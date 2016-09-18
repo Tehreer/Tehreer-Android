@@ -1,0 +1,52 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+
+    sourceSets.main {
+        jniLibs.srcDir 'src/main/jniLibs' // Set .so files location to jniLibs
+        jni.srcDirs = [] // Disable automatic ndk-build call
+    }
+
+    task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+        String ndkDir = System.getenv('ANDROID_NDK_ROOT')
+        if (ndkDir == null) {
+            Properties properties = new Properties()
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+            ndkDir = properties.getProperty('ndk.dir', null)
+            if (ndkDir == null) {
+                throw new GradleException('NDK location not found. Define location with ndk.dir in the local.properties file or with an ANDROID_NDK_ROOT environment variable.')
+            }
+        }
+
+        String ndkBuild = ndkDir + '/ndk-build' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.cmd' : '')
+
+        commandLine ndkBuild,
+                'NDK_PROJECT_PATH=build/intermediates/ndk',
+                'NDK_LIBS_OUT=src/main/jniLibs',
+                'APP_BUILD_SCRIPT=src/main/jni/Android.mk',
+                'NDK_APPLICATION_MK=src/main/jni/Application.mk'
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}

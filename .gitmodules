@@ -1,0 +1,14 @@
+[submodule "SheenBidi"]
+	path = sheenbidi
+	url = git://github.com/mta452/SheenBidi.git
+	branch = master
+
+[submodule "SheenFigure"]
+	path = sheenfigure
+	url = git://github.com/mta452/SheenFigure.git
+	branch = master
+
+[submodule "FreeType"]
+	path = freetype
+	url = git://git.sv.nongnu.org/freetype/freetype2.git
+	branch = master
