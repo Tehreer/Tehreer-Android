@@ -35,6 +35,9 @@ import com.mta.tehreer.text.TextTypesetter;
 
 import java.util.ArrayList;
 
+/**
+ * Displays read-only text to the user.
+ */
 public class Label extends View {
 
     private static final String TRUNCATION_STRING = "...";
@@ -374,60 +377,127 @@ public class Label extends View {
         }
     }
 
+    /**
+     * Returns the horizontal and vertical alignment of this Label.
+     *
+     * @return The horizontal and vertical alignment of this Label.
+     */
     public int getGravity() {
         return mGravity;
     }
 
+    /**
+     * Sets the horizontal alignment of the text and the vertical gravity that will be used when
+     * there is extra space in the Label beyond what is required for the text itself.
+     *
+     * @param gravity The horizontal and vertical alignment.
+     */
     public void setGravity(int gravity) {
         mGravity = gravity;
         invalidate();
     }
 
+    /**
+     * Returns the current typeface in which the text is being displayed.
+     *
+     * @return The typeface being used for displaying text.
+     */
     public Typeface getTypeface() {
         return mRenderer.getTypeface();
     }
 
+    /**
+     * Sets the typeface in which the text should be displayed.
+     *
+     * @param typeface The typeface to use for displaying text.
+     */
     public void setTypeface(Typeface typeface) {
         mRenderer.setTypeface(typeface);
         updateTypesetter();
     }
 
-    private void setTypeface(int tag) {
-        setTypeface(TypefaceManager.getTypeface(tag));
+    /**
+     * Sets the typeface in which the text should be displayed.
+     *
+     * @param typefaceTag The tag of the typeface registered in <code>TypefaceManager</code>.
+     */
+    private void setTypeface(int typefaceTag) {
+        setTypeface(TypefaceManager.getTypeface(typefaceTag));
     }
 
+    /**
+     * Returns the current text that is being displayed.
+     *
+     * @return The text being displayed.
+     */
     public String getText() {
         return mText;
     }
 
+    /**
+     * Sets the text that should be displayed.
+     *
+     * @param text The text to display.
+     */
     public void setText(String text) {
         mText = text;
         updateTypesetter();
     }
 
+    /**
+     * Returns the current text size (in pixels) in which the text is being displayed.
+     *
+     * @return The text size to use for displaying text.
+     */
     public float getTextSize() {
         return mRenderer.getTextSize();
     }
 
+    /**
+     * Set the text size (in pixels) in which the text should be displayed.
+     *
+     * @param textSize The text size to use for displaying text.
+     */
     public void setTextSize(float textSize) {
         mRenderer.setTextSize(Math.max(0.0f, textSize));
         requestLayout();
         invalidate();
     }
 
+    /**
+     * Returns the current color in which the text is being displayed.
+     *
+     * @return The color being used for displaying text.
+     */
     public int getTextColor() {
         return mRenderer.getTextColor();
     }
 
+    /**
+     * Sets the color in which the text should be displayed.
+     *
+     * @param textColor The color to use for displaying text.
+     */
     public void setTextColor(int textColor) {
         mRenderer.setTextColor(textColor);
         invalidate();
     }
 
+    /**
+     * Returns the truncation mode that should be applied on the last line of the text.
+     *
+     * @return The current truncation mode.
+     */
     public int getTruncationMode() {
         return mTruncationMode;
     }
 
+    /**
+     * Sets the truncation mode that should be applied on the last line of the text if it overflows
+     * the available area.
+     *
+     * @param truncationMode A value of <code>TRUNCATION_MODE</code>.
+     */
     public void setTruncationMode(int truncationMode) {
         switch (truncationMode) {
         case TRUNCATION_MODE_NONE:
@@ -444,10 +514,20 @@ public class Label extends View {
         updateTruncation();
     }
 
+    /**
+     * Returns the place at which text should be truncated if it overflows the available area.
+     *
+     * @return The current truncation place.
+     */
     public int getTruncationPlace() {
         return mTruncationPlace;
     }
 
+    /**
+     * Sets the place at which text should be truncated if it overflows the available area.
+     *
+     * @param truncationPlace A value of <code>TRUNCATION_PLACE</code>.
+     */
     public void setTruncationPlace(int truncationPlace) {
         switch (truncationPlace) {
         case TRUNCATION_PLACE_END:
@@ -463,46 +543,99 @@ public class Label extends View {
         updateTruncation();
     }
 
+    /**
+     * Returns the maximum number of lines that should be displayed.
+     *
+     * @return The maximum number of lines that should be displayed.
+     */
     public int getMaxLines() {
         return mMaxLines;
     }
 
+    /**
+     * Makes the Label at most this many lines tall.
+     *
+     * @param maxLines The maximum number of lines that should be displayed.
+     */
     public void setMaxLines(int maxLines) {
         mMaxLines = maxLines;
         updateTypesetter();
     }
 
+    /**
+     * Returns the radius of the shadow layer.
+     *
+     * @return The value of shadow radius.
+     */
     public float getShadowRadius() {
         return mRenderer.getShadowRadius();
     }
 
+    /**
+     * Sets the radius of the shadow layer. Only works if this Label's layer type is
+     * <code>LAYER_TYPE_SOFTWARE</code>.
+     * <p>
+     * The shadow is disabled if the value of <code>shadowRadius</code> is equal to zero.
+     *
+     * @param shadowRadius The value of shadow's radius.
+     */
     public void setShadowRadius(float shadowRadius) {
         mRenderer.setShadowRadius(Math.max(0.0f, shadowRadius));
         invalidate();
     }
 
+    /**
+     * Returns the horizontal offset of the shadow layer.
+     *
+     * @return The value of shadow's horizontal offset.
+     */
     public float getShadowDx() {
         return mRenderer.getShadowDx();
     }
 
+    /**
+     * Sets the horizontal offset of the shadow layer.
+     *
+     * @param shadowDx The value of shadow's horizontal offset.
+     */
     public void setShadowDx(float shadowDx) {
         mRenderer.setShadowDx(shadowDx);
         invalidate();
     }
 
+    /**
+     * Returns the vertical offset of the shadow layer.
+     *
+     * @return The value of shadow's vertical offset.
+     */
     public float getShadowDy() {
         return mRenderer.getShadowDy();
     }
 
+    /**
+     * Sets the vertical offset of the shadow layer.
+     *
+     * @param shadowDy The value of shadow's vertical offset.
+     */
     public void setShadowDy(float shadowDy) {
         mRenderer.setShadowDy(shadowDy);
         invalidate();
     }
 
+    /**
+     * Returns the color of the shadow layer.
+     *
+     * @return The color of the shadow.
+     */
     public int getShadowColor() {
         return mRenderer.getShadowColor();
     }
 
+    /**
+     * Sets the color of the shadow layer.
+     *
+     * @param shadowColor The color the shadow.
+     */
     public void setShadowColor(int shadowColor) {
         mRenderer.setShadowColor(shadowColor);
         invalidate();
