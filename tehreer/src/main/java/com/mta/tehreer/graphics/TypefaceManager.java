@@ -19,11 +19,29 @@ package com.mta.tehreer.graphics;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * In general, a typeface is not automatically cached due to the fact that it might be only used in
+ * specific scenarios. Caching every typeface that is created can lead to severe memory penalties.
+ * <code>TypefaceManager</code> class provides management activities related to typefaces. The
+ * typefaces that are intended to be shared in multiple screens should be registered here so that
+ * they can be easily accessed afterwards.
+ */
 public class TypefaceManager {
 
     private static final HashMap<Integer, Typeface> TYPEFACE_MAP = new HashMap<>();
 
-    public static void registerTypeface(int tag, Typeface typeface) {
+    /**
+     * Registers a typeface against a specified tag in <code>TypefaceManager</code>.
+     *
+     * @param typefaceTag The tag to identify the typeface.
+     * @param typeface The finalizable instance of the typeface.
+     *
+     * @throws NullPointerException is <code>typeface</code> is null.
+     * @throws IllegalArgumentException if <code>typeface</code> is not finalizable, or
+     *         <code>typeface</code> is already registered for a different tag, or another typeface
+     *         is registered for <code>typefaceTag</code>.
+     */
+    public static void registerTypeface(int typefaceTag, Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -32,18 +50,27 @@ public class TypefaceManager {
         }
 
         synchronized (TYPEFACE_MAP) {
-            if (TYPEFACE_MAP.containsKey(tag)) {
-                throw new IllegalArgumentException("A typeface is already registered for tag: " + tag);
-            }
-
             if (TYPEFACE_MAP.containsValue(typeface)) {
                 throw new IllegalArgumentException("This typeface is already registered for a different tag");
             }
 
-            TYPEFACE_MAP.put(tag, typeface);
+            if (TYPEFACE_MAP.containsKey(typefaceTag)) {
+                throw new IllegalArgumentException("A typeface is already registered for tag: " + typefaceTag);
+            }
+
+            TYPEFACE_MAP.put(typefaceTag, typeface);
         }
     }
 
+    /**
+     * Unregisters a typeface in <code>TypefaceManager</code> thus making it available for GC.
+     *
+     * @param typeface The typeface to unregister.
+     *
+     * @throws NullPointerException if <code>typeface</code> is null.
+     * @throws IllegalArgumentException if <code>typeface</code> is not registered in
+     *         <code>TypefaceManager</code>.
+     */
     public static void unregisterTypeface(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
@@ -66,9 +93,16 @@ public class TypefaceManager {
         }
     }
 
-    public static Typeface getTypeface(int tag) {
+    /**
+     * Returns the typeface registered against the specified tag.
+     *
+     * @param typefaceTag The tag to identify the typeface.
+     * @return The registered typeface, or <code>null</code> if no typeface is registered against
+     *         the specified tag.
+     */
+    public static Typeface getTypeface(int typefaceTag) {
         synchronized (TYPEFACE_MAP) {
-            return TYPEFACE_MAP.get(tag);
+            return TYPEFACE_MAP.get(typefaceTag);
         }
     }
 }

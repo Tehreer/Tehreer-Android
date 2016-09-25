@@ -24,6 +24,11 @@ import com.mta.tehreer.util.Disposable;
 
 import java.io.InputStream;
 
+/**
+ * The Typeface class specifies the typeface and intrinsic style of a font. This is used in the
+ * renderer, along with optionally Renderer settings like textSize, textSkewX, textScaleX to specify
+ * how text appears when drawn (and measured).
+ */
 public class Typeface implements Disposable {
 
     private static class Finalizable extends Typeface {
@@ -65,6 +70,15 @@ public class Typeface implements Disposable {
 
 	long nativeTypeface;
 
+    /**
+     * Creates a new typeface with the specified asset. The data of the font is not copied into the
+     * memory. Rather, it is directly read from the stream when needed. So the performance of
+     * resulting typeface might be slower and should be used with precaution.
+     *
+     * @param assetManager The application's asset manager.
+     * @param path The path of the font file in the assets directory.
+     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     */
     public static Typeface createWithAsset(AssetManager assetManager, String path) {
         long nativeTypeface = nativeCreateWithAsset(assetManager, path);
         if (nativeTypeface != 0) {
@@ -74,6 +88,13 @@ public class Typeface implements Disposable {
         return null;
     }
 
+    /**
+     * Creates a new typeface with the specified file. The data for the font is directly read from
+     * the file when needed.
+     *
+     * @param path The absolute path of the font file.
+     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     */
     public static Typeface createWithFile(String path) {
         long nativeTypeface = nativeCreateWithFile(path);
         if (nativeTypeface != 0) {
@@ -83,6 +104,13 @@ public class Typeface implements Disposable {
         return null;
     }
 
+    /**
+     * Create a new typeface from the input stream by copying its data into a native memory buffer.
+     * So it may take time to create the typeface if the stream holds larger data.
+     *
+     * @param stream The input stream that contains the data of the font.
+     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     */
     public static Typeface createFromStream(InputStream stream) {
         long nativeTypeface = nativeCreateFromStream(stream);
         if (nativeTypeface != 0) {
@@ -100,26 +128,61 @@ public class Typeface implements Disposable {
         this.nativeTypeface = other.nativeTypeface;
     }
 
-    public byte[] copyTable(int tag) {
-        return nativeCopyTable(nativeTypeface, tag);
+
+    /**
+     * Generates an array of bytes containing the data of the intended table.
+     *
+     * @param tableTag The tag of the table as an integer. This can be created from string like
+     *                 <code>OpenTypeTag.make("math");</code>.
+     * @return An array of bytes containing the data of the table, or <code>null</code> if no such
+     *         table exists.
+     */
+    public byte[] copyTable(int tableTag) {
+        return nativeCopyTable(nativeTypeface, tableTag);
     }
 
+    /**
+     * Returns the number of font units per EM square for this typeface.
+     *
+     * @return The number of font units per EM square for this typeface.
+     */
 	public int getUnitsPerEm() {
 		return nativeGetUnitsPerEm(nativeTypeface);
 	}
 
+    /**
+     * Returns the typographic ascender of this typeface expressed in font units.
+     *
+     * @return The typographic ascender of this typeface expressed in font units.
+     */
 	public int getAscent() {
 		return nativeGetAscent(nativeTypeface);
 	}
 
+    /**
+     * Returns the typographic descender of this typeface expressed in font units.
+     *
+     * @return The typographic descender of this typeface expressed in font units.
+     */
 	public int getDescent() {
 		return nativeGetDescent(nativeTypeface);
 	}
 
+    /**
+     * Returns the number of glyphs in this typeface.
+     *
+     * @return The number of glyphs in this typeface.
+     */
 	public int getGlyphCount() {
 	    return nativeGetGlyphCount(nativeTypeface);
 	}
 
+    /**
+     * Returns the font bounding box expressed in font units. The box is large enough to contain any
+     * glyph from the font.
+     *
+     * @return The font bounding box expressed in font units.
+     */
 	public Rect getBoundingBox() {
 	    Rect boundingBox = new Rect();
 	    nativeGetBoundingBox(nativeTypeface, boundingBox);
@@ -127,10 +190,20 @@ public class Typeface implements Disposable {
 	    return boundingBox;
 	}
 
+    /**
+     * Returns the position, in font units, of the underline line for this typeface.
+     *
+     * @return The position, in font units, of the underline line for this typeface.
+     */
 	public int getUnderlinePosition() {
 	    return nativeGetUnderlinePosition(nativeTypeface);
 	}
 
+    /**
+     * Returns the thickness, in font units, of the underline for this typeface.
+     *
+     * @return The thickness, in font units, of the underline for this typeface.
+     */
 	public int getUnderlineThickness() {
 	    return nativeGetUnderlineThickness(nativeTypeface);
 	}
@@ -157,7 +230,7 @@ public class Typeface implements Disposable {
     private static native long nativeCreateFromStream(InputStream stream);
 	private static native void nativeDispose(long nativeTypeface);
 
-    private static native byte[] nativeCopyTable(long nativeTypeface, int tag);
+    private static native byte[] nativeCopyTable(long nativeTypeface, int tableTag);
 
 	private static native int nativeGetUnitsPerEm(long nativeTypeface);
 	private static native int nativeGetAscent(long nativeTypeface);
