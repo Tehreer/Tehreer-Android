@@ -14,26 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.bidi;
-
 /**
- * Represents an operation that accepts a single <code>BidiPair</code> object and returns no result.
+ * Provides the classes necessary to apply Unicode Bidirectional Algorithm on text.
  */
-public abstract class BidiPairConsumer {
-
-    boolean isStopped;
-
-    /**
-     * Performs this operation on the given <code>BidiPair</code> object.
-     *
-     * @param bidiPair The input <code>BidiPair</code> argument.
-     */
-    public abstract void accept(BidiPair bidiPair);
-
-    /**
-     * Instructs the iterator to stop retrieving bidi pairs after this iteration.
-     */
-    public final void stop() {
-        isStopped = true;
-    }
-}
+package com.mta.tehreer.bidi;

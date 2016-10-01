@@ -16,12 +16,23 @@
 
 package com.mta.tehreer.bidi;
 
+/**
+ * Represents an operation that accepts a single <code>BidiRun</code> object and returns no result.
+ */
 public abstract class BidiRunConsumer {
 
     boolean isStopped;
 
+    /**
+     * Performs this operation on the given <code>BidiRun</code> object.
+     *
+     * @param bidiRun The input <code>BidiRun</code> argument.
+     */
     public abstract void accept(BidiRun bidiRun);
 
+    /**
+     * Instructs the iterator to stop retrieving bidi runs after this iteration.
+     */
     public final void stop() {
         isStopped = true;
     }

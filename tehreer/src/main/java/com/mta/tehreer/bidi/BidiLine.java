@@ -19,6 +19,12 @@ package com.mta.tehreer.bidi;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.util.Disposable;
 
+/**
+ * A <code>BidiLine</code> object represents a single line processed with rules L1-L2 of Unicode
+ * Bidirectional Algorithm. Instead of reordering the characters as stated by rule L2, it allows to
+ * query and iterate over reordered level runs. The caller is responsible to reorder the characters
+ * manually, if required.
+ */
 public class BidiLine implements Disposable {
 
     private static class Finalizable extends BidiLine {
@@ -42,6 +48,20 @@ public class BidiLine implements Disposable {
         }
     }
 
+    /**
+     * Wraps a bidi line object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param bidiLine The bidi line object to wrap into a finalizable instance.
+     *
+     * @return The finalizable instance of the passed-in bidi line object.
+     */
     public static BidiLine finalizable(BidiLine bidiLine) {
         if (bidiLine.getClass() == BidiLine.class) {
             return new Finalizable(bidiLine);
@@ -54,6 +74,14 @@ public class BidiLine implements Disposable {
         return bidiLine;
     }
 
+    /**
+     * Checks whether a bidi line object is finalizable or not.
+     *
+     * @param bidiLine The bidi line object to check.
+     *
+     * @return <code>true</code> if the passed-in bidi line objcet is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(BidiLine bidiLine) {
         return (bidiLine.getClass() == Finalizable.class);
     }

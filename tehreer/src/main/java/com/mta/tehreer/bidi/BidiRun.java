@@ -16,6 +16,10 @@
 
 package com.mta.tehreer.bidi;
 
+/**
+ * A <code>BidiRun</code> object represents a sequence of characters which have the same embedding
+ * level. The direction of run is considered right-to-left, if its embedding level is odd.
+ */
 public class BidiRun {
 
     private int mCharStart;
@@ -47,9 +51,9 @@ public class BidiRun {
     }
 
     /**
-     * Returns the level of this run.
+     * Returns the embedding level of this run.
      *
-     * @return The level of this run.
+     * @return The embedding level of this run.
      */
     public byte getEmbeddingLevel() {
         return mEmbeddingLevel;
@@ -58,7 +62,7 @@ public class BidiRun {
     /**
      * Returns <code>true</code> if this run is right-to-left.
      *
-     * @return <code>true</code> if this run is right-to-left.
+     * @return <code>true</code> if this run is right-to-left, <code>false</code> otherwise.
      */
     public boolean isRightToLeft() {
         return (mEmbeddingLevel & 1) == 1;

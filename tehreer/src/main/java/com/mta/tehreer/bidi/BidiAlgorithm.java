@@ -19,8 +19,20 @@ package com.mta.tehreer.bidi;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.util.Disposable;
 
+/**
+ * This class implements Unicode Bidirectional Algorithm available at
+ * http://www.unicode.org/reports/tr9.
+ * <p>
+ * A <code>BidiAlgorithm</code> object provides information related to individual paragraphs in
+ * source text by applying rule P1. It can be used to create paragraph objects by explicitly
+ * specifying the paragraph level or deriving it from rules P2 and P3. Once a paragraph object is
+ * created, embedding levels of characters can be queried from it.
+ */
 public class BidiAlgorithm implements Disposable {
 
+    /**
+     * Maximum explicit embedding level.
+     */
     public static final byte MAX_LEVEL = 125;
 
     private static class Finalizable extends BidiAlgorithm {
@@ -44,6 +56,20 @@ public class BidiAlgorithm implements Disposable {
         }
     }
 
+    /**
+     * Wraps a bidi algorithm object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param bidiAlgorithm The bidi algorithm object to wrap into a finalizable instance.
+     *
+     * @return The finalizable instance of the passed-in bidi algorithm object.
+     */
     public static BidiAlgorithm finalizable(BidiAlgorithm bidiAlgorithm) {
         if (bidiAlgorithm.getClass() == BidiAlgorithm.class) {
             return new Finalizable(bidiAlgorithm);
@@ -56,6 +82,14 @@ public class BidiAlgorithm implements Disposable {
         return bidiAlgorithm;
     }
 
+    /**
+     * Checks whether a bidi algorithm object is finalizable or not.
+     *
+     * @param bidiAlgorithm The bidi algorithm object to check.
+     *
+     * @return <code>true</code> if the passed-in bidi algorithm object is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(BidiAlgorithm bidiAlgorithm) {
         return (bidiAlgorithm.getClass() == Finalizable.class);
     }

@@ -16,6 +16,10 @@
 
 package com.mta.tehreer.bidi;
 
+/**
+ * A <code>BidiPair</code> object provides the pair of a unicode code point at a specific index in
+ * source text.
+ */
 public class BidiPair {
 
     private int mCharIndex;
@@ -26,10 +30,20 @@ public class BidiPair {
         mPairingCodePoint = pairingCodePoint;
     }
 
+    /**
+     * Returns the index of pairing character in source text.
+     *
+     * @return The index of pairing character in source text.
+     */
     public int getCharIndex() {
         return mCharIndex;
     }
 
+    /**
+     * Returns the pairing code point.
+     *
+     * @return The pairing code point.
+     */
     public int getPairingCodePoint() {
         return mPairingCodePoint;
     }

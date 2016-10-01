@@ -16,10 +16,29 @@
 
 package com.mta.tehreer.bidi;
 
+/**
+ * Specifies the base direction of a paragraph.
+ */
 public enum BaseDirection {
+    /**
+     * Base direction is left-to-right.
+     */
     LEFT_TO_RIGHT(0),
+    /**
+     * Base direction is right-to-left.
+     */
     RIGHT_TO_LEFT(1),
+    /**
+     * Base direction depends on the first strong directional character of the paragraph according
+     * to Unicode Bidirectional Algorithm. If no strong directional character is present, the base
+     * direction is left-to-right.
+     */
     DEFAULT_LEFT_TO_RIGHT(0xFE),
+    /**
+     * Base direction depends on the first strong directional character of the paragraph according
+     * to Unicode Bidirectional Algorithm. If no strong directional character is present, the base
+     * direction is right-to-left.
+     */
     DEFAULT_RIGHT_TO_LEFT(0xFD);
 
     final int value;

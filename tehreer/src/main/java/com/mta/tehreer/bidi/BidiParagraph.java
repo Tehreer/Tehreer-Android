@@ -19,6 +19,11 @@ package com.mta.tehreer.bidi;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.util.Disposable;
 
+/**
+ * A <code>BidiParagraph</code> object represents a single paragraph of text processed with rules
+ * X1-I2 of Unicode Bidirectional Algorithm. It contains the resolved embedding levels of all the
+ * characters of a paragraph and provides the facility to query them or iterate over their runs.
+ */
 public class BidiParagraph implements Disposable {
 
     private static class Finalizable extends BidiParagraph {
@@ -42,6 +47,20 @@ public class BidiParagraph implements Disposable {
         }
     }
 
+    /**
+     * Wraps a bidi paragraph object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param bidiParagraph The bidi paragraph object to wrap into a finalizable instance.
+     *
+     * @return The finalizable instance of the passed-in bidi paragraph object.
+     */
     public static BidiParagraph finalizable(BidiParagraph bidiParagraph) {
         if (bidiParagraph.getClass() == BidiParagraph.class) {
             return new Finalizable(bidiParagraph);
@@ -54,6 +73,14 @@ public class BidiParagraph implements Disposable {
         return bidiParagraph;
     }
 
+    /**
+     * Checks whether a paragraph object is finalizable or not.
+     *
+     * @param bidiParagraph The paragraph object to check.
+     *
+     * @return <code>true</code> if the passed-in bidi paragraph object is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(BidiParagraph bidiParagraph) {
         return (bidiParagraph.getClass() == Finalizable.class);
     }
