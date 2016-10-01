@@ -19,6 +19,12 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.util.Disposable;
 
+/**
+ * An <code>OpenTypeAlbum</code> object is a container for the results of text shaping. It is filled
+ * by <code>OpenTypeArtist</code> to provide the information related to characters, their glyphs,
+ * offsets, and advances. It can be safely accessed from multiple threads but only one thread should
+ * be allowed to manipulate it at a time.
+ */
 public class OpenTypeAlbum implements Disposable {
 
     private static class Finalizable extends OpenTypeAlbum {
@@ -42,6 +48,19 @@ public class OpenTypeAlbum implements Disposable {
         }
     }
 
+    /**
+     * Wraps an open type album object into a finalizable instance which is guaranteed to be
+     * disposed automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param openTypeAlbum The open type album object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in open type album object.
+     */
     public static OpenTypeAlbum finalizable(OpenTypeAlbum openTypeAlbum) {
         if (openTypeAlbum.getClass() == OpenTypeAlbum.class) {
             return new Finalizable(openTypeAlbum);
@@ -54,12 +73,22 @@ public class OpenTypeAlbum implements Disposable {
         return openTypeAlbum;
     }
 
+    /**
+     * Checks whether an open type album object is finalizable or not.
+     *
+     * @param openTypeAlbum The open type album object to check.
+     * @return <code>true</code> if the passed-in open type album object is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(OpenTypeAlbum openTypeAlbum) {
         return (openTypeAlbum.getClass() == Finalizable.class);
     }
 
 	long nativeAlbum;
 
+    /**
+     * Constructs an open type album object.
+     */
 	public OpenTypeAlbum() {
 	    nativeAlbum = nativeCreate();
 	}
@@ -125,7 +154,8 @@ public class OpenTypeAlbum implements Disposable {
     /**
      * Returns <code>true</code> if the text flows backward for this album.
      *
-     * @return <code>true</code> if the text flows backward for this album.
+     * @return <code>true</code> if the text flows backward for this album, <code>false</code>
+     *         otherwise.
      */
 	public boolean isBackward() {
 	    return nativeIsBackward(nativeAlbum);
@@ -165,7 +195,7 @@ public class OpenTypeAlbum implements Disposable {
      * @return The glyph id at the specified index in this album.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
 	public int getGlyphId(int glyphIndex) {
 		verifyGlyphIndex(glyphIndex);
@@ -179,7 +209,7 @@ public class OpenTypeAlbum implements Disposable {
      * @return The glyph's x- offset at the specified index in this album.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
 	public int getGlyphXOffset(int glyphIndex) {
 		verifyGlyphIndex(glyphIndex);
@@ -193,7 +223,7 @@ public class OpenTypeAlbum implements Disposable {
      * @return The glyph's y- offset at the specified index in this album.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
 	public int getGlyphYOffset(int glyphIndex) {
 		verifyGlyphIndex(glyphIndex);
@@ -207,7 +237,7 @@ public class OpenTypeAlbum implements Disposable {
      * @return The glyph's advance at the specified index in this album.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
 	public int getGlyphAdvance(int glyphIndex) {
 		verifyGlyphIndex(glyphIndex);
@@ -223,7 +253,7 @@ public class OpenTypeAlbum implements Disposable {
      *         source text.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         <code>getCharStart()</code>, or greater than or equal to <code>getCharEnd()</code>
+     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
      */
 	public int getCharGlyphIndex(int charIndex) {
         verifyCharIndex(charIndex);
@@ -244,9 +274,9 @@ public class OpenTypeAlbum implements Disposable {
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *           <li><code>fromIndex</code> is negative</li>
-     *           <li><code>toIndex</code> is greater than <code>getGlyphCount()</code></li>
+     *           <li><code>toIndex</code> is greater than {@link #getGlyphCount()}</li>
      *           <li><code>fromIndex</code> is greater than <code>toIndex</code></li>
-     *           <li>Any of the non-null passed-in array cannot contain
+     *           <li>Any of the non-null passed-in array does not have the capacity to hold
      *               <code>toIndex - fromIndex</code> elements</li>
      *         </ul>
      */
@@ -280,10 +310,10 @@ public class OpenTypeAlbum implements Disposable {
      *
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
-     *           <li><code>fromIndex</code> is less than <code>getCharStart()</code></li>
-     *           <li><code>toIndex</code> is greater than <code>getCharEnd()</code></li>
+     *           <li><code>fromIndex</code> is less than {@link #getCharStart()}</li>
+     *           <li><code>toIndex</code> is greater than {@link #getCharEnd()}</li>
      *           <li><code>fromIndex</code> is greater than <code>toIndex</code></li>
-     *           <li><code>charGlyphIndexes</code> array cannot contain
+     *           <li><code>charGlyphIndexes</code> array does not have the capacity to hold
      *               <code>toIndex - fromIndex</code> elements</li>
      *         </ul>
      */

@@ -23,6 +23,9 @@ import com.mta.tehreer.text.TextDirection;
 import com.mta.tehreer.text.TextMode;
 import com.mta.tehreer.util.Disposable;
 
+/**
+ * The <code>OpenTypeArtist</code> class represents the text shaping engine.
+ */
 public class OpenTypeArtist implements Disposable {
 
     private static class Finalizable extends OpenTypeArtist {
@@ -46,6 +49,19 @@ public class OpenTypeArtist implements Disposable {
         }
     }
 
+    /**
+     * Wraps an open type artist object into a finalizable instance which is guaranteed to be
+     * disposed automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param openTypeArtist The open type artist object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in open type artist object.
+     */
     public static OpenTypeArtist finalizable(OpenTypeArtist openTypeArtist) {
         if (openTypeArtist.getClass() == OpenTypeArtist.class) {
             return new Finalizable(openTypeArtist);
@@ -58,10 +74,23 @@ public class OpenTypeArtist implements Disposable {
         return openTypeArtist;
     }
 
+    /**
+     * Checks whether an open type artist object is finalizable or not.
+     *
+     * @param openTypeArtist The open type artist object to check.
+     * @return <code>true</code> if the passed-in open type artist object is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(OpenTypeArtist openTypeArtist) {
         return (openTypeArtist.getClass() == Finalizable.class);
     }
 
+    /**
+     * Returns the default rendering direction of a script.
+     *
+     * @param scriptTag The tag of the script whose default direction is returned.
+     * @return The default direction of the script identified by <code>scriptTag</code>.
+     */
     public static TextDirection getScriptDefaultDirection(int scriptTag) {
         return Convert.toJavaTextDirection(nativeGetScriptDefaultDirection(scriptTag));
     }
@@ -126,6 +155,8 @@ public class OpenTypeArtist implements Disposable {
 
     /**
      * Sets this artist's script tag for text shaping. The default value is <code>'dflt'</code>.
+     * <p>
+     * A tag can be created from string by using {@link OpenTypeTag#make(String)} method.
      *
      * @param scriptTag The script tag to use for text shaping.
      */
@@ -144,6 +175,8 @@ public class OpenTypeArtist implements Disposable {
 
     /**
      * Sets this artist's language tag for text shaping. The default value is <code>'dflt'</code>.
+     * <p>
+     * A tag can be created from string by using {@link OpenTypeTag#make(String)} method.
      *
      * @param languageTag The language tag to use for text shaping.
      */
@@ -180,9 +213,9 @@ public class OpenTypeArtist implements Disposable {
      * @param charEnd The index after the last character in source text.
      *
      * @throws IllegalStateException if current text of artist is null.
-     * @throws IllegalArgumentException if <code>charStart<var/> is negative, or <code>charEnd</code> is
-     *         greater than <code>getText().length()</code>, or <code>charStart<var/> is greater than
-     *         <code>charEnd</code>
+     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
+     *         <code>charEnd</code> is greater than <code>getText().length()</code>, or
+     *         <code>charStart</code> is greater than <code>charEnd</code>
      */
     public void setTextRange(int charStart, int charEnd) {
         ensureText();
@@ -213,10 +246,10 @@ public class OpenTypeArtist implements Disposable {
     /**
      * Sets this artist's text direction for shaping.
      * <p>
-     * The value of <code>textDirection</code> must reflect the script direction of source text range,
-     * so that cursive and mark glyphs are placed at appropriate locations with respect to script.
-     * It should not be confused with the direction of a bidirectional run as that may not reflect
-     * the script direction if overridden explicitly.
+     * The value of <code>textDirection</code> must reflect the rendering direction of source script
+     * so that cursive and mark glyphs are placed at appropriate locations. It should not be
+     * confused with the direction of a bidirectional run as that may not reflect the script
+     * direction if overridden explicitly.
      *
      * @param textDirection The text direction to use for shaping.
      */
@@ -238,8 +271,8 @@ public class OpenTypeArtist implements Disposable {
      * <p>
      * This method provides a convenient way to shape a bidirectional run whose direction is
      * opposite to that of script. For example, if the direction of a run, 'car' is explicitly set
-     * as right-to-left, <code>TextMode.BACKWARD</code> will automatically treat it as 'rac' without
-     * reordering the original text.
+     * as right-to-left, backward mode will automatically read it as 'rac' without reordering the
+     * original text.
      *
      * @param textMode The text mode to use for shaping.
      */
@@ -248,15 +281,15 @@ public class OpenTypeArtist implements Disposable {
 	}
 
     /**
-     * Shapes the text range with appropriate shaping engine, filling the album with glyph infos.
-     * The <code>album</code> is cleared first, if not empty.
+     * Shapes the specified range of source text with appropriate shaping engine, filling the album
+     * with shaping results. The <code>album</code> is cleared first, if not empty.
      * <p>
      * The output glyphs in the album flow in logical text direction. For left-to-right direction,
      * the position of pen is incremented with glyph's advance after rendering it. Similarly, for
      * right-to-left direction, the position of pen is decremented with glyph's advance after
      * rendering it.
      *
-     * @param album The album that should be filled with glyph infos.
+     * @param album The album that should be filled with shaping results.
      *
      * @throws IllegalStateException if either artist's current typeface is <code>null</code>, or
      *         artist's current text is <code>null</code>.

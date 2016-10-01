@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.opentype;
 
+/**
+ * Provides static utility methods related to open type tags.
+ */
 public class OpenTypeTag {
 
 	private static boolean isValidByte(byte val) {
@@ -28,12 +31,6 @@ public class OpenTypeTag {
 		return (val <= Byte.MAX_VALUE) && isValidByte((byte) val);
 	}
 
-	private static void verifyByte(byte val, String message) {
-		if (!isValidByte(val)) {
-			throw new IllegalArgumentException(message);
-		}
-	}
-
 	private static void verifyChar(char val, String message) {
 		if (!isValidChar(val)) {
 			throw new IllegalArgumentException(message);
@@ -44,25 +41,28 @@ public class OpenTypeTag {
         return (a << 24) | (b << 16) | (c << 8) | (d);
     }
 
-	public static int make(String tag) {
-		if (tag.length() != 4) {
-			throw new IllegalArgumentException("The length of tag is not equal to four characters");
+    /**
+     * Makes a four-byte integer, representing the tag passed-in as a string.
+     *
+     * @param tagStr The tag string to represent as an integer.
+     * @return Integer representation of the tag.
+     *
+     * @throws IllegalArgumentException if <code>tagStr</code> is not four characters long, or any
+     *         character is neither an English alphabet nor a space.
+     */
+	public static int make(String tagStr) {
+		if (tagStr.length() != 4) {
+			throw new IllegalArgumentException("The length of tag string is not equal to four");
 		}
-		verifyChar(tag.charAt(0), "Index: 0");
-		verifyChar(tag.charAt(1), "Index: 1");
-		verifyChar(tag.charAt(2), "Index: 2");
-		verifyChar(tag.charAt(3), "Index: 3");
+		verifyChar(tagStr.charAt(0), "Index: 0");
+		verifyChar(tagStr.charAt(1), "Index: 1");
+		verifyChar(tagStr.charAt(2), "Index: 2");
+		verifyChar(tagStr.charAt(3), "Index: 3");
 
-		return makeNoVerify((byte) tag.charAt(0), (byte) tag.charAt(1),
-					        (byte) tag.charAt(2), (byte) tag.charAt(3));
+		return makeNoVerify((byte) tagStr.charAt(0), (byte) tagStr.charAt(1),
+					        (byte) tagStr.charAt(2), (byte) tagStr.charAt(3));
 	}
 
-	public static int make(byte a, byte b, byte c, byte d) {
-		verifyByte(a, "a");
-		verifyByte(b, "b");
-		verifyByte(c, "c");
-		verifyByte(d, "d");
-
-		return makeNoVerify(a, b, c, d);
-	}
+    private OpenTypeTag() {
+    }
 }
