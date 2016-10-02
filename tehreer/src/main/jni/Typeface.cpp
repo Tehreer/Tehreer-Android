@@ -336,21 +336,25 @@ static void dispose(JNIEnv *env, jobject obj, jlong handle)
     delete typeface;
 }
 
-static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong handle, jint tag)
+static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong handle, jint tableTag)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(handle);
 
     SFUInteger length;
-    protocolLoadTable(nullptr, tag, nullptr, &length);
+    protocolLoadTable(nullptr, tableTag, nullptr, &length);
 
-    jbyteArray dataArray = env->NewByteArray(length);
-    void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
+    if (length > 0) {
+        jbyteArray dataArray = env->NewByteArray(length);
+        void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-    protocolLoadTable(nullptr, tag, (SFUInt8 *)dataBuffer, nullptr);
+        protocolLoadTable(nullptr, tableTag, (SFUInt8 *)dataBuffer, nullptr);
 
-    env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
+        env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 
-    return dataArray;
+        return dataArray;
+    }
+
+    return nullptr;
 }
 
 static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong handle)
