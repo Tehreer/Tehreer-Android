@@ -20,9 +20,11 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 
 import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.opentype.OpenTypeTag;
 import com.mta.tehreer.util.Disposable;
 
 import java.io.InputStream;
+import java.lang.String;
 
 /**
  * The Typeface class specifies the typeface and intrinsic style of a font. This is used in the
@@ -52,6 +54,19 @@ public class Typeface implements Disposable {
         }
     }
 
+    /**
+     * Wraps a typeface object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param typeface The typeface object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in open typeface object.
+     */
     public static Typeface finalizable(Typeface typeface) {
         if (typeface.getClass() == Typeface.class) {
             return new Finalizable(typeface);
@@ -64,6 +79,13 @@ public class Typeface implements Disposable {
         return typeface;
     }
 
+    /**
+     * Checks whether a typeface object is finalizable or not.
+     *
+     * @param typeface The typeface object to check.
+     * @return <code>true</code> if the passed-in typeface object is finalizable, <code>false</code>
+     *         otherwise.
+     */
     public static boolean isFinalizable(Typeface typeface) {
         return (typeface.getClass() == Finalizable.class);
     }
@@ -71,7 +93,7 @@ public class Typeface implements Disposable {
 	long nativeTypeface;
 
     /**
-     * Creates a new typeface with the specified asset. The data of the font is not copied into the
+     * Creates a new typeface with the specified asset. The data of the asset is not copied into the
      * memory. Rather, it is directly read from the stream when needed. So the performance of
      * resulting typeface might be slower and should be used with precaution.
      *
@@ -132,8 +154,8 @@ public class Typeface implements Disposable {
     /**
      * Generates an array of bytes containing the data of the intended table.
      *
-     * @param tableTag The tag of the table as an integer. This can be created from string like
-     *                 <code>OpenTypeTag.make("math");</code>.
+     * @param tableTag The tag of the table as an integer. It can be created from string by using
+     *                 {@link OpenTypeTag#make(String)} method.
      * @return An array of bytes containing the data of the table, or <code>null</code> if no such
      *         table exists.
      */
@@ -191,9 +213,9 @@ public class Typeface implements Disposable {
 	}
 
     /**
-     * Returns the position, in font units, of the underline line for this typeface.
+     * Returns the position, in font units, of the underline for this typeface.
      *
-     * @return The position, in font units, of the underline line for this typeface.
+     * @return The position, in font units, of the underline for this typeface.
      */
 	public int getUnderlinePosition() {
 	    return nativeGetUnderlinePosition(nativeTypeface);

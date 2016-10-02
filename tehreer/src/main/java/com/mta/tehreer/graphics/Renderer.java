@@ -26,13 +26,29 @@ import android.util.Log;
 
 import com.mta.tehreer.text.TextDirection;
 
+/**
+ * The <code>Renderer</code> class represents a generic glyph renderer. It can be used to generate
+ * glyph paths, measure their bounding boxes and draw them on a <code>Canvas</code> object.
+ */
 public class Renderer {
 
     private static final String TAG = Renderer.class.getSimpleName();
 
+    /**
+     * Specifies the treatment for the beginning and ending of stroked lines and paths.
+     */
     public enum Cap {
+        /**
+         * The stroke ends with the path, and does not project beyond it.
+         */
         BUTT(GlyphRasterizer.LINECAP_BUTT),
+        /**
+         * The stroke projects out as a semicircle, with the center at the end of the path.
+         */
         ROUND(GlyphRasterizer.LINECAP_ROUND),
+        /**
+         * The stroke projects out as a square, with the center at the end of the path.
+         */
         SQUARE(GlyphRasterizer.LINECAP_SQUARE);
 
         private final int value;
@@ -42,10 +58,22 @@ public class Renderer {
         }
     }
 
+    /**
+     * Specifies the treatment where lines and curve segments join on a stroked path.
+     */
     public enum Join {
-        ROUND(GlyphRasterizer.LINEJOIN_ROUND),
+        /**
+         * The outer edges of a join meet with a straight line.
+         */
         BEVEL(GlyphRasterizer.LINEJOIN_BEVEL),
-        MITER(GlyphRasterizer.LINEJOIN_MITER);
+        /**
+         * The outer edges of a join meet at a sharp angle.
+         */
+        MITER(GlyphRasterizer.LINEJOIN_MITER),
+        /**
+         * The outer edges of a join meet in a circular arc.
+         */
+        ROUND(GlyphRasterizer.LINEJOIN_ROUND);
 
         private final int value;
 
@@ -54,10 +82,25 @@ public class Renderer {
         }
     }
 
+    /**
+     * Specifies if the primitive being drawn is filled, stroked, or both.
+     */
     public enum Style {
+        /**
+         * Glyphs drawn with this style will be filled, ignoring all stroke-related settings in the
+         * renderer.
+         */
         FILL,
-        STROKE,
+        /**
+         * Glyphs drawn with this style will be both filled and stroked at the same time, respecting
+         * the stroke-related settings in the renderer.
+         */
         FILL_STROKE,
+        /**
+         * Glyphs drawn with this style will be stroked, respecting the stroke-related settings in
+         * the renderer.
+         */
+        STROKE,
     }
 
     private GlyphStrike mGlyphStrike;
@@ -88,6 +131,9 @@ public class Renderer {
     private float mShadowDy;
     private int mShadowColor;
 
+    /**
+     * Constructs a renderer object.
+     */
     public Renderer() {
         mGlyphStrike = new GlyphStrike();
         mPaint = new Paint();
@@ -131,10 +177,24 @@ public class Renderer {
         }
     }
 
+    /**
+     * Returns this renderer's style, used for controlling how glyphs should appear while drawing.
+     * The default value is {@link Style#FILL}.
+     *
+     * @return The style setting of this renderer.
+     */
     public Style getRenderingStyle() {
         return mRenderingStyle;
     }
 
+    /**
+     * Sets this renderer's style, used for controlling how glyphs should appear while drawing. The
+     * default value is {@link Style#FILL}.
+     *
+     * @param renderingStyle The new style to set in the renderer.
+     *
+     * @throws NullPointerException if <code>renderingStyle</code> is null.
+     */
     public void setRenderingStyle(Style renderingStyle) {
     	if (renderingStyle == null) {
     		throw new NullPointerException("Rendering style is null");
@@ -143,48 +203,106 @@ public class Renderer {
         mRenderingStyle = renderingStyle;
     }
 
+    /**
+     * Returns this renderer's typeface, used for drawing glyphs.
+     *
+     * @return The typeface of this renderer.
+     */
     public Typeface getTypeface() {
         return mTypeface;
     }
 
+    /**
+     * Sets this renderer's typeface, used for drawing glyphs.
+     *
+     * @param typeface The typeface to use for drawing glyphs.
+     */
     public void setTypeface(Typeface typeface) {
         mTypeface = typeface;
         mGlyphStrike.typeface = typeface;
     }
 
+    /**
+     * Returns this renderer's text direction, used to move pen while drawing glyphs. The default
+     * value is {@link TextDirection#LEFT_TO_RIGHT}.
+     *
+     * @return The text direction of this renderer.
+     */
     public TextDirection getTextDirection() {
         return mTextDirection;
     }
 
+    /**
+     * Sets this renderer's text direction, used to move pen while drawing glyphs. The default value
+     * is {@link TextDirection#LEFT_TO_RIGHT}.
+     *
+     * @param textDirection The new text direction to set.
+     */
     public void setTextDirection(TextDirection textDirection) {
         mTextDirection = textDirection;
     }
 
+    /**
+     * Returns this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @return The text color of this renderer expressed as ARGB integer.
+     */
     public int getTextColor() {
         return mTextColor;
     }
 
+    /**
+     * Sets this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @param textColor The 32-bit value of color expressed as ARGB.
+     */
     public void setTextColor(int textColor) {
         mTextColor = textColor;
     }
 
+    /**
+     * Returns this renderer's text size, applied on glyphs while drawing.
+     *
+     * @return The text size of this renderer in pixels.
+     */
     public float getTextSize() {
         return mTextSize;
     }
 
+    /**
+     * Sets this renderer's text size, applied on glyphs while drawing.
+     *
+     * @param textSize The new text size in pixels.
+     *
+     * @throws IllegalArgumentException if <code>textSize</code> is negative.
+     */
     public void setTextSize(float textSize) {
         if (textSize < 0.0) {
-            throw new IllegalArgumentException("Size is negative");
+            throw new IllegalArgumentException("The value of text size is negative");
         }
 
         mTextSize = textSize;
         updatePixelSizes();
     }
 
+    /**
+     * Returns this renderer's horizontal scale factor for glyphs. The default value is 1.0.
+     *
+     * @return The horizontal scale factor of this renderer for drawing/measuring glyphs.
+     */
     public float getTextScaleX() {
         return mTextScaleX;
     }
 
+    /**
+     * Sets this renderer's horizontal scale factor for glyphs. The default value is 1.0. Values
+     * greater than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
+     * narrower.
+     *
+     * @param textScaleX The horizontal scale factor for drawing/measuring glyphs.
+     */
     public void setTextScaleX(float textScaleX) {
         if (textScaleX < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
@@ -194,10 +312,22 @@ public class Renderer {
         updatePixelSizes();
     }
 
+    /**
+     * Returns this renderer's vertical scale factor for glyphs. The default value is 1.0.
+     *
+     * @return The vertical scale factor of this renderer for drawing/measuring glyphs.
+     */
     public float getTextScaleY() {
         return mTextScaleY;
     }
 
+    /**
+     * Sets this renderer's vertical scale factor for glyphs. The default value is 1.0. Values
+     * greater than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
+     * narrower.
+     *
+     * @param textScaleY The vertical scale factor for drawing/measuring glyphs.
+     */
     public void setTextScaleY(float textScaleY) {
         if (textScaleY < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
@@ -207,27 +337,58 @@ public class Renderer {
         updatePixelSizes();
     }
 
+    /**
+     * Returns this renderer's horizontal skew factor for glyphs. The default value is 0.
+     *
+     * @return The horizontal skew factor of this renderer for drawing glyphs.
+     */
     public float getTextSkewX() {
         return mTextSkewX;
     }
 
+    /**
+     * Sets this renderer's horizontal skew factor for glyphs. The default value is 0.
+     *
+     * @param textSkewX The horizontal skew factor for drawing glyphs.
+     */
     public void setTextSkewX(float textSkewX) {
         mTextSkewX = textSkewX;
         updateTransform();
     }
 
+    /**
+     * Returns this renderer's stroke color for glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @return The stroke color of this renderer expressed as ARGB integer.
+     */
     public int getStrokeColor() {
         return mStrokeColor;
     }
 
+    /**
+     * Sets this renderer's stroke color for glyphs. The default value is <code>Color.BLACK</code>.
+     *
+     * @param strokeColor The 32-bit value of color expressed as ARGB.
+     */
     public void setStrokeColor(int strokeColor) {
         mStrokeColor = strokeColor;
     }
 
+    /**
+     * Returns this renderer's width for stroking glyphs.
+     *
+     * @return The stroke width of this renderer in pixels.
+     */
     public float getStrokeWidth() {
         return mStrokeWidth;
     }
 
+    /**
+     * Sets the width for stroking glyphs.
+     *
+     * @param strokeWidth The stroke width in pixels.
+     */
     public void setStrokeWidth(float strokeWidth) {
         if (strokeWidth < 0.0f) {
             throw new IllegalArgumentException("Stroke width is negative");
@@ -237,10 +398,24 @@ public class Renderer {
         mGlyphLineRadius = (int) ((strokeWidth * 64.0f / 2.0f) + 0.5f);
     }
 
+    /**
+     * Returns this renderer's cap, controlling how the start and end of stroked lines and paths are
+     * treated. The default value is {@link Cap#BUTT}.
+     *
+     * @return The stroke cap style of this renderer.
+     */
     public Cap getStrokeCap() {
         return mStrokeCap;
     }
 
+    /**
+     * Sets this renderer's cap, controlling how the start and end of stroked lines and paths are
+     * treated.  The default value is {@link Cap#BUTT}.
+     *
+     * @param strokeCap The new stroke cap style.
+     *
+     * @throws NullPointerException if <code>strokeCap</code> is null.
+     */
     public void setStrokeCap(Cap strokeCap) {
         if (strokeCap == null) {
             throw new NullPointerException("Stroke cap is null");
@@ -250,10 +425,22 @@ public class Renderer {
         mGlyphLineCap = strokeCap.value;
     }
 
+    /**
+     * Returns this renderer's stroke join type. The default value is {@link Join#ROUND}.
+     *
+     * @return The stroke join type of this renderer.
+     */
     public Join getStrokeJoin() {
         return mStrokeJoin;
     }
 
+    /**
+     * Sets this renderer's stroke join type. The default value is {@link Join#ROUND}.
+     *
+     * @param strokeJoin The new stroke join type.
+     *
+     * @throws NullPointerException if <code>strokeJoin</code> is null.
+     */
     public void setStrokeJoin(Join strokeJoin) {
         if (strokeJoin == null) {
             throw new NullPointerException("Stroke join is null");
@@ -263,10 +450,24 @@ public class Renderer {
         mGlyphLineJoin = strokeJoin.value;
     }
 
+    /**
+     * Returns this renderer's stroke miter value. Used to control the behavior of miter joins when
+     * the joins angle is sharp.
+     *
+     * @return The miter limit of this renderer in pixels.
+     */
     public float getStrokeMiter() {
         return mStrokeMiter;
     }
 
+    /**
+     * Sets this renderer's stroke miter value. This is used to control the behavior of miter joins
+     * when the joins angle is sharp.
+     *
+     * @param strokeMiter The value of miter limit in pixels.
+     *
+     * @throws IllegalArgumentException if <code>strokeMiter</code> is less than one.
+     */
     public void setStrokeMiter(float strokeMiter) {
         if (strokeMiter < 1.0f) {
             throw new IllegalArgumentException("Stroke miter is less than one");
@@ -276,10 +477,23 @@ public class Renderer {
         mGlyphMiterLimit = (int) ((strokeMiter * 0x10000) + 0.5f);
     }
 
+    /**
+     * Returns this renderer's shadow radius, used when drawing glyphs. The default value is zero.
+     *
+     * @return The shadow radius of this renderer in pixels.
+     */
     public float getShadowRadius() {
         return mShadowRadius;
     }
 
+    /**
+     * Sets this renderer's shadow radius. The default value is zero. The shadow is disabled if the
+     * radius is set to zero.
+     *
+     * @param shadowRadius The value of shadow radius in pixels.
+     *
+     * @throws IllegalArgumentException if <code>shadowRadius</code> is negative.
+     */
     public void setShadowRadius(float shadowRadius) {
         if (shadowRadius < 0.0f) {
             throw new IllegalArgumentException("Shadow radius is negative");
@@ -289,28 +503,58 @@ public class Renderer {
         mShadowLayerSynced = false;
     }
 
+    /**
+     * Returns this renderer's horizontal shadow offset.
+     *
+     * @return The horizontal shadow offset of this renderer in pixels.
+     */
     public float getShadowDx() {
         return mShadowDx;
     }
 
+    /**
+     * Sets this renderer's horizontal shadow offset.
+     *
+     * @param shadowDx The value of horizontal shadow offset in pixels.
+     */
     public void setShadowDx(float shadowDx) {
         mShadowDx = shadowDx;
         mShadowLayerSynced = false;
     }
 
+    /**
+     * Returns this renderer's vertical shadow offset.
+     *
+     * @return The vertical shadow offset of this renderer in pixels.
+     */
     public float getShadowDy() {
         return mShadowDy;
     }
 
+    /**
+     * Sets this renderer's vertical shadow offset.
+     *
+     * @param shadowDy The value of vertical shadow offset in pixels.
+     */
     public void setShadowDy(float shadowDy) {
         mShadowDy = shadowDy;
         mShadowLayerSynced = false;
     }
 
+    /**
+     * Returns this renderer's shadow color.
+     *
+     * @return The shadow color of this renderer expressed as ARGB integer.
+     */
     public int getShadowColor() {
         return mShadowColor;
     }
 
+    /**
+     * Sets this renderer's shadow color.
+     *
+     * @param shadowColor The 32-bit value of color expressed as ARGB.
+     */
     public void setShadowColor(int shadowColor) {
         mShadowColor = shadowColor;
         mShadowLayerSynced = false;
@@ -320,6 +564,12 @@ public class Renderer {
         return GlyphCache.getInstance().getGlyphPath(mGlyphStrike, glyphId);
     }
 
+    /**
+     * Generates the path of the specified glyph.
+     *
+     * @param glyphId The id of glyph whose path is generated.
+     * @return The path of the glyph specified by <code>glyphId</code>.
+     */
     public Path generatePath(int glyphId) {
         Path glyphPath = new Path();
         glyphPath.addPath(getGlyphPath(glyphId));
@@ -327,6 +577,17 @@ public class Renderer {
         return glyphPath;
     }
 
+    /**
+     * Generates a cumulative path of the glyphs in specified range.
+     *
+     * @param glyphIds The array containing the glyph ids.
+     * @param xOffsets The array containing the glyph x- offsets.
+     * @param yOffsets The array containing the glyph y- offsets.
+     * @param advances The array containing the glyph advances.
+     * @param fromIndex The index of the first element (inclusive) to process.
+     * @param toIndex The index of the last element (exclusive) to process.
+     * @return The cumulative path of the glyphs in specified range.
+     */
     public Path generatePath(int[] glyphIds,
                              float[] xOffsets, float[] yOffsets, float[] advances,
                              int fromIndex, int toIndex) {
@@ -354,6 +615,12 @@ public class Renderer {
         boundingBox.set(glyph.left(), glyph.top(), glyph.right(), glyph.bottom());
     }
 
+    /**
+     * Calculates the bounding box of specified glyph.
+     *
+     * @param glyphId The id of glyph whose bounding box is calculated.
+     * @return A rectangle that tightly encloses the path of the specified glyph.
+     */
     public RectF computeBoundingBox(int glyphId) {
         RectF boundingBox = new RectF();
         copyBoundingBox(glyphId, boundingBox);
@@ -361,11 +628,31 @@ public class Renderer {
         return boundingBox;
     }
 
+    /**
+     * Calculates the bounding box of the glyphs.
+     *
+     * @param glyphIds The array containing the glyph ids.
+     * @param xOffsets The array containing the glyph x- offsets.
+     * @param yOffsets The array containing the glyph y- offsets.
+     * @param advances The array containing the glyph advances.
+     * @return A rectangle that tightly encloses the paths of glyphs.
+     */
     public RectF computeBoundingBox(int[] glyphIds,
                                     float[] xOffsets, float[] yOffsets, float[] advances) {
         return computeBoundingBox(glyphIds, xOffsets, yOffsets, advances, 0, glyphIds.length);
     }
 
+    /**
+     * Calculates the bounding box of the glyphs in specified range.
+     *
+     * @param glyphIds The array containing the glyph ids.
+     * @param xOffsets The array containing the glyph x- offsets.
+     * @param yOffsets The array containing the glyph y- offsets.
+     * @param advances The array containing the glyph advances.
+     * @param fromIndex The index of the first element (inclusive) to process
+     * @param toIndex The index of the last element (exclusive) to process
+     * @return A rectangle that tightly encloses the paths of glyphs in the specified range.
+     */
     public RectF computeBoundingBox(int[] glyphIds,
                                     float[] xOffsets, float[] yOffsets, float[] advances,
                                     int fromIndex, int toIndex) {
@@ -422,6 +709,18 @@ public class Renderer {
         }
     }
 
+    /**
+     * Draws the glyphs in specified range onto the given canvas. The shadow will not be drawn if
+     * the canvas is hardware accelerated.
+     *
+     * @param canvas The canvas onto which to draw the glyphs.
+     * @param glyphIds The array containing the glyph ids.
+     * @param xOffsets The array containing the glyph x- offsets.
+     * @param yOffsets The array containing the glyph y- offsets.
+     * @param advances The array containing the glyph advances.
+     * @param fromIndex The index of the first element (inclusive) to draw.
+     * @param toIndex The index of the last element (exclusive) to draw.
+     */
     public void drawGlyphs(Canvas canvas,
                            int[] glyphIds, float[] xOffsets, float[] yOffsets, float[] advances,
                            int fromIndex, int toIndex) {

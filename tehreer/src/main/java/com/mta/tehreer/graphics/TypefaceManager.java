@@ -20,11 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * The <code>TypefaceManager</code> class provides management activities related to typefaces.
+ * <p>
  * In general, a typeface is not automatically cached due to the fact that it might be only used in
  * specific scenarios. Caching every typeface that is created can lead to severe memory penalties.
- * <code>TypefaceManager</code> class provides management activities related to typefaces. The
- * typefaces that are intended to be shared in multiple screens should be registered here so that
- * they can be easily accessed afterwards.
+ * <p>
+ * The typefaces that are intended to be shared across multiple screens should be registered in
+ * <code>TypefaceManager</code> so that they can be easily accessed afterwards.
  */
 public class TypefaceManager {
 
@@ -55,7 +57,7 @@ public class TypefaceManager {
             }
 
             if (TYPEFACE_MAP.containsKey(typefaceTag)) {
-                throw new IllegalArgumentException("A typeface is already registered for tag: " + typefaceTag);
+                throw new IllegalArgumentException("A different typeface is already registered for tag: " + typefaceTag);
             }
 
             TYPEFACE_MAP.put(typefaceTag, typeface);
