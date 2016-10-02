@@ -103,6 +103,9 @@ public class OpenTypeArtist implements Disposable {
     private final Base base;
     long nativeArtist;
 
+    /**
+     * Constructs an open type artist object.
+     */
     public OpenTypeArtist() {
         base = new Base();
         nativeArtist = nativeCreate();
