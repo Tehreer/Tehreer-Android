@@ -14,22 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
-
 /**
- * Specifies the rendering direction of text.
+ * Provides the classes necessary to typeset simple or spanned text.
  */
-public enum TextDirection {
-    /**
-     * Text is rendered in default direction of script as determined by the shaping engine.
-     */
-	DEFAULT,
-    /**
-     * Text is rendered from left-to-right.
-     */
-	LEFT_TO_RIGHT,
-    /**
-     * Text is rendered from right-to-left.
-     */
-	RIGHT_TO_LEFT,
-}
+package com.mta.tehreer.text;

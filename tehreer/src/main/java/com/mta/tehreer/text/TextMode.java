@@ -16,7 +16,16 @@
 
 package com.mta.tehreer.text;
 
+/**
+ * Specifies text's flow mode in memory.
+ */
 public enum TextMode {
+    /**
+     * Text flows in forward mode starting from index zero (inclusive) to length (exclusive).
+     */
     FORWARD,
+    /**
+     * Text flows in backward mode starting from index length (exclusive) to zero (inclusive).
+     */
     BACKWARD,
 }

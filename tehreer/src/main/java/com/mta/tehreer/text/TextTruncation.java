@@ -16,12 +16,33 @@
 
 package com.mta.tehreer.text;
 
+/**
+ * Specifies the truncation type of text.
+ */
 public enum TextTruncation {
+    /**
+     * Text is truncated at the start of the line using word break mode.
+     */
     WORD_START,
+    /**
+     * Text is truncated at the middle of the line using word break mode.
+     */
     WORD_MIDDLE,
+    /**
+     * Text is truncated at the end of the line using word break mode.
+     */
     WORD_END,
+    /**
+     * Text is truncated at the start of the line using character break mode.
+     */
     CHARACTER_START,
+    /**
+     * Text is truncated at the middle of the line using character break mode.
+     */
     CHARACTER_MIDDLE,
+    /**
+     * Text is truncated at the end of the line using character break mode.
+     */
     CHARACTER_END;
 
     private static final int MASK_PLACE = 0x0F;

@@ -23,6 +23,10 @@ import com.mta.tehreer.graphics.Renderer;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a frame containing multiple lines of text. The frame object is the output resulting
+ * from the text-framing process performed by a typesetter object.
+ */
 public class TextFrame {
 
     private int mCharStart;
@@ -63,7 +67,7 @@ public class TextFrame {
     }
 
     /**
-     * Draws this frame onto the given <code>Canvas</code> using the given <code>Renderer</code>.
+     * Draws this frame onto the given <code>canvas</code> using the given <code>renderer</code>.
      *
      * @param renderer The renderer to use for drawing this frame.
      * @param canvas The canvas onto which to draw this frame.
@@ -76,5 +80,26 @@ public class TextFrame {
             textLine.draw(renderer, canvas, textLine.getOriginX(), textLine.getOriginY());
             canvas.translate(-x, -y);
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder linesBuilder = new StringBuilder();
+        linesBuilder.append("[");
+
+        int runCount = mLineList.size();
+        for (int i = 0; i < runCount; i++) {
+            linesBuilder.append(mLineList.get(i).toString());
+            if (i < runCount - 1) {
+                linesBuilder.append(", ");
+            }
+        }
+
+        linesBuilder.append("]");
+
+        return "TextFrame{charStart=" + mCharStart
+                + ", charEnd=" + mCharEnd
+                + ", lines=" + linesBuilder.toString()
+                + "}";
     }
 }

@@ -43,6 +43,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Represents a typesetter which performs text layout. It can be used to create lines, perform line
+ * breaking, and do other contextual analysis based on the characters in the string.
+ */
 public class TextTypesetter implements Disposable {
 
     private static final float DEFAULT_FONT_SIZE = 16.0f;
@@ -107,6 +111,15 @@ public class TextTypesetter implements Disposable {
         this.base = other.base;
     }
 
+    /**
+     * Constructs the typesetter object using given text, typeface and font size.
+     *
+     * @param text The text to typeset.
+     * @param typeface The typeface to use.
+     * @param fontSize The font size to apply.
+     *
+     * @throws IllegalArgumentException if <code>text</code> is null or empty, or typeface is null
+     */
 	public TextTypesetter(String text, Typeface typeface, float fontSize) {
         if (text == null || text.length() == 0) {
             throw new IllegalArgumentException("Text is null or empty");
@@ -120,6 +133,13 @@ public class TextTypesetter implements Disposable {
         init(text, spanned);
 	}
 
+    /**
+     * Constructs the typesetter object using a spanned text.
+     *
+     * @param spanned The spanned text to typeset.
+     *
+     * @throws IllegalArgumentException if <code>spanned</code> is null or empty
+     */
     public TextTypesetter(Spanned spanned) {
         if (spanned == null || spanned.length() == 0) {
             throw new IllegalArgumentException("Spanned text is null or empty");
@@ -520,6 +540,22 @@ public class TextTypesetter implements Disposable {
         return -1;
     }
 
+    /**
+     * Suggests a typographic character line break index based on the width provided. This can be
+     * used by the caller to implement a different line breaking scheme, such as hyphenation.
+     *
+     * @param charStart The starting index for the typographic character break calculations.
+     * @param maxWidth The requested typographic character break width.
+     * @return The index (exclusive) that would cause the character break.
+     *
+     * @throws IllegalArgumentException if any of the following is true:
+     *         <ul>
+     *             <li><code>charStart</code> is negative</li>
+     *             <li><code>charStart</code> is greater than or equal to the length of source
+     *                 text</li>
+     *             <li><code>maxWidth</code> is less than or equal to zero</li>
+     *         </ul>
+     */
     public int suggestCharBoundary(int charStart, float maxWidth) {
         if (charStart < 0 || charStart >= base.text.length()) {
             throw new IndexOutOfBoundsException("Char Start: " + charStart);
@@ -531,9 +567,28 @@ public class TextTypesetter implements Disposable {
         return suggestForwardCharBreak(charStart, base.text.length(), maxWidth);
     }
 
+    /**
+     * Suggests a contextual line break index based on the width provided.
+     *
+     * @param charStart The starting index for the line break calculations.
+     * @param maxWidth The requested line break width.
+     * @return The index (exclusive) that would cause the line break.
+     *
+     * @throws IllegalArgumentException if any of the following is true:
+     *         <ul>
+     *             <li><code>charStart</code> is negative</li>
+     *             <li><code>charStart</code> is greater than or equal to the length of source
+     *                 text</li>
+     *             <li><code>maxWidth</code> is less than or equal to zero</li>
+     *         </ul>
+     */
     public int suggestLineBoundary(int charStart, float maxWidth) {
-        if (charStart < 0 || charStart >= base.text.length()) {
-            throw new IndexOutOfBoundsException("Char Start: " + charStart);
+        if (charStart < 0) {
+            throw new IllegalArgumentException("Char Start: " + charStart);
+        }
+        if (charStart > base.text.length()) {
+            throw new IllegalArgumentException("Char Start: " + charStart
+                                               + ", Text Length: " + base.text.length());
         }
         if (maxWidth <= 0.0f) {
             throw new IllegalArgumentException("Max Width: " + maxWidth);
@@ -542,6 +597,17 @@ public class TextTypesetter implements Disposable {
         return suggestForwardLineBreak(charStart, base.text.length(), maxWidth);
     }
 
+    /**
+     * Creates a line of specified string range.
+     *
+     * @param charStart The index to first character of the line in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @return The new line object.
+     *
+     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
+     *         <code>charEnd</code> is greater than the length of source text, or
+     *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
+     */
 	public TextLine createSimpleLine(int charStart, int charEnd) {
         verifyTextRange(charStart, charEnd);
 
@@ -551,6 +617,32 @@ public class TextTypesetter implements Disposable {
 		return new TextLine(base.text, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
 	}
 
+    /**
+     * Creates a line of specified string range, truncating it if it overflows the max width.
+     *
+     * @param charStart The index to first character of the line in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @param maxWidth The width at which truncation will begin. The line will be truncated if its
+     *                 width is greater than the width passed in this.
+     * @param truncationType The type of truncation to perform if needed.
+     * @param truncationToken This token will be added to the point where truncation took place to
+     *                        indicate that the line was truncated. Usually, the truncation token is
+     *                        the ellipsis character (U+2026). The line specified in
+     *                        <code>truncationToken</code> should have a width less than the width
+     *                        specified by the <code>maxWidth</code> parameter.
+     * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
+     *
+     * @throws NullPointerException if <code>truncationType</code> is null, or
+     *         <code>truncationToken</code> is null
+     * @throws IllegalArgumentException if any of the following is true:
+     *         <ul>
+     *             <li><code>charStart</code> is negative</li>
+     *             <li><code>charEnd</code> is greater than the length of source text</li>
+     *             <li><code>charStart</code> is greater than of equal to <code>charEnd</code></li>
+     *             <li><code>maxWidth</code> is less than the width of line specified in
+     *                 <code>truncationToken</code></li>
+     *         </ul>
+     */
     public TextLine createTruncatedLine(int charStart, int charEnd, float maxWidth, TextTruncation truncationType, TextLine truncationToken) {
         verifyTextRange(charStart, charEnd);
         if (truncationType == null) {
@@ -828,6 +920,17 @@ public class TextTypesetter implements Disposable {
         } while (visualStart != visualEnd);
     }
 
+    /**
+     * Creates a frame full of lines in the rectangle provided by the <code>frameRect</code>
+     * parameter. The typesetter will continue to fill the frame until it either runs out of text or
+     * it finds that text no longer fits.
+     *
+     * @param charStart The index to first character of the frame in source text.
+     * @param charEnd The index after the last character of the frame in source text.
+     * @param frameRect The rectangle specifying the frame to fill.
+     * @param textAlignment The horizontal text alignment of the lines in frame.
+     * @return The new frame object.
+     */
     public TextFrame createFrame(int charStart, int charEnd, RectF frameRect, TextAlignment textAlignment) {
         verifyTextRange(charStart, charEnd);
         if (frameRect.isEmpty()) {

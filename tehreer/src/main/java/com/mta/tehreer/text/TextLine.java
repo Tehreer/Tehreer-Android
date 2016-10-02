@@ -24,6 +24,9 @@ import com.mta.tehreer.text.internal.util.StringUtils;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a line of text consisting of an array of <code>TextRun</code> objects in visual order.
+ */
 public class TextLine {
 
 	private int mCharStart;
@@ -163,6 +166,16 @@ public class TextLine {
         return mRunList;
     }
 
+    /**
+     * Returns the pen offset required to draw flush text.
+     *
+     * @param flushFactor Specifies the kind of flushness. A flush factor of 0 or less indicates
+     *                    left flush. A flushFactor of 1.0 or more indicates right flush. Flush
+     *                    factors between 0 and 1.0 indicate varying degrees of center flush, with a
+     *                    value of 0.5 being totally center flush.
+     * @param flushWidth Specifies the width that the flushness operation should apply to.
+     * @return A value which can be used to offset the current pen position for the flush operation.
+     */
     public float getFlushPenOffset(float flushFactor, float flushWidth) {
         float penOffset = (flushWidth - (mWidth - mTrailingWhitespaceWidth)) * flushFactor;
         if ((mParagraphLevel & 1) == 1) {
@@ -173,8 +186,7 @@ public class TextLine {
     }
 
     /**
-     * Draws this line completely in the given <code>Canvas</code> using the given
-     * <code>Renderer</code>.
+     * Draws this line onto the given <code>canvas</code> using the given <code>renderer</code>.
      *
      * @param renderer The renderer to use for drawing this line.
      * @param canvas The canvas onto which to draw this line.

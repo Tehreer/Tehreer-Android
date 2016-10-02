@@ -21,6 +21,10 @@ import android.graphics.RectF;
 
 import com.mta.tehreer.graphics.Renderer;
 
+/**
+ * A <code>TextRun</code> object is a collection of consecutive glyphs sharing the same attributes
+ * and direction.
+ */
 public class TextRun {
 
     private GlyphRun mGlyphRun;
@@ -119,7 +123,7 @@ public class TextRun {
      * @return The glyph id at the specified index in this run.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
     public int getGlyphId(int glyphIndex) {
         verifyGlyphIndex(glyphIndex);
@@ -133,7 +137,7 @@ public class TextRun {
      * @return The glyph's x- offset at the specified index in this run.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
     public float getGlyphXOffset(int glyphIndex) {
         verifyGlyphIndex(glyphIndex);
@@ -147,7 +151,7 @@ public class TextRun {
      * @return The glyph's y- offset at the specified index in this run.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
     public float getGlyphYOffset(int glyphIndex) {
         verifyGlyphIndex(glyphIndex);
@@ -155,13 +159,13 @@ public class TextRun {
     }
 
     /**
-     * Returns the glyph's advance at the specified index in this album.
+     * Returns the glyph's advance at the specified index in this run.
      *
      * @param glyphIndex The index of the glyph record.
-     * @return The glyph's advance at the specified index in this album.
+     * @return The glyph's advance at the specified index in this run.
      *
      * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to <code>getGlyphCount()</code>
+     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
      */
     public float getGlyphAdvance(int glyphIndex) {
         verifyGlyphIndex(glyphIndex);
@@ -177,7 +181,7 @@ public class TextRun {
      *         source text.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         <code>getCharStart()</code>, or greater than or equal to <code>getCharEnd()</code>
+     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
      */
     public int getCharGlyphStart(int charIndex) {
         verifyCharIndex(charIndex);
@@ -193,7 +197,7 @@ public class TextRun {
      *         in source text.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         <code>getCharStart()</code>, or greater than or equal to <code>getCharEnd()</code>
+     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
      */
     public int getCharGlyphEnd(int charIndex) {
         verifyCharIndex(charIndex);
@@ -280,6 +284,10 @@ public class TextRun {
      * @param glyphStart The index to the first glyph being measured.
      * @param glyphEnd The index after the last glyph being measured.
      * @return A rectangle that tightly encloses the paths of this run's glyphs in the given range.
+     *
+     * @throws IllegalArgumentException if <code>glyphStart</code> is negative, or
+     *         <code>glyphEnd</code> is greater than total number of glyphs in the run, or
+     *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public RectF computeBoundingBox(Renderer renderer, int glyphStart, int glyphEnd) {
 	    verifyGlyphRange(glyphStart, glyphEnd);
@@ -293,24 +301,28 @@ public class TextRun {
 	}
 
     /**
-     * Draws this run completely in the given <code>Canvas</code> using the given
-     * <code>Renderer</code>.
+     * Draws this run completely onto the given <code>canvas</code> using the given
+     * <code>renderer</code>.
      *
      * @param renderer The renderer to use for drawing this run.
-     * @param canvas The canvas into which to draw this run.
+     * @param canvas The canvas onto which to draw this run.
      */
 	public void draw(Renderer renderer, Canvas canvas) {
 	    draw(renderer, canvas, 0, mGlyphCount);
 	}
 
     /**
-     * Draws a part of this run in the given <code>Canvas</code> using the given
-     * <code>Renderer</code>.
+     * Draws a part of this run onto the given <code>canvas</code> using the given
+     * <code>renderer</code>.
      *
      * @param renderer The renderer to use for drawing this run.
-     * @param canvas The canvas into which to draw this run.
+     * @param canvas The canvas onto which to draw this run.
      * @param glyphStart The index to the first glyph being drawn.
      * @param glyphEnd The index after the last glyph being drawn.
+     *
+     * @throws IllegalArgumentException if <code>glyphStart</code> is negative, or
+     *         <code>glyphEnd</code> is greater than total number of glyphs in the run, or
+     *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public void draw(Renderer renderer, Canvas canvas, int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
