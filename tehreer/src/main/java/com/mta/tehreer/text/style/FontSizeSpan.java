@@ -16,14 +16,27 @@
 
 package com.mta.tehreer.text.style;
 
+/**
+ * The <code>FontSizeSpan</code> class represents a span for specifying absolute font size.
+ */
 public class FontSizeSpan extends TehreerSpan {
 
     private final float size;
 
+    /**
+     * Constructs a font size span object.
+     *
+     * @param size The absolute font size in pixels.
+     */
     public FontSizeSpan(float size) {
         this.size = size;
     }
 
+    /**
+     * Returns this span's font size.
+     *
+     * @return The font size of this span.
+     */
     public float getSize() {
         return size;
     }

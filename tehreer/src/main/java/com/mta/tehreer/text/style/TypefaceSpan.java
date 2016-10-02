@@ -18,14 +18,27 @@ package com.mta.tehreer.text.style;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * The <code>TypefaceSpan</code> class represents a span for specifying custom typeface.
+ */
 public class TypefaceSpan extends TehreerSpan {
 
     private final Typeface typeface;
 
+    /**
+     * Constructs a typeface span object.
+     *
+     * @param typeface The typeface object.
+     */
     public TypefaceSpan(Typeface typeface) {
         this.typeface = typeface;
     }
 
+    /**
+     * Returns this span's typeface.
+     *
+     * @return The typeface of this span.
+     */
     public Typeface getTypeface() {
         return typeface;
     }

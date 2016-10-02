@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text.style;
-
 /**
- * The abstract base class for all the spans provided by Tehreer library.
+ * Provides classes for spans supported by Tehreer library.
  */
-public abstract class TehreerSpan {
-}
+package com.mta.tehreer.text.style;
