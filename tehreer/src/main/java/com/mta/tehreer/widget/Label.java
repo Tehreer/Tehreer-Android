@@ -244,7 +244,7 @@ public class Label extends View {
     private void ensureTruncationToken() {
         if (mTruncationToken == null) {
             TextTypesetter tokenTypesetter = new TextTypesetter(TRUNCATION_STRING, getTypeface(), getTextSize());
-            mTruncationToken = tokenTypesetter.createSimpleLine(0, TRUNCATION_STRING.length());
+            mTruncationToken = tokenTypesetter.createLine(0, TRUNCATION_STRING.length());
             tokenTypesetter.dispose();
         }
     }
@@ -260,7 +260,7 @@ public class Label extends View {
             int lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
 
             // Add first line even if layout height is smaller than its height.
-            TextLine textLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
+            TextLine textLine = mTypesetter.createLine(lineStart, lineEnd);
             mTextLines.add(textLine);
 
             // Setup text width and height based on first line.
@@ -275,7 +275,7 @@ public class Label extends View {
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
                 lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
-                textLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
+                textLine = mTypesetter.createLine(lineStart, lineEnd);
 
                 float lineWidth = textLine.getWidth();
                 float lineHeight = getLineHeight(textLine);

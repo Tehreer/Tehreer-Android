@@ -608,7 +608,7 @@ public class TextTypesetter implements Disposable {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-	public TextLine createSimpleLine(int charStart, int charEnd) {
+	public TextLine createLine(int charStart, int charEnd) {
         verifyTextRange(charStart, charEnd);
 
         ArrayList<TextRun> lineRuns = new ArrayList<>();
@@ -746,7 +746,7 @@ public class TextTypesetter implements Disposable {
             return new TextLine(base.text, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
         }
 
-        return createSimpleLine(truncatedStart, charEnd);
+        return createLine(truncatedStart, charEnd);
     }
 
     private TextLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
@@ -773,7 +773,7 @@ public class TextTypesetter implements Disposable {
             return new TextLine(base.text, charStart, charEnd, runList, getCharParagraphLevel(charStart));
         }
 
-        return createSimpleLine(charStart, charEnd);
+        return createLine(charStart, charEnd);
     }
 
     private class EndTruncationHandler extends BidiRunConsumer {
@@ -848,7 +848,7 @@ public class TextTypesetter implements Disposable {
             return new TextLine(base.text, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
         }
 
-        return createSimpleLine(charStart, truncatedEnd);
+        return createLine(charStart, truncatedEnd);
     }
 
     private void addTruncationTokenRuns(TextLine truncationToken, ArrayList<TextRun> runList, int insertIndex) {
@@ -964,7 +964,7 @@ public class TextTypesetter implements Disposable {
 
         while (lineStart != charEnd) {
             int lineEnd = suggestLineBoundary(lineStart, frameWidth);
-            TextLine textLine = createSimpleLine(lineStart, lineEnd);
+            TextLine textLine = createLine(lineStart, lineEnd);
 
             float lineX = textLine.getFlushPenOffset(flushFactor, frameWidth);
             float lineAscent = textLine.getAscent();
