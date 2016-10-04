@@ -72,6 +72,19 @@ public class TextTypesetter implements Disposable {
         }
     }
 
+    /**
+     * Wraps a typesetter object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
+     * <code>dispose()</code> should not be called on either original object or returned object.
+     * Calling <code>dispose()</code> on returned object will throw an
+     * <code>UnsupportedOperationException</code>.
+     * <p>
+     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
+     * as a parameter.
+     *
+     * @param textTypesetter The typesetter object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in typesetter object.
+     */
     public static TextTypesetter finalizable(TextTypesetter textTypesetter) {
         if (textTypesetter.getClass() == TextTypesetter.class) {
             return new Finalizable(textTypesetter);
@@ -84,6 +97,13 @@ public class TextTypesetter implements Disposable {
         return textTypesetter;
     }
 
+    /**
+     * Checks whether a typesetter object is finalizable or not.
+     *
+     * @param textTypesetter The typesetter object to check.
+     * @return <code>true</code> if the passed-in typesetter object is finalizable,
+     *         <code>false</code> otherwise.
+     */
     public static boolean isFinalizable(TextTypesetter textTypesetter) {
         return (textTypesetter.getClass() == Finalizable.class);
     }
