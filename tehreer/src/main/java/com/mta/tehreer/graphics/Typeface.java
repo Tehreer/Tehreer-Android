@@ -65,7 +65,7 @@ public class Typeface implements Disposable {
      * as a parameter.
      *
      * @param typeface The typeface object to wrap into a finalizable instance.
-     * @return The finalizable instance of the passed-in open typeface object.
+     * @return The finalizable instance of the passed-in typeface object.
      */
     public static Typeface finalizable(Typeface typeface) {
         if (typeface.getClass() == Typeface.class) {
