@@ -108,7 +108,7 @@ public class Label extends View {
             setTextColor(values.getInteger(R.styleable.Label_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.Label_textSize, 16));
             setText(values.getString(R.styleable.Label_text));
-            setTypeface(values.getInteger(R.styleable.Label_typeface, 0));
+            setTypeface(values.getString(R.styleable.Label_typeface));
         } finally {
             values.recycle();
         }
@@ -419,10 +419,10 @@ public class Label extends View {
     /**
      * Sets the typeface in which the text should be displayed.
      *
-     * @param typefaceTag The tag of the typeface registered in <code>TypefaceManager</code>.
+     * @param tag The tag of the typeface registered in <code>TypefaceManager</code>.
      */
-    private void setTypeface(int typefaceTag) {
-        setTypeface(TypefaceManager.getTypeface(typefaceTag));
+    private void setTypeface(Object tag) {
+        setTypeface(TypefaceManager.getTypeface(tag));
     }
 
     /**

@@ -28,6 +28,6 @@
             <enum name="start" value="1"/>
             <enum name="middle" value="2"/>
         </attr>
-        <attr name="typeface" format="integer" />
+        <attr name="typeface" format="string" />
     </declare-styleable>
 </resources>

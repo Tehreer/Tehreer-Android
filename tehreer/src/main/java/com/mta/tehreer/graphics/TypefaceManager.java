@@ -30,20 +30,23 @@ import java.util.Map;
  */
 public class TypefaceManager {
 
-    private static final HashMap<Integer, Typeface> TYPEFACE_MAP = new HashMap<>();
+    private static final HashMap<Object, Typeface> TYPEFACE_MAP = new HashMap<>();
 
     /**
      * Registers a typeface against a specified tag in <code>TypefaceManager</code>.
      *
-     * @param typefaceTag The tag to identify the typeface.
+     * @param tag The tag to identify the typeface.
      * @param typeface The finalizable instance of the typeface.
      *
-     * @throws NullPointerException is <code>typeface</code> is null.
+     * @throws NullPointerException if <code>tag</code> is null or <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not finalizable, or
      *         <code>typeface</code> is already registered for a different tag, or another typeface
-     *         is registered for <code>typefaceTag</code>.
+     *         is registered for specified <code>tag</code>.
      */
-    public static void registerTypeface(int typefaceTag, Typeface typeface) {
+    public static void registerTypeface(Object tag, Typeface typeface) {
+        if (tag == null) {
+            throw new NullPointerException("Tag is null");
+        }
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -56,11 +59,11 @@ public class TypefaceManager {
                 throw new IllegalArgumentException("This typeface is already registered for a different tag");
             }
 
-            if (TYPEFACE_MAP.containsKey(typefaceTag)) {
-                throw new IllegalArgumentException("A different typeface is already registered for tag: " + typefaceTag);
+            if (TYPEFACE_MAP.containsKey(tag)) {
+                throw new IllegalArgumentException("A different typeface is already registered for tag: " + tag);
             }
 
-            TYPEFACE_MAP.put(typefaceTag, typeface);
+            TYPEFACE_MAP.put(tag, typeface);
         }
     }
 
@@ -79,9 +82,9 @@ public class TypefaceManager {
         }
 
         synchronized (TYPEFACE_MAP) {
-            Integer tag = null;
+            Object tag = null;
 
-            for (Map.Entry<Integer, Typeface> entry : TYPEFACE_MAP.entrySet()) {
+            for (Map.Entry<Object, Typeface> entry : TYPEFACE_MAP.entrySet()) {
                 if (entry.getValue().equals(typeface)) {
                     tag = entry.getKey();
                 }
@@ -98,13 +101,13 @@ public class TypefaceManager {
     /**
      * Returns the typeface registered against the specified tag.
      *
-     * @param typefaceTag The tag to identify the typeface.
+     * @param tag The tag to identify the typeface.
      * @return The registered typeface, or <code>null</code> if no typeface is registered against
      *         the specified tag.
      */
-    public static Typeface getTypeface(int typefaceTag) {
+    public static Typeface getTypeface(Object tag) {
         synchronized (TYPEFACE_MAP) {
-            return TYPEFACE_MAP.get(typefaceTag);
+            return TYPEFACE_MAP.get(tag);
         }
     }
 }

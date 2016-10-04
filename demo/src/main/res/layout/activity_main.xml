@@ -39,7 +39,7 @@
             app:text="@string/article_detail"
             app:textColor="@android:color/black"
             app:textSize="18sp"
-            app:typeface="@integer/typeface_taj_nastaleeq"/>
+            app:typeface="@string/typeface_taj_nastaleeq"/>
     </ScrollView>
 
     <TextView

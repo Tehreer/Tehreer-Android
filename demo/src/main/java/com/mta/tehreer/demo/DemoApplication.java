@@ -39,10 +39,10 @@ public class DemoApplication extends Application {
         System.loadLibrary("tehreer");
 
         Resources resources = getResources();
-        registerTypeface(ASSET_TAJ_NASTALEEQ, resources.getInteger(R.integer.typeface_taj_nastaleeq));
+        registerTypeface(ASSET_TAJ_NASTALEEQ, resources.getString(R.string.typeface_taj_nastaleeq));
     }
 
-    private void registerTypeface(String fileName, int tag) {
+    private void registerTypeface(String fileName, String tag) {
         // Since the typeface is larger, it is better to copy it to sdcard for performance reasons.
         try {
             String path = copyAsset(fileName);
