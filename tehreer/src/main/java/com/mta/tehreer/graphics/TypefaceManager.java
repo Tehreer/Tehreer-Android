@@ -110,4 +110,7 @@ public class TypefaceManager {
             return TYPEFACE_MAP.get(tag);
         }
     }
+
+    private TypefaceManager() {
+    }
 }
