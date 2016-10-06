@@ -1,0 +1,161 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'tehreer-android'
+
+    publishedGroupId = 'com.github.mta452'
+    publishedArtifactId = 'tehreer-android'
+
+    libraryName = 'Tehreer-Android'
+    libraryVersion = '1.0'
+    libraryDescription = 'A library that gives full control over text related technologies such as bidirectional algorithm, open type shaping, text typesetting and text rendering.'
+
+    siteUrl = 'https://github.com/mta452/Tehreer-Android'
+    gitUrl = 'https://github.com/mta452/Tehreer-Android.git'
+
+    developerId = 'mta452'
+    developerName = 'Muhammad Tayyab Akram'
+    developerEmail = 'dear_tayyab@yahoo.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = [ 'Apache-2.0' ]
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+group = publishedGroupId
+version = libraryVersion
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion '24.0.2'
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 24
+        versionCode 1
+        versionName libraryVersion
+    }
+
+    sourceSets.main {
+        jniLibs.srcDir 'src/main/jniLibs' // Set .so files location to jniLibs
+        jni.srcDirs = [] // Disable automatic ndk-build call
+    }
+
+    task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+        def ndkDir = System.getenv('ANDROID_NDK_ROOT')
+        if (ndkDir == null) {
+            ndkDir = properties.getProperty('ndk.dir', null)
+            if (ndkDir == null) {
+                throw new GradleException('NDK location not found. Define location with ndk.dir in local.properties file or with ANDROID_NDK_ROOT environment variable.')
+            }
+        }
+
+        def ndkBuild = ndkDir + '/ndk-build' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.cmd' : '')
+
+        commandLine ndkBuild,
+                'NDK_PROJECT_PATH=build/intermediates/ndk',
+                'NDK_LIBS_OUT=src/main/jniLibs',
+                'APP_BUILD_SCRIPT=src/main/jni/Android.mk',
+                'NDK_APPLICATION_MK=src/main/jni/Application.mk'
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn ndkBuild
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Configure artifacts
+artifacts {
+    task javadoc(type: Javadoc) {
+        title = "$libraryName $libraryVersion API"
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        exclude '**/internal/**'
+
+        options.addStringOption("bottom", "Copyright &copy; 2016 $developerName. All rights reserved.")
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+
+    archives javadocJar
+    archives sourcesJar
+}
+
+// Configure android-maven-gradle-plugin
+install {
+    repositories.mavenInstaller.pom.project {
+        packaging 'aar'
+        groupId publishedGroupId
+        artifactId publishedArtifactId
+
+        name libraryName
+        description libraryDescription
+        url siteUrl
+
+        licenses {
+            license {
+                name licenseName
+                url licenseUrl
+            }
+        }
+        developers {
+            developer {
+                id developerId
+                name developerName
+                email developerEmail
+            }
+        }
+        scm {
+            url siteUrl
+            connection gitUrl
+            developerConnection gitUrl
+        }
+    }
+}
+
+// Configure gradle-bintray-plugin
+bintray {
+    user = properties.getProperty('bintray.user')
+    key = properties.getProperty('bintray.apikey')
+    configurations = ['archives']
+
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        desc = libraryDescription
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = allLicenses
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            gpg {
+                sign = true
+                passphrase = properties.getProperty('bintray.gpg.password')
+            }
+        }
+    }
+}

@@ -1,1 +1,1 @@
-include ':demo', ':tehreer'
+include ':demo', ':tehreer-android'
