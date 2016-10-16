@@ -1,4 +1,7 @@
 # Tehreer-Android
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.mta452/tehreer-android.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.mta452%22%20AND%20a%3A%22tehreer-android%22)
+
 Tehreer is a library which gives full control over following text related technologies.
 
 * Bidirectional Algorithm
@@ -8,8 +11,15 @@ Tehreer is a library which gives full control over following text related techno
 
 It is a wrapper over mature C libraries, [FreeType](https://www.freetype.org), [SheenBidi](https://github.com/mta452/SheenBidi) and [SheenFigure](https://github.com/mta452/SheenFigure). So a part of the library has been written in JNI in order to access the functionality of said libraries.
 
-## Memory Management
-The classes that acheive their functionality by using some kind of native object, implement `Disposable` interface and provide a static method named `finalizable`. The `Disposable` interface provides a `dispose` method for cleaning up the memory manually. The `finalizable` method takes an object of same class as a parameter and returns a new object which automatically releases native memory when the object is no longer in use. The first approach is preferred and should be used when an object is only required within a scope. The second approach should only be used when it is not known how long the object will be in use.
+## Installation
+If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
+
+```groovy
+compile 'com.github.mta452:tehreer-android:1.0'
+```
+
+## API Reference
+The [Javadocs](https://mta452.github.io/Tehreer-Android/apidocs/) are available for online browsing. The Javadocs are also bundled as source Jars with each distribution for consumption in the IDE.
 
 ## License
 ```
