@@ -16,6 +16,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".BidiAlgorithmActivity"
+            android:label="Bidirectional Algorithm">
+        </activity>
+        <activity
+            android:name=".BidiInfoActivity"
+            android:label="Bidirectional Algorithm">
+        </activity>
+        <activity
+            android:name=".LabelWidgetActivity"
+            android:label="Label Widget">
+        </activity>
     </application>
 
 </manifest>
