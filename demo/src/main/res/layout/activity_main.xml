@@ -24,6 +24,12 @@
                 android:text="Bidirectional Algorithm"/>
 
             <Button
+                android:id="@+id/button_font_glyphs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Font Glyphs"/>
+
+            <Button
                 android:id="@+id/button_label_widget"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

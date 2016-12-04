@@ -31,6 +31,7 @@ import java.io.OutputStream;
 public class DemoApplication extends Application {
 
     private static final String ASSET_TAJ_NASTALEEQ = "TajNastaleeq.ttf";
+    private static final String ASSET_NAFEES_WEB = "NafeesWeb.ttf";
 
     @Override
     public void onCreate() {
@@ -40,6 +41,7 @@ public class DemoApplication extends Application {
 
         Resources resources = getResources();
         registerTypeface(ASSET_TAJ_NASTALEEQ, resources.getString(R.string.typeface_taj_nastaleeq));
+        registerTypeface(ASSET_NAFEES_WEB, resources.getString(R.string.typeface_nafees_web));
     }
 
     private void registerTypeface(String fileName, String tag) {

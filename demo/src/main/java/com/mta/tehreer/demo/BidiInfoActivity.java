@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.demo;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -78,8 +79,8 @@ public class BidiInfoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bidi_info);
 
-        Bundle extras = getIntent().getExtras();
-        mBidiText = String.valueOf(extras.get(BIDI_TEXT));
+        Intent intent = getIntent();
+        mBidiText = String.valueOf(intent.getCharSequenceExtra(BIDI_TEXT));
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
