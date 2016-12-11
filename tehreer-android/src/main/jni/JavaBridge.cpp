@@ -136,14 +136,14 @@ JavaBridge::~JavaBridge()
 {
 }
 
-jobject JavaBridge::BidiPair_construct(jint charIndex, jint relatedCodepoint) const
+jobject JavaBridge::BidiPair_construct(jint charIndex, jint pairingCodePoint) const
 {
-    return m_env->NewObject(BIDI_PAIR, BIDI_PAIR__CONSTRUCTOR, charIndex, relatedCodepoint);
+    return m_env->NewObject(BIDI_PAIR, BIDI_PAIR__CONSTRUCTOR, charIndex, pairingCodePoint);
 }
 
-jobject JavaBridge::BidiRun_construct(jint runStart, jint runEnd, jbyte level) const
+jobject JavaBridge::BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const
 {
-    return m_env->NewObject(BIDI_RUN, BIDI_RUN__CONSTRUCTOR, runStart, runEnd, level);
+    return m_env->NewObject(BIDI_RUN, BIDI_RUN__CONSTRUCTOR, charStart, charEnd, embeddingLevel);
 }
 
 jobject JavaBridge::Bitmap_create(jint width, jint height, BitmapConfig config) const

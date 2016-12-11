@@ -43,80 +43,83 @@ using namespace Tehreer;
 static void protocolLoadTable(void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
+    FT_Face baseFace = typeface->ftFace();
+    FT_ULong tableSize = 0;
 
-    FT_Face ftFace;
-    typeface->lockFreetypeFace(&ftFace);
+    typeface->lock();
 
-    FT_ULong size = 0;
-    FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length ? &size : nullptr);
+    FT_Load_Sfnt_Table(baseFace, tag, 0, buffer, length ? &tableSize : nullptr);
 
-    typeface->unlockFreetypeFace();
+    typeface->unlock();
 
     if (length) {
-        *length = size;
+        *length = tableSize;
     }
 }
 
 static SFGlyphID protocolGetGlyphIDForCodepoint(void *object, SFCodepoint codepoint)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
+    FT_Face baseFace = typeface->ftFace();
+    FT_UInt glyphID = 0;
 
-    FT_Face ftFace;
-    typeface->lockFreetypeFace(&ftFace);
+    typeface->lock();
 
-    FT_UInt glyphID = FT_Get_Char_Index(ftFace, codepoint);
+    glyphID = FT_Get_Char_Index(baseFace, codepoint);
 
-    typeface->unlockFreetypeFace();
+    typeface->unlock();
 
     if (glyphID > 0xFFFF) {
         LOGW("Received invalid glyph id for code point: %u", codepoint);
         glyphID = 0;
     }
 
-    return (SFGlyphID)glyphID;
+    return static_cast<SFGlyphID>(glyphID);
 }
 
 static SFAdvance protocolGetAdvanceForGlyph(void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Fixed glyphAdvance = 0;
 
-    FT_Int32 flags = FT_LOAD_NO_SCALE;
+    FT_Int32 loadFlags = FT_LOAD_NO_SCALE;
     if (fontLayout == SFFontLayoutVertical) {
-        flags |= FT_LOAD_VERTICAL_LAYOUT;
+        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
     }
 
-    FT_Face ftFace;
-    typeface->lockFreetypeFace(&ftFace);
+    typeface->lock();
 
-    FT_Fixed advance = 0;
-    FT_Get_Advance(ftFace, glyphID, flags, &advance);
+    FT_Get_Advance(baseFace, glyphID, loadFlags, &glyphAdvance);
 
-    typeface->unlockFreetypeFace();
+    typeface->unlock();
 
     // TODO: Cache the advances.
-    
-    return (SFAdvance)advance;
+
+    return static_cast<SFInt32>(glyphAdvance);
 }
 
-static unsigned long assetStreamRead(FT_Stream assetStream, unsigned long offset, unsigned char *buffer,
-                                     unsigned long count)
+static unsigned long assetStreamRead(FT_Stream assetStream,
+    unsigned long offset, unsigned char *buffer, unsigned long count)
 {
+    AAsset *asset = static_cast<AAsset *>(assetStream->descriptor.pointer);
+    int bytesRead = 0;
+
     if (!count && offset > assetStream->size) {
         return 1;
     }
 
-    AAsset *asset = (AAsset *)assetStream->descriptor.pointer;
-
     if (assetStream->pos != offset) {
         AAsset_seek(asset, offset, SEEK_SET);
     }
+    bytesRead = AAsset_read(asset, buffer, count);
 
-    return (unsigned long)AAsset_read(asset, buffer, count);
+    return static_cast<unsigned long>(bytesRead);
 }
 
 static void assetStreamClose(FT_Stream assetStream)
 {
-    AAsset *asset = (AAsset *)assetStream->descriptor.pointer;
+    AAsset *asset = static_cast<AAsset *>(assetStream->descriptor.pointer);
     AAsset_close(asset);
 
     assetStream->descriptor.pointer = nullptr;
@@ -139,7 +142,7 @@ static FT_Stream assetStreamCreate(AAssetManager *assetManager, const char *path
     FT_Stream assetStream;
     assetStream = (FT_Stream)malloc(sizeof(*assetStream));
     assetStream->base = nullptr;
-    assetStream->size = size;
+    assetStream->size = static_cast<unsigned long>(size);
     assetStream->pos = 0;
     assetStream->descriptor.pointer = asset;
     assetStream->pathname.pointer = nullptr;
@@ -177,7 +180,7 @@ Typeface *Typeface::createWithFile(const char *path)
     args.flags = FT_OPEN_PATHNAME;
     args.memory_base = nullptr;
     args.memory_size = 0;
-    args.pathname = (FT_String *)path;
+    args.pathname = const_cast<FT_String *>(path);
     args.stream = nullptr;
 
     return createWithArgs(&args);
@@ -185,13 +188,13 @@ Typeface *Typeface::createWithFile(const char *path)
 
 Typeface *Typeface::createFromStream(const JavaBridge &bridge, jobject stream)
 {
-    jint length;
+    size_t length;
     void *buffer = StreamUtils::toRawBuffer(bridge, stream, &length);
 
     if (buffer) {
         FT_Open_Args args;
         args.flags = FT_OPEN_MEMORY;
-        args.memory_base = (const FT_Byte *)buffer;
+        args.memory_base = static_cast<const FT_Byte *>(buffer);
         args.memory_size = length;
         args.pathname = nullptr;
         args.stream = nullptr;
@@ -262,18 +265,7 @@ Typeface::~Typeface()
     }
 }
 
-void Typeface::lockFreetypeFace(FT_Face *ftFace)
-{
-    m_mutex.lock();
-    *ftFace = m_ftFace;
-}
-
-void Typeface::unlockFreetypeFace()
-{
-    m_mutex.unlock();
-}
-
-FT_Stroker Typeface::freetypeStroker()
+FT_Stroker Typeface::ftStroker()
 {
     /*
      * NOTE:
@@ -330,24 +322,27 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
     return 0;
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     delete typeface;
 }
 
-static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong handle, jint tableTag)
+static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    SFTag inputTag = static_cast<SFTag>(tableTag);
 
     SFUInteger length;
-    protocolLoadTable(nullptr, tableTag, nullptr, &length);
+    protocolLoadTable(typeface, inputTag, nullptr, &length);
 
     if (length > 0) {
-        jbyteArray dataArray = env->NewByteArray(length);
+        jsize dataLength = static_cast<jint>(length);
+        jbyteArray dataArray = env->NewByteArray(dataLength);
         void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-        protocolLoadTable(nullptr, tableTag, (SFUInt8 *)dataBuffer, nullptr);
+        SFUInt8 *dataBytes = static_cast<SFUInt8 *>(dataBuffer);
+        protocolLoadTable(nullptr, inputTag, dataBytes, nullptr);
 
         env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 
@@ -357,49 +352,69 @@ static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong handle, jint tableTa
     return nullptr;
 }
 
-static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong handle)
+static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return typeface->unitsPerEm();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_UShort unitsPerEm = baseFace->units_per_EM;
+
+    return static_cast<jint>(unitsPerEm);
 }
 
-static jint getAscent(JNIEnv *env, jobject obj, jlong handle)
+static jint getAscent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return typeface->ascender();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Short ascender = baseFace->ascender;
+
+    return static_cast<jint>(ascender);
 }
 
-static jint getDescent(JNIEnv *env, jobject obj, jlong handle)
+static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return -typeface->descender();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Short descender = baseFace->descender;
+
+    return static_cast<jint>(-descender);
 }
 
-static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
+static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return typeface->glyphCount();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Long glyphCount = baseFace->num_glyphs;
+
+    return static_cast<jint>(glyphCount);
 }
 
-static void getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jobject rect)
+static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobject rect)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    JavaBridge bridge(env);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_BBox bbox = baseFace->bbox;
 
-    FT_BBox bbox = typeface->boundingBox();
-    bridge.Rect_set(rect, bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax);
+    JavaBridge(env).Rect_set(rect,
+                             static_cast<jint>(bbox.xMin), static_cast<jint>(bbox.yMin),
+                             static_cast<jint>(bbox.xMax), static_cast<jint>(bbox.yMax));
 }
 
-static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong handle)
+static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return typeface->underlinePosition();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Short underlinePosition = baseFace->underline_position;
+
+    return static_cast<jint>(underlinePosition);
 }
 
-static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong handle)
+static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(handle);
-    return typeface->underlineThickness();
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Short underlineThickness = baseFace->underline_thickness;
+
+    return static_cast<jint>(underlineThickness);
 }
 
 static JNINativeMethod JNI_METHODS[] = {

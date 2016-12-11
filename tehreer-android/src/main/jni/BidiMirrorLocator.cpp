@@ -15,15 +15,14 @@
  */
 
 extern "C" {
-#include <SBMirrorLocator.h>
 #include <SBLine.h>
+#include <SBMirrorLocator.h>
 }
 
 #include <jni.h>
 
 #include "BidiBuffer.h"
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "BidiMirrorLocator.h"
 
 using namespace Tehreer;
@@ -34,29 +33,31 @@ static jlong create(JNIEnv *env, jobject obj)
     return reinterpret_cast<jlong>(mirrorLocator);
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong locatorHandle)
 {
-    SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(handle);
+    SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(locatorHandle);
     SBMirrorLocatorRelease(mirrorLocator);
 }
 
 static void loadLine(JNIEnv *env, jobject obj, jlong locatorHandle, jlong lineHandle, jlong bufferHandle)
 {
     SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(locatorHandle);
-    SBLineRef line = reinterpret_cast<SBLineRef>(lineHandle);
-    BidiBuffer *buffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    void *stringBuffer = static_cast<void *>(bidiBuffer->data());
 
-    SBMirrorLocatorLoadLine(mirrorLocator, line, buffer->data());
+    SBMirrorLocatorLoadLine(mirrorLocator, bidiLine, stringBuffer);
 }
 
-static jobject getNextPair(JNIEnv *env, jobject obj, jlong handle, jobject agentBuffer)
+static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle)
 {
-    SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(handle);
+    SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(locatorHandle);
     if (SBMirrorLocatorMoveNext(mirrorLocator)) {
         SBMirrorAgentRef mirrorAgent = SBMirrorLocatorGetAgent(mirrorLocator);
-        JavaBridge bridge(env);
+        jint charIndex = static_cast<jint>(mirrorAgent->index);
+        jint pairingCodePoint = static_cast<jint>(mirrorAgent->mirror);
 
-        return bridge.BidiPair_construct(mirrorAgent->index, mirrorAgent->mirror);
+        return JavaBridge(env).BidiPair_construct(charIndex, pairingCodePoint);
     }
 
     return nullptr;

@@ -28,7 +28,6 @@ extern "C" {
 #include <jni.h>
 
 #include "FreeType.h"
-#include "Glyph.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
 #include "GlyphRasterizer.h"
@@ -42,22 +41,25 @@ struct PathContext {
 
 static inline jfloat toJfloat(FT_Pos pos)
 {
-    return (jfloat)(pos >> 6);
+    return (pos / 64.0f);
 }
 
-static int processMoveTo(const FT_Vector *to, void *user) {
+static int processMoveTo(const FT_Vector *to, void *user)
+{
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_moveTo(context->path, toJfloat(to->x), toJfloat(to->y));
     return 0;
 }
 
-static int processLineTo(const FT_Vector *to, void *user) {
+static int processLineTo(const FT_Vector *to, void *user)
+{
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_lineTo(context->path, toJfloat(to->x), toJfloat(to->y));
     return 0;
 }
 
-static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *user) {
+static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *user)
+{
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_quadTo(context->path,
                                  toJfloat(control1->x), toJfloat(control1->y),
@@ -65,7 +67,8 @@ static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *u
     return 0;
 }
 
-static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) {
+static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user)
+{
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_cubicTo(context->path,
                                   toJfloat(control1->x), toJfloat(control1->y),
@@ -79,14 +82,14 @@ GlyphRasterizer::GlyphRasterizer(Typeface &typeface, FT_F26Dot6 pixelWidth, FT_F
     , m_size(nullptr)
     , m_transform(transform)
 {
-    FT_Face ftFace;
-    m_typeface.lockFreetypeFace(&ftFace);
+    m_typeface.lock();
 
-    FT_New_Size(ftFace, &m_size);
+    FT_Face baseFace = m_typeface.ftFace();
+    FT_New_Size(baseFace, &m_size);
     FT_Activate_Size(m_size);
-    FT_Set_Char_Size(ftFace, pixelWidth, pixelHeight, 0, 0);
+    FT_Set_Char_Size(baseFace, pixelWidth, pixelHeight, 0, 0);
 
-    m_typeface.unlockFreetypeFace();
+    m_typeface.unlock();
 }
 
 GlyphRasterizer::~GlyphRasterizer()
@@ -94,16 +97,13 @@ GlyphRasterizer::~GlyphRasterizer()
     if (m_size) {
         /*
          * NOTE:
-         *      Freetype face must be locked before releasing the size because it changes an
+         *      FreeType face must be locked before releasing the size because it changes an
          *      internal list of the face containing all the sizes.
          */
 
-        FT_Face ftFace;
-        m_typeface.lockFreetypeFace(&ftFace);
-
+        m_typeface.lock();
         FT_Done_Size(m_size);
-
-        m_typeface.unlockFreetypeFace();
+        m_typeface.unlock();
     }
 }
 
@@ -117,7 +117,7 @@ jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge &bridge, const FT_B
 {
     char pixelMode = bitmap->pixel_mode;
     jobject glyphBitmap = nullptr;
-    int bitmapLength = 0;
+    size_t bitmapLength = 0;
 
     switch (pixelMode) {
     case FT_PIXEL_MODE_GRAY:
@@ -138,63 +138,63 @@ jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge &bridge, const FT_B
 
 void GlyphRasterizer::loadBitmap(const JavaBridge &bridge, jobject glyph)
 {
-    jint glyphID = bridge.Glyph_getGlyphID(glyph);
+    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
     jobject glyphBitmap = nullptr;
-    jint glyphLeft = 0;
-    jint glyphTop = 0;
+    jint leftSideBearing = 0;
+    jint topSideBearing = 0;
 
-    FT_Face ftFace;
-    m_typeface.lockFreetypeFace(&ftFace);
+    m_typeface.lock();
 
-    unsafeActivate(ftFace);
+    FT_Face baseFace = m_typeface.ftFace();
+    unsafeActivate(baseFace);
 
-    FT_Error error = FT_Load_Glyph(ftFace, glyphID, FT_LOAD_RENDER);
+    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_RENDER);
     if (error == FT_Err_Ok) {
-        FT_GlyphSlot slot = ftFace->glyph;
-        glyphBitmap = unsafeCreateBitmap(bridge, &slot->bitmap);
+        FT_GlyphSlot glyphSlot = baseFace->glyph;
+        glyphBitmap = unsafeCreateBitmap(bridge, &glyphSlot->bitmap);
 
         if (glyphBitmap) {
-            glyphLeft = slot->bitmap_left;
-            glyphTop = slot->bitmap_top;
+            leftSideBearing = glyphSlot->bitmap_left;
+            topSideBearing = glyphSlot->bitmap_top;
         }
     }
 
-    m_typeface.unlockFreetypeFace();
+    m_typeface.unlock();
 
-    bridge.Glyph_ownBitmap(glyph, glyphBitmap, glyphLeft, glyphTop);
+    bridge.Glyph_ownBitmap(glyph, glyphBitmap, leftSideBearing, topSideBearing);
 }
 
 void GlyphRasterizer::loadOutline(const JavaBridge &bridge, jobject glyph)
 {
-    jint glyphID = bridge.Glyph_getGlyphID(glyph);
+    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
 
-    FT_Face ftFace;
-    m_typeface.lockFreetypeFace(&ftFace);
+    m_typeface.lock();
 
-    unsafeActivate(ftFace);
+    FT_Face baseFace = m_typeface.ftFace();
+    unsafeActivate(baseFace);
 
     FT_Glyph outline = nullptr;
-    FT_Error error = FT_Load_Glyph(ftFace, glyphID, FT_LOAD_NO_BITMAP);
+    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_NO_BITMAP);
     if (error == FT_Err_Ok) {
-        FT_Get_Glyph(ftFace->glyph, &outline);
+        FT_Get_Glyph(baseFace->glyph, &outline);
     }
 
-    m_typeface.unlockFreetypeFace();
+    m_typeface.unlock();
 
     bridge.Glyph_ownOutline(glyph, outline ? reinterpret_cast<jlong>(outline) : 0);
 }
 
 void GlyphRasterizer::loadPath(const JavaBridge &bridge, jobject glyph)
 {
-    jint glyphID = bridge.Glyph_getGlyphID(glyph);
+    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
     jobject glyphPath = nullptr;
 
-    FT_Face ftFace;
-    m_typeface.lockFreetypeFace(&ftFace);
+    m_typeface.lock();
 
-    unsafeActivate(ftFace);
+    FT_Face baseFace = m_typeface.ftFace();
+    unsafeActivate(baseFace);
 
-    FT_Error error = FT_Load_Glyph(ftFace, glyphID, FT_LOAD_NO_BITMAP);
+    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_NO_BITMAP);
     if (error == FT_Err_Ok) {
         FT_Outline_Funcs funcs;
         funcs.move_to = processMoveTo;
@@ -208,53 +208,52 @@ void GlyphRasterizer::loadPath(const JavaBridge &bridge, jobject glyph)
         pathContext.bridge = &bridge;
         pathContext.path = bridge.Path_construct();
 
-        FT_Outline *outline = &ftFace->glyph->outline;
+        FT_Outline *outline = &baseFace->glyph->outline;
         error = FT_Outline_Decompose(outline, &funcs, &pathContext);
         if (error == FT_Err_Ok) {
             glyphPath = pathContext.path;
         }
     }
 
-    m_typeface.unlockFreetypeFace();
+    m_typeface.unlock();
 
     bridge.Glyph_ownPath(glyph, glyphPath);
 }
 
-jobject GlyphRasterizer::strokeGlyph(const JavaBridge &bridge, jobject glyphInfo, FT_Fixed lineRadius,
-                                     FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit)
+jobject GlyphRasterizer::strokeGlyph(const JavaBridge &bridge, jobject glyph, FT_Fixed lineRadius,
+    FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit)
 {
-    jint glyphID = bridge.Glyph_getGlyphID(glyphInfo);
-    FT_Glyph outline = reinterpret_cast<FT_Glyph>(bridge.Glyph_getNativeOutline(glyphInfo));
+    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
+    FT_Glyph baseGlyph = reinterpret_cast<FT_Glyph>(bridge.Glyph_getNativeOutline(glyph));
 
-    if (outline) {
-        FT_Face ftFace;
-        m_typeface.lockFreetypeFace(&ftFace);
+    if (baseGlyph) {
+        m_typeface.lock();
 
-        FT_Stroker stroker = m_typeface.freetypeStroker();
+        FT_Stroker stroker = m_typeface.ftStroker();
         FT_Stroker_Set(stroker, lineRadius, lineCap, lineJoin, miterLimit);
-        FT_Error error = FT_Glyph_Stroke(&outline, stroker, 0);
+        FT_Error error = FT_Glyph_Stroke(&baseGlyph, stroker, 0);
 
-        m_typeface.unlockFreetypeFace();
+        m_typeface.unlock();
 
         if (error == FT_Err_Ok) {
-            FT_Glyph_To_Bitmap(&outline, FT_RENDER_MODE_NORMAL, nullptr, 1);
+            FT_Glyph_To_Bitmap(&baseGlyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
 
-            FT_BitmapGlyph output = (FT_BitmapGlyph)outline;
-            jobject glyphBitmap = nullptr;
-            jint glyphLeft = 0;
-            jint glyphTop = 0;
+            FT_BitmapGlyph bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(baseGlyph);
+            jobject strokeBitmap = nullptr;
+            jint leftSideBearing = 0;
+            jint topSideBearing = 0;
 
-            glyphBitmap = unsafeCreateBitmap(bridge, &output->bitmap);
-            if (glyphBitmap) {
-                glyphLeft = output->left;
-                glyphTop = output->top;
+            strokeBitmap = unsafeCreateBitmap(bridge, &bitmapGlyph->bitmap);
+            if (strokeBitmap) {
+                leftSideBearing = bitmapGlyph->left;
+                topSideBearing = bitmapGlyph->top;
             }
 
             jobject result = bridge.Glyph_construct(glyphID);
-            bridge.Glyph_ownBitmap(result, glyphBitmap, glyphLeft, glyphTop);
+            bridge.Glyph_ownBitmap(result, strokeBitmap, leftSideBearing, topSideBearing);
 
             /* Dispose the stroked / bitmap glyph. */
-            FT_Done_Glyph(outline);
+            FT_Done_Glyph(baseGlyph);
 
             return result;
         }
@@ -264,7 +263,7 @@ jobject GlyphRasterizer::strokeGlyph(const JavaBridge &bridge, jobject glyphInfo
 }
 
 static jlong create(JNIEnv *env, jobject obj, jlong typefaceHandle, jint pixelWidth, jint pixelHeight,
-                    jint transformXX, jint transformXY, jint transformYX, jint transformYY)
+    jint transformXX, jint transformXY, jint transformYX, jint transformYY)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Matrix transform = {
@@ -272,40 +271,45 @@ static jlong create(JNIEnv *env, jobject obj, jlong typefaceHandle, jint pixelWi
         transformYX, transformYY
     };
 
-    GlyphRasterizer *rasterizer = new GlyphRasterizer(*typeface, pixelWidth, pixelHeight, transform);
-    return reinterpret_cast<jlong>(rasterizer);
+    GlyphRasterizer *glyphRasterizer = new GlyphRasterizer(*typeface, pixelWidth, pixelHeight, transform);
+    return reinterpret_cast<jlong>(glyphRasterizer);
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong rasterizerHandle)
 {
-    GlyphRasterizer *rasterizer = reinterpret_cast<GlyphRasterizer *>(handle);
-    delete rasterizer;
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    delete glyphRasterizer;
 }
 
-static void loadBitmap(JNIEnv *env, jobject obj, jlong handle, jobject glyph)
+static void loadBitmap(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
 {
-    GlyphRasterizer *rasterizer = reinterpret_cast<GlyphRasterizer *>(handle);
-    rasterizer->loadBitmap(JavaBridge(env), glyph);
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    glyphRasterizer->loadBitmap(JavaBridge(env), glyph);
 }
 
-static void loadOutline(JNIEnv *env, jobject obj, jlong handle, jobject glyph)
+static void loadOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
 {
-    GlyphRasterizer *rasterizer = reinterpret_cast<GlyphRasterizer *>(handle);
-    rasterizer->loadOutline(JavaBridge(env), glyph);
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    glyphRasterizer->loadOutline(JavaBridge(env), glyph);
 }
 
-static void loadPath(JNIEnv *env, jobject obj, jlong handle, jobject glyph)
+static void loadPath(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
 {
-    GlyphRasterizer *rasterizer = reinterpret_cast<GlyphRasterizer *>(handle);
-    rasterizer->loadPath(JavaBridge(env), glyph);
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    glyphRasterizer->loadPath(JavaBridge(env), glyph);
 }
 
-static jobject strokeGlyph(JNIEnv *env, jobject obj, jlong handle, jobject glyph, jint lineRadius,
-                           jint lineCap, jint lineJoin, jint miterLimit)
+static jobject strokeGlyph(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph,
+    jint lineRadius, jint lineCap, jint lineJoin, jint miterLimit)
 {
-    GlyphRasterizer *rasterizer = reinterpret_cast<GlyphRasterizer *>(handle);
-    jobject result = rasterizer->strokeGlyph(JavaBridge(env), glyph, lineRadius, (FT_Stroker_LineCap)lineCap, (FT_Stroker_LineJoin)lineJoin, miterLimit);
-    return result;
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    FT_Fixed strokeRadius = static_cast<FT_Fixed >(lineRadius);
+    FT_Stroker_LineCap strokeCap = static_cast<FT_Stroker_LineCap>(lineCap);
+    FT_Stroker_LineJoin strokeJoin = static_cast<FT_Stroker_LineJoin>(lineJoin);
+    FT_Fixed strokeMiter = static_cast<FT_Fixed>(miterLimit);
+
+    return glyphRasterizer->strokeGlyph(JavaBridge(env), glyph, strokeRadius,
+                                        strokeCap, strokeJoin, strokeMiter);
 }
 
 static JNINativeMethod JNI_METHODS[] = {

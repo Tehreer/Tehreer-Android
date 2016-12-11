@@ -43,9 +43,8 @@ public:
     void loadOutline(const JavaBridge &bridge, jobject glyph);
     void loadPath(const JavaBridge &bridge, jobject glyph);
 
-    jobject generatePath(const JavaBridge &bridge, uint16_t glyphID);
     jobject strokeGlyph(const JavaBridge &bridge, jobject glyph, FT_Fixed lineRadius,
-                        FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
+        FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
 
 private:
     Typeface &m_typeface;

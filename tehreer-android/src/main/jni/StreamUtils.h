@@ -25,7 +25,7 @@ namespace Tehreer {
 
 class StreamUtils {
 public:
-    static void *toRawBuffer(const JavaBridge &bridge, jobject stream, jint *length);
+    static void *toRawBuffer(const JavaBridge &bridge, jobject stream, size_t *length);
 };
 
 }

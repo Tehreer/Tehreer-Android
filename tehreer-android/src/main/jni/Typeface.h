@@ -21,6 +21,7 @@ extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_STROKER_H
+#include FT_SYSTEM_H
 
 #include <SFFont.h>
 }
@@ -41,22 +42,14 @@ public:
 
     ~Typeface();
 
-    void lockFreetypeFace(FT_Face *ftFace);
-    void unlockFreetypeFace();
-    FT_Stroker freetypeStroker();
+    void lock() { m_mutex.lock(); };
+    void unlock() { m_mutex.unlock(); }
 
-    SFFontRef sheenfigureFont() const { return m_sfFont; }
+    FT_Face ftFace() const { return m_ftFace; }
+    FT_Stroker ftStroker();
+
+    SFFontRef sfFont() const { return m_sfFont; }
     PatternCache &patternCache() { return m_patternCache; }
-
-    FT_UShort unitsPerEm() const { return m_ftFace->units_per_EM; }
-    FT_Short ascender() const { return m_ftFace->ascender; }
-    FT_Short descender() const { return m_ftFace->descender; }
-
-    FT_Long glyphCount() const { return m_ftFace->num_glyphs; }
-    FT_BBox boundingBox() const { return m_ftFace->bbox; }
-
-    FT_Short underlinePosition() const { return m_ftFace->underline_position; }
-    FT_Short underlineThickness() const { return m_ftFace->underline_thickness; }
 
 private:
     std::mutex m_mutex;

@@ -16,15 +16,15 @@
 
 extern "C" {
 #include <SBAlgorithm.h>
+#include <SBBase.h>
 #include <SBCodepointSequence.h>
+#include <SBParagraph.h>
 }
 
 #include <jni.h>
 
 #include "BidiBuffer.h"
-#include "BidiParagraph.h"
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "BidiAlgorithm.h"
 
 using namespace Tehreer;
@@ -32,41 +32,50 @@ using namespace Tehreer;
 static jlong create(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
     BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    void *stringBuffer = static_cast<void *>(bidiBuffer->data());
+    SBUInteger stringLength = static_cast<SBUInteger>(bidiBuffer->length());
 
     SBCodepointSequence codepointSequence;
     codepointSequence.stringEncoding = SBStringEncodingUTF16;
-    codepointSequence.stringBuffer = bidiBuffer->data();
-    codepointSequence.stringLength = bidiBuffer->length();
+    codepointSequence.stringBuffer = stringBuffer;
+    codepointSequence.stringLength = stringLength;
 
-    SBAlgorithmRef algorithm = SBAlgorithmCreate(&codepointSequence);
-    return reinterpret_cast<jlong>(algorithm);
+    SBAlgorithmRef bidiAlgorithm = SBAlgorithmCreate(&codepointSequence);
+    return reinterpret_cast<jlong>(bidiAlgorithm);
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong algorithmHandle)
 {
-    SBAlgorithmRef algorithm = reinterpret_cast<SBAlgorithmRef>(handle);
-    SBAlgorithmRelease(algorithm);
+    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    SBAlgorithmRelease(bidiAlgorithm);
 }
 
-static jint getParagraphBoundary(JNIEnv *env, jobject obj, jlong handle, jint charStart, jint charEnd)
+static jint getParagraphBoundary(JNIEnv *env, jobject obj,
+    jlong algorithmHandle, jint charStart, jint charEnd)
 {
-    SBAlgorithmRef algorithm = reinterpret_cast<SBAlgorithmRef>(handle);
+    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    SBUInteger paragraphOffset = static_cast<SBUInteger>(charStart);
+    SBUInteger suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
 
     SBUInteger actualLength;
-    SBAlgorithmGetParagraphBoundary(algorithm,
-                                    charStart, charEnd - charStart,
+    SBAlgorithmGetParagraphBoundary(bidiAlgorithm,
+                                    paragraphOffset, suggestedLength,
                                     &actualLength, nullptr);
 
-    return (jint)(charStart + actualLength);
+    return static_cast<jint>(paragraphOffset + actualLength);
 }
 
-static jlong createParagraph(JNIEnv *env, jobject obj, jlong handle, jint charStart, jint charEnd, jint baseLevel)
+static jlong createParagraph(JNIEnv *env, jobject obj,
+    jlong algorithmHandle, jint charStart, jint charEnd, jint baseLevel)
 {
-    SBAlgorithmRef algorithm = reinterpret_cast<SBAlgorithmRef>(handle);
-    SBParagraphRef paragraph = SBAlgorithmCreateParagraph(algorithm,
-                                                          charStart, charEnd - charStart,
-                                                          baseLevel);
+    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    SBUInteger paragraphOffset = static_cast<SBUInteger>(charStart);
+    SBUInteger suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
+    SBLevel inputLevel = static_cast<SBLevel>(baseLevel);
 
+    SBParagraphRef paragraph = SBAlgorithmCreateParagraph(bidiAlgorithm,
+                                                          paragraphOffset, suggestedLength,
+                                                          inputLevel);
     return reinterpret_cast<jlong>(paragraph);
 }
 

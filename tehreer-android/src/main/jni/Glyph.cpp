@@ -22,14 +22,13 @@ extern "C" {
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "Glyph.h"
 
 using namespace Tehreer;
 
-static void disposeOutline(JNIEnv *env, jobject obj, jlong handle)
+static void disposeOutline(JNIEnv *env, jobject obj, jlong outlineHandle)
 {
-    FT_Glyph glyph = reinterpret_cast<FT_Glyph>(handle);
+    FT_Glyph glyph = reinterpret_cast<FT_Glyph>(outlineHandle);
     FT_Done_Glyph(glyph);
 }
 

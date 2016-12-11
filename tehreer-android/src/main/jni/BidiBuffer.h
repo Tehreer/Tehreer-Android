@@ -24,20 +24,20 @@ namespace Tehreer {
 
 class BidiBuffer {
 public:
-    static BidiBuffer *create(const jchar *charArray, jint charCount);
+    static BidiBuffer *create(const jchar *charArray, jsize charCount);
 
     jchar *data() const { return m_data; }
-    jint length() const { return m_length; }
+    jsize length() const { return m_length; }
 
     void retain();
     void release();
 
 private:
     jchar *m_data;
-    jint m_length;
+    jsize m_length;
     std::atomic_int m_retainCount;
 
-    BidiBuffer(const jchar *charArray, jint charCount);
+    BidiBuffer(const jchar *charArray, jsize charCount);
     ~BidiBuffer();
 };
 

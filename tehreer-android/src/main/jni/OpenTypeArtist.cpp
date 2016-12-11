@@ -21,14 +21,11 @@ extern "C" {
 #include <SFScheme.h>
 }
 
-#include <cstddef>
 #include <cstring>
 #include <jni.h>
 #include <map>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
-#include "OpenTypeTag.h"
 #include "PatternCache.h"
 #include "TextDirection.h"
 #include "OpenTypeArtist.h"
@@ -59,23 +56,24 @@ static inline TextDirection makeTRTextDirection(SFTextDirection textDirection) {
     }
 }
 
-TextDirection OpenTypeArtist::getScriptDefaultDirection(uint32_t scriptTag)
+TextDirection OpenTypeArtist::getScriptDefaultDirection(SFTag scriptTag)
 {
     SFTextDirection textDirection = SFScriptGetDefaultDirection(scriptTag);
     return makeTRTextDirection(textDirection);
 }
 
 OpenTypeArtist::OpenTypeArtist()
+    : m_sfArtist(SFArtistCreate())
+    , m_sfScheme(SFSchemeCreate())
+    , m_typeface(nullptr)
+    , m_scriptTag(SFTagMake('D', 'F', 'L', 'T'))
+    , m_languageTag(SFTagMake('d', 'f', 'l', 't'))
+    , m_charArray(nullptr)
+    , m_charStart(0)
+    , m_charEnd(0)
+    , m_textDirection(TextDirection::Default)
+    , m_textMode(SFTextModeForward)
 {
-    m_sfArtist = SFArtistCreate();
-    m_sfScheme = SFSchemeCreate();
-    m_typeface = nullptr;
-    m_scriptTag = OpenTypeTag::make('d', 'f', 'l', 't');
-    m_languageTag = OpenTypeTag::make('d', 'f', 'l', 't');
-    m_charArray = nullptr;
-    m_textRange = Range();
-    m_textDirection = TextDirection::Default;
-    m_textMode = SFTextModeForward;
 }
 
 OpenTypeArtist::~OpenTypeArtist()
@@ -88,16 +86,22 @@ OpenTypeArtist::~OpenTypeArtist()
 void OpenTypeArtist::setText(const jchar *charArray, jint charCount)
 {
     delete [] m_charArray;
+
     m_charArray = new jchar[charCount];
-    m_textRange = Range(0, charCount);
+    m_charStart = 0;
+    m_charEnd = charCount;
 
     memcpy(m_charArray, charArray, sizeof(jchar) * charCount);
 }
 
-void OpenTypeArtist::setTextRange(Range textRange)
+void OpenTypeArtist::setTextRange(jint charStart, jint charEnd)
 {
-    m_textRange = textRange;
-    SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, m_charArray + textRange.start, textRange.length());
+    m_charStart = charStart;
+    m_charEnd = charEnd;
+
+    void *stringBuffer = static_cast<void *>(m_charArray + charStart);
+    SFUInteger stringLength = static_cast<SFUInteger>(charEnd - charStart);
+    SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
 }
 
 void OpenTypeArtist::setTextMode(SFTextMode textMode)
@@ -113,7 +117,7 @@ void OpenTypeArtist::fillAlbum(OpenTypeAlbum &album)
     SFPatternRef pattern = cache.get(key);
 
     if (!pattern) {
-        SFSchemeSetFont(m_sfScheme, m_typeface->sheenfigureFont());
+        SFSchemeSetFont(m_sfScheme, m_typeface->sfFont());
         SFSchemeSetScriptTag(m_sfScheme, m_scriptTag);
         SFSchemeSetLanguageTag(m_sfScheme, m_languageTag);
 
@@ -126,14 +130,17 @@ void OpenTypeArtist::fillAlbum(OpenTypeAlbum &album)
 
     SFArtistSetPattern(m_sfArtist, pattern);
     SFArtistSetTextDirection(m_sfArtist, textDirection);
-    SFArtistFillAlbum(m_sfArtist, album.SFAlbum());
+    SFArtistFillAlbum(m_sfArtist, album.sfAlbum());
 
-    album.associateText(m_textRange, m_textMode == SFTextModeBackward);
+    album.associateText(m_charStart, m_charEnd, m_textMode == SFTextModeBackward);
 }
 
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
 {
-    return (jint)OpenTypeArtist::getScriptDefaultDirection(scriptTag);
+    SFTag inputTag = static_cast<SFTag>(scriptTag);
+    TextDirection defaultDirection = OpenTypeArtist::getScriptDefaultDirection(inputTag);
+
+    return static_cast<jint>(defaultDirection);
 }
 
 static jlong create(JNIEnv *env, jobject obj)
@@ -142,16 +149,15 @@ static jlong create(JNIEnv *env, jobject obj)
     return reinterpret_cast<jlong>(opentypeArtist);
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
     delete opentypeArtist;
 }
 
 static void setTypeface(JNIEnv *env, jobject obj, jlong artistHandle, jobject jtypeface)
 {
-    JavaBridge bridge(env);
-    jlong typefaceHandle = bridge.Typeface_getNativeTypeface(jtypeface);
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
 
     OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -159,92 +165,109 @@ static void setTypeface(JNIEnv *env, jobject obj, jlong artistHandle, jobject jt
     opentypeArtist->setTypeface(typeface);
 }
 
-static jint getScriptTag(JNIEnv *env, jobject obj, jlong handle)
+static jint getScriptTag(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return opentypeArtist->scriptTag();
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTag scriptTag = opentypeArtist->scriptTag();
+
+    return static_cast<jint>(scriptTag);
 }
 
-static void setScriptTag(JNIEnv *env, jobject obj, jlong handle, jint scriptTag)
+static void setScriptTag(JNIEnv *env, jobject obj, jlong artistHandle, jint scriptTag)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    opentypeArtist->setScriptTag(scriptTag);
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTag inputTag = static_cast<SFTag>(scriptTag);
+
+    opentypeArtist->setScriptTag(inputTag);
 }
 
-static jint getLanguageTag(JNIEnv *env, jobject obj, jlong handle)
+static jint getLanguageTag(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return opentypeArtist->languageTag();
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTag languageTag = opentypeArtist->languageTag();
+
+    return static_cast<jint>(languageTag);
 }
 
-static void setLanguageTag(JNIEnv *env, jobject obj, jlong handle, jint languageTag)
+static void setLanguageTag(JNIEnv *env, jobject obj, jlong artistHandle, jint languageTag)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    opentypeArtist->setLanguageTag(languageTag);
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTag inputTag = static_cast<SFTag>(languageTag);
+
+    opentypeArtist->setLanguageTag(inputTag);
 }
 
-static void setText(JNIEnv *env, jobject obj, jlong handle, jstring text)
+static void setText(JNIEnv *env, jobject obj, jlong artistHandle, jstring text)
 {
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+
     if (text) {
         const jchar *charArray = env->GetStringChars(text, nullptr);
-        jint charCount = env->GetStringLength(text);
+        jsize charCount = env->GetStringLength(text);
 
-        OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
         opentypeArtist->setText(charArray, charCount);
 
         env->ReleaseStringChars(text, charArray);
     } else {
-        OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-        opentypeArtist->setText(NULL, 0);
+        opentypeArtist->setText(nullptr, 0);
     }
 }
 
-static jint getTextStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getTextStart(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return opentypeArtist->textRange().start;
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    return opentypeArtist->charStart();
 }
 
-static jint getTextEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getTextEnd(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return opentypeArtist->textRange().end;
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    return opentypeArtist->charEnd();
 }
 
-static void setTextRange(JNIEnv *env, jobject obj, jlong handle, jint charStart, jint charEnd)
+static void setTextRange(JNIEnv *env, jobject obj, jlong artistHandle, jint charStart, jint charEnd)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    opentypeArtist->setTextRange(Range(charStart, charEnd));
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    opentypeArtist->setTextRange(charStart, charEnd);
 }
 
-static jint getTextDirection(JNIEnv *env, jobject obj, jlong handle)
+static jint getTextDirection(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return (jint)opentypeArtist->textDirection();
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    TextDirection textDirection = opentypeArtist->textDirection();
+
+    return static_cast<jint>(textDirection);
 }
 
-static void setTextDirection(JNIEnv *env, jobject obj, jlong handle, jint textDirection)
+static void setTextDirection(JNIEnv *env, jobject obj, jlong artistHandle, jint textDirection)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    opentypeArtist->setTextDirection((TextDirection)textDirection);
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    TextDirection inputDirection = static_cast<TextDirection>(textDirection);
+
+    opentypeArtist->setTextDirection(inputDirection);
 }
 
-static jint getTextMode(JNIEnv *env, jobject obj, jlong handle)
+static jint getTextMode(JNIEnv *env, jobject obj, jlong artistHandle)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    return opentypeArtist->textMode();
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTextMode textMode = opentypeArtist->textMode();
+
+    return static_cast<jint>(textMode);
 }
 
-static void setTextMode(JNIEnv *env, jobject obj, jlong handle, jint textMode)
+static void setTextMode(JNIEnv *env, jobject obj, jlong artistHandle, jint textMode)
 {
-    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(handle);
-    opentypeArtist->setTextMode(textMode);
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    SFTextMode inputMode = static_cast<SFTextMode>(textMode);
+
+    opentypeArtist->setTextMode(inputMode);
 }
 
 static void fillAlbum(JNIEnv *env, jobject obj, jlong artistHandle, jlong albumHandle)
 {
     OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
     OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+
     opentypeArtist->fillAlbum(*opentypeAlbum);
 }
 

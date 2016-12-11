@@ -15,6 +15,7 @@
  */
 
 extern "C" {
+#include <SBBase.h>
 #include <SBLine.h>
 #include <SBRun.h>
 }
@@ -22,42 +23,50 @@ extern "C" {
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "BidiLine.h"
 
 using namespace Tehreer;
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef line = reinterpret_cast<SBLineRef>(handle);
-    SBLineRelease(line);
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    SBLineRelease(bidiLine);
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef line = reinterpret_cast<SBLineRef>(handle);
-    return SBLineGetOffset(line);
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    SBUInteger lineOffset = SBLineGetOffset(bidiLine);
+
+    return static_cast<jint>(lineOffset);
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef line = reinterpret_cast<SBLineRef>(handle);
-    return (SBLineGetOffset(line) + SBLineGetLength(line));
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    SBUInteger lineOffset = SBLineGetOffset(bidiLine);
+    SBUInteger lineLength = SBLineGetLength(bidiLine);
+
+    return static_cast<jint>(lineOffset + lineLength);
 }
 
-static jint getRunCount(JNIEnv *env, jobject obj, jlong handle)
+static jint getRunCount(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef line = reinterpret_cast<SBLineRef>(handle);
-    return SBLineGetRunCount(line);
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    SBUInteger runCount = SBLineGetRunCount(bidiLine);
+
+    return static_cast<jint>(runCount);
 }
 
-static jobject getVisualRun(JNIEnv *env, jobject obj, jlong handle, jint runIndex)
+static jobject getVisualRun(JNIEnv *env, jobject obj, jlong lineHandle, jint runIndex)
 {
-    SBLineRef line = reinterpret_cast<SBLineRef>(handle);
-    const SBRun *runPtr = &SBLineGetRunsPtr(line)[runIndex];
-    JavaBridge bridge(env);
+    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    const SBRun *runPtr = &SBLineGetRunsPtr(bidiLine)[runIndex];
+    jint charStart = static_cast<jint>(runPtr->offset);
+    jint charEnd = static_cast<jint>(runPtr->offset + runPtr->length);
+    jbyte embeddingLevel = static_cast<jbyte>(runPtr->level);
 
-    return bridge.BidiRun_construct(runPtr->offset, runPtr->offset + runPtr->length, runPtr->level);
+    return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
 }
 
 static JNINativeMethod JNI_METHODS[] = {

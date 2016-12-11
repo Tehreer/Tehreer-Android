@@ -23,22 +23,22 @@
 
 using namespace Tehreer;
 
-void *StreamUtils::toRawBuffer(const JavaBridge &bridge, jobject stream, jint *length)
+void *StreamUtils::toRawBuffer(const JavaBridge &bridge, jobject stream, size_t *length)
 {
     JNIEnv *env = bridge.env();
 
     const jint chunkLength = 4096;
     jbyteArray chunkArray = env->NewByteArray(chunkLength);
 
-    jint bufferCapacity = chunkLength;
+    size_t bufferCapacity = chunkLength;
     void *streamBuffer = malloc(bufferCapacity);
 
-    jint bufferOffset = 0;
+    size_t bufferOffset = 0;
     *length = 0;
 
     jint bytesRead;
     while ((bytesRead = bridge.InputStream_read(stream, chunkArray, 0, chunkLength)) > 0) {
-        jint newLength = *length + bytesRead;
+        size_t newLength = *length + bytesRead;
         if (newLength > bufferCapacity) {
             bufferCapacity = bufferCapacity * 2;
             if (bufferCapacity < newLength) {
@@ -49,7 +49,7 @@ void *StreamUtils::toRawBuffer(const JavaBridge &bridge, jobject stream, jint *l
         }
 
         void *chunkData = env->GetPrimitiveArrayCritical(chunkArray, nullptr);
-        memcpy((uint8_t *)streamBuffer + bufferOffset, chunkData, bytesRead);
+        memcpy((uint8_t *)streamBuffer + bufferOffset, chunkData, (size_t)bytesRead);
         env->ReleasePrimitiveArrayCritical(chunkArray, chunkData, 0);
 
         bufferOffset += bytesRead;

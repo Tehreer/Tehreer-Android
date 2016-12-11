@@ -17,10 +17,6 @@
 #ifndef _TEHREER__BIDI_ALGORITHM_H
 #define _TEHREER__BIDI_ALGORITHM_H
 
-extern "C" {
-#include <SBAlgorithm.h>
-}
-
 #include <jni.h>
 
 jint register_com_mta_tehreer_bidi_BidiAlgorithm(JNIEnv *env);

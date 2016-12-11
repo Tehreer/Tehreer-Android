@@ -19,6 +19,7 @@
 
 extern "C" {
 #include <SFArtist.h>
+#include <SFBase.h>
 #include <SFPattern.h>
 #include <SFScheme.h>
 }
@@ -46,33 +47,35 @@ public:
     const Typeface *typeface() const { return m_typeface; }
     void setTypeface(Typeface *typeface) { m_typeface = typeface; }
 
-    uint32_t scriptTag() const { return m_scriptTag; }
-    void setScriptTag(uint32_t scriptTag) { m_scriptTag = scriptTag; }
+    SFTag scriptTag() const { return m_scriptTag; }
+    void setScriptTag(SFTag scriptTag) { m_scriptTag = scriptTag; }
 
-    uint32_t languageTag() const { return m_languageTag; }
-    void setLanguageTag(uint32_t languageTag) { m_languageTag = languageTag; }
+    SFTag languageTag() const { return m_languageTag; }
+    void setLanguageTag(SFTag languageTag) { m_languageTag = languageTag; }
 
     void setText(const jchar *charArray, jint charCount);
 
-    Range textRange() const { return m_textRange; };
-    void setTextRange(Range textRange);
+    jint charStart() const { return m_charStart; }
+    jint charEnd() const { return m_charEnd; }
+    void setTextRange(jint charStart, jint charEnd);
 
     TextDirection textDirection() const { return m_textDirection; }
     void setTextDirection(TextDirection textDirection) { m_textDirection = textDirection; }
 
     SFTextMode textMode() const { return m_textMode; }
     void setTextMode(SFTextMode textMode);
-    
+
     void fillAlbum(OpenTypeAlbum &album);
 
 private:
     SFArtistRef m_sfArtist;
     SFSchemeRef m_sfScheme;
     Typeface *m_typeface;
-    uint32_t m_scriptTag;
-    uint32_t m_languageTag;
+    SFTag m_scriptTag;
+    SFTag m_languageTag;
     jchar *m_charArray;
-    Range m_textRange;
+    jint m_charStart;
+    jint m_charEnd;
     TextDirection m_textDirection;
     SFTextMode m_textMode;
 };

@@ -15,78 +15,91 @@
  */
 
 extern "C" {
+#include <SBBase.h>
 #include <SBParagraph.h>
 }
 
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
-#include "Range.h"
 #include "BidiParagraph.h"
 
 using namespace Tehreer;
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    SBParagraphRelease(paragraph);
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBParagraphRelease(bidiParagraph);
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    return SBParagraphGetOffset(paragraph);
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
+
+    return static_cast<jint>(paragraphOffset);
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    return (SBParagraphGetOffset(paragraph) + SBParagraphGetLength(paragraph));
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
+    SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
+
+    return static_cast<jint>(paragraphOffset + paragraphLength);
 }
 
-static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong handle)
+static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    return SBParagraphGetBaseLevel(paragraph);
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBLevel baseLevel = SBParagraphGetBaseLevel(bidiParagraph);
+
+    return static_cast<jbyte>(baseLevel);
 }
 
-static jbyte getLevel(JNIEnv *env, jobject obj, jlong handle, jint levelIndex)
+static jbyte getLevel(JNIEnv *env, jobject obj, jlong paragraphHandle, jint levelIndex)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    return SBParagraphGetLevelsPtr(paragraph)[levelIndex];
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
+
+    return static_cast<jbyte>(levelsPtr[levelIndex]);
 }
 
-static jobject getRun(JNIEnv *env, jobject obj, jlong handle, jint levelIndex)
+static jobject getRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jint levelIndex)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    SBUInteger length = SBParagraphGetLength(paragraph);
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
 
-    if (levelIndex < length) {
-        const SBLevel *levels = SBParagraphGetLevelsPtr(paragraph);
-        SBLevel runLevel = levels[levelIndex];
-        SBUInteger nextIndex = levelIndex;
+    if (levelIndex < paragraphLength) {
+        const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
+        SBLevel currentLevel = levelsPtr[levelIndex];
+        SBUInteger nextIndex = static_cast<SBUInteger>(levelIndex);
 
-        while (++nextIndex < length) {
-            if (levels[nextIndex] != runLevel) {
+        while (++nextIndex < paragraphLength) {
+            if (levelsPtr[nextIndex] != currentLevel) {
                 break;
             }
         }
 
-        SBUInteger offset = SBParagraphGetOffset(paragraph);
-        JavaBridge bridge(env);
+        SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
+        jint charStart = static_cast<jint>(levelIndex + paragraphOffset);
+        jint charEnd = static_cast<jint>(nextIndex + paragraphOffset);
+        jbyte embeddingLevel = static_cast<jbyte>(currentLevel);
 
-        return bridge.BidiRun_construct(levelIndex + offset, nextIndex + offset, runLevel);
+        return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
     }
 
     return nullptr;
 }
 
-static jbyte createLine(JNIEnv *env, jobject obj, jlong handle, jint charStart, jint charEnd)
+static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint charStart, jint charEnd)
 {
-    SBParagraphRef paragraph = reinterpret_cast<SBParagraphRef>(handle);
-    SBLineRef line = SBParagraphCreateLine(paragraph, charStart, charEnd - charStart);
-    return reinterpret_cast<jlong>(line);
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger lineOffset = static_cast<SBUInteger>(charStart);
+    SBUInteger lineLength = static_cast<SBUInteger>(charEnd - charStart);
+
+    SBLineRef bidiLine = SBParagraphCreateLine(bidiParagraph, lineOffset, lineLength);
+    return reinterpret_cast<jlong>(bidiLine);
 }
 
 static JNINativeMethod JNI_METHODS[] = {

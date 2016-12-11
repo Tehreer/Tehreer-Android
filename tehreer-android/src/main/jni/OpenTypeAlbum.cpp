@@ -16,20 +16,22 @@
 
 extern "C" {
 #include <SFAlbum.h>
+#include <SFBase.h>
 }
 
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "OpenTypeAlbum.h"
 
 using namespace Tehreer;
 
 OpenTypeAlbum::OpenTypeAlbum()
+    : m_sfAlbum(SFAlbumCreate())
+    , m_isBackward(false)
+    , m_charStart(0)
+    , m_charEnd(0)
 {
-    m_sfAlbum = SFAlbumCreate();
-    m_isBackward = false;
 }
 
 OpenTypeAlbum::~OpenTypeAlbum()
@@ -37,26 +39,30 @@ OpenTypeAlbum::~OpenTypeAlbum()
     SFAlbumRelease(m_sfAlbum);
 }
 
-void OpenTypeAlbum::associateText(Range textRange, bool isBackward)
+void OpenTypeAlbum::associateText(jint charStart, jint charEnd, bool isBackward)
 {
-    m_textRange = textRange;
+    m_charStart = charStart;
+    m_charEnd = charEnd;
     m_isBackward = isBackward;
 }
 
 jint OpenTypeAlbum::getCharGlyphIndex(jint charIndex) const
 {
-    return SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum)[charIndex - m_textRange.start];
+    const SFUInteger *codeunitMap = SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum);
+    SFUInteger glyphIndex = codeunitMap[charIndex - m_charStart];
+
+    return static_cast<jint>(glyphIndex);
 }
 
-void OpenTypeAlbum::copyGlyphInfos(Range glyphRange, jfloat scaleFactor,
+void OpenTypeAlbum::copyGlyphInfos(jint fromIndex, jint toIndex, jfloat scaleFactor,
     jint *glyphIDBuffer, jfloat *xOffsetBuffer, jfloat *yOffsetBuffer, jfloat *advanceBuffer) const
 {
-    const SFGlyphID *albumGlyphIDs = SFAlbumGetGlyphIDsPtr(m_sfAlbum) + glyphRange.start;
-    const SFPoint *albumOffsets = SFAlbumGetGlyphOffsetsPtr(m_sfAlbum) + glyphRange.start;
-    const SFAdvance *albumAdvances = SFAlbumGetGlyphAdvancesPtr(m_sfAlbum) + glyphRange.start;
+    const SFGlyphID *albumGlyphIDs = SFAlbumGetGlyphIDsPtr(m_sfAlbum) + fromIndex;
+    const SFPoint *albumOffsets = SFAlbumGetGlyphOffsetsPtr(m_sfAlbum) + fromIndex;
+    const SFInt32 *albumAdvances = SFAlbumGetGlyphAdvancesPtr(m_sfAlbum) + fromIndex;
 
-    jint glyphCount = glyphRange.length();
-    for (jint i = 0; i < glyphCount; i++) {
+    size_t glyphCount = static_cast<size_t >(toIndex - fromIndex);
+    for (size_t i = 0; i < glyphCount; i++) {
         if (glyphIDBuffer) {
             glyphIDBuffer[i] = albumGlyphIDs[i];
         }
@@ -72,13 +78,13 @@ void OpenTypeAlbum::copyGlyphInfos(Range glyphRange, jfloat scaleFactor,
     }
 }
 
-void OpenTypeAlbum::copyCharGlyphIndexes(Range textRange, jint *glyphIndexBuffer) const
+void OpenTypeAlbum::copyCharGlyphIndexes(jint fromIndex, jint toIndex, jint *glyphIndexBuffer) const
 {
     const SFUInteger *codeunitToGlyphMap = SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum);
-    jint codeunitCount = textRange.length();
+    size_t codeunitCount = static_cast<size_t>(toIndex - fromIndex);
 
     for (jint i = 0; i < codeunitCount; i++) {
-        glyphIndexBuffer[i] = codeunitToGlyphMap[textRange.start + i - m_textRange.start];
+        glyphIndexBuffer[i] = static_cast<jint>(codeunitToGlyphMap[fromIndex + i - m_charStart]);
     }
 }
 
@@ -88,92 +94,111 @@ static jlong create(JNIEnv *env, jobject obj)
     return reinterpret_cast<jlong>(opentypeAlbum);
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jobject obj, jlong albumHandle)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
     delete opentypeAlbum;
 }
 
-static jint isBackward(JNIEnv *env, jobject obj, jlong handle)
+static jint isBackward(JNIEnv *env, jobject obj, jlong albumHandle)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
     return opentypeAlbum->isBackward();
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong albumHandle)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->textRange().start;
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    return opentypeAlbum->charStart();
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong albumHandle)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->textRange().end;
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    return opentypeAlbum->charEnd();
 }
 
-static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
+static jint getGlyphCount(JNIEnv *env, jobject obj, jlong albumHandle)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->glyphCount();
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    SFAlbumRef baseAlbum = opentypeAlbum->sfAlbum();
+    SFUInteger glyphCount = SFAlbumGetGlyphCount(baseAlbum);
+
+    return static_cast<jint>(glyphCount);
 }
 
-static jint getCharGlyphIndex(JNIEnv *env, jobject obj, jlong handle, jint charIndex)
+static jint getCharGlyphIndex(JNIEnv *env, jobject obj, jlong albumHandle, jint charIndex)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
     return opentypeAlbum->getCharGlyphIndex(charIndex);
 }
 
-static jint getGlyphId(JNIEnv *env, jobject obj, jlong handle, jint glyphIndex)
+static jint getGlyphId(JNIEnv *env, jobject obj, jlong albumHandle, jint glyphIndex)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->glyphIDAt(glyphIndex);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    SFAlbumRef baseAlbum = opentypeAlbum->sfAlbum();
+    const SFGlyphID *glyphIDsPtr = SFAlbumGetGlyphIDsPtr(baseAlbum);
+
+    return static_cast<jint>(glyphIDsPtr[glyphIndex]);
 }
 
-static jint getGlyphXOffset(JNIEnv *env, jobject obj, jlong handle, jint glyphIndex)
+static jint getGlyphXOffset(JNIEnv *env, jobject obj, jlong albumHandle, jint glyphIndex)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->glyphXOffsetAt(glyphIndex);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    SFAlbumRef baseAlbum = opentypeAlbum->sfAlbum();
+    const SFPoint *glyphOffsetsPtr = SFAlbumGetGlyphOffsetsPtr(baseAlbum);
+
+    return static_cast<jint>(glyphOffsetsPtr[glyphIndex].x);
 }
 
-static jint getGlyphYOffset(JNIEnv *env, jobject obj, jlong handle, jint glyphIndex)
+static jint getGlyphYOffset(JNIEnv *env, jobject obj, jlong albumHandle, jint glyphIndex)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->glyphYOffsetAt(glyphIndex);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    SFAlbumRef baseAlbum = opentypeAlbum->sfAlbum();
+    const SFPoint *glyphOffsetsPtr = SFAlbumGetGlyphOffsetsPtr(baseAlbum);
+
+    return static_cast<jint>(glyphOffsetsPtr[glyphIndex].y);
 }
 
-static jint getGlyphAdvance(JNIEnv *env, jobject obj, jlong handle, jint glyphIndex)
+static jint getGlyphAdvance(JNIEnv *env, jobject obj, jlong albumHandle, jint glyphIndex)
 {
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    return opentypeAlbum->glyphAdvanceAt(glyphIndex);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    SFAlbumRef baseAlbum = opentypeAlbum->sfAlbum();
+    const SFInt32 *glyphAdvancesPtr = SFAlbumGetGlyphAdvancesPtr(baseAlbum);
+
+    return static_cast<jint>(glyphAdvancesPtr[glyphIndex]);
 }
 
-void copyGlyphInfos(JNIEnv *env, jobject obj, jlong handle, jint fromIndex, jint toIndex, jfloat scaleFactor,
-        jintArray glyphIDs, jfloatArray xOffsets, jfloatArray yOffsets, jfloatArray advances)
+void copyGlyphInfos(JNIEnv *env, jobject obj, jlong albumHandle,
+    jint fromIndex, jint toIndex, jfloat scaleFactor,
+    jintArray glyphIDs, jfloatArray xOffsets, jfloatArray yOffsets, jfloatArray advances)
 {
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+
     void *glyphIDBuffer = env->GetPrimitiveArrayCritical(glyphIDs, nullptr);
     void *xOffsetBuffer = env->GetPrimitiveArrayCritical(xOffsets, nullptr);
     void *yOffsetBuffer = env->GetPrimitiveArrayCritical(yOffsets, nullptr);
     void *advanceBuffer = env->GetPrimitiveArrayCritical(advances, nullptr);
 
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    opentypeAlbum->copyGlyphInfos(Range(fromIndex, toIndex), scaleFactor,
-                                  (jint *)glyphIDBuffer,
-                                  (jfloat *)xOffsetBuffer, (jfloat *)yOffsetBuffer,
-                                  (jfloat *)advanceBuffer);
+    opentypeAlbum->copyGlyphInfos(fromIndex, toIndex, scaleFactor,
+                                  static_cast<jint *>(glyphIDBuffer),
+                                  static_cast<jfloat *>(xOffsetBuffer),
+                                  static_cast<jfloat *>(yOffsetBuffer),
+                                  static_cast<jfloat *>(advanceBuffer));
 
-    env->ReleasePrimitiveArrayCritical(glyphIDs, glyphIDBuffer, 0);
-    env->ReleasePrimitiveArrayCritical(xOffsets, xOffsetBuffer, 0);
-    env->ReleasePrimitiveArrayCritical(yOffsets, yOffsetBuffer, 0);
     env->ReleasePrimitiveArrayCritical(advances, advanceBuffer, 0);
+    env->ReleasePrimitiveArrayCritical(yOffsets, yOffsetBuffer, 0);
+    env->ReleasePrimitiveArrayCritical(xOffsets, xOffsetBuffer, 0);
+    env->ReleasePrimitiveArrayCritical(glyphIDs, glyphIDBuffer, 0);
 }
 
-void copyCharGlyphIndexes(JNIEnv *env, jobject obj, jlong handle, jint fromIndex, jint toIndex, jintArray charGlyphIndexes)
+void copyCharGlyphIndexes(JNIEnv *env, jobject obj, jlong albumHandle,
+    jint fromIndex, jint toIndex, jintArray charGlyphIndexes)
 {
     void *charGlyphIndexBuffer = env->GetPrimitiveArrayCritical(charGlyphIndexes, nullptr);
 
-    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(handle);
-    opentypeAlbum->copyCharGlyphIndexes(Range(fromIndex, toIndex), (jint *)charGlyphIndexBuffer);
+    OpenTypeAlbum *opentypeAlbum = reinterpret_cast<OpenTypeAlbum *>(albumHandle);
+    opentypeAlbum->copyCharGlyphIndexes(fromIndex, toIndex, (jint *)charGlyphIndexBuffer);
 
     env->ReleasePrimitiveArrayCritical(charGlyphIndexes, charGlyphIndexBuffer, 0);
 }

@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-extern "C" {
-#include <SBCodepointSequence.h>
-}
-
 #include <cstring>
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "BidiBuffer.h"
 
 using namespace Tehreer;
 
-BidiBuffer *BidiBuffer::create(const jchar *charArray, jint charCount)
+BidiBuffer *BidiBuffer::create(const jchar *charArray, jsize charCount)
 {
     return new BidiBuffer(charArray, charCount);
 }
 
-BidiBuffer::BidiBuffer(const jchar *charArray, jint charCount)
+BidiBuffer::BidiBuffer(const jchar *charArray, jsize charCount)
 {
     m_data = new jchar[charCount];
     m_length = charCount;
@@ -61,7 +56,7 @@ void BidiBuffer::release()
 static jlong create(JNIEnv *env, jobject obj, jstring string)
 {
     const jchar *charArray = env->GetStringChars(string, nullptr);
-    jint charCount = env->GetStringLength(string);
+    jsize charCount = env->GetStringLength(string);
 
     BidiBuffer *bidiBuffer = BidiBuffer::create(charArray, charCount);
 
@@ -70,16 +65,16 @@ static jlong create(JNIEnv *env, jobject obj, jstring string)
     return reinterpret_cast<jlong>(bidiBuffer);
 }
 
-static void retain(JNIEnv *env, jobject obj, jlong handle)
+static void retain(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
-    BidiBuffer *buffer = reinterpret_cast<BidiBuffer *>(handle);
-    buffer->retain();
+    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    bidiBuffer->retain();
 }
 
-static void release(JNIEnv *env, jobject obj, jlong handle)
+static void release(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
-    BidiBuffer *buffer = reinterpret_cast<BidiBuffer *>(handle);
-    buffer->release();
+    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    bidiBuffer->release();
 }
 
 static JNINativeMethod JNI_METHODS[] = {

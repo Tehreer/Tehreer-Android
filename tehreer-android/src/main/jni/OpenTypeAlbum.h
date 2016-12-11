@@ -24,8 +24,6 @@ extern "C" {
 #include <jni.h>
 #include <memory>
 
-#include "Range.h"
-
 namespace Tehreer {
 
 class OpenTypeAlbum {
@@ -33,28 +31,25 @@ public:
     OpenTypeAlbum();
     ~OpenTypeAlbum();
 
-    SFAlbumRef SFAlbum() const { return m_sfAlbum; }
+    SFAlbumRef sfAlbum() const { return m_sfAlbum; }
 
-    void associateText(Range textRange, bool isBackward);
+    void associateText(jint charStart, jint charEnd, bool isBackward);
 
     bool isBackward() const { return m_isBackward; }
-    Range textRange() const { return m_textRange; }
+    jint charStart() const { return m_charStart; }
+    jint charEnd() const { return m_charEnd; }
 
-    jint glyphCount() const { return SFAlbumGetGlyphCount(m_sfAlbum); }
-    jint glyphIDAt(jint glyphIndex) const { return SFAlbumGetGlyphIDsPtr(m_sfAlbum)[glyphIndex]; }
-    jint glyphXOffsetAt(jint glyphIndex) const { return SFAlbumGetGlyphOffsetsPtr(m_sfAlbum)[glyphIndex].x; }
-    jint glyphYOffsetAt(jint glyphIndex) const { return SFAlbumGetGlyphOffsetsPtr(m_sfAlbum)[glyphIndex].y; }
-    jint glyphAdvanceAt(jint glyphIndex) const { return SFAlbumGetGlyphAdvancesPtr(m_sfAlbum)[glyphIndex]; }
     jint getCharGlyphIndex(jint charIndex) const;
 
-    void copyGlyphInfos(Range glyphRange, jfloat sizeScale,
-            jint *glyphIDBuffer, jfloat *xOffsetBuffer, jfloat *yOffsetBuffer, jfloat *advanceBuffer) const;
-    void copyCharGlyphIndexes(Range stringRange, jint *glyphIndexBuffer) const;
+    void copyGlyphInfos(jint fromIndex, jint toIndex, jfloat scaleFactor,
+        jint *glyphIDBuffer, jfloat *xOffsetBuffer, jfloat *yOffsetBuffer, jfloat *advanceBuffer) const;
+    void copyCharGlyphIndexes(jint fromIndex, jint toIndex, jint *glyphIndexBuffer) const;
 
 private:
     SFAlbumRef m_sfAlbum;
-    Range m_textRange;
     bool m_isBackward;
+    jint m_charStart;
+    jint m_charEnd;
 };
 
 }

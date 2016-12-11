@@ -28,8 +28,6 @@
 #include "Miscellaneous.h"
 #include "OpenTypeAlbum.h"
 #include "OpenTypeArtist.h"
-#include "OpenTypeTag.h"
-#include "Range.h"
 #include "Typeface.h"
 
 #endif

@@ -36,9 +36,9 @@ public:
         Alpha8,
     };
 
-    jobject BidiPair_construct(jint charIndex, jint relatedCodepoint) const;
+    jobject BidiPair_construct(jint charIndex, jint pairingCodePoint) const;
 
-    jobject BidiRun_construct(jint runStart, jint runEnd, jbyte level) const;
+    jobject BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const;
 
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
     void Bitmap_setPixels(jobject bitmap, const void *pixels, size_t length) const;
