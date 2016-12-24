@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-#include <cstring>
-
 #include <android/bitmap.h>
+#include <cstring>
 #include <jni.h>
 
-#include "Miscellaneous.h"
 #include "JavaBridge.h"
 
 using namespace Tehreer;
-
-static jclass    OBJECT;
-static jmethodID OBJECT__CONSTRUCTOR;
 
 static jclass    BIDI_PAIR;
 static jmethodID BIDI_PAIR__CONSTRUCTOR;
@@ -46,7 +41,6 @@ static jmethodID GLYPH__OWN_BITMAP;
 static jmethodID GLYPH__OWN_OUTLINE;
 static jmethodID GLYPH__OWN_PATH;
 
-static jclass    INPUT_STREAM;
 static jmethodID INPUT_STREAM__READ;
 
 static jclass    NAME_ENTRY;
@@ -75,10 +69,6 @@ void JavaBridge::load(JNIEnv* env)
     jfieldID fieldID;
     jobject field;
 
-    clazz = env->FindClass("java/lang/Object");
-    OBJECT = (jclass)env->NewGlobalRef(clazz);
-    OBJECT__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "()V");
-
     clazz = env->FindClass("com/mta/tehreer/bidi/BidiPair");
     BIDI_PAIR = (jclass)env->NewGlobalRef(clazz);
     BIDI_PAIR__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(II)V");
@@ -106,7 +96,6 @@ void JavaBridge::load(JNIEnv* env)
     GLYPH__OWN_PATH = env->GetMethodID(clazz, "ownPath", "(Landroid/graphics/Path;)V");
 
     clazz = env->FindClass("java/io/InputStream");
-    INPUT_STREAM = (jclass)env->NewGlobalRef(clazz);
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
 
     clazz = env->FindClass("com/mta/tehreer/opentype/NameEntry");

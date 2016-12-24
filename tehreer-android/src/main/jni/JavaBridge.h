@@ -17,7 +17,6 @@
 #ifndef _TEHREER__JAVA_BRIDGE_H
 #define _TEHREER__JAVA_BRIDGE_H
 
-#include <cstdint>
 #include <jni.h>
 
 namespace Tehreer {
