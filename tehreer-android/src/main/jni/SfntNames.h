@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER_H
-#define _TEHREER_H
+#ifndef _TEHREER__SFNT_NAMES_H
+#define _TEHREER__SFNT_NAMES_H
 
-#include "BidiAlgorithm.h"
-#include "BidiBuffer.h"
-#include "BidiLine.h"
-#include "BidiMirrorLocator.h"
-#include "BidiParagraph.h"
-#include "FreeType.h"
-#include "Glyph.h"
-#include "GlyphRasterizer.h"
-#include "Miscellaneous.h"
-#include "OpenTypeAlbum.h"
-#include "OpenTypeArtist.h"
-#include "SfntNames.h"
-#include "Typeface.h"
+#include <jni.h>
+
+jint register_com_mta_tehreer_opentype_SfntNames(JNIEnv *env);
 
 #endif

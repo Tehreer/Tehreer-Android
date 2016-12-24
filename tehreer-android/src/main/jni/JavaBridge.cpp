@@ -59,6 +59,10 @@ static jmethodID PATH__QUAD_TO;
 
 static jmethodID RECT__SET;
 
+static jclass    SFNT_NAMES;
+static jmethodID SFNT_NAMES__CREATE_LOCALE;
+static jmethodID SFNT_NAMES__ADD_NAME;
+
 static jfieldID  TYPEFACE__NATIVE_TYPEFACE;
 
 void JavaBridge::load(JNIEnv* env)
@@ -112,6 +116,11 @@ void JavaBridge::load(JNIEnv* env)
 
     clazz = env->FindClass("android/graphics/Rect");
     RECT__SET = env->GetMethodID(clazz, "set", "(IIII)V");
+
+    clazz = env->FindClass("com/mta/tehreer/opentype/SfntNames");
+    SFNT_NAMES = (jclass)env->NewGlobalRef(clazz);
+    SFNT_NAMES__CREATE_LOCALE = env->GetStaticMethodID(clazz, "createLocale", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Locale;");
+    SFNT_NAMES__ADD_NAME = env->GetMethodID(clazz, "addName", "(ILjava/util/Locale;Ljava/lang/String;[B)V");
 
     clazz = env->FindClass("com/mta/tehreer/graphics/Typeface");
     TYPEFACE__NATIVE_TYPEFACE = env->GetFieldID(clazz, "nativeTypeface", "J");
@@ -236,6 +245,16 @@ void JavaBridge::Path_quadTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jflo
 void JavaBridge::Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const
 {
     m_env->CallVoidMethod(rect, RECT__SET, left, top, right, bottom);
+}
+
+jobject JavaBridge::SfntNames_createLocale(jstring platform, jstring language, jstring region, jstring script, jstring variant) const
+{
+    return m_env->CallStaticObjectMethod(SFNT_NAMES, SFNT_NAMES__CREATE_LOCALE, platform, language, region, script, variant);
+}
+
+void JavaBridge::SfntNames_addName(jobject sfntNames, jint nameId, jobject locale, jstring encoding, jbyteArray value) const
+{
+    m_env->CallVoidMethod(sfntNames, SFNT_NAMES__ADD_NAME, nameId, locale, encoding, value);
 }
 
 jlong JavaBridge::Typeface_getNativeTypeface(jobject typeface) const

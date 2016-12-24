@@ -61,6 +61,9 @@ public:
 
     void Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const;
 
+    jobject SfntNames_createLocale(jstring platform, jstring language, jstring region, jstring script, jstring variant) const;
+    void SfntNames_addName(jobject sfntNames, jint nameId, jobject locale, jstring encoding, jbyteArray value) const;
+
     jlong Typeface_getNativeTypeface(jobject typeface) const;
 
 private:
