@@ -42,13 +42,15 @@ private:
 public:
     Locale(uint16_t platformID, uint16_t languageID)
     {
-        static const vector<string> Platforms = {
+        static const vector<string> AllPlatforms = {
             "ucd",  // Unicode
             "mac",  // Macintosh
             "iso",  // ISO
             "win",  // Windows
             "cst",  // Custom
         };
+        static const string UnrecognizedPlatform = "unr";
+
         // Format: <ID, <Language, Region, Script, Variant>>
         static const map<uint16_t, vector<string>> MacLanguages = {
             {0, {"en"}},
@@ -381,7 +383,11 @@ public:
         };
         static const vector<string> UndeterminedLanguage = {"und"};
 
-        m_platform = platformID < Platforms.size() ? &Platforms[platformID] : nullptr;
+        if (platformID < AllPlatforms.size()) {
+            m_platform = &AllPlatforms[platformID];
+        } else {
+            m_platform = &UnrecognizedPlatform;
+        }
 
         switch (platformID) {
         case 1: {
@@ -415,7 +421,7 @@ public:
 
 class Encoding {
 private:
-    string m_string;
+    string m_name;
 
 public:
     Encoding(uint16_t platformID, uint16_t encodingID)
@@ -427,12 +433,12 @@ public:
             case 1:
             case 2:
             case 3:
-                m_string = "UTF-16";
+                m_name = "UTF-16";
                 break;
 
             case 4:
             case 6:
-                m_string = "UTF_32";
+                m_name = "UTF_32";
                 break;
 
             default:
@@ -444,48 +450,48 @@ public:
         case 1:
             switch (encodingID) {
             case 0:
-                m_string = "MacRoman";
+                m_name = "MacRoman";
                 break;
 
             case 1:
-                m_string = "SJIS";
+                m_name = "SJIS";
                 break;
 
             case 2:
-                m_string = "Big5";
+                m_name = "Big5";
                 break;
 
             case 3:
-                m_string = "EUC_KR";
+                m_name = "EUC_KR";
                 break;
 
             case 4:
-                m_string = "MacArabic";
+                m_name = "MacArabic";
                 break;
 
             case 5:
-                m_string = "MacHebrew";
+                m_name = "MacHebrew";
                 break;
 
             case 6:
-                m_string = "MacGreek";
+                m_name = "MacGreek";
                 break;
 
             case 7:
             case 29:
-                m_string = "MacCyrillic";
+                m_name = "MacCyrillic";
                 break;
 
             case 8:
-                m_string = "MacSymbol";
+                m_name = "MacSymbol";
                 break;
 
             case 21:
-                m_string = "MacThai";
+                m_name = "MacThai";
                 break;
 
             case 25:
-                m_string = "EUC-CN";
+                m_name = "EUC-CN";
                 break;
 
             default:
@@ -497,15 +503,15 @@ public:
         case 2:
             switch (encodingID) {
             case 0:
-                m_string = "ASCII";
+                m_name = "ASCII";
                 break;
 
             case 1:
-                m_string = "UTF-16";
+                m_name = "UTF-16";
                 break;
 
             case 2:
-                m_string = "ISO8859_1";
+                m_name = "ISO8859_1";
                 break;
 
             default:
@@ -518,31 +524,31 @@ public:
             switch (encodingID) {
             case 0:
             case 1:
-                m_string = "UTF-16";
+                m_name = "UTF-16";
                 break;
 
             case 2:
-                m_string = "SJIS";
+                m_name = "SJIS";
                 break;
 
             case 3:
-                m_string = "GBK";
+                m_name = "GBK";
                 break;
 
             case 4:
-                m_string = "MS950";
+                m_name = "MS950";
                 break;
 
             case 5:
-                m_string = "EUC_KR";
+                m_name = "EUC_KR";
                 break;
 
             case 6:
-                m_string = "Johab";
+                m_name = "Johab";
                 break;
 
             case 10:
-                m_string = "UTF_32";
+                m_name = "UTF_32";
                 break;
 
             default:
@@ -557,19 +563,68 @@ public:
         }
     }
 
-    const char *name() const { return (m_string.length() > 0 ? m_string.c_str() : nullptr); }
+    const char *name() const { return (m_name.length() > 0 ? m_name.c_str() : nullptr); }
 };
+
+static jobject createLocale(JNIEnv *env, Locale &locale)
+{
+    jstring platform = env->NewStringUTF(locale.platform());
+    jstring language = env->NewStringUTF(locale.language());
+    jstring region = env->NewStringUTF(locale.region());
+    jstring script = env->NewStringUTF(locale.script());
+    jstring variant = env->NewStringUTF(locale.variant());
+    jobject result = JavaBridge(env).SfntNames_createLocale(platform, language, region, script, variant);
+
+    env->DeleteLocalRef(variant);
+    env->DeleteLocalRef(script);
+    env->DeleteLocalRef(region);
+    env->DeleteLocalRef(language);
+    env->DeleteLocalRef(platform);
+
+    return result;
+}
+
+static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
+{
+    jbyteArray bytes = env->NewByteArray(length);
+    env->SetByteArrayRegion(bytes, 0, length, reinterpret_cast<jbyte *>(buffer));
+
+    return bytes;
+}
+
+static jstring decodeBytes(JNIEnv *env, Encoding &encoding, jbyteArray bytes)
+{
+    if (encoding.name()) {
+        jstring encodingName = env->NewStringUTF(encoding.name());
+        jstring decodedString = JavaBridge(env).SfntNames_decodeBytes(encodingName, bytes);
+
+        env->DeleteLocalRef(encodingName);
+
+        return decodedString;
+    }
+
+    return nullptr;
+}
+
+static jstring decodeBuffer(JNIEnv *env, Encoding &encoding, FT_Byte *buffer, FT_UInt length)
+{
+    jbyteArray encodedBytes = createBytes(env, buffer, length);
+    jstring decodedString = decodeBytes(env, encoding, encodedBytes);
+
+    env->DeleteLocalRef(encodedBytes);
+
+    return decodedString;
+}
 
 void addStandardNames(JNIEnv *env, jobject obj, jobject jsfntNames, jobject jtypeface)
 {
-    JavaBridge bridge(env);
-    jlong typefaceHandle = bridge.Typeface_getNativeTypeface(jtypeface);
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-
     FT_Face baseFace = typeface->ftFace();
     FT_UInt nameCount = FT_Get_Sfnt_Name_Count(baseFace);
 
     for (FT_UInt i = 0; i < nameCount; i++) {
+        // Lock the typeface as FreeType loads the name on demand.
         typeface->lock();
 
         FT_SfntName sfntName;
@@ -582,42 +637,62 @@ void addStandardNames(JNIEnv *env, jobject obj, jobject jsfntNames, jobject jtyp
         }
 
         if (sfntName.name_id <= 25) {
-            Encoding encoding(sfntName.platform_id, sfntName.encoding_id);
-            if (!encoding.name()) {
-                continue;
-            }
-
             Locale locale(sfntName.platform_id, sfntName.language_id);
-            if (!locale.platform()) {
-                continue;
+            Encoding encoding(sfntName.platform_id, sfntName.encoding_id);
+
+            jobject relevantLocale = createLocale(env, locale);
+            jstring decodedString = decodeBuffer(env, encoding, sfntName.string, sfntName.string_len);
+
+            if (decodedString) {
+                JavaBridge(env).SfntNames_addName(jsfntNames, sfntName.name_id, relevantLocale, decodedString);
             }
 
-            jstring jplatform = env->NewStringUTF(locale.platform());
-            jstring jlanguage = env->NewStringUTF(locale.language());
-            jstring jregion = env->NewStringUTF(locale.region());
-            jstring jscript = env->NewStringUTF(locale.script());
-            jstring jvariant = env->NewStringUTF(locale.variant());
-            jobject jlocale = bridge.SfntNames_createLocale(jplatform, jlanguage, jregion, jscript, jvariant);
-            jstring jencoding = env->NewStringUTF(encoding.name());
-            jbyteArray jvalue = env->NewByteArray(sfntName.string_len);
-            env->SetByteArrayRegion(jvalue, 0, sfntName.string_len, (jbyte *)(sfntName.string));
-
-            bridge.SfntNames_addName(jsfntNames, sfntName.name_id, jlocale, jencoding, jvalue);
-
-            env->DeleteLocalRef(jvalue);
-            env->DeleteLocalRef(jencoding);
-            env->DeleteLocalRef(jlocale);
-            env->DeleteLocalRef(jvariant);
-            env->DeleteLocalRef(jscript);
-            env->DeleteLocalRef(jregion);
-            env->DeleteLocalRef(jlanguage);
-            env->DeleteLocalRef(jplatform);
+            env->DeleteLocalRef(decodedString);
+            env->DeleteLocalRef(relevantLocale);
         }
     }
 }
 
+jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
+{
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(baseFace);
+
+    return static_cast<jint>(nameCount);
+}
+
+jobject getNameAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
+{
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+
+    // Lock the typeface as FreeType loads the name on demand.
+    typeface->lock();
+
+    FT_SfntName sfntName;
+    FT_Get_Sfnt_Name(baseFace, static_cast<FT_UInt>(index), &sfntName);
+
+    typeface->unlock();
+
+    Locale locale(sfntName.platform_id, sfntName.language_id);
+    Encoding encoding(sfntName.platform_id, sfntName.encoding_id);
+
+    jobject relevantLocale = createLocale(env, locale);
+    jbyteArray encodedBytes = createBytes(env, sfntName.string, sfntName.string_len);
+    jstring decodedString = decodeBytes(env, encoding, encodedBytes);
+
+    return JavaBridge(env).NameEntry_construct(sfntName.name_id, sfntName.platform_id,
+                                               sfntName.language_id, sfntName.encoding_id,
+                                               encodedBytes, relevantLocale, decodedString);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nativeAddStandardNames", "(Lcom/mta/tehreer/opentype/SfntNames;Lcom/mta/tehreer/graphics/Typeface;)V", (void *)addStandardNames },
+    { "nativeGetNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
+    { "nativeGetNameAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameEntry;", (void *)getNameAt },
 };
 
 jint register_com_mta_tehreer_opentype_SfntNames(JNIEnv *env)

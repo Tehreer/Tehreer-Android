@@ -51,7 +51,7 @@ public class SfntNames {
     private static final int TYPOGRAPHIC_SUBFAMILY = 17;
     private static final int MAC_FULL_NAME = 18;
     private static final int SAMPLE_TEXT = 19;
-    private static final int POSTSCRIPT_CID_FONT_NAME = 20;
+    private static final int POSTSCRIPT_CID_FIND_FONT_NAME = 20;
     private static final int WWS_FAMILY = 21;
     private static final int WWS_SUBFAMILY = 22;
     private static final int LIGHT_BACKGROUND_PALETTE = 23;
@@ -91,6 +91,18 @@ public class SfntNames {
         return new Locale(language, region, secret);
     }
 
+    private static String decodeBytes(String encoding, byte[] bytes) {
+        String string = null;
+
+        try {
+            Charset charset = Charset.forName(encoding);
+            string = new String(bytes, charset);
+        } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
+        }
+
+        return string;
+    }
+
     public static SfntNames forTypeface(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
@@ -104,20 +116,14 @@ public class SfntNames {
         nativeAddStandardNames(this, typeface);
     }
 
-    private void addName(int nameId, Locale locale, String encoding, byte[] value) {
-        try {
-            Charset charset = Charset.forName(encoding);
-            String string = new String(value, charset);
-
-            Map<Locale, String> nameMap = standardNames.get(nameId);
-            if (nameMap == null) {
-                nameMap = new HashMap<>();
-                standardNames.put(nameId, nameMap);
-            }
-
-            nameMap.put(locale, string);
-        } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
+    private void addName(int nameId, Locale relevantLocale, String decodedString) {
+        Map<Locale, String> nameMap = standardNames.get(nameId);
+        if (nameMap == null) {
+            nameMap = new HashMap<>();
+            standardNames.put(nameId, nameMap);
         }
+
+        nameMap.put(relevantLocale, decodedString);
     }
 
     private Map<Locale, String> getNameById(int nameId) {
@@ -131,6 +137,18 @@ public class SfntNames {
 
     public Typeface getTypeface() {
         return typeface;
+    }
+
+    public int getNameCount() {
+        return nativeGetNameCount(typeface);
+    }
+
+    public NameEntry getNameAt(int index) {
+        if (index < 0 || index >= getNameCount()) {
+            throw new IndexOutOfBoundsException("Index: " + index);
+        }
+
+        return nativeGetNameAt(typeface, index);
     }
 
     public Map<Locale, String> getCopyright() {
@@ -209,6 +227,10 @@ public class SfntNames {
         return getNameById(SAMPLE_TEXT);
     }
 
+    public Map<Locale, String> getPostscriptCIDFindFontName() {
+        return getNameById(POSTSCRIPT_CID_FIND_FONT_NAME);
+    }
+
     public Map<Locale, String> getWwsFamily() {
         return getNameById(WWS_FAMILY);
     }
@@ -230,4 +252,7 @@ public class SfntNames {
     }
 
     private static native void nativeAddStandardNames(SfntNames sfntNames, Typeface typeface);
+
+    private static native int nativeGetNameCount(Typeface typeface);
+    private static native NameEntry nativeGetNameAt(Typeface typeface, int index);
 }
