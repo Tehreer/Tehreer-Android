@@ -19,21 +19,25 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import com.mta.tehreer.internal.util.Sustain;
+
 class Glyph {
 
-    private int mGlyphId;
+    @Sustain
+    private final int glyphId;
+    @Sustain
+    private long nativeOutline;
     private int mLeft;
     private int mTop;
     private Bitmap mBitmap;
     private Path mPath;
-    private long mNativeOutline;
 
     public Glyph(int glyphId) {
-        mGlyphId = glyphId;
+        this.glyphId = glyphId;
     }
 
     public int glyphId() {
-        return mGlyphId;
+        return glyphId;
     }
 
     public int left() {
@@ -61,9 +65,10 @@ class Glyph {
     }
 
     public boolean containsOutline() {
-        return (mNativeOutline != 0);
+        return (nativeOutline != 0);
     }
 
+    @Sustain
     @SuppressWarnings("unused")
     private void ownBitmap(Bitmap bitmap, int left, int top) {
         if (mBitmap != null && !mBitmap.isRecycled()) {
@@ -75,26 +80,28 @@ class Glyph {
         mTop = top;
     }
 
+    @Sustain
     @SuppressWarnings("unused")
     private void ownPath(Path path) {
         mPath = path;
     }
 
+    @Sustain
     @SuppressWarnings("unused")
     private void ownOutline(long nativeOutline) {
-        if (mNativeOutline != 0) {
-            nativeDisposeOutline(mNativeOutline);
+        if (this.nativeOutline != 0) {
+            nativeDisposeOutline(this.nativeOutline);
         }
 
-        mNativeOutline = nativeOutline;
+        this.nativeOutline = nativeOutline;
     }
 
     @Override
     public void finalize() throws Throwable {
         try {
-            if (mNativeOutline != 0) {
-                nativeDisposeOutline(mNativeOutline);
-                mNativeOutline = 0;
+            if (nativeOutline != 0) {
+                nativeDisposeOutline(nativeOutline);
+                nativeOutline = 0;
             }
         } finally {
             super.finalize();

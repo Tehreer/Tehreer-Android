@@ -89,8 +89,8 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("com/mta/tehreer/graphics/Glyph");
     GLYPH = (jclass)env->NewGlobalRef(clazz);
     GLYPH__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(I)V");
-    GLYPH__GLYPH_ID = env->GetFieldID(clazz, "mGlyphId", "I");
-    GLYPH__NATIVE_OUTLINE = env->GetFieldID(clazz, "mNativeOutline", "J");
+    GLYPH__GLYPH_ID = env->GetFieldID(clazz, "glyphId", "I");
+    GLYPH__NATIVE_OUTLINE = env->GetFieldID(clazz, "nativeOutline", "J");
     GLYPH__OWN_BITMAP = env->GetMethodID(clazz, "ownBitmap", "(Landroid/graphics/Bitmap;II)V");
     GLYPH__OWN_OUTLINE = env->GetMethodID(clazz, "ownOutline", "(J)V");
     GLYPH__OWN_PATH = env->GetMethodID(clazz, "ownPath", "(Landroid/graphics/Path;)V");

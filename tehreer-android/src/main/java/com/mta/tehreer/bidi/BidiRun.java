@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.util.Sustain;
+
 /**
  * A <code>BidiRun</code> object represents a sequence of characters which have the same embedding
  * level. The direction of run is considered right-to-left, if its embedding level is odd.
@@ -26,6 +28,7 @@ public class BidiRun {
     private int mCharEnd;
     private byte mEmbeddingLevel;
 
+    @Sustain
     BidiRun(int charStart, int charEnd, byte embeddingLevel) {
         mCharStart = charStart;
         mCharEnd = charEnd;

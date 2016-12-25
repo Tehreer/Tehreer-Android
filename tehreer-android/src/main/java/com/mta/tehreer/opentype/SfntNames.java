@@ -20,6 +20,7 @@ import android.os.Build;
 import android.util.SparseArray;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.util.Sustain;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -61,6 +62,8 @@ public class SfntNames {
     private final SparseArray<Map<Locale, String>> standardNames = new SparseArray<>(25);
     private final Typeface typeface;
 
+    @Sustain
+    @SuppressWarnings("unused")
     private static Locale createLocale(String platform, String language, String region, String script, String variant) {
         if (Build.VERSION.SDK_INT >= 21) {
             Locale.Builder builder = new Locale.Builder();
@@ -91,6 +94,8 @@ public class SfntNames {
         return new Locale(language, region, secret);
     }
 
+    @Sustain
+    @SuppressWarnings("unused")
     private static String decodeBytes(String encoding, byte[] bytes) {
         String string = null;
 
@@ -116,6 +121,8 @@ public class SfntNames {
         nativeAddStandardNames(this, typeface);
     }
 
+    @Sustain
+    @SuppressWarnings("unused")
     private void addName(int nameId, Locale relevantLocale, String decodedString) {
         Map<Locale, String> nameMap = standardNames.get(nameId);
         if (nameMap == null) {

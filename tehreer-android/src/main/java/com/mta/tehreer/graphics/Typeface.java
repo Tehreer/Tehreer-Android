@@ -20,6 +20,7 @@ import android.content.res.AssetManager;
 import android.graphics.Rect;
 
 import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.util.Sustain;
 import com.mta.tehreer.opentype.OpenTypeTag;
 import com.mta.tehreer.util.Disposable;
 
@@ -90,7 +91,8 @@ public class Typeface implements Disposable {
         return (typeface.getClass() == Finalizable.class);
     }
 
-	long nativeTypeface;
+    @Sustain
+    long nativeTypeface;
 
     /**
      * Creates a new typeface with the specified asset. The data of the asset is not copied into the

@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.util.Sustain;
+
 /**
  * A <code>BidiPair</code> object provides the pair of a unicode code point at a specific index in
  * source text.
@@ -25,6 +27,7 @@ public class BidiPair {
     private int mCharIndex;
     private int mPairingCodePoint;
 
+    @Sustain
     BidiPair(int charIndex, int pairingCodePoint) {
         mCharIndex = charIndex;
         mPairingCodePoint = pairingCodePoint;
