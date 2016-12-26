@@ -32,6 +32,13 @@ import java.util.Map;
 
 public class SfntNames {
 
+    public static final String UNICODE_PLATFORM = "ucd";
+    public static final String MACINTOSH_PLATFORM = "mac";
+    public static final String ISO_PLATFORM = "iso";
+    public static final String WINDOWS_PLATFORM = "win";
+    public static final String CUSTOM_PLATFORM = "cst";
+    public static final String UNRECOGNIZED_PLATFORM = "unr";
+
     private static final int COPYRIGHT = 0;
     private static final int FONT_FAMILY = 1;
     private static final int FONT_SUBFAMILY = 2;
