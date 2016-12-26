@@ -27,8 +27,8 @@ class Glyph {
     private final int glyphId;
     @Sustain
     private long nativeOutline;
-    private int mLeft;
-    private int mTop;
+    private int mLeftSideBearing;
+    private int mTopSideBearing;
     private Bitmap mBitmap;
     private Path mPath;
 
@@ -40,20 +40,20 @@ class Glyph {
         return glyphId;
     }
 
-    public int left() {
-        return mLeft;
+    public int leftSideBearing() {
+        return mLeftSideBearing;
     }
 
-    public int top() {
-        return mTop;
+    public int topSideBearing() {
+        return mTopSideBearing;
     }
 
-    public int right() {
-        return mLeft + (mBitmap != null ? mBitmap.getWidth() : 0);
+    public int rightSideBearing() {
+        return mLeftSideBearing + (mBitmap != null ? mBitmap.getWidth() : 0);
     }
 
-    public int bottom() {
-        return mTop + (mBitmap != null ? mBitmap.getHeight() : 0);
+    public int bottomSideBearing() {
+        return mTopSideBearing + (mBitmap != null ? mBitmap.getHeight() : 0);
     }
 
     public Bitmap bitmap() {
@@ -76,8 +76,8 @@ class Glyph {
         }
 
         mBitmap = bitmap;
-        mLeft = left;
-        mTop = top;
+        mLeftSideBearing = left;
+        mTopSideBearing = top;
     }
 
     @Sustain

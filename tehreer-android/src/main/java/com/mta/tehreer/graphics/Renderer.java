@@ -612,7 +612,8 @@ public class Renderer {
 
     private void copyBoundingBox(int glyphId, RectF boundingBox) {
         Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId);
-        boundingBox.set(glyph.left(), glyph.top(), glyph.right(), glyph.bottom());
+        boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
+                        glyph.rightSideBearing(), glyph.bottomSideBearing());
     }
 
     /**
@@ -699,8 +700,8 @@ public class Renderer {
                                                     mGlyphLineCap, mGlyphLineJoin, mGlyphMiterLimit));
             Bitmap maskBitmap = maskGlyph.bitmap();
             if (maskBitmap != null) {
-                int left = (int) (penX + xOffset + maskGlyph.left() + 0.5f);
-                int top = (int) (-yOffset - maskGlyph.top() + 0.5f);
+                int left = (int) (penX + xOffset + maskGlyph.leftSideBearing() + 0.5f);
+                int top = (int) (-yOffset - maskGlyph.topSideBearing() + 0.5f);
 
                 canvas.drawBitmap(maskBitmap, left, top, mPaint);
             }
