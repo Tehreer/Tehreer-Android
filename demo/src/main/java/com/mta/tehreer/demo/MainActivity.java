@@ -38,6 +38,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button fontInfoButton = (Button) findViewById(R.id.button_font_info);
+        fontInfoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, FontInfoActivity.class);
+                startActivity(intent);
+            }
+        });
+
         Button fontGlyphsButton = (Button) findViewById(R.id.button_font_glyphs);
         fontGlyphsButton.setOnClickListener(new View.OnClickListener() {
             @Override

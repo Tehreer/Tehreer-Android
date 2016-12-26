@@ -25,6 +25,10 @@
             android:label="Bidirectional Algorithm">
         </activity>
         <activity
+            android:name=".FontInfoActivity"
+            android:label="Font Information">
+        </activity>
+        <activity
             android:name=".FontGlyphsActivity"
             android:label="Font Glyphs">
         </activity>
