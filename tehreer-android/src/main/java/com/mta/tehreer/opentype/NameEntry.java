@@ -18,6 +18,7 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.internal.util.Sustain;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 public class NameEntry {
@@ -31,8 +32,8 @@ public class NameEntry {
     private final String decodedString;
 
     @Sustain
-    NameEntry(int nameId, int platformId, int languageId, int encodingId,
-              byte[] encodedBytes, Locale relevantLocale, String decodedString) {
+    public NameEntry(int nameId, int platformId, int languageId, int encodingId,
+                     byte[] encodedBytes, Locale relevantLocale, String decodedString) {
         this.nameId = nameId;
         this.platformId = platformId;
         this.languageId = languageId;
@@ -59,7 +60,7 @@ public class NameEntry {
     }
 
     public byte[] getEncodedBytes() {
-        return encodedBytes;
+        return Arrays.copyOf(encodedBytes, encodedBytes.length);
     }
 
     public Locale getRelevantLocale() {
