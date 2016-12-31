@@ -595,10 +595,10 @@ static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
 static jstring decodeBytes(JNIEnv *env, Encoding &encoding, jbyteArray bytes)
 {
     if (encoding.name()) {
-        jstring encodingName = env->NewStringUTF(encoding.name());
-        jstring decodedString = JavaBridge(env).SfntNames_decodeBytes(encodingName, bytes);
+        jstring charsetName = env->NewStringUTF(encoding.name());
+        jstring decodedString = JavaBridge(env).SfntNames_decodeBytes(charsetName, bytes);
 
-        env->DeleteLocalRef(encodingName);
+        env->DeleteLocalRef(charsetName);
 
         return decodedString;
     }
@@ -614,6 +614,48 @@ static jstring decodeBuffer(JNIEnv *env, Encoding &encoding, FT_Byte *buffer, FT
     env->DeleteLocalRef(encodedBytes);
 
     return decodedString;
+}
+
+jstring getLocaleTag(JNIEnv *env, jobject obj, jint tagId, jint platformId, jint languageId)
+{
+    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+    jstring tag = nullptr;
+
+    switch(tagId) {
+    case 0:
+        tag = env->NewStringUTF(locale.platform());
+        break;
+
+    case 1:
+        tag = env->NewStringUTF(locale.language());
+        break;
+
+    case 2:
+        tag = env->NewStringUTF(locale.region());
+        break;
+
+    case 3:
+        tag = env->NewStringUTF(locale.script());
+        break;
+
+    case 4:
+        tag = env->NewStringUTF(locale.variant());
+        break;
+
+    default:
+        // Unknown tag id.
+        break;
+    }
+
+    return tag;
+}
+
+jstring getCharsetName(JNIEnv *env, jobject obj, jint platformId, jint encodingId)
+{
+    Encoding encoding(static_cast<uint16_t>(platformId), static_cast<uint16_t>(encodingId));
+    jstring name = env->NewStringUTF(encoding.name());
+
+    return name;
 }
 
 void addStandardNames(JNIEnv *env, jobject obj, jobject jsfntNames, jobject jtypeface)
@@ -677,22 +719,19 @@ jobject getNameAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 
     typeface->unlock();
 
-    Locale locale(sfntName.platform_id, sfntName.language_id);
-    Encoding encoding(sfntName.platform_id, sfntName.encoding_id);
+    jbyteArray bytes = createBytes(env, sfntName.string, sfntName.string_len);
 
-    jobject relevantLocale = createLocale(env, locale);
-    jbyteArray encodedBytes = createBytes(env, sfntName.string, sfntName.string_len);
-    jstring decodedString = decodeBytes(env, encoding, encodedBytes);
-
-    return JavaBridge(env).NameEntry_construct(sfntName.name_id, sfntName.platform_id,
-                                               sfntName.language_id, sfntName.encoding_id,
-                                               encodedBytes, relevantLocale, decodedString);
+    return JavaBridge(env).SfntNamesEntry_construct(sfntName.name_id, sfntName.platform_id,
+                                                    sfntName.language_id, sfntName.encoding_id,
+                                                    bytes);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
+    { "nativeGetLocaleTag", "(III)Ljava/lang/String;", (void *)getLocaleTag },
+    { "nativeGetCharsetName", "(II)Ljava/lang/String;", (void *)getCharsetName },
     { "nativeAddStandardNames", "(Lcom/mta/tehreer/opentype/SfntNames;Lcom/mta/tehreer/graphics/Typeface;)V", (void *)addStandardNames },
     { "nativeGetNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
-    { "nativeGetNameAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameEntry;", (void *)getNameAt },
+    { "nativeGetNameAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/SfntNames$Entry;", (void *)getNameAt },
 };
 
 jint register_com_mta_tehreer_opentype_SfntNames(JNIEnv *env)

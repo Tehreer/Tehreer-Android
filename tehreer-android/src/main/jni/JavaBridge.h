@@ -51,8 +51,6 @@ public:
 
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;
 
-    jobject NameEntry_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray encodedBytes, jobject relevantLocale, jstring decodedString) const;
-
     jobject Path_construct() const;
     void Path_close(jobject path) const;
     void Path_cubicTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jfloat y2, jfloat x3, jfloat y3) const;
@@ -65,6 +63,8 @@ public:
     jobject SfntNames_createLocale(jstring platform, jstring language, jstring region, jstring script, jstring variant) const;
     jstring SfntNames_decodeBytes(jstring encoding, jbyteArray bytes) const;
     void SfntNames_addName(jobject sfntNames, jint nameId, jobject relevantLocale, jstring decodedString) const;
+
+    jobject SfntNamesEntry_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
 
     jlong Typeface_getNativeTypeface(jobject typeface) const;
 

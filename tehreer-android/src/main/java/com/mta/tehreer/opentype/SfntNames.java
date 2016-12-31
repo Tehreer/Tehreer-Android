@@ -62,6 +62,12 @@ public class SfntNames {
      */
     public static final String UNRECOGNIZED_PLATFORM = "unr";
 
+    private static final int TAG_ID_PLATFORM = 0;
+    private static final int TAG_ID_LANGUAGE = 1;
+    private static final int TAG_ID_REGION = 2;
+    private static final int TAG_ID_SCRIPT = 3;
+    private static final int TAG_ID_VARIANT = 4;
+
     private static final int COPYRIGHT = 0;
     private static final int FONT_FAMILY = 1;
     private static final int FONT_SUBFAMILY = 2;
@@ -93,7 +99,6 @@ public class SfntNames {
     private final Typeface typeface;
 
     @Sustain
-    @SuppressWarnings("unused")
     private static Locale createLocale(String platform, String language, String region, String script, String variant) {
         if (Build.VERSION.SDK_INT >= 21) {
             Locale.Builder builder = new Locale.Builder();
@@ -125,7 +130,6 @@ public class SfntNames {
     }
 
     @Sustain
-    @SuppressWarnings("unused")
     private static String decodeBytes(String encoding, byte[] bytes) {
         String string = null;
 
@@ -138,6 +142,14 @@ public class SfntNames {
         return string;
     }
 
+    /**
+     * Returns an <code>SfntNames</code> object for the specified typeface.
+     *
+     * @param typeface The typeface for which to create the <code>SfntNames</code> object.
+     * @return An <code>SfntNames</code> object for the specified typeface.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
     public static SfntNames forTypeface(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
@@ -152,7 +164,6 @@ public class SfntNames {
     }
 
     @Sustain
-    @SuppressWarnings("unused")
     private void addName(int nameId, Locale relevantLocale, String decodedString) {
         Map<Locale, String> nameMap = standardNames.get(nameId);
         if (nameMap == null) {
@@ -194,7 +205,7 @@ public class SfntNames {
      * @throws IndexOutOfBoundsException if <code>index</code> is negative, or
      *         <code>index</code> is greater than or equal to {@link #getNameCount()}
      */
-    public NameEntry getNameAt(int index) {
+    public Entry getNameAt(int index) {
         if (index < 0 || index >= getNameCount()) {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
@@ -550,8 +561,101 @@ public class SfntNames {
         return getNameById(VARIATIONS_POSTSCRIPT_NAME_PREFIX);
     }
 
-    private static native void nativeAddStandardNames(SfntNames sfntNames, Typeface typeface);
+    private static native String nativeGetLocaleTag(int tagId, int platformId, int languageId);
+    private static native String nativeGetCharsetName(int platformId, int encodingId);
 
+    private static native void nativeAddStandardNames(SfntNames sfntNames, Typeface typeface);
     private static native int nativeGetNameCount(Typeface typeface);
-    private static native NameEntry nativeGetNameAt(Typeface typeface, int index);
+    private static native Entry nativeGetNameAt(Typeface typeface, int index);
+
+    /**
+     * Represents a single entry of SFNT 'name' table.
+     */
+    public static class Entry {
+
+        /**
+         * The name id of this entry.
+         */
+        public int nameId;
+        /**
+         * The platform id of this entry.
+         */
+        public int platformId;
+        /**
+         * The language id of this entry.
+         */
+        public int languageId;
+        /**
+         * The encoding id of this entry.
+         */
+        public int encodingId;
+        /**
+         * The encoded bytes of this entry.
+         */
+        public byte[] bytes;
+
+        @Sustain
+        private Entry(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
+            this.nameId = nameId;
+            this.platformId = platformId;
+            this.languageId = languageId;
+            this.encodingId = encodingId;
+            this.bytes = bytes;
+        }
+
+        public Entry() {
+        }
+
+        /**
+         * Generates a relevant locale for this entry by interpreting {@link #platformId} and
+         * {@link #languageId}.
+         *
+         * @return The relevant locale for this entry.
+         */
+        public Locale locale() {
+            String platform = SfntNames.nativeGetLocaleTag(TAG_ID_PLATFORM, platformId, languageId);
+            String language = SfntNames.nativeGetLocaleTag(TAG_ID_LANGUAGE, platformId, languageId);
+            String region = SfntNames.nativeGetLocaleTag(TAG_ID_REGION, platformId, languageId);
+            String script = SfntNames.nativeGetLocaleTag(TAG_ID_SCRIPT, platformId, languageId);
+            String variant = SfntNames.nativeGetLocaleTag(TAG_ID_VARIANT, platformId, languageId);
+
+            return createLocale(platform, language, region, script, variant);
+        }
+
+        /**
+         * Determines a suitable charset for this entry reflecting {@link #platformId} and
+         * {@link #encodingId}. If a charset cannot be determined or is unsupported in the current
+         * Java virtual machine, then <code>null</code> is returned.
+         *
+         * @return The suitable charset for this entry, or <code>null</code>.
+         */
+        public Charset charset() {
+            Charset charset = null;
+
+            try {
+                String encoding = SfntNames.nativeGetCharsetName(platformId, encodingId);
+                if (encoding != null) {
+                    charset = Charset.forName(encoding);
+                }
+            } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
+            }
+
+            return charset;
+        }
+
+        /**
+         * Decodes the {@link #bytes} array into a string using a suitable charset. If no suitable
+         * charset is available, then <code>null</code> is returned.
+         *
+         * @return The decoded string for this entry, or <code>null</code>.
+         */
+        public String string() {
+            Charset charset = charset();
+            if (charset != null && bytes != null) {
+                return new String(bytes, charset);
+            }
+
+            return null;
+        }
+    }
 }
