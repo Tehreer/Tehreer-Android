@@ -37,6 +37,14 @@
             android:label="Glyph Info">
         </activity>
         <activity
+            android:name=".OpenTypeShapingActivity"
+            android:label="OpenType Shaping">
+        </activity>
+        <activity
+            android:name=".OpenTypeInfoActivity"
+            android:label="OpenType Info">
+        </activity>
+        <activity
             android:name=".LabelWidgetActivity"
             android:label="Label Widget">
         </activity>
