@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,9 +49,11 @@ void OpenTypeAlbum::associateText(jint charStart, jint charEnd, bool isBackward)
 jint OpenTypeAlbum::getCharGlyphIndex(jint charIndex) const
 {
     const SFUInteger *codeunitMap = SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum);
-    SFUInteger glyphIndex = codeunitMap[charIndex - m_charStart];
+    if (codeunitMap) {
+        return static_cast<jint>(codeunitMap[charIndex - m_charStart]);
+    }
 
-    return static_cast<jint>(glyphIndex);
+    return -1;
 }
 
 void OpenTypeAlbum::copyGlyphInfos(jint fromIndex, jint toIndex, jfloat scaleFactor,
@@ -83,8 +85,14 @@ void OpenTypeAlbum::copyCharGlyphIndexes(jint fromIndex, jint toIndex, jint *gly
     const SFUInteger *codeunitToGlyphMap = SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum);
     size_t codeunitCount = static_cast<size_t>(toIndex - fromIndex);
 
-    for (jint i = 0; i < codeunitCount; i++) {
-        glyphIndexBuffer[i] = static_cast<jint>(codeunitToGlyphMap[fromIndex + i - m_charStart]);
+    if (codeunitToGlyphMap) {
+        for (size_t i = 0; i < codeunitCount; i++) {
+            glyphIndexBuffer[i] = static_cast<jint>(codeunitToGlyphMap[fromIndex + i - m_charStart]);
+        }
+    } else {
+        for (size_t i = 0; i < codeunitCount; i++) {
+            glyphIndexBuffer[i] = -1;
+        }
     }
 }
 
