@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,12 +86,14 @@ OpenTypeArtist::~OpenTypeArtist()
 void OpenTypeArtist::setText(const jchar *charArray, jint charCount)
 {
     delete [] m_charArray;
+    m_charArray = nullptr;
 
-    m_charArray = new jchar[charCount];
-    m_charStart = 0;
-    m_charEnd = charCount;
+    if (charArray && charCount) {
+        m_charArray = new jchar[charCount];
+        memcpy(m_charArray, charArray, sizeof(jchar) * charCount);
+    }
 
-    memcpy(m_charArray, charArray, sizeof(jchar) * charCount);
+    setTextRange(0, charCount);
 }
 
 void OpenTypeArtist::setTextRange(jint charStart, jint charEnd)
@@ -99,9 +101,13 @@ void OpenTypeArtist::setTextRange(jint charStart, jint charEnd)
     m_charStart = charStart;
     m_charEnd = charEnd;
 
-    void *stringBuffer = static_cast<void *>(m_charArray + charStart);
-    SFUInteger stringLength = static_cast<SFUInteger>(charEnd - charStart);
-    SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
+    if (m_charArray) {
+        void *stringBuffer = static_cast<void *>(m_charArray + charStart);
+        SFUInteger stringLength = static_cast<SFUInteger>(charEnd - charStart);
+        SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
+    } else {
+        SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, nullptr, 0);
+    }
 }
 
 void OpenTypeArtist::setTextMode(SFTextMode textMode)
