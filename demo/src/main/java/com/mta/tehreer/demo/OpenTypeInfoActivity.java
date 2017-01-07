@@ -16,19 +16,153 @@
 
 package com.mta.tehreer.demo;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+
+import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.opentype.OpenTypeAlbum;
+import com.mta.tehreer.opentype.OpenTypeArtist;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class OpenTypeInfoActivity extends AppCompatActivity {
 
-    public static final String GLYPH_IDS = "glyph_ids";
-    public static final String X_OFFSETS = "x_offsets";
-    public static final String Y_OFFSETS = "y_offsets";
-    public static final String ADVANCES = "advances";
-    public static final String CHAR_GLYPH_INDEXES = "char_glyph_indexes";
+    public static final String TYPEFACE_TAG = "typeface_tag";
+    public static final String SCRIPT_TAG = "script_tag";
+    public static final String LANGUAGE_TAG = "language_tag";
+    public static final String SOURCE_TEXT = "source_text";
+
+    private static class GlyphDetailHolder {
+        final View rootLayout;
+        final TextView glyphIdTextView;
+        final TextView offsetTextView;
+        final TextView advanceTextView;
+
+        GlyphDetailHolder(View layout) {
+            rootLayout = layout;
+            glyphIdTextView = (TextView) layout.findViewById(R.id.text_view_glyph_id);
+            offsetTextView = (TextView) layout.findViewById(R.id.text_view_offset);
+            advanceTextView = (TextView) layout.findViewById(R.id.text_view_advance);
+        }
+    }
+
+    private static class CharDetailHolder {
+        final TextView indexTextView;
+        final TextView characterTextView;
+        final ViewGroup glyphInfoLayout;
+        final TextView feedbackTextView;
+        final List<GlyphDetailHolder> glyphDetailList = new ArrayList<>();
+
+        CharDetailHolder(View layout) {
+            indexTextView = (TextView) layout.findViewById(R.id.text_view_index);
+            characterTextView = (TextView) layout.findViewById(R.id.text_view_character);
+            glyphInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
+            feedbackTextView = (TextView) layout.findViewById(R.id.text_view_feedback);
+            glyphDetailList.add(new GlyphDetailHolder(glyphInfoLayout.getChildAt(1)));
+        }
+    }
+
+    private static class CharDetailAdapter extends BaseAdapter {
+
+        final Context context;
+        final String source;
+        final OpenTypeAlbum album;
+        final int[] initials;
+        final int[] relations;
+        final int[] totals;
+
+        CharDetailAdapter(Context context, String source, OpenTypeAlbum album,
+                                 int[] initials, int[] relations, int[] totals) {
+            this.context = context;
+            this.source = source;
+            this.album = album;
+            this.initials = initials;
+            this.relations = relations;
+            this.totals = totals;
+        }
+
+        @Override
+        public int getCount() {
+            return source.length();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int i, View convertView, ViewGroup parent) {
+            final CharDetailHolder charDetailHolder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(context);
+                convertView = inflater.inflate(R.layout.item_char_detail, parent, false);
+                charDetailHolder = new CharDetailHolder(convertView);
+
+                convertView.setTag(charDetailHolder);
+            } else {
+                charDetailHolder = (CharDetailHolder) convertView.getTag();
+            }
+            charDetailHolder.indexTextView.setText(String.valueOf(i + 1));
+            charDetailHolder.characterTextView.setText(String.format("%04X (%c)", (int) source.charAt(i), source.charAt(i)));
+
+            final List<GlyphDetailHolder> glyphDetailList = charDetailHolder.glyphDetailList;
+
+            if (totals[i] > 0) {
+                charDetailHolder.feedbackTextView.setVisibility(View.GONE);
+
+                for (int j = 0; j < totals[i]; j++) {
+                    if (glyphDetailList.size() <= j) {
+                        LayoutInflater inflater = LayoutInflater.from(context);
+                        View layout = inflater.inflate(R.layout.item_glyph_detail, charDetailHolder.glyphInfoLayout, false);
+                        layout.setPadding(0, 1, 0, 0);
+
+                        charDetailHolder.glyphInfoLayout.addView(layout);
+                        glyphDetailList.add(new GlyphDetailHolder(layout));
+                    }
+
+                    int glyphIndex = initials[i] + j;
+
+                    GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
+                    glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
+                    glyphDetailHolder.glyphIdTextView.setText(String.format("%06X", album.getGlyphId(glyphIndex)));
+                    glyphDetailHolder.offsetTextView.setText("(" + album.getGlyphXOffset(glyphIndex) + ", " + album.getGlyphYOffset(glyphIndex) + ")");
+                    glyphDetailHolder.advanceTextView.setText(String.valueOf(album.getGlyphAdvance(glyphIndex)));
+                }
+            } else {
+                charDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
+
+                int relation = relations[i];
+                if (relation > -1) {
+                    charDetailHolder.feedbackTextView.setText("Related to Character #" + (relation + 1));
+                } else {
+                    charDetailHolder.feedbackTextView.setText("No Glyph");
+                }
+            }
+
+            for (int j = totals[i]; j < glyphDetailList.size(); j++) {
+                glyphDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            }
+
+            return convertView;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,66 +175,54 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        int[] glyphIds = intent.getIntArrayExtra(GLYPH_IDS);
-        float[] xOffsets = intent.getFloatArrayExtra(X_OFFSETS);
-        float[] yOffsets = intent.getFloatArrayExtra(Y_OFFSETS);
-        float[] advances = intent.getFloatArrayExtra(ADVANCES);
-        int[] charGlyphIndexes = intent.getIntArrayExtra(CHAR_GLYPH_INDEXES);
+        CharSequence typefaceTag = intent.getCharSequenceExtra(TYPEFACE_TAG);
+        int scriptTag = intent.getIntExtra(SCRIPT_TAG, 0);
+        int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
+        CharSequence sourceText = intent.getCharSequenceExtra(SOURCE_TEXT);
 
-        StringBuilder builder = new StringBuilder();
-        builder.append("[");
-        for (int glyphId : glyphIds) {
-            builder.append(glyphId).append(", ");
-        }
-        if (glyphIds.length > 0) {
-            builder.delete(builder.length() - 2, builder.length());
-        }
-        builder.append("]");
+        OpenTypeArtist artist = OpenTypeArtist.finalizable(new OpenTypeArtist());
+        artist.setTypeface(TypefaceManager.getTypeface(typefaceTag));
+        artist.setScriptTag(scriptTag);
+        artist.setLanguageTag(languageTag);
+        artist.setText(sourceText.toString());
 
-        TextView textViewGlyphIds = (TextView) findViewById(R.id.text_view_glyph_ids);
-        textViewGlyphIds.setText(builder.toString());
+        int charCount = sourceText.length();
+        int[] initials = new int[charCount + 1];
+        int[] relations = new int[initials.length];
+        int[] totals = new int[initials.length];
 
-        builder = new StringBuilder();
-        builder.append("[");
-        for (int i = 0; i < xOffsets.length; i++) {
-            builder.append("(")
-                    .append((int) xOffsets[i]).append(", ")
-                    .append((int) yOffsets[i]).append(")")
-                    .append(", ");
-        }
-        if (xOffsets.length > 0) {
-            builder.delete(builder.length() - 2, builder.length());
-        }
-        builder.append("]");
+        OpenTypeAlbum album = OpenTypeAlbum.finalizable(new OpenTypeAlbum());
+        artist.fillAlbum(album);
+        album.copyCharGlyphIndexes(0, charCount, initials);
 
-        TextView textViewOffsets = (TextView) findViewById(R.id.text_view_glyph_offsets);
-        textViewOffsets.setText(builder.toString());
+        initials[charCount] = album.getGlyphCount();
+        Arrays.fill(relations, -1);
 
-        builder = new StringBuilder();
-        builder.append("[");
-        for (float advance : advances) {
-            builder.append((int) advance).append(", ");
-        }
-        if (advances.length > 0) {
-            builder.delete(builder.length() - 2, builder.length());
-        }
-        builder.append("]");
+        for (int i = 0; i < initials.length; i++) {
+            // Skip, if this character has no glyph or related to some other character.
+            if (initials[i] == -1 || relations[i] > -1) {
+                continue;
+            }
 
-        TextView textViewAdvances = (TextView) findViewById(R.id.text_view_glyph_advances);
-        textViewAdvances.setText(builder.toString());
+            // Setup relations for this character.
+            for (int j = i + 1; j < initials.length; j++) {
+                if (initials[j] == initials[i]) {
+                    relations[j] = i;
+                }
+            }
 
-        builder = new StringBuilder();
-        builder.append("[");
-        for (int index : charGlyphIndexes) {
-            builder.append(index).append(", ");
+            // Setup totals for this character.
+            for (int j = i + 1; j < initials.length; j++) {
+                if (initials[j] > initials[i]) {
+                    totals[i] = initials[j] - initials[i];
+                    break;
+                }
+            }
         }
-        if (charGlyphIndexes.length > 0) {
-            builder.delete(builder.length() - 2, builder.length());
-        }
-        builder.append("]");
 
-        TextView textViewCharGlyphIndexes = (TextView) findViewById(R.id.text_view_char_glyph_indexes);
-        textViewCharGlyphIndexes.setText(builder.toString());
+        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, artist.getText(), album, initials, relations, totals);
+        ListView infoListView = (ListView) findViewById(R.id.list_view_info);
+        infoListView.setAdapter(charDetailAdapter);
     }
 
     @Override

@@ -1,106 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:padding="6dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="8dp">
 
-    <ScrollView
-        android:id="@+id/scroll_view_opentype_info"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:background="#000000"
+        android:orientation="horizontal"
+        android:padding="1dp"
+        android:weightSum="1">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="1dp"
+            android:layout_weight="0.09"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="#"
+            android:textColor="#000000"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="1dp"
+            android:layout_weight="0.23"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:padding="4dp"
+            android:text="Character"
+            android:textColor="#000000"
+            android:textStyle="bold"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.68"
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:orientation="vertical">
+            <TextView
+                android:id="@+id/text_view_glyph_id"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_weight="0.30"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:padding="4dp"
+                android:text="Glyph ID"
+                android:textColor="#000000"
+                android:textStyle="bold"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Glyph Ids:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+            <TextView
+                android:id="@+id/text_view_offset"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="1dp"
+                android:layout_weight="0.40"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:padding="4dp"
+                android:text="Glyph Offset"
+                android:textColor="#000000"
+                android:textStyle="bold"/>
 
-                <TextView
-                    android:id="@+id/text_view_glyph_ids"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Glyph Offsets:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
-
-                <TextView
-                    android:id="@+id/text_view_glyph_offsets"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Glyph Advances:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
-
-                <TextView
-                    android:id="@+id/text_view_glyph_advances"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Character to Glyph Indexes:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
-
-                <TextView
-                    android:id="@+id/text_view_char_glyph_indexes"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
-            </LinearLayout>
+            <TextView
+                android:id="@+id/text_view_advance"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.30"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:padding="4dp"
+                android:text="Glyph Advance"
+                android:textColor="#000000"
+                android:textStyle="bold"/>
         </LinearLayout>
-    </ScrollView>
-</FrameLayout>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/list_view_info"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="2dp"/>
+</LinearLayout>

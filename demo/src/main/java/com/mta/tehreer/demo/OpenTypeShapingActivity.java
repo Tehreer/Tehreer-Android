@@ -30,9 +30,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.opentype.OpenTypeAlbum;
-import com.mta.tehreer.opentype.OpenTypeArtist;
 import com.mta.tehreer.opentype.OpenTypeTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
@@ -40,13 +37,12 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
     private int[] mTypefaceResIds = { R.string.typeface_taj_nastaleeq, R.string.typeface_nafees_web};
     private String[] mTypefaceNames = { "AlQalam Taj Nastaleeq", "Nafees Web Naskh" };
 
-    private OpenTypeArtist mArtist = OpenTypeArtist.finalizable(new OpenTypeArtist());
-    private OpenTypeAlbum mAlbum = OpenTypeAlbum.finalizable(new OpenTypeAlbum());
-
     private Spinner mTypefaceSpinner;
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
     private EditText mTextField;
+
+    private String mTypefaceTag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +62,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mArtist.setTypeface(TypefaceManager.getTypeface(getResources().getString(mTypefaceResIds[i])));
+                mTypefaceTag = getResources().getString(mTypefaceResIds[i]);
             }
 
             @Override
@@ -109,7 +105,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
     private void shape() {
         CharSequence scriptTag = mScriptTagField.getText();
         try {
-            mArtist.setScriptTag(OpenTypeTag.make(scriptTag.toString()));
+            OpenTypeTag.make(scriptTag.toString());
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(this, "Write a valid script tag!", Toast.LENGTH_LONG).show();
             return;
@@ -117,33 +113,17 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
 
         CharSequence languageTag = mLanguageTagField.getText();
         try {
-            mArtist.setLanguageTag(OpenTypeTag.make(languageTag.toString()));
+            OpenTypeTag.make(languageTag.toString());
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(this, "Write a valid language tag!", Toast.LENGTH_LONG).show();
             return;
         }
 
-        CharSequence text = mTextField.getText();
-        mArtist.setText(text.toString());
-        mArtist.fillAlbum(mAlbum);
-
-        int glyphCount = mAlbum.getGlyphCount();
-        int[] glyphIds = new int[glyphCount];
-        float[] xOffsets = new float[glyphCount];
-        float[] yOffsets = new float[glyphCount];
-        float[] advances = new float[glyphCount];
-        mAlbum.copyGlyphInfos(0, glyphCount, 1.0f, glyphIds, xOffsets, yOffsets, advances);
-
-        int charCount = mAlbum.getCharEnd() - mAlbum.getCharStart();
-        int[] charGlyphIndexes = new int[charCount];
-        mAlbum.copyCharGlyphIndexes(0, charCount, charGlyphIndexes);
-
         Intent intent = new Intent(this, OpenTypeInfoActivity.class);
-        intent.putExtra(OpenTypeInfoActivity.GLYPH_IDS, glyphIds);
-        intent.putExtra(OpenTypeInfoActivity.X_OFFSETS, xOffsets);
-        intent.putExtra(OpenTypeInfoActivity.Y_OFFSETS, yOffsets);
-        intent.putExtra(OpenTypeInfoActivity.ADVANCES, advances);
-        intent.putExtra(OpenTypeInfoActivity.CHAR_GLYPH_INDEXES, charGlyphIndexes);
+        intent.putExtra(OpenTypeInfoActivity.TYPEFACE_TAG, mTypefaceTag);
+        intent.putExtra(OpenTypeInfoActivity.SCRIPT_TAG, OpenTypeTag.make(scriptTag.toString()));
+        intent.putExtra(OpenTypeInfoActivity.LANGUAGE_TAG, OpenTypeTag.make(languageTag.toString()));
+        intent.putExtra(OpenTypeInfoActivity.SOURCE_TEXT, mTextField.getText());
 
         startActivity(intent);
     }
