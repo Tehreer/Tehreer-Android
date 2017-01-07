@@ -110,7 +110,7 @@ public class FontInfoActivity extends AppCompatActivity {
     }
 
     private void loadTypeface(String tag) {
-        if (!tag.endsWith(mTypefaceTag)) {
+        if (!tag.equals(mTypefaceTag)) {
             mTypefaceTag = tag;
 
             Typeface typeface = TypefaceManager.getTypeface(tag);

@@ -2,13 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical">
+              android:orientation="vertical"
+              android:padding="8dp">
 
     <Spinner
         android:id="@+id/spinner_font"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="6dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <GridView
         android:id="@+id/grid_view_glyphs"
@@ -18,8 +19,6 @@
         android:fastScrollEnabled="true"
         android:horizontalSpacing="6dp"
         android:numColumns="auto_fit"
-        android:padding="6dp"
         android:stretchMode="columnWidth"
         android:verticalSpacing="6dp"/>
-
 </LinearLayout>

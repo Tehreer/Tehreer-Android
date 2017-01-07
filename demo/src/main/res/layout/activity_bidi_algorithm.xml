@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="8dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|top"
-        android:padding="4dp"
         android:text="Write some bidirectional text"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
 
@@ -21,7 +19,5 @@
         android:gravity="top|start"
         android:inputType="textMultiLine"
         android:scrollbars="vertical"
-        android:text="یہ ایک (car) ہے۔"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
-
+        android:text="یہ ایک (car) ہے۔"/>
 </LinearLayout>
