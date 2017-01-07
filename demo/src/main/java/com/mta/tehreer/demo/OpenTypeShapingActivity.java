@@ -34,14 +34,9 @@ import com.mta.tehreer.opentype.OpenTypeTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
 
-    private int[] mTypefaceResIds = { R.string.typeface_taj_nastaleeq, R.string.typeface_nafees_web};
-    private String[] mTypefaceNames = { "AlQalam Taj Nastaleeq", "Nafees Web Naskh" };
-
-    private Spinner mTypefaceSpinner;
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
     private EditText mTextField;
-
     private String mTypefaceTag;
 
     @Override
@@ -54,23 +49,24 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTypefaceNames);
+        final DemoApplication demoApplication = (DemoApplication) getApplication();
+        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
         typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        mTypefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
-        mTypefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
+        typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mTypefaceTag = getResources().getString(mTypefaceResIds[i]);
+                mTypefaceTag = demoApplication.getTypefaceTag(i);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        mTypefaceSpinner.setAdapter(typefaceAdapter);
-        mTypefaceSpinner.setSelection(1);
+        typefaceSpinner.setAdapter(typefaceAdapter);
+        typefaceSpinner.setSelection(0);
 
         mScriptTagField = (EditText) findViewById(R.id.field_script_tag);
         mLanguageTagField = (EditText) findViewById(R.id.field_language_tag);

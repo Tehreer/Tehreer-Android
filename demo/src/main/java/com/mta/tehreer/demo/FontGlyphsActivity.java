@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,8 @@ import com.mta.tehreer.graphics.TypefaceManager;
 
 public class FontGlyphsActivity extends AppCompatActivity {
 
-    private int[] mTypefaceResIds = { R.string.typeface_taj_nastaleeq, R.string.typeface_nafees_web};
-    private String[] mTypefaceNames = { "AlQalam Taj Nastaleeq", "Nafees Web Naskh" };
-
     private GridView mGlyphsGridView;
-    private int mTypefaceResId;
+    private String mTypefaceTag;
 
     private static class GlyphHolder {
         ImageView glyphImageView;
@@ -174,7 +171,8 @@ public class FontGlyphsActivity extends AppCompatActivity {
             }
         });
 
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTypefaceNames);
+        final DemoApplication demoApplication = (DemoApplication) getApplication();
+        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
         typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_font);
@@ -182,7 +180,7 @@ public class FontGlyphsActivity extends AppCompatActivity {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                loadTypeface(mTypefaceResIds[i]);
+                loadTypeface(demoApplication.getTypefaceTag(i));
             }
 
             @Override
@@ -190,7 +188,7 @@ public class FontGlyphsActivity extends AppCompatActivity {
             }
         });
         typefaceSpinner.setAdapter(typefaceAdapter);
-        typefaceSpinner.setSelection(1);
+        typefaceSpinner.setSelection(0);
     }
 
     @Override
@@ -199,12 +197,12 @@ public class FontGlyphsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void loadTypeface(int typefaceResId) {
-        if (mTypefaceResId != typefaceResId) {
-            mTypefaceResId = typefaceResId;
+    private void loadTypeface(String tag) {
+        if (!tag.equals(mTypefaceTag)) {
+            mTypefaceTag = tag;
 
             Resources resources = getResources();
-            Typeface typeface = TypefaceManager.getTypeface(resources.getString(typefaceResId));
+            Typeface typeface = TypefaceManager.getTypeface(tag);
             float fontSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, resources.getDisplayMetrics());
 
             Renderer renderer = new Renderer();
@@ -216,10 +214,8 @@ public class FontGlyphsActivity extends AppCompatActivity {
     }
 
     private void displayGlyph(int glyphId) {
-        String typefaceTag = getResources().getString(mTypefaceResId);
-
         Intent intent = new Intent(this, GlyphInfoActivity.class);
-        intent.putExtra(GlyphInfoActivity.TYPEFACE_TAG, typefaceTag);
+        intent.putExtra(GlyphInfoActivity.TYPEFACE_TAG, mTypefaceTag);
         intent.putExtra(GlyphInfoActivity.GLYPH_ID, glyphId);
 
         startActivity(intent);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.demo;
 
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -38,9 +37,7 @@ import java.util.Map;
 
 public class FontInfoActivity extends AppCompatActivity {
 
-    private int[] mTypefaceResIds = { R.string.typeface_taj_nastaleeq, R.string.typeface_nafees_web};
-    private String[] mTypefaceNames = { "AlQalam Taj Nastaleeq", "Nafees Web Naskh" };
-    private int mTypefaceResId;
+    private String mTypefaceTag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +49,8 @@ public class FontInfoActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTypefaceNames);
+        final DemoApplication demoApplication = (DemoApplication) getApplication();
+        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
         typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_font);
@@ -60,7 +58,7 @@ public class FontInfoActivity extends AppCompatActivity {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                loadTypeface(mTypefaceResIds[i]);
+                loadTypeface(demoApplication.getTypefaceTag(i));
             }
 
             @Override
@@ -68,7 +66,13 @@ public class FontInfoActivity extends AppCompatActivity {
             }
         });
         typefaceSpinner.setAdapter(typefaceAdapter);
-        typefaceSpinner.setSelection(1);
+        typefaceSpinner.setSelection(0);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
     private void configureName(int layoutResId, Map<Locale, String> nameMap) {
@@ -105,12 +109,11 @@ public class FontInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void loadTypeface(int typefaceResId) {
-        if (mTypefaceResId != typefaceResId) {
-            mTypefaceResId = typefaceResId;
+    private void loadTypeface(String tag) {
+        if (!tag.endsWith(mTypefaceTag)) {
+            mTypefaceTag = tag;
 
-            Resources resources = getResources();
-            Typeface typeface = TypefaceManager.getTypeface(resources.getString(typefaceResId));
+            Typeface typeface = TypefaceManager.getTypeface(tag);
             SfntNames sfntNames = SfntNames.forTypeface(typeface);
 
             configureName(R.id.layout_copyright, sfntNames.getCopyright());

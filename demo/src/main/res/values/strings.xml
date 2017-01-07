@@ -8,5 +8,6 @@
     <string name="article_reference">https://ur.wikipedia.org/wiki/OpenType</string>
 
     <string name="typeface_taj_nastaleeq">TajNastaleeq</string>
+    <string name="typeface_nafees_nastaleeq">NafeesNastaleeq</string>
     <string name="typeface_nafees_web">NafeesWeb</string>
 </resources>
