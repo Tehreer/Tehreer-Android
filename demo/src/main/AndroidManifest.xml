@@ -63,5 +63,9 @@
             android:name=".LabelWidgetActivity"
             android:label="Label Widget">
         </activity>
+        <activity
+            android:name=".OpenSourceLicensesActivity"
+            android:label="Open Source Licenses">
+        </activity>
     </application>
 </manifest>

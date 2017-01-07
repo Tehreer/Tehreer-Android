@@ -73,5 +73,14 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        Button openSourceLicensesButton = (Button) findViewById(R.id.button_open_source_licenses);
+        openSourceLicensesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, OpenSourceLicensesActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 }
