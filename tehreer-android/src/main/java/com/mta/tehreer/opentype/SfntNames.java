@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import android.os.Build;
 import android.util.SparseArray;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.util.ArrayDescription;
 import com.mta.tehreer.internal.util.Sustain;
 
 import java.nio.charset.Charset;
@@ -613,11 +614,11 @@ public class SfntNames {
          * @return The relevant locale for this entry.
          */
         public Locale locale() {
-            String platform = SfntNames.nativeGetLocaleTag(TAG_ID_PLATFORM, platformId, languageId);
-            String language = SfntNames.nativeGetLocaleTag(TAG_ID_LANGUAGE, platformId, languageId);
-            String region = SfntNames.nativeGetLocaleTag(TAG_ID_REGION, platformId, languageId);
-            String script = SfntNames.nativeGetLocaleTag(TAG_ID_SCRIPT, platformId, languageId);
-            String variant = SfntNames.nativeGetLocaleTag(TAG_ID_VARIANT, platformId, languageId);
+            String platform = nativeGetLocaleTag(TAG_ID_PLATFORM, platformId, languageId);
+            String language = nativeGetLocaleTag(TAG_ID_LANGUAGE, platformId, languageId);
+            String region = nativeGetLocaleTag(TAG_ID_REGION, platformId, languageId);
+            String script = nativeGetLocaleTag(TAG_ID_SCRIPT, platformId, languageId);
+            String variant = nativeGetLocaleTag(TAG_ID_VARIANT, platformId, languageId);
 
             return createLocale(platform, language, region, script, variant);
         }
@@ -633,9 +634,9 @@ public class SfntNames {
             Charset charset = null;
 
             try {
-                String encoding = SfntNames.nativeGetCharsetName(platformId, encodingId);
-                if (encoding != null) {
-                    charset = Charset.forName(encoding);
+                String charsetName = nativeGetCharsetName(platformId, encodingId);
+                if (charsetName != null) {
+                    charset = Charset.forName(charsetName);
                 }
             } catch (IllegalCharsetNameException | UnsupportedCharsetException ignored) {
             }
@@ -656,6 +657,21 @@ public class SfntNames {
             }
 
             return null;
+        }
+
+        @Override
+        public String toString() {
+            Charset charset = charset();
+
+            return "SfntNames.Entry{nameId=" + nameId
+                    + ", platformId=" + platformId
+                    + ", languageId=" + languageId
+                    + ", encodingId=" + encodingId
+                    + ", bytes=" + ArrayDescription.forByteArray(bytes)
+                    + ", locale=" + locale().toString()
+                    + ", charset=" + (charset != null ? charset.name() : null)
+                    + ", string=" + string()
+                    + "}";
         }
     }
 }
