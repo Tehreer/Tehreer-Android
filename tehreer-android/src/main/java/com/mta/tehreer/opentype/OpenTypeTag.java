@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ public class OpenTypeTag {
 	private static boolean isValidByte(byte val) {
 		return (val >= 'a' && val <= 'z')
 				|| (val >= 'A' && val <= 'Z')
+                || (val >= '0' && val <= '9')
 				|| (val == ' ');
 	}
 
@@ -48,7 +49,7 @@ public class OpenTypeTag {
      * @return Integer representation of the tag.
      *
      * @throws IllegalArgumentException if <code>tagStr</code> is not four characters long, or any
-     *         character is neither an English alphabet nor a space.
+     *         character is not an English alphabet, a numeric or a space.
      */
 	public static int make(String tagStr) {
 		if (tagStr.length() != 4) {
