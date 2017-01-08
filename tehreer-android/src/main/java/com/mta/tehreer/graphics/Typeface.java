@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,15 @@ public class Typeface implements Disposable {
 	}
 
     /**
+     * Returns the typographic leading of this typeface expressed in font units.
+     *
+     * @return The typographic leading of this typeface expressed in font units.
+     */
+    public int getLeading() {
+        return nativeGetLeading(nativeTypeface);
+    }
+
+    /**
      * Returns the number of glyphs in this typeface.
      *
      * @return The number of glyphs in this typeface.
@@ -242,6 +251,7 @@ public class Typeface implements Disposable {
         return "Typeface{unitsPerEm=" + getUnitsPerEm()
                 + ", ascent=" + getAscent()
                 + ", descent=" + getDescent()
+                + ", leading=" + getLeading()
                 + ", glyphCount=" + getGlyphCount()
                 + ", boundingBox=" + getBoundingBox().toString()
                 + ", underlinePosition=" + getUnderlinePosition()
@@ -259,6 +269,7 @@ public class Typeface implements Disposable {
 	private static native int nativeGetUnitsPerEm(long nativeTypeface);
 	private static native int nativeGetAscent(long nativeTypeface);
 	private static native int nativeGetDescent(long nativeTypeface);
+    private static native int nativeGetLeading(long nativeTypeface);
 
 	private static native int nativeGetGlyphCount(long nativeTypeface);
 	private static native void nativeGetBoundingBox(long nativeTypeface, Rect boundingBox);

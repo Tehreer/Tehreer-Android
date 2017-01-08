@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -379,6 +379,17 @@ static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
     return static_cast<jint>(-descender);
 }
 
+static jint getLeading(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Short ascender = baseFace->ascender;
+    FT_Short descender = baseFace->descender;
+    FT_Short height = baseFace->height;
+
+    return static_cast<jint>(height - (ascender - descender));
+}
+
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -426,6 +437,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nativeGetAscent", "(J)I", (void *)getAscent },
     { "nativeGetDescent", "(J)I", (void *)getDescent },
+    { "nativeGetLeading", "(J)I", (void *)getLeading },
     { "nativeGetGlyphCount", "(J)I", (void *)getGlyphCount },
     { "nativeGetBoundingBox", "(JLandroid/graphics/Rect;)V", (void *)getBoundingBox },
     { "nativeGetUnderlinePosition", "(J)I", (void *)getUnderlinePosition },
