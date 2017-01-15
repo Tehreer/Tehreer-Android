@@ -640,7 +640,7 @@ public class SfntNames {
         public byte[] bytes;
 
         @Sustain
-        private Entry(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
+        public Entry(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
             this.nameId = nameId;
             this.platformId = platformId;
             this.languageId = languageId;
