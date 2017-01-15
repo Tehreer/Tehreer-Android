@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.graphics;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public class TypefaceManager {
 
-    private static final HashMap<Object, Typeface> TYPEFACE_MAP = new HashMap<>();
+    private static final Map<Object, Typeface> TYPEFACE_MAP = new LinkedHashMap<>();
 
     /**
      * Registers a typeface against a specified tag in <code>TypefaceManager</code>.
@@ -95,6 +95,18 @@ public class TypefaceManager {
             }
 
             TYPEFACE_MAP.remove(tag);
+        }
+    }
+
+    /**
+     * Returns an array containing tags of registered typefaces.
+     *
+     * @return A new array containing tags of registered typefaces, or an empty array if no typeface
+     * is registered.
+     */
+    public static Object[] getTakenTags() {
+        synchronized (TYPEFACE_MAP) {
+            return TYPEFACE_MAP.keySet().toArray();
         }
     }
 
