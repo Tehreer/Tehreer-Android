@@ -26,8 +26,9 @@ import com.mta.tehreer.internal.util.Sustain;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -75,7 +76,7 @@ public class SfntNames {
     private static final int UNIQUE_ID = 3;
     private static final int FULL_NAME = 4;
     private static final int VERSION = 5;
-    private static final int POSTSCRIPT_NAME = 6;
+    private static final int POST_SCRIPT_NAME = 6;
     private static final int TRADEMARK = 7;
     private static final int MANUFACTURER = 8;
     private static final int DESIGNER = 9;
@@ -89,14 +90,14 @@ public class SfntNames {
     private static final int TYPOGRAPHIC_SUBFAMILY = 17;
     private static final int MAC_FULL_NAME = 18;
     private static final int SAMPLE_TEXT = 19;
-    private static final int POSTSCRIPT_CID_FIND_FONT_NAME = 20;
+    private static final int POST_SCRIPT_CID_FIND_FONT_NAME = 20;
     private static final int WWS_FAMILY = 21;
     private static final int WWS_SUBFAMILY = 22;
     private static final int LIGHT_BACKGROUND_PALETTE = 23;
     private static final int DARK_BACKGROUND_PALETTE = 24;
-    private static final int VARIATIONS_POSTSCRIPT_NAME_PREFIX = 25;
+    private static final int VARIATIONS_POST_SCRIPT_NAME_PREFIX = 25;
 
-    private final SparseArray<Map<Locale, String>> standardNames = new SparseArray<>(25);
+    private final SparseArray<Map<Locale, String>> collection = new SparseArray<>(28);
     private final Typeface typeface;
 
     @Sustain
@@ -147,7 +148,7 @@ public class SfntNames {
      * Returns an <code>SfntNames</code> object for the specified typeface.
      *
      * @param typeface The typeface for which to create the <code>SfntNames</code> object.
-     * @return An <code>SfntNames</code> object for the specified typeface.
+     * @return A new <code>SfntNames</code> object for the specified typeface.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      */
@@ -159,24 +160,67 @@ public class SfntNames {
         return new SfntNames(typeface);
     }
 
+    /**
+     * Returns a map of matching names by filtering the specified platforms.
+     *
+     * @param names A map that contains the names to filter.
+     * @param platforms A collection of platforms used for matching.
+     * @return A new {@link java.util.Map Map&lt;K, V&gt;} object that contains the filtered names.
+     *
+     * @throws NullPointerException if <code>names</code> or <code>platform</code> is null.
+     */
+    public static Map<Locale, String> filterPlatforms(Map<Locale, String> names, Collection<String> platforms) {
+        if (names == null) {
+            throw new NullPointerException("The names map is null");
+        }
+        if (platforms == null) {
+            throw new NullPointerException("The platforms collection is null");
+        }
+
+        Map<Locale, String> filter = new LinkedHashMap<>();
+
+        for (Map.Entry<Locale, String> entry : names.entrySet()) {
+            if (Build.VERSION.SDK_INT >= 21) {
+                Locale locale = entry.getKey();
+                String extension = locale.getExtension(Locale.PRIVATE_USE_EXTENSION);
+
+                if (platforms.contains(extension)) {
+                    filter.put(entry.getKey(), entry.getValue());
+                }
+            } else {
+                Locale locale = entry.getKey();
+                String variant = locale.getVariant();
+
+                for (String p : platforms) {
+                    if (variant.endsWith(p)) {
+                        filter.put(entry.getKey(), entry.getValue());
+                        break;
+                    }
+                }
+            }
+        }
+
+        return Collections.unmodifiableMap(filter);
+    }
+
     private SfntNames(Typeface typeface) {
         this.typeface = typeface;
         nativeAddStandardNames(this, typeface);
     }
 
     @Sustain
-    private void addName(int nameId, Locale relevantLocale, String decodedString) {
-        Map<Locale, String> nameMap = standardNames.get(nameId);
+    private void addName(int nameId, Locale locale, String string) {
+        Map<Locale, String> nameMap = collection.get(nameId);
         if (nameMap == null) {
-            nameMap = new HashMap<>();
-            standardNames.put(nameId, nameMap);
+            nameMap = new LinkedHashMap<>();
+            collection.put(nameId, nameMap);
         }
 
-        nameMap.put(relevantLocale, decodedString);
+        nameMap.put(locale, string);
     }
 
     private Map<Locale, String> getNameById(int nameId) {
-        Map<Locale, String> map = standardNames.get(nameId);
+        Map<Locale, String> map = collection.get(nameId);
         if (map == null) {
             return Collections.emptyMap();
         }
@@ -309,8 +353,8 @@ public class SfntNames {
      *         object that identifies the locale. The value is a string expressing the PostScript
      *         name.
      */
-    public Map<Locale, String> getPostscriptName() {
-        return getNameById(POSTSCRIPT_NAME);
+    public Map<Locale, String> getPostScriptName() {
+        return getNameById(POST_SCRIPT_NAME);
     }
 
     /**
@@ -467,19 +511,19 @@ public class SfntNames {
     }
 
     /**
-     * Returns the postscript CID findfont name information retrieved from SFNT 'name' table. Its
+     * Returns the PostScript CID findfont name information retrieved from SFNT 'name' table. Its
      * presence in a font means that the PostScript name is meant to be used with the "composefont"
      * invocation in order to invoke the font in a PostScript interpreter.
      *
      * @return A {@link java.util.Map Map&lt;K, V&gt;} object that contains key/value pairs that
-     *         represent postscript CID findfont name information. The key is a
+     *         represent PostScript CID findfont name information. The key is a
      *         {@link java.util.Locale Locale} object that identifies the locale. The value is a
-     *         string expressing the postscript CID findfont name.
+     *         string expressing the PostScript CID findfont name.
      *
-     * @see #getPostscriptName()
+     * @see #getPostScriptName()
      */
-    public Map<Locale, String> getPostscriptCIDFindFontName() {
-        return getNameById(POSTSCRIPT_CID_FIND_FONT_NAME);
+    public Map<Locale, String> getPostScriptCIDFindFontName() {
+        return getNameById(POST_SCRIPT_CID_FIND_FONT_NAME);
     }
 
     /**
@@ -558,8 +602,8 @@ public class SfntNames {
      *         {@link java.util.Locale Locale} object that identifies the locale. The value is a
      *         string expressing the variations PostScript name prefix.
      */
-    public Map<Locale, String> getVariationsPostscriptNamePrefix() {
-        return getNameById(VARIATIONS_POSTSCRIPT_NAME_PREFIX);
+    public Map<Locale, String> getVariationsPostScriptNamePrefix() {
+        return getNameById(VARIATIONS_POST_SCRIPT_NAME_PREFIX);
     }
 
     private static native String nativeGetLocaleTag(int tagId, int platformId, int languageId);
