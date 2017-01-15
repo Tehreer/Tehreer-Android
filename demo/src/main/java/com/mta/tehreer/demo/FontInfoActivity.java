@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.demo;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +31,8 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.opentype.SfntNames;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -77,24 +78,12 @@ public class FontInfoActivity extends AppCompatActivity {
 
     private void configureName(int layoutResId, Map<Locale, String> nameMap) {
         LinearLayout nameLayout = (LinearLayout) findViewById(layoutResId);
-        if (nameMap.size() > 0) {
-            StringBuilder nameBuilder = new StringBuilder();
-            for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
-                // Display names corresponding to windows platform only.
-                if (Build.VERSION.SDK_INT >= 21) {
-                    Locale locale = entry.getKey();
-                    String extension = locale.getExtension(Locale.PRIVATE_USE_EXTENSION);
-                    if (!extension.equals(SfntNames.WINDOWS_PLATFORM)) {
-                        continue;
-                    }
-                } else {
-                    Locale locale = entry.getKey();
-                    String variant = locale.getVariant();
-                    if (!variant.endsWith(SfntNames.WINDOWS_PLATFORM)) {
-                        continue;
-                    }
-                }
+        Collection<String> platforms = Collections.singleton(SfntNames.WINDOWS_PLATFORM);
+        Map<Locale, String> filteredMap = SfntNames.filterPlatforms(nameMap, platforms);
 
+        if (filteredMap.size() > 0) {
+            StringBuilder nameBuilder = new StringBuilder();
+            for (Map.Entry<Locale, String> entry : filteredMap.entrySet()) {
                 nameBuilder.append(entry.getValue());
                 nameBuilder.append('\n');
             }
@@ -122,7 +111,7 @@ public class FontInfoActivity extends AppCompatActivity {
             configureName(R.id.layout_unique_id, sfntNames.getUniqueId());
             configureName(R.id.layout_full_name, sfntNames.getFullName());
             configureName(R.id.layout_version, sfntNames.getVersion());
-            configureName(R.id.layout_postscript_name, sfntNames.getPostscriptName());
+            configureName(R.id.layout_postscript_name, sfntNames.getPostScriptName());
             configureName(R.id.layout_trademark, sfntNames.getTrademark());
             configureName(R.id.layout_manufacturer, sfntNames.getManufacturer());
             configureName(R.id.layout_designer, sfntNames.getDesigner());
@@ -135,12 +124,12 @@ public class FontInfoActivity extends AppCompatActivity {
             configureName(R.id.layout_typographic_subfamily, sfntNames.getTypographicSubfamily());
             configureName(R.id.layout_mac_full_name, sfntNames.getMacFullName());
             configureName(R.id.layout_sample_text, sfntNames.getSampleText());
-            configureName(R.id.layout_postscript_cid_findfont_name, sfntNames.getPostscriptCIDFindFontName());
+            configureName(R.id.layout_postscript_cid_findfont_name, sfntNames.getPostScriptCIDFindFontName());
             configureName(R.id.layout_wws_family, sfntNames.getWwsFamily());
             configureName(R.id.layout_wws_subfamily, sfntNames.getWwsSubfamily());
             configureName(R.id.layout_light_background_palette, sfntNames.getLightBackgroundPalette());
             configureName(R.id.layout_dark_background_palette, sfntNames.getDarkBackgroundPalette());
-            configureName(R.id.layout_variations_postscript_name_prefix, sfntNames.getVariationsPostscriptNamePrefix());
+            configureName(R.id.layout_variations_postscript_name_prefix, sfntNames.getVariationsPostScriptNamePrefix());
 
             ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view_font_info);
             scrollView.scrollTo(0, 0);
