@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <jni.h>
 
@@ -24,21 +27,22 @@ using namespace Tehreer;
 
 BidiBuffer *BidiBuffer::create(const jchar *charArray, jsize charCount)
 {
-    return new BidiBuffer(charArray, charCount);
-}
+    const size_t sizeBuffer = sizeof(BidiBuffer);
+    const size_t sizeData = sizeof(jchar) * charCount;
+    const size_t sizeMemory = sizeBuffer + sizeData;
 
-BidiBuffer::BidiBuffer(const jchar *charArray, jsize charCount)
-{
-    m_data = new jchar[charCount];
-    m_length = charCount;
-    m_retainCount = 1;
+    const size_t offsetBuffer = 0;
+    const size_t offsetData = sizeBuffer;
 
-    memcpy(m_data, charArray, sizeof(jchar) * charCount);
-}
+    uint8_t *memory = reinterpret_cast<uint8_t *>(malloc(sizeMemory));
+    BidiBuffer *buffer = reinterpret_cast<BidiBuffer *>(memory + offsetBuffer);
+    buffer->m_data = reinterpret_cast<jchar *>(memory + offsetData);
+    buffer->m_length = charCount;
+    buffer->m_retainCount = 1;
 
-BidiBuffer::~BidiBuffer()
-{
-    delete [] m_data;
+    memcpy(buffer->m_data, charArray, sizeData);
+
+    return buffer;
 }
 
 void BidiBuffer::retain()
@@ -49,7 +53,7 @@ void BidiBuffer::retain()
 void BidiBuffer::release()
 {
     if (--m_retainCount == 0) {
-        delete this;
+        free(this);
     }
 }
 

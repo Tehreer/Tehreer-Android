@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,6 @@ private:
     jchar *m_data;
     jsize m_length;
     std::atomic_int m_retainCount;
-
-    BidiBuffer(const jchar *charArray, jsize charCount);
-    ~BidiBuffer();
 };
 
 }
