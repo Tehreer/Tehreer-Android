@@ -69,10 +69,12 @@ static jlong create(JNIEnv *env, jobject obj, jstring string)
     return reinterpret_cast<jlong>(bidiBuffer);
 }
 
-static void retain(JNIEnv *env, jobject obj, jlong bufferHandle)
+static jlong retain(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
     BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
     bidiBuffer->retain();
+
+    return reinterpret_cast<jlong>(bidiBuffer);
 }
 
 static void release(JNIEnv *env, jobject obj, jlong bufferHandle)
@@ -82,9 +84,9 @@ static void release(JNIEnv *env, jobject obj, jlong bufferHandle)
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "(Ljava/lang/String;)J", (void *)create },
-    { "nativeRetain", "(J)V", (void *)retain },
-    { "nativeRelease", "(J)V", (void *)release },
+    { "create", "(Ljava/lang/String;)J", (void *)create },
+    { "retain", "(J)J", (void *)retain },
+    { "release", "(J)V", (void *)release },
 };
 
 jint register_com_mta_tehreer_bidi_BidiBuffer(JNIEnv *env)

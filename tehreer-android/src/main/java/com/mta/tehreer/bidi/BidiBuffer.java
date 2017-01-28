@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,7 @@ package com.mta.tehreer.bidi;
 
 class BidiBuffer {
 
-    public static long create(String string) {
-        return nativeCreate(string);
-    }
-
-    public static long retain(long nativeBuffer) {
-        nativeRetain(nativeBuffer);
-        return nativeBuffer;
-    }
-
-    public static void release(long nativeBuffer) {
-        nativeRelease(nativeBuffer);
-    }
-
-    private static native long nativeCreate(String string);
-    private static native void nativeRetain(long nativeBuffer);
-    private static native void nativeRelease(long nativeBuffer);
+    public static native long create(String string);
+    public static native long retain(long nativeBuffer);
+    public static native void release(long nativeBuffer);
 }
