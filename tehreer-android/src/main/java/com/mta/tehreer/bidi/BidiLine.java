@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,14 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.util.Disposable;
+
+import java.util.AbstractList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * A <code>BidiLine</code> object represents a single line processed with rules L1-L2 of Unicode
@@ -118,83 +124,29 @@ public class BidiLine implements Disposable {
 	}
 
     /**
-     * Returns the number of runs in this line.
+     * Returns an unmodifiable list of visually ordered runs in this line.
      *
-     * @return The number of runs in this line.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the line object
+     * is disposed.
+     *
+     * @return An unmodifiable list of visually ordered runs in this line.
      */
-	public int getRunCount() {
-	    return nativeGetRunCount(nativeLine);
-	}
-
-    /**
-     * Returns the visual run at the specified index in this line.
-     *
-     * @param runIndex Index of the visual run to return.
-     * @return The visual run at the specified index in this line.
-     *
-     * @throws IndexOutOfBoundsException if <code>runIndex</code> is negative, or greater than or
-     *         equal to <code>getRunCount()</code>.
-     */
-	public BidiRun getVisualRun(int runIndex) {
-        int runCount = getRunCount();
-        if (runIndex < 0 || runIndex >= runCount) {
-            throw new IndexOutOfBoundsException("Run Index: " + runIndex);
-        }
-
-        return nativeGetVisualRun(nativeLine, runIndex);
+    public List<BidiRun> getVisualRuns() {
+        return new RunList();
     }
 
     /**
-     * Notifies the given consumer about each visual run of this line until all runs have been
-     * processed or <code>stop()</code> has been called by the consumer.
+     * Returns an iterable of mirroring pairs in this line. You can use the iterable to implement
+     * Rule L4 of Unicode Bidirectional Algorithm.
      *
-     * @param consumer The consumer to notify about each visual run.
+     * <strong>Note:</strong> The returned iterable might exhibit undefined behavior if the line
+     * object is disposed.
      *
-     * @throws NullPointerException if <code>consumer</code> is <code>null</code>.
+     * @return An iterable of mirroring pairs in this line.
      */
-	public void iterateVisualRuns(BidiRunConsumer consumer) {
-        int runCount = getRunCount();
-
-        for (int i = 0; i < runCount; i++) {
-            consumer.accept(nativeGetVisualRun(nativeLine, i));
-
-            if (consumer.isStopped) {
-                break;
-            }
-        }
+    public Iterable<BidiPair> getMirroringPairs() {
+        return new MirrorIterable();
     }
-
-    /**
-     * Notifies the given consumer about each mirror of this line until all mirrors have been
-     * processed or <code>stop()</code> has been called by the consumer.
-     * <p>
-     * You can use this method to implement Rule L4 of Unicode Bidirectional Algorithm.
-     *
-     * @param consumer The consumer to notify about each mirror.
-     *
-     * @throws NullPointerException if <code>consumer</code> is <code>null</code>.
-     */
-	public void iterateMirrors(BidiPairConsumer consumer) {
-        BidiMirrorLocator locator = null;
-
-        try {
-            locator = new BidiMirrorLocator();
-            locator.loadLine(this);
-
-            BidiPair bidiPair;
-            while ((bidiPair = locator.nextPair()) != null) {
-                consumer.accept(bidiPair);
-
-                if (consumer.isStopped) {
-                    break;
-                }
-            }
-        } finally {
-            if (locator != null) {
-                locator.dispose();
-            }
-        }
-	}
 
     @Override
     public void dispose() {
@@ -204,22 +156,10 @@ public class BidiLine implements Disposable {
 
     @Override
     public String toString() {
-        StringBuilder runsBuilder = new StringBuilder();
-        runsBuilder.append("[");
-
-        int runCount = getRunCount();
-        for (int i = 0; i < runCount; i++) {
-            runsBuilder.append(nativeGetVisualRun(nativeLine, i).toString());
-            if (i < runCount - 1) {
-                runsBuilder.append(", ");
-            }
-        }
-
-        runsBuilder.append("]");
-
         return "BidiLine{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
-                + ", visualRuns=" + runsBuilder.toString()
+                + ", visualRuns=" + Description.forIterable(getVisualRuns())
+                + ", mirroringPairs=" + Description.forIterable(getMirroringPairs())
                 + "}";
     }
 
@@ -230,4 +170,74 @@ public class BidiLine implements Disposable {
 
 	private static native int nativeGetRunCount(long nativeLine);
 	private static native BidiRun nativeGetVisualRun(long nativeLine, int runIndex);
+
+    private class RunList extends AbstractList<BidiRun> {
+
+        int size = nativeGetRunCount(nativeLine);
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public BidiRun get(int index) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            }
+
+            return nativeGetVisualRun(nativeLine, index);
+        }
+    }
+
+    private class MirrorIterator implements Iterator<BidiPair> {
+
+        BidiMirrorLocator locator;
+        BidiPair pair;
+
+        MirrorIterator() {
+            locator = new BidiMirrorLocator();
+            locator.loadLine(BidiLine.this);
+
+            pair = locator.nextPair();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return (pair != null);
+        }
+
+        @Override
+        public BidiPair next() {
+            BidiPair current = pair;
+            if (current == null) {
+                throw new NoSuchElementException();
+            }
+            pair = locator.nextPair();
+
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                locator.dispose();
+            } finally {
+                super.finalize();
+            }
+        }
+    }
+
+    private class MirrorIterable implements Iterable<BidiPair> {
+
+        @Override
+        public Iterator<BidiPair> iterator() {
+            return new MirrorIterator();
+        }
+    }
 }
