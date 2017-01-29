@@ -25,7 +25,6 @@ import com.mta.tehreer.bidi.BidiAlgorithm;
 import com.mta.tehreer.bidi.BidiLine;
 import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
-import com.mta.tehreer.bidi.BidiRunConsumer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.text.internal.util.StringUtils;
@@ -224,19 +223,16 @@ public class TextTypesetter implements Disposable {
 
         while (paragraphStart != suggestedEnd) {
             BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
-            paragraph.iterateRuns(new BidiRunConsumer() {
-                @Override
-                public void accept(BidiRun bidiRun) {
-                    int scriptTag = OpenTypeTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                    TextDirection textDirection = OpenTypeArtist.getScriptDefaultDirection(scriptTag);
+            for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
+                int scriptTag = OpenTypeTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
+                TextDirection textDirection = OpenTypeArtist.getScriptDefaultDirection(scriptTag);
 
-                    openTypeArtist.setScriptTag(scriptTag);
-                    openTypeArtist.setTextDirection(textDirection);
+                openTypeArtist.setScriptTag(scriptTag);
+                openTypeArtist.setTextDirection(textDirection);
 
-                    resolveTypefaces(bidiRun.getCharStart(), bidiRun.getCharEnd(),
-                                     bidiRun.getEmbeddingLevel(), openTypeArtist, openTypeAlbum);
-                }
-            });
+                resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
+                                 bidiRun.embeddingLevel, openTypeArtist, openTypeAlbum);
+            }
             base.bidiParagraphs.add(paragraph);
 
             base.breakRecord[paragraph.getCharStart()] |= backwardType;
@@ -697,7 +693,11 @@ public class TextTypesetter implements Disposable {
         return null;
     }
 
-    private class StartTruncationHandler extends BidiRunConsumer {
+    private interface BidiRunConsumer {
+        void accept(BidiRun bidiRun);
+    }
+
+    private class StartTruncationHandler implements BidiRunConsumer {
 
         private final int charStart;
         private final int charEnd;
@@ -713,8 +713,8 @@ public class TextTypesetter implements Disposable {
 
         @Override
         public void accept(BidiRun bidiRun) {
-            int visualStart = bidiRun.getCharStart();
-            int visualEnd = bidiRun.getCharEnd();
+            int visualStart = bidiRun.charStart;
+            int visualEnd = bidiRun.charEnd;
 
             if (charStart == visualStart) {
                 firstRunIndex = runList.size();
@@ -796,7 +796,7 @@ public class TextTypesetter implements Disposable {
         return createLine(charStart, charEnd);
     }
 
-    private class EndTruncationHandler extends BidiRunConsumer {
+    private class EndTruncationHandler implements BidiRunConsumer {
 
         private final int charStart;
         private final int charEnd;
@@ -812,8 +812,8 @@ public class TextTypesetter implements Disposable {
 
         @Override
         public void accept(BidiRun bidiRun) {
-            int visualStart = bidiRun.getCharStart();
-            int visualEnd = bidiRun.getCharEnd();
+            int visualStart = bidiRun.charStart;
+            int visualEnd = bidiRun.charEnd;
 
             if (visualEnd == charEnd) {
                 lastRunIndex = runList.size();
@@ -891,7 +891,9 @@ public class TextTypesetter implements Disposable {
             feasibleEnd = Math.min(bidiParagraph.getCharEnd(), charEnd);
 
             BidiLine bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd);
-            bidiLine.iterateVisualRuns(runConsumer);
+            for (BidiRun bidiRun : bidiLine.getVisualRuns()) {
+                runConsumer.accept(bidiRun);
+            }
             bidiLine.dispose();
 
             paragraphIndex++;
@@ -902,8 +904,8 @@ public class TextTypesetter implements Disposable {
         addContinuousLineRuns(charStart, charEnd, new BidiRunConsumer() {
             @Override
             public void accept(BidiRun bidiRun) {
-                int visualStart = bidiRun.getCharStart();
-                int visualEnd = bidiRun.getCharEnd();
+                int visualStart = bidiRun.charStart;
+                int visualEnd = bidiRun.charEnd;
 
                 addVisualRuns(visualStart, visualEnd, runList);
             }
