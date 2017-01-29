@@ -27,15 +27,15 @@ public class BidiPair {
     /**
      * The index of actual character in source text.
      */
-    private int charIndex;
+    public int charIndex;
     /**
      * The code point of actual character in source text.
      */
-    private int actualCodePoint;
+    public int actualCodePoint;
     /**
      * The code point of character forming a pair with actual character.
      */
-    private int pairingCodePoint;
+    public int pairingCodePoint;
 
     @Sustain
     public BidiPair(int charIndex, int actualCodePoint, int pairingCodePoint) {
