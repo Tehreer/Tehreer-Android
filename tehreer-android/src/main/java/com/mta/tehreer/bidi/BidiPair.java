@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,30 +24,26 @@ import com.mta.tehreer.internal.util.Sustain;
  */
 public class BidiPair {
 
-    private int mCharIndex;
-    private int mPairingCodePoint;
+    /**
+     * The index of actual character in source text.
+     */
+    private int charIndex;
+    /**
+     * The code point of actual character in source text.
+     */
+    private int actualCodePoint;
+    /**
+     * The code point of character forming a pair with actual character.
+     */
+    private int pairingCodePoint;
 
     @Sustain
-    BidiPair(int charIndex, int pairingCodePoint) {
-        mCharIndex = charIndex;
-        mPairingCodePoint = pairingCodePoint;
+    public BidiPair(int charIndex, int actualCodePoint, int pairingCodePoint) {
+        this.charIndex = charIndex;
+        this.actualCodePoint = actualCodePoint;
+        this.pairingCodePoint = pairingCodePoint;
     }
 
-    /**
-     * Returns the index of pairing character in source text.
-     *
-     * @return The index of pairing character in source text.
-     */
-    public int getCharIndex() {
-        return mCharIndex;
-    }
-
-    /**
-     * Returns the pairing code point.
-     *
-     * @return The pairing code point.
-     */
-    public int getPairingCodePoint() {
-        return mPairingCodePoint;
+    public BidiPair() {
     }
 }
