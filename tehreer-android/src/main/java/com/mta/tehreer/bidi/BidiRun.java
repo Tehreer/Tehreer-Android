@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,58 +24,43 @@ import com.mta.tehreer.internal.util.Sustain;
  */
 public class BidiRun {
 
-    private int mCharStart;
-    private int mCharEnd;
-    private byte mEmbeddingLevel;
+    /**
+     * The index to the first character of this run in source text.
+     */
+    public int charStart;
+    /**
+     * The index after the last character of this run in source text.
+     */
+    public int charEnd;
+    /**
+     * The embedding level of this run.
+     */
+    public byte embeddingLevel;
 
     @Sustain
-    BidiRun(int charStart, int charEnd, byte embeddingLevel) {
-        mCharStart = charStart;
-        mCharEnd = charEnd;
-        mEmbeddingLevel = embeddingLevel;
+    public BidiRun(int charStart, int charEnd, byte embeddingLevel) {
+        this.charStart = charStart;
+        this.charEnd = charEnd;
+        this.embeddingLevel = embeddingLevel;
+    }
+
+    public BidiRun() {
     }
 
     /**
-     * Returns the index to the first character of this run in source text.
-     *
-     * @return The index to the first character of this run in source text.
-     */
-    public int getCharStart() {
-        return mCharStart;
-    }
-
-    /**
-     * Returns the index after the last character of this run in source text.
-     *
-     * @return The index after the last character of this run in source text.
-     */
-    public int getCharEnd() {
-        return mCharEnd;
-    }
-
-    /**
-     * Returns the embedding level of this run.
-     *
-     * @return The embedding level of this run.
-     */
-    public byte getEmbeddingLevel() {
-        return mEmbeddingLevel;
-    }
-
-    /**
-     * Returns <code>true</code> if this run is right-to-left.
+     * Returns <code>true</code> if the embedding level of this run is odd.
      *
      * @return <code>true</code> if this run is right-to-left, <code>false</code> otherwise.
      */
     public boolean isRightToLeft() {
-        return (mEmbeddingLevel & 1) == 1;
+        return (embeddingLevel & 1) == 1;
     }
 
     @Override
     public String toString() {
-        return "BidiRun{charStart=" + mCharStart
-                + ", charEnd=" + mCharEnd
-                + ", embeddingLevel=" + mEmbeddingLevel
+        return "BidiRun{charStart=" + charStart
+                + ", charEnd=" + charEnd
+                + ", embeddingLevel=" + embeddingLevel
                 + "}";
     }
 }
