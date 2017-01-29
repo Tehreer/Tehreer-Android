@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,14 @@ static jint getCharEnd(JNIEnv *env, jobject obj, jlong paragraphHandle)
     return static_cast<jint>(paragraphOffset + paragraphLength);
 }
 
+static jint getCharCount(JNIEnv *env, jobject obj, jlong paragraphHandle)
+{
+    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
+
+    return static_cast<jint>(paragraphLength);
+}
+
 static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
     SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
@@ -57,19 +65,21 @@ static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong paragraphHandle)
     return static_cast<jbyte>(baseLevel);
 }
 
-static jbyte getLevel(JNIEnv *env, jobject obj, jlong paragraphHandle, jint levelIndex)
+static jlong getLevelsPtr(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
     SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
 
-    return static_cast<jbyte>(levelsPtr[levelIndex]);
+    return reinterpret_cast<jlong>(levelsPtr);
 }
 
-static jobject getRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jint levelIndex)
+static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jint charIndex)
 {
     SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
     SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
 
+    jint levelIndex = static_cast<jint>(charIndex - paragraphOffset);
     if (levelIndex < paragraphLength) {
         const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
         SBLevel currentLevel = levelsPtr[levelIndex];
@@ -81,7 +91,6 @@ static jobject getRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jint leve
             }
         }
 
-        SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
         jint charStart = static_cast<jint>(levelIndex + paragraphOffset);
         jint charEnd = static_cast<jint>(nextIndex + paragraphOffset);
         jbyte embeddingLevel = static_cast<jbyte>(currentLevel);
@@ -106,9 +115,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeDispose", "(J)V", (void *)dispose },
     { "nativeGetCharStart", "(J)I", (void *)getCharStart },
     { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nativeGetCharCount", "(J)I", (void *)getCharCount },
     { "nativeGetBaseLevel", "(J)B", (void *)getBaseLevel },
-    { "nativeGetLevel", "(JI)B", (void *)getLevel },
-    { "nativeGetRun", "(JI)Lcom/mta/tehreer/bidi/BidiRun;", (void *)getRun },
+    { "nativeGetLevelsPtr", "(J)J", (void *)getLevelsPtr },
+    { "nativeGetOnwardRun", "(JI)Lcom/mta/tehreer/bidi/BidiRun;", (void *)getOnwardRun },
     { "nativeCreateLine", "(JII)J", (void *)createLine },
 };
 
