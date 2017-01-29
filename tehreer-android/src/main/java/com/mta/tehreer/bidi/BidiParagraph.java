@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,13 @@
 package com.mta.tehreer.bidi;
 
 import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.UnsafeByteList;
+import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.Disposable;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A <code>BidiParagraph</code> object represents a single paragraph of text processed with rules
@@ -126,48 +132,28 @@ public class BidiParagraph implements Disposable {
 	}
 
     /**
-     * Notifies the given consumer about each run of this paragraph until all runs have been
-     * processed or <code>stop()</code> has been called by the consumer.
+     * Returns an unmodifiable list containing the levels of all characters in this paragraph.
      *
-     * @param consumer The consumer to notify about each run.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the paragraph
+     * object is disposed.
      *
-     * @throws NullPointerException if <code>consumer</code> is <code>null</code>.
+     * @return An unmodifiable list containing the levels of all characters in this paragraph.
      */
-	public void iterateRuns(BidiRunConsumer consumer) {
-        BidiRun bidiRun = nativeGetRun(nativeParagraph, 0);
-        int paragraphOffset = bidiRun.getCharStart();
-        int levelIndex;
-
-        do {
-            consumer.accept(bidiRun);
-            if (consumer.isStopped) {
-                break;
-            }
-
-            levelIndex = bidiRun.getCharEnd() - paragraphOffset;
-        } while ((bidiRun = nativeGetRun(nativeParagraph, levelIndex)) != null);
-    }
+	public ByteList getCharLevels() {
+	    return new LevelList();
+	}
 
     /**
-     * Returns the level of a character at the specified index in source text.
+     * Returns an iterable of logically ordered runs in this paragraph.
      *
-     * @param charIndex The index of a character in source text.
-     * @return The level of the character at <code>charIndex</code> in source text.
+     * <strong>Note:</strong> The returned iterable might exhibit undefined behavior if the
+     * paragraph object is disposed.
      *
-     * @throws IllegalArgumentException if <code>charIndex</code> does not lie within the range of
-     *         this paragraph.
+     * @return An iterable of logically ordered runs in this paragraph.
      */
-	public byte getCharLevel(int charIndex) {
-	    int paragraphStart = getCharStart();
-	    int paragraphEnd = getCharEnd();
-
-        if (charIndex < paragraphStart || charIndex >= paragraphEnd) {
-            throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Paragraph Range: [" + paragraphStart + ".." + paragraphEnd + ")");
-        }
-
-	    return nativeGetLevel(nativeParagraph, charIndex - paragraphStart);
-	}
+    public Iterable<BidiRun> getLogicalRuns() {
+        return new RunIterable();
+    }
 
     /**
      * Creates a line object of specified range by applying Rules L1-L2 of Unicode Bidirectional
@@ -209,23 +195,11 @@ public class BidiParagraph implements Disposable {
 
     @Override
     public String toString() {
-        StringBuilder levelsBuilder = new StringBuilder();
-        levelsBuilder.append("[");
-
-        int levelCount = getCharEnd() - getCharStart();
-        for (int i = 0; i < levelCount; i++) {
-            levelsBuilder.append(nativeGetLevel(nativeParagraph, i));
-            if (i < levelCount - 1) {
-                levelsBuilder.append(", ");
-            }
-        }
-
-        levelsBuilder.append("]");
-
         return "BidiParagraph{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", baseLevel=" + getBaseLevel()
-                + ", charLevels=" + levelsBuilder.toString()
+                + ", charLevels=" + Description.forByteList(getCharLevels())
+                + ", logicalRuns=" + Description.forIterable(getLogicalRuns())
                 + "}";
     }
 
@@ -233,10 +207,62 @@ public class BidiParagraph implements Disposable {
 
 	private static native int nativeGetCharStart(long nativeParagraph);
 	private static native int nativeGetCharEnd(long nativeParagraph);
+    private static native int nativeGetCharCount(long nativeParagraph);
 
 	private static native byte nativeGetBaseLevel(long nativeParagraph);
-	private static native byte nativeGetLevel(long nativeParagraph, int levelIndex);
-    private static native BidiRun nativeGetRun(long nativeParagraph, int levelIndex);
+	private static native long nativeGetLevelsPtr(long nativeParagraph);
+    private static native BidiRun nativeGetOnwardRun(long nativeParagraph, int charIndex);
 
 	private static native long nativeCreateLine(long nativeParagraph, int charStart, int charEnd);
+
+    private class LevelList extends UnsafeByteList {
+
+        LevelList() {
+            super(nativeGetLevelsPtr(nativeParagraph),
+                  nativeGetCharCount(nativeParagraph));
+        }
+
+        @Override
+        public void set(int index, byte value) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class RunIterator implements Iterator<BidiRun> {
+
+        BidiRun run;
+
+        RunIterator() {
+            run = nativeGetOnwardRun(nativeParagraph, getCharStart());
+        }
+
+        @Override
+        public boolean hasNext() {
+            return run != null;
+        }
+
+        @Override
+        public BidiRun next() {
+            BidiRun current = run;
+            if (current == null) {
+                throw new NoSuchElementException();
+            }
+            run = nativeGetOnwardRun(nativeParagraph, current.getCharEnd());
+
+            return current;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class RunIterable implements Iterable<BidiRun> {
+
+        @Override
+        public Iterator<BidiRun> iterator() {
+            return new RunIterator();
+        }
+    }
 }
