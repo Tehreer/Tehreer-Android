@@ -31,7 +31,7 @@ import com.mta.tehreer.text.internal.util.StringUtils;
 import com.mta.tehreer.text.internal.util.TopSpanIterator;
 import com.mta.tehreer.opentype.OpenTypeAlbum;
 import com.mta.tehreer.opentype.OpenTypeArtist;
-import com.mta.tehreer.opentype.OpenTypeTag;
+import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.text.style.FontSizeSpan;
 import com.mta.tehreer.text.style.TypefaceSpan;
 import com.mta.tehreer.util.Disposable;
@@ -224,7 +224,7 @@ public class TextTypesetter implements Disposable {
         while (paragraphStart != suggestedEnd) {
             BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
             for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
-                int scriptTag = OpenTypeTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
+                int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
                 TextDirection textDirection = OpenTypeArtist.getScriptDefaultDirection(scriptTag);
 
                 openTypeArtist.setScriptTag(scriptTag);

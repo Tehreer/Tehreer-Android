@@ -17,9 +17,9 @@
 package com.mta.tehreer.opentype;
 
 /**
- * Provides static utility methods related to open type tags.
+ * Provides static utility methods related to SFNT tags.
  */
-public class OpenTypeTag {
+public class SfntTag {
 
 	private static boolean isValidByte(byte val) {
 		return (val >= 'a' && val <= 'z')
@@ -64,6 +64,6 @@ public class OpenTypeTag {
 					        (byte) tagStr.charAt(2), (byte) tagStr.charAt(3));
 	}
 
-    private OpenTypeTag() {
+    private SfntTag() {
     }
 }

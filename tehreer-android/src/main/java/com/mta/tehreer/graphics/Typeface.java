@@ -21,7 +21,7 @@ import android.graphics.Rect;
 
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.internal.util.Sustain;
-import com.mta.tehreer.opentype.OpenTypeTag;
+import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.util.Disposable;
 
 import java.io.InputStream;
@@ -157,7 +157,7 @@ public class Typeface implements Disposable {
      * Generates an array of bytes containing the data of the intended table.
      *
      * @param tableTag The tag of the table as an integer. It can be created from string by using
-     *                 {@link OpenTypeTag#make(String)} method.
+     *                 {@link SfntTag#make(String)} method.
      * @return An array of bytes containing the data of the table, or <code>null</code> if no such
      *         table exists.
      */

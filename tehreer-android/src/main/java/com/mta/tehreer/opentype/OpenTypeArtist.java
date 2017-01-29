@@ -159,7 +159,7 @@ public class OpenTypeArtist implements Disposable {
     /**
      * Sets this artist's script tag for text shaping. The default value is <code>'dflt'</code>.
      * <p>
-     * A tag can be created from string by using {@link OpenTypeTag#make(String)} method.
+     * A tag can be created from string by using {@link SfntTag#make(String)} method.
      *
      * @param scriptTag The script tag to use for text shaping.
      */
@@ -179,7 +179,7 @@ public class OpenTypeArtist implements Disposable {
     /**
      * Sets this artist's language tag for text shaping. The default value is <code>'dflt'</code>.
      * <p>
-     * A tag can be created from string by using {@link OpenTypeTag#make(String)} method.
+     * A tag can be created from string by using {@link SfntTag#make(String)} method.
      *
      * @param languageTag The language tag to use for text shaping.
      */
