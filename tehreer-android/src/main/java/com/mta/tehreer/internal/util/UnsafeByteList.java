@@ -92,4 +92,9 @@ public class UnsafeByteList implements ByteList {
     public byte[] toArray() {
         return Memory.toByteArray(address, size);
     }
+
+    @Override
+    public String toString() {
+        return Description.forByteList(this);
+    }
 }
