@@ -18,9 +18,15 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
 
+import java.util.Iterator;
+
 public class Description {
 
     private static final String NULL = "null";
+
+    public static String forByteArray(byte[] array) {
+        return forByteList(new SafeByteList(array));
+    }
 
     public static String forByteList(ByteList list) {
         if (list != null) {
@@ -38,8 +44,24 @@ public class Description {
         return NULL;
     }
 
-    public static String forByteArray(byte[] array) {
-        return forByteList(new SafeByteList(array));
+    public static <T> String forIterator(Iterator<T> iterator) {
+        if (iterator != null) {
+            Description description = new Description();
+            description.begin();
+            while (iterator.hasNext()) {
+                T element = iterator.next();
+                description.append(element.toString());
+            }
+            description.end();
+
+            return description.toString();
+        }
+
+        return NULL;
+    }
+
+    public static <T> String forIterable(Iterable<T> iterable) {
+        return forIterator(iterable.iterator());
     }
 
     private final StringBuilder builder = new StringBuilder();
