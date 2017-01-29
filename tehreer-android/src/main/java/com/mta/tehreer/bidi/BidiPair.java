@@ -46,4 +46,12 @@ public class BidiPair {
 
     public BidiPair() {
     }
+
+    @Override
+    public String toString() {
+        return "BidiPair{charIndex=" + charIndex
+                + ", actualCodePoint=" + actualCodePoint
+                + ", pairingCodePoint=" + pairingCodePoint
+                + "}";
+    }
 }
