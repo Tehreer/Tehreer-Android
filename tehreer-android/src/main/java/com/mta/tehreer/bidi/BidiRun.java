@@ -57,6 +57,33 @@ public class BidiRun {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this != obj) {
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+
+            BidiRun other = (BidiRun) obj;
+            if (charStart != other.charStart
+                    || charEnd != other.charEnd
+                    || embeddingLevel != other.embeddingLevel) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = charStart;
+        result = 31 * result + charEnd;
+        result = 31 * result + embeddingLevel;
+
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "BidiRun{charStart=" + charStart
                 + ", charEnd=" + charEnd
