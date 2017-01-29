@@ -16,16 +16,19 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.util.ByteList;
+
 public class Description {
 
     private static final String NULL = "null";
 
-    public static String forByteArray(byte[] array) {
-        if (array != null) {
+    public static String forByteList(ByteList list) {
+        if (list != null) {
             Description description = new Description();
             description.begin();
-            for (byte value : array) {
-                description.append(String.valueOf(value));
+            int size = list.size();
+            for (int i = 0; i < size; i++) {
+                description.append(String.valueOf(list.get(i)));
             }
             description.end();
 
@@ -33,6 +36,10 @@ public class Description {
         }
 
         return NULL;
+    }
+
+    public static String forByteArray(byte[] array) {
+        return forByteList(new SafeByteList(array));
     }
 
     private final StringBuilder builder = new StringBuilder();
