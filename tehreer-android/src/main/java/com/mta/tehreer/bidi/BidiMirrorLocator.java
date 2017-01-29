@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.mta.tehreer.util.Disposable;
 class BidiMirrorLocator implements Disposable {
 
     long nativeMirrorLocator;
+    long nativeBuffer;
 
 	public BidiMirrorLocator() {
 		nativeMirrorLocator = nativeCreate();
@@ -31,7 +32,7 @@ class BidiMirrorLocator implements Disposable {
     }
 
     public BidiPair nextPair() {
-        return nativeGetNextPair(nativeMirrorLocator);
+        return nativeGetNextPair(nativeMirrorLocator, nativeBuffer);
     }
 
     @Override
@@ -43,5 +44,5 @@ class BidiMirrorLocator implements Disposable {
 	private native void nativeDispose(long nativeMirrorLocator);
 
 	private native void nativeLoadLine(long nativeMirrorLocator, long nativeLine, long nativeBuffer);
-	private native BidiPair nativeGetNextPair(long nativeMirrorLocator);
+	private native BidiPair nativeGetNextPair(long nativeMirrorLocator, long nativeBuffer);
 }
