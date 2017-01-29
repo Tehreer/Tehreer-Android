@@ -71,7 +71,7 @@ void JavaBridge::load(JNIEnv* env)
 
     clazz = env->FindClass("com/mta/tehreer/bidi/BidiPair");
     BIDI_PAIR = (jclass)env->NewGlobalRef(clazz);
-    BIDI_PAIR__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(II)V");
+    BIDI_PAIR__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(III)V");
 
     clazz = env->FindClass("com/mta/tehreer/bidi/BidiRun");
     BIDI_RUN = (jclass)env->NewGlobalRef(clazz);
@@ -143,9 +143,9 @@ JavaBridge::~JavaBridge()
 {
 }
 
-jobject JavaBridge::BidiPair_construct(jint charIndex, jint pairingCodePoint) const
+jobject JavaBridge::BidiPair_construct(jint charIndex, jint actualCodePoint, jint pairingCodePoint) const
 {
-    return m_env->NewObject(BIDI_PAIR, BIDI_PAIR__CONSTRUCTOR, charIndex, pairingCodePoint);
+    return m_env->NewObject(BIDI_PAIR, BIDI_PAIR__CONSTRUCTOR, charIndex, actualCodePoint, pairingCodePoint);
 }
 
 jobject JavaBridge::BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const

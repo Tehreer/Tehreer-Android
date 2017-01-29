@@ -35,7 +35,7 @@ public:
         Alpha8,
     };
 
-    jobject BidiPair_construct(jint charIndex, jint pairingCodePoint) const;
+    jobject BidiPair_construct(jint charIndex, jint actualCodePoint, jint pairingCodePoint) const;
 
     jobject BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const;
 
