@@ -83,4 +83,9 @@ public class SafeByteList implements ByteList {
     public byte[] toArray() {
         return Arrays.copyOf(array, array.length);
     }
+
+    @Override
+    public String toString() {
+        return Description.forByteList(this);
+    }
 }
