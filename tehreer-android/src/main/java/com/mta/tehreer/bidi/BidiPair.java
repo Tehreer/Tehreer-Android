@@ -48,6 +48,33 @@ public class BidiPair {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this != obj) {
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+
+            BidiPair other = (BidiPair) obj;
+            if (charIndex != other.charIndex
+                    || actualCodePoint != other.actualCodePoint
+                    || pairingCodePoint != other.pairingCodePoint) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = charIndex;
+        result = 31 * result + actualCodePoint;
+        result = 31 * result + pairingCodePoint;
+
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "BidiPair{charIndex=" + charIndex
                 + ", actualCodePoint=" + actualCodePoint
