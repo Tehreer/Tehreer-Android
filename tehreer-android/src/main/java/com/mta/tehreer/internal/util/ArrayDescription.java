@@ -18,6 +18,8 @@ package com.mta.tehreer.internal.util;
 
 public class ArrayDescription {
 
+    private static final String NULL = "null";
+
     public static String forByteArray(byte[] array) {
         if (array != null) {
             ArrayDescription description = new ArrayDescription();
@@ -30,7 +32,7 @@ public class ArrayDescription {
             return description.toString();
         }
 
-        return null;
+        return NULL;
     }
 
     private final StringBuilder builder = new StringBuilder();
