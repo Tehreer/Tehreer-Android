@@ -36,12 +36,15 @@ public class ArrayDescription {
     private final StringBuilder builder = new StringBuilder();
     private boolean begun = false;
 
-    public void begin() {
+    private ArrayDescription() {
+    }
+
+    private void begin() {
         builder.append("[");
         begun = true;
     }
 
-    public void append(String value) {
+    private void append(String value) {
         if (!begun) {
             builder.append(", ");
         }
@@ -49,7 +52,7 @@ public class ArrayDescription {
         begun = false;
     }
 
-    public void end() {
+    private void end() {
         builder.append("]");
     }
 
