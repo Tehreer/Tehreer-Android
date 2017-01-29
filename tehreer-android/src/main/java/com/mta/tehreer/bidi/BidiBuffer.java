@@ -21,4 +21,7 @@ class BidiBuffer {
     public static native long create(String string);
     public static native long retain(long nativeBuffer);
     public static native void release(long nativeBuffer);
+
+    private BidiBuffer() {
+    }
 }
