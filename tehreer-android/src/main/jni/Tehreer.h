@@ -25,6 +25,7 @@
 #include "FreeType.h"
 #include "Glyph.h"
 #include "GlyphRasterizer.h"
+#include "Memory.h"
 #include "Miscellaneous.h"
 #include "OpenTypeAlbum.h"
 #include "OpenTypeArtist.h"

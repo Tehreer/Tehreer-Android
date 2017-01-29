@@ -41,6 +41,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
           && register_com_mta_tehreer_graphics_GlyphRasterizer(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
+          && register_com_mta_tehreer_internal_Memory(env) == JNI_OK
           && register_com_mta_tehreer_opentype_OpenTypeAlbum(env) == JNI_OK
           && register_com_mta_tehreer_opentype_OpenTypeArtist(env) == JNI_OK
           && register_com_mta_tehreer_opentype_SfntNames(env) == JNI_OK;
