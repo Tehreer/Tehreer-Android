@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 
 extern "C" {
+#include <SBCodepointSequence.h>
 #include <SBLine.h>
 #include <SBMirrorLocator.h>
 }
@@ -49,15 +50,29 @@ static void loadLine(JNIEnv *env, jobject obj, jlong locatorHandle, jlong lineHa
     SBMirrorLocatorLoadLine(mirrorLocator, bidiLine, stringBuffer);
 }
 
-static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle)
+static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle, jlong bufferHandle)
 {
     SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(locatorHandle);
     if (SBMirrorLocatorMoveNext(mirrorLocator)) {
-        SBMirrorAgentRef mirrorAgent = SBMirrorLocatorGetAgent(mirrorLocator);
-        jint charIndex = static_cast<jint>(mirrorAgent->index);
-        jint pairingCodePoint = static_cast<jint>(mirrorAgent->mirror);
+        BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+        void *stringBuffer = static_cast<void *>(bidiBuffer->data());
+        SBUInteger stringLength = static_cast<SBUInteger>(bidiBuffer->length());
 
-        return JavaBridge(env).BidiPair_construct(charIndex, pairingCodePoint);
+        SBCodepointSequence codepointSequence;
+        codepointSequence.stringEncoding = SBStringEncodingUTF16;
+        codepointSequence.stringBuffer = stringBuffer;
+        codepointSequence.stringLength = stringLength;
+
+        SBMirrorAgentRef mirrorAgent = SBMirrorLocatorGetAgent(mirrorLocator);
+        SBUInteger index = mirrorAgent->index;
+        SBCodepoint source = SBCodepointSequenceGetCodepointAt(&codepointSequence, &index);
+        SBCodepoint mirror = mirrorAgent->mirror;
+
+        jint charIndex = static_cast<jint>(index);
+        jint actualCodePoint = static_cast<jint>(source);
+        jint pairingCodePoint = static_cast<jint>(mirror);
+
+        return JavaBridge(env).BidiPair_construct(charIndex, actualCodePoint, pairingCodePoint);
     }
 
     return nullptr;
@@ -67,7 +82,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeCreate", "()J", (void *)create },
     { "nativeDispose", "(J)V", (void *)dispose },
     { "nativeLoadLine", "(JJJ)V", (void *)loadLine },
-    { "nativeGetNextPair", "(J)Lcom/mta/tehreer/bidi/BidiPair;", (void *)getNextPair },
+    { "nativeGetNextPair", "(JJ)Lcom/mta/tehreer/bidi/BidiPair;", (void *)getNextPair },
 };
 
 jint register_com_mta_tehreer_bidi_BidiMirrorLocator(JNIEnv *env)
