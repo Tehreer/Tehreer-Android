@@ -20,7 +20,7 @@ import android.os.Build;
 import android.util.SparseArray;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.util.ArrayDescription;
+import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.internal.util.Sustain;
 
 import java.nio.charset.Charset;
@@ -711,7 +711,7 @@ public class SfntNames {
                     + ", platformId=" + platformId
                     + ", languageId=" + languageId
                     + ", encodingId=" + encodingId
-                    + ", bytes=" + ArrayDescription.forByteArray(bytes)
+                    + ", bytes=" + Description.forByteArray(bytes)
                     + ", locale=" + locale().toString()
                     + ", charset=" + (charset != null ? charset.name() : null)
                     + ", string=" + string()

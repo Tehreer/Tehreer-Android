@@ -16,13 +16,13 @@
 
 package com.mta.tehreer.internal.util;
 
-public class ArrayDescription {
+public class Description {
 
     private static final String NULL = "null";
 
     public static String forByteArray(byte[] array) {
         if (array != null) {
-            ArrayDescription description = new ArrayDescription();
+            Description description = new Description();
             description.begin();
             for (byte value : array) {
                 description.append(String.valueOf(value));
@@ -38,7 +38,7 @@ public class ArrayDescription {
     private final StringBuilder builder = new StringBuilder();
     private boolean begun = false;
 
-    private ArrayDescription() {
+    private Description() {
     }
 
     private void begin() {
