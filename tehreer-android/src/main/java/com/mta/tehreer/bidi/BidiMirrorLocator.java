@@ -28,7 +28,8 @@ class BidiMirrorLocator implements Disposable {
 	}
 
     public void loadLine(BidiLine line) {
-        nativeLoadLine(nativeMirrorLocator, line.nativeLine, line.nativeBuffer);
+        nativeBuffer = line.nativeBuffer;
+        nativeLoadLine(nativeMirrorLocator, line.nativeLine, nativeBuffer);
     }
 
     public BidiPair nextPair() {
