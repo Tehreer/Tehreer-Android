@@ -247,7 +247,7 @@ public class BidiParagraph implements Disposable {
             if (current == null) {
                 throw new NoSuchElementException();
             }
-            run = nativeGetOnwardRun(nativeParagraph, current.getCharEnd());
+            run = nativeGetOnwardRun(nativeParagraph, current.charEnd);
 
             return current;
         }
