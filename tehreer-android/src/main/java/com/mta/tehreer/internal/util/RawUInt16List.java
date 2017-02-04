@@ -64,7 +64,7 @@ public class RawUInt16List implements IntList {
 
     @Override
     public int[] toArray() {
-        return Raw.toUInt16Array(pointer, size);
+        return Raw.arrayForUInt16Values(pointer, size);
     }
 
     @Override

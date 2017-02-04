@@ -18,19 +18,19 @@ package com.mta.tehreer.internal;
 
 public class Raw {
 
-    public static native boolean isEqual(long pointer, long other, int bufferSize);
-    public static native int getHash(long pointer, int bufferSize);
+    public static native byte getInt8(long pointer, int index);
+    public static native int getInt32(long pointer, int index);
+    public static native int getUInt16(long pointer, int index);
 
-    public static native byte getInt8(long pointer, int arrayIndex);
-    public static native int getInt32(long pointer, int arrayIndex);
-    public static native int getUInt16(long pointer, int arrayIndex);
+    public static native void putInt8(long pointer, int index, byte value);
+    public static native void putInt32(long pointer, int index, int value);
+    public static native void putUInt16(long pointer, int index, int value);
 
-    public static native void putInt8(long pointer, int arrayIndex, byte value);
-    public static native void putInt32(long pointer, int arrayIndex, int value);
-    public static native void putUInt16(long pointer, int arrayIndex, int value);
-
-    public static native byte[] toInt8Array(long pointer, int arraySize);
-    public static native int[] toInt32Array(long pointer, int arraySize);
-    public static native int[] toUInt16Array(long pointer, int arraySize);
+    public static native byte[] arrayForInt8Values(long pointer, int count);
+    public static native int[] arrayForInt32Values(long pointer, int count);
+    public static native int[] arrayForUInt16Values(long pointer, int count);
     public static native float[] arrayForInt32Points(long pointer, int count, float scale);
+
+    private Raw() {
+    }
 }

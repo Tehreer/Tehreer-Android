@@ -64,7 +64,7 @@ public class RawInt32List implements IntList {
 
     @Override
     public int[] toArray() {
-        return Raw.toInt32Array(pointer, size);
+        return Raw.arrayForInt32Values(pointer, size);
     }
 
     @Override

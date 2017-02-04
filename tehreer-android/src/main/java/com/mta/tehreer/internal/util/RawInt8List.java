@@ -64,7 +64,7 @@ public class RawInt8List implements ByteList {
 
     @Override
     public byte[] toArray() {
-        return Raw.toInt8Array(pointer, size);
+        return Raw.arrayForInt8Values(pointer, size);
     }
 
     @Override
