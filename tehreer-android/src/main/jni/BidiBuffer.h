@@ -18,11 +18,12 @@
 #define _TEHREER__BIDI_BUFFER_H
 
 #include <atomic>
+#include <cstddef>
 #include <jni.h>
 
 namespace Tehreer {
 
-class BidiBuffer {
+class alignas(sizeof(size_t)) BidiBuffer {
 public:
     static BidiBuffer *create(const jchar *charArray, jsize charCount);
 
