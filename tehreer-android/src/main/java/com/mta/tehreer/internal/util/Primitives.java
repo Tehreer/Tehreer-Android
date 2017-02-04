@@ -2,6 +2,7 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 import com.mta.tehreer.util.PrimitiveList;
 
 public class Primitives {
@@ -21,6 +22,10 @@ public class Primitives {
 
         if (list instanceof IntList) {
             return equals((IntList) list, obj);
+        }
+
+        if (list instanceof PointList) {
+            return equals((PointList) list, obj);
         }
 
         return false;
@@ -68,6 +73,27 @@ public class Primitives {
         return true;
     }
 
+    private static boolean equals(PointList list, Object obj) {
+        if (!(obj instanceof PointList)) {
+            return false;
+        }
+
+        PointList points = (PointList) obj;
+        int size = points.size();
+
+        if (list.size() != size) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (list.getX(i) != points.getX(i) || list.getY(i) != points.getY(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static int hashCode(PrimitiveList list) {
         if (list instanceof ByteList) {
             return hashCode((ByteList) list);
@@ -77,10 +103,14 @@ public class Primitives {
             return hashCode((IntList) list);
         }
 
+        if (list instanceof PointList) {
+            return hashCode((PointList) list);
+        }
+
         return 0;
     }
 
-    public static int hashCode(ByteList list) {
+    private static int hashCode(ByteList list) {
         int size = list.size();
         int result = 1;
 
@@ -91,12 +121,24 @@ public class Primitives {
         return result;
     }
 
-    public static int hashCode(IntList list) {
+    private static int hashCode(IntList list) {
         int size = list.size();
         int result = 1;
 
         for (int i = 0; i < size; i++) {
             result = 31 * result + list.get(i);
+        }
+
+        return result;
+    }
+
+    private static int hashCode(PointList list) {
+        int size = list.size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + Float.floatToIntBits(list.getX(i));
+            result = 31 * result + Float.floatToIntBits(list.getY(i));
         }
 
         return result;
