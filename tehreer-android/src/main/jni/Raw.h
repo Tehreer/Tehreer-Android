@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__MEMORY_H
-#define _TEHREER__MEMORY_H
+#ifndef _TEHREER__RAW_H
+#define _TEHREER__RAW_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_internal_Memory(JNIEnv *env);
+jint register_com_mta_tehreer_internal_Raw(JNIEnv *env);
 
 #endif

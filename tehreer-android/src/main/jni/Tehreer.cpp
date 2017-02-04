@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
           && register_com_mta_tehreer_graphics_GlyphRasterizer(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
-          && register_com_mta_tehreer_internal_Memory(env) == JNI_OK
+          && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
           && register_com_mta_tehreer_opentype_OpenTypeAlbum(env) == JNI_OK
           && register_com_mta_tehreer_opentype_OpenTypeArtist(env) == JNI_OK
           && register_com_mta_tehreer_opentype_SfntNames(env) == JNI_OK;

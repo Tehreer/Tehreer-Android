@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@
 #include "FreeType.h"
 #include "Glyph.h"
 #include "GlyphRasterizer.h"
-#include "Memory.h"
 #include "Miscellaneous.h"
 #include "OpenTypeAlbum.h"
 #include "OpenTypeArtist.h"
+#include "Raw.h"
 #include "SfntNames.h"
 #include "Typeface.h"
 

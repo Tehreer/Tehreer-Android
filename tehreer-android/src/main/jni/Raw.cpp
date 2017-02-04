@@ -19,22 +19,22 @@
 #include <jni.h>
 
 #include "JavaBridge.h"
-#include "Memory.h"
+#include "Raw.h"
 
 using namespace Tehreer;
 
-static jboolean isEqual(JNIEnv *env, jobject obj, jlong address, jlong other, jint size)
+static jboolean isEqual(JNIEnv *env, jobject obj, jlong pointer, jlong other, jint size)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(address);
+    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
     jbyte *chunk = reinterpret_cast<jbyte *>(other);
     int result = memcmp(memory, chunk, static_cast<size_t>(size));
 
     return static_cast<jboolean>(result == 0);
 }
 
-static jint getHash(JNIEnv *env, jobject obj, jlong address, jint size)
+static jint getHash(JNIEnv *env, jobject obj, jlong pointer, jint size)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(address);
+    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
 
     jint result = 1;
     for (size_t i = 0; i < size; i++) {
@@ -44,23 +44,23 @@ static jint getHash(JNIEnv *env, jobject obj, jlong address, jint size)
     return result;
 }
 
-static jbyte getByte(JNIEnv *env, jobject obj, jlong address, jint index)
+static jbyte getByte(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(address);
+    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
     jbyte value = memory[index];
 
     return value;
 }
 
-static void putByte(JNIEnv *env, jobject obj, jlong address, jint index, jbyte value)
+static void putByte(JNIEnv *env, jobject obj, jlong pointer, jint index, jbyte value)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(address);
+    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
     memory[index] = value;
 }
 
-static jbyteArray toByteArray(JNIEnv *env, jobject obj, jlong address, jint size)
+static jbyteArray toByteArray(JNIEnv *env, jobject obj, jlong pointer, jint size)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(address);
+    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
     jbyteArray array = env->NewByteArray(size);
     env->SetByteArrayRegion(array, 0, size, memory);
 
@@ -75,7 +75,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "toByteArray", "(JI)[B", (void *)toByteArray },
 };
 
-jint register_com_mta_tehreer_internal_Memory(JNIEnv *env)
+jint register_com_mta_tehreer_internal_Raw(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/internal/Memory", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/internal/Raw", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }
