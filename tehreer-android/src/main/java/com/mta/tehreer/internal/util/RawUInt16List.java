@@ -31,38 +31,12 @@ public class RawUInt16List implements IntList {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof IntList)) {
-            return false;
-        }
-
-        IntList other = (IntList) obj;
-        if (size != other.size()) {
-            return false;
-        }
-
-        if (other.getClass() == RawUInt16List.class) {
-            RawUInt16List raw = (RawUInt16List) other;
-            if (pointer != raw.pointer && !Raw.isEqual(pointer, raw.pointer, size * 2)) {
-                return false;
-            }
-        } else {
-            for (int i = 0; i < size; i++) {
-                if (Raw.getUInt16(pointer, i) != other.get(i)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return Primitives.equals(this, obj);
     }
 
     @Override
     public int hashCode() {
-        return Raw.getHash(pointer, size * 2);
+        return Primitives.hashCode(this);
     }
 
     @Override

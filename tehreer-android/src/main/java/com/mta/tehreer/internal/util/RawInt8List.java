@@ -31,38 +31,12 @@ public class RawInt8List implements ByteList {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof ByteList)) {
-            return false;
-        }
-
-        ByteList other = (ByteList) obj;
-        if (size != other.size()) {
-            return false;
-        }
-
-        if (other.getClass() == RawInt8List.class) {
-            RawInt8List raw = (RawInt8List) other;
-            if (pointer != raw.pointer && !Raw.isEqual(pointer, raw.pointer, size)) {
-                return false;
-            }
-        } else {
-            for (int i = 0; i < size; i++) {
-                if (Raw.getInt8(pointer, i) != other.get(i)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return Primitives.equals(this, obj);
     }
 
     @Override
     public int hashCode() {
-        return Raw.getHash(pointer, size);
+        return Primitives.hashCode(this);
     }
 
     @Override
