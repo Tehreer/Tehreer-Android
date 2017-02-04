@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
-import com.mta.tehreer.internal.Memory;
+import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.ByteList;
 
 public class UnsafeByteList implements ByteList {
@@ -46,12 +46,12 @@ public class UnsafeByteList implements ByteList {
 
         if (other.getClass() == UnsafeByteList.class) {
             UnsafeByteList raw = (UnsafeByteList) other;
-            if (address != raw.address && !Memory.isEqual(address, raw.address, size)) {
+            if (address != raw.address && !Raw.isEqual(address, raw.address, size)) {
                 return false;
             }
         } else {
             for (int i = 0; i < size; i++) {
-                if (Memory.getByte(address, i) != other.get(i)) {
+                if (Raw.getByte(address, i) != other.get(i)) {
                     return false;
                 }
             }
@@ -62,7 +62,7 @@ public class UnsafeByteList implements ByteList {
 
     @Override
     public int hashCode() {
-        return Memory.getHash(address, size);
+        return Raw.getHash(address, size);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class UnsafeByteList implements ByteList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
-        return Memory.getByte(address, index);
+        return Raw.getByte(address, index);
     }
 
     @Override
@@ -85,12 +85,12 @@ public class UnsafeByteList implements ByteList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
-        Memory.putByte(address, index, value);
+        Raw.putByte(address, index, value);
     }
 
     @Override
     public byte[] toArray() {
-        return Memory.toByteArray(address, size);
+        return Raw.toByteArray(address, size);
     }
 
     @Override

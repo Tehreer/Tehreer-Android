@@ -16,12 +16,12 @@
 
 package com.mta.tehreer.internal;
 
-public class Memory {
+public class Raw {
 
-    public static native boolean isEqual(long address, long other, int size);
-    public static native int getHash(long address, int size);
+    public static native boolean isEqual(long pointer, long other, int size);
+    public static native int getHash(long pointer, int size);
 
-    public static native byte getByte(long address, int offset);
-    public static native void putByte(long address, int offset, byte value);
-    public static native byte[] toByteArray(long address, int size);
+    public static native byte getByte(long pointer, int offset);
+    public static native void putByte(long pointer, int offset, byte value);
+    public static native byte[] toByteArray(long pointer, int size);
 }
