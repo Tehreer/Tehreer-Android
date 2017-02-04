@@ -15,6 +15,7 @@
  */
 
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <jni.h>
 
@@ -23,46 +24,75 @@
 
 using namespace Tehreer;
 
-static jboolean isEqual(JNIEnv *env, jobject obj, jlong pointer, jlong other, jint size)
+static jboolean isEqual(JNIEnv *env, jobject obj, jlong pointer, jlong other, jint bufferSize)
 {
     jbyte *memory = reinterpret_cast<jbyte *>(pointer);
     jbyte *chunk = reinterpret_cast<jbyte *>(other);
-    int result = memcmp(memory, chunk, static_cast<size_t>(size));
+    int result = memcmp(memory, chunk, static_cast<size_t>(bufferSize));
 
     return static_cast<jboolean>(result == 0);
 }
 
-static jint getHash(JNIEnv *env, jobject obj, jlong pointer, jint size)
+static jint getHash(JNIEnv *env, jobject obj, jlong pointer, jint bufferSize)
 {
     jbyte *memory = reinterpret_cast<jbyte *>(pointer);
 
     jint result = 1;
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < bufferSize; i++) {
         result = 31 * result + memory[i];
     }
 
     return result;
 }
 
-static jbyte getByte(JNIEnv *env, jobject obj, jlong pointer, jint index)
+static jbyte getInt8(JNIEnv *env, jobject obj, jlong pointer, jint arrayIndex)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
-    jbyte value = memory[index];
+    int8_t *memory = reinterpret_cast<int8_t *>(pointer);
+    jbyte value = memory[arrayIndex];
 
     return value;
 }
 
-static void putByte(JNIEnv *env, jobject obj, jlong pointer, jint index, jbyte value)
+static jint getUInt16(JNIEnv *env, jobject obj, jlong pointer, jint arrayIndex)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
-    memory[index] = value;
+    uint16_t *memory = reinterpret_cast<uint16_t *>(pointer);
+    jint value = memory[arrayIndex];
+
+    return value;
 }
 
-static jbyteArray toByteArray(JNIEnv *env, jobject obj, jlong pointer, jint size)
+static void putInt8(JNIEnv *env, jobject obj, jlong pointer, jint arrayIndex, jbyte value)
 {
-    jbyte *memory = reinterpret_cast<jbyte *>(pointer);
+    int8_t *memory = reinterpret_cast<int8_t *>(pointer);
+    memory[arrayIndex] = static_cast<int8_t>(value);
+}
+
+static void putUInt16(JNIEnv *env, jobject obj, jlong pointer, jint arrayIndex, jint value)
+{
+    uint16_t *memory = reinterpret_cast<uint16_t *>(pointer);
+    memory[arrayIndex] = static_cast<uint16_t>(value);
+}
+
+static jbyteArray toInt8Array(JNIEnv *env, jobject obj, jlong arrayIndex, jint size)
+{
+    int8_t *memory = reinterpret_cast<int8_t *>(arrayIndex);
     jbyteArray array = env->NewByteArray(size);
     env->SetByteArrayRegion(array, 0, size, memory);
+
+    return array;
+}
+
+static jintArray toUInt16Array(JNIEnv *env, jobject obj, jlong arrayIndex, jint size)
+{
+    uint16_t *memory = reinterpret_cast<uint16_t *>(arrayIndex);
+    jintArray array = env->NewIntArray(size);
+    jint *elements = env->GetIntArrayElements(array, nullptr);
+
+    for (size_t i = 0; i < size; i++) {
+        elements[i] = memory[i];
+    }
+
+    env->ReleaseIntArrayElements(array, elements, 0);
 
     return array;
 }
@@ -70,9 +100,12 @@ static jbyteArray toByteArray(JNIEnv *env, jobject obj, jlong pointer, jint size
 static JNINativeMethod JNI_METHODS[] = {
     { "isEqual", "(JJI)Z", (void *)isEqual },
     { "getHash", "(JI)I", (void *)getHash },
-    { "getByte", "(JI)B", (void *)getByte },
-    { "putByte", "(JIB)V", (void *)putByte },
-    { "toByteArray", "(JI)[B", (void *)toByteArray },
+    { "getInt8", "(JI)B", (void *)getInt8 },
+    { "getUInt16", "(JI)I", (void *)getUInt16 },
+    { "putInt8", "(JIB)V", (void *)putInt8 },
+    { "putUInt16", "(JII)V", (void *)putUInt16 },
+    { "toInt8Array", "(JI)[B", (void *)toInt8Array },
+    { "toUInt16Array", "(JI)[I", (void *)toUInt16Array },
 };
 
 jint register_com_mta_tehreer_internal_Raw(JNIEnv *env)
