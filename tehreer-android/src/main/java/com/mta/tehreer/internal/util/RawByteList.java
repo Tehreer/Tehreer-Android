@@ -73,7 +73,7 @@ public class RawByteList implements ByteList {
     @Override
     public byte get(int index) {
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            throw new ArrayIndexOutOfBoundsException(index);
         }
 
         return Raw.getByte(pointer, index);
@@ -82,7 +82,7 @@ public class RawByteList implements ByteList {
     @Override
     public void set(int index, byte value) {
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            throw new ArrayIndexOutOfBoundsException(index);
         }
 
         Raw.putByte(pointer, index, value);
