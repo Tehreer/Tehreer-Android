@@ -2,6 +2,7 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 import com.mta.tehreer.util.PrimitiveList;
 
@@ -18,6 +19,10 @@ public class Primitives {
 
         if (list instanceof ByteList) {
            return equals((ByteList) list, obj);
+        }
+
+        if (list instanceof IntList) {
+            return equals((IntList) list, obj);
         }
 
         if (list instanceof FloatList) {
@@ -52,12 +57,12 @@ public class Primitives {
         return true;
     }
 
-    private static boolean equals(FloatList list, Object obj) {
-        if (!(obj instanceof FloatList)) {
+    private static boolean equals(IntList list, Object obj) {
+        if (!(obj instanceof IntList)) {
             return false;
         }
 
-        FloatList ints = (FloatList) obj;
+        IntList ints = (IntList) obj;
         int size = ints.size();
 
         if (list.size() != size) {
@@ -65,7 +70,28 @@ public class Primitives {
         }
 
         for (int i = 0; i < size; i++) {
-            if (Float.floatToIntBits(list.get(i)) != Float.floatToIntBits(ints.get(i))) {
+            if (list.get(i) != ints.get(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(FloatList list, Object obj) {
+        if (!(obj instanceof FloatList)) {
+            return false;
+        }
+
+        FloatList floats = (FloatList) obj;
+        int size = floats.size();
+
+        if (list.size() != size) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (Float.floatToIntBits(list.get(i)) != Float.floatToIntBits(floats.get(i))) {
                 return false;
             }
         }
@@ -99,6 +125,10 @@ public class Primitives {
             return hashCode((ByteList) list);
         }
 
+        if (list instanceof IntList) {
+            return hashCode((IntList) list);
+        }
+
         if (list instanceof FloatList) {
             return hashCode((FloatList) list);
         }
@@ -111,6 +141,17 @@ public class Primitives {
     }
 
     private static int hashCode(ByteList list) {
+        int size = list.size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + list.get(i);
+        }
+
+        return result;
+    }
+
+    private static int hashCode(IntList list) {
         int size = list.size();
         int result = 1;
 

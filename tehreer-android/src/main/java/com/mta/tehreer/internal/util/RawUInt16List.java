@@ -17,9 +17,9 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
 
-public class RawUInt16List implements FloatList {
+public class RawUInt16List implements IntList {
 
     private final long pointer;
     private final int size;

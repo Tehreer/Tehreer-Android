@@ -65,6 +65,6 @@ public class RawInt32FloatList implements FloatList {
 
     @Override
     public String toString() {
-        return Description.forIntList(this);
+        return Description.forFloatList(this);
     }
 }
