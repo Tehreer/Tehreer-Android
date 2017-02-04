@@ -19,12 +19,12 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.ByteList;
 
-public class RawByteList implements ByteList {
+public class RawInt8List implements ByteList {
 
     private final long pointer;
     private final int size;
 
-    public RawByteList(long pointer, int size) {
+    public RawInt8List(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
@@ -44,14 +44,14 @@ public class RawByteList implements ByteList {
             return false;
         }
 
-        if (other.getClass() == RawByteList.class) {
-            RawByteList raw = (RawByteList) other;
+        if (other.getClass() == RawInt8List.class) {
+            RawInt8List raw = (RawInt8List) other;
             if (pointer != raw.pointer && !Raw.isEqual(pointer, raw.pointer, size)) {
                 return false;
             }
         } else {
             for (int i = 0; i < size; i++) {
-                if (Raw.getByte(pointer, i) != other.get(i)) {
+                if (Raw.getInt8(pointer, i) != other.get(i)) {
                     return false;
                 }
             }
@@ -76,7 +76,7 @@ public class RawByteList implements ByteList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getByte(pointer, index);
+        return Raw.getInt8(pointer, index);
     }
 
     @Override
@@ -85,12 +85,12 @@ public class RawByteList implements ByteList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        Raw.putByte(pointer, index, value);
+        Raw.putInt8(pointer, index, value);
     }
 
     @Override
     public byte[] toArray() {
-        return Raw.toByteArray(pointer, size);
+        return Raw.toInt8Array(pointer, size);
     }
 
     @Override

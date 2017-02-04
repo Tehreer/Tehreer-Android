@@ -18,7 +18,7 @@ package com.mta.tehreer.bidi;
 
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.RawByteList;
+import com.mta.tehreer.internal.util.RawInt8List;
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.Disposable;
 
@@ -215,7 +215,7 @@ public class BidiParagraph implements Disposable {
 
 	private static native long nativeCreateLine(long nativeParagraph, int charStart, int charEnd);
 
-    private class LevelList extends RawByteList {
+    private class LevelList extends RawInt8List {
 
         LevelList() {
             super(nativeGetLevelsPtr(nativeParagraph),
