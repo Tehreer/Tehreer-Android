@@ -32,4 +32,5 @@ public class Raw {
     public static native byte[] toInt8Array(long pointer, int arraySize);
     public static native int[] toInt32Array(long pointer, int arraySize);
     public static native int[] toUInt16Array(long pointer, int arraySize);
+    public static native float[] arrayForInt32Points(long pointer, int count, float scale);
 }
