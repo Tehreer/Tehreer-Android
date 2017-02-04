@@ -19,13 +19,13 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.ByteList;
 
-public class UnsafeByteList implements ByteList {
+public class RawByteList implements ByteList {
 
-    private final long address;
+    private final long pointer;
     private final int size;
 
-    public UnsafeByteList(long address, int size) {
-        this.address = address;
+    public RawByteList(long pointer, int size) {
+        this.pointer = pointer;
         this.size = size;
     }
 
@@ -44,14 +44,14 @@ public class UnsafeByteList implements ByteList {
             return false;
         }
 
-        if (other.getClass() == UnsafeByteList.class) {
-            UnsafeByteList raw = (UnsafeByteList) other;
-            if (address != raw.address && !Raw.isEqual(address, raw.address, size)) {
+        if (other.getClass() == RawByteList.class) {
+            RawByteList raw = (RawByteList) other;
+            if (pointer != raw.pointer && !Raw.isEqual(pointer, raw.pointer, size)) {
                 return false;
             }
         } else {
             for (int i = 0; i < size; i++) {
-                if (Raw.getByte(address, i) != other.get(i)) {
+                if (Raw.getByte(pointer, i) != other.get(i)) {
                     return false;
                 }
             }
@@ -62,7 +62,7 @@ public class UnsafeByteList implements ByteList {
 
     @Override
     public int hashCode() {
-        return Raw.getHash(address, size);
+        return Raw.getHash(pointer, size);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class UnsafeByteList implements ByteList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
-        return Raw.getByte(address, index);
+        return Raw.getByte(pointer, index);
     }
 
     @Override
@@ -85,12 +85,12 @@ public class UnsafeByteList implements ByteList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
 
-        Raw.putByte(address, index, value);
+        Raw.putByte(pointer, index, value);
     }
 
     @Override
     public byte[] toArray() {
-        return Raw.toByteArray(address, size);
+        return Raw.toByteArray(pointer, size);
     }
 
     @Override
