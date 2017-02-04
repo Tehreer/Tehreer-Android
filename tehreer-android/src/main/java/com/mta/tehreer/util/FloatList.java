@@ -16,12 +16,12 @@
 
 package com.mta.tehreer.util;
 
-public interface IntList extends PrimitiveList {
+public interface FloatList extends PrimitiveList {
 
     int size();
 
-    int get(int index);
-    void set(int index, int value);
+    float get(int index);
+    void set(int index, float value);
 
-    int[] toArray();
+    float[] toArray(float scale);
 }

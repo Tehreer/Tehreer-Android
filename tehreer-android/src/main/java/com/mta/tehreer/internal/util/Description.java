@@ -17,7 +17,7 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.FloatList;
 
 import java.util.Iterator;
 
@@ -45,7 +45,7 @@ public class Description {
         return NULL;
     }
 
-    public static String forIntList(IntList list) {
+    public static String forIntList(FloatList list) {
         if (list != null) {
             Description description = new Description();
             description.begin();

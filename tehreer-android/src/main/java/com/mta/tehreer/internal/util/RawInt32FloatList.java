@@ -17,14 +17,14 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.FloatList;
 
-public class RawInt32List implements IntList {
+public class RawInt32FloatList implements FloatList {
 
     private final long pointer;
     private final int size;
 
-    public RawInt32List(long pointer, int size) {
+    public RawInt32FloatList(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
@@ -45,7 +45,7 @@ public class RawInt32List implements IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException(index);
         }
@@ -54,13 +54,13 @@ public class RawInt32List implements IntList {
     }
 
     @Override
-    public void set(int index, int value) {
+    public void set(int index, float value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int[] toArray() {
-        return Raw.arrayForInt32Values(pointer, size);
+    public float[] toArray(float scale) {
+        return Raw.arrayForInt32Floats(pointer, size, scale);
     }
 
     @Override

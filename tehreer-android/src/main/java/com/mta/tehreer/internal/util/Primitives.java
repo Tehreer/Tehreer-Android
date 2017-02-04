@@ -1,7 +1,7 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.PointList;
 import com.mta.tehreer.util.PrimitiveList;
 
@@ -20,8 +20,8 @@ public class Primitives {
            return equals((ByteList) list, obj);
         }
 
-        if (list instanceof IntList) {
-            return equals((IntList) list, obj);
+        if (list instanceof FloatList) {
+            return equals((FloatList) list, obj);
         }
 
         if (list instanceof PointList) {
@@ -52,12 +52,12 @@ public class Primitives {
         return true;
     }
 
-    private static boolean equals(IntList list, Object obj) {
-        if (!(obj instanceof IntList)) {
+    private static boolean equals(FloatList list, Object obj) {
+        if (!(obj instanceof FloatList)) {
             return false;
         }
 
-        IntList ints = (IntList) obj;
+        FloatList ints = (FloatList) obj;
         int size = ints.size();
 
         if (list.size() != size) {
@@ -65,7 +65,7 @@ public class Primitives {
         }
 
         for (int i = 0; i < size; i++) {
-            if (list.get(i) != ints.get(i)) {
+            if (Float.floatToIntBits(list.get(i)) != Float.floatToIntBits(ints.get(i))) {
                 return false;
             }
         }
@@ -99,8 +99,8 @@ public class Primitives {
             return hashCode((ByteList) list);
         }
 
-        if (list instanceof IntList) {
-            return hashCode((IntList) list);
+        if (list instanceof FloatList) {
+            return hashCode((FloatList) list);
         }
 
         if (list instanceof PointList) {
@@ -121,12 +121,12 @@ public class Primitives {
         return result;
     }
 
-    private static int hashCode(IntList list) {
+    private static int hashCode(FloatList list) {
         int size = list.size();
         int result = 1;
 
         for (int i = 0; i < size; i++) {
-            result = 31 * result + list.get(i);
+            result = 31 * result + Float.floatToIntBits(list.get(i));
         }
 
         return result;
