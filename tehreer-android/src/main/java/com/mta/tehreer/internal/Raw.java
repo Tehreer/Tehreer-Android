@@ -22,6 +22,11 @@ public class Raw {
     public static native int getHash(long pointer, int size);
 
     public static native byte getByte(long pointer, int offset);
+    public static native int getUInt16(long pointer, int index);
+
     public static native void putByte(long pointer, int offset, byte value);
+    public static native void putUInt16(long pointer, int index, int value);
+
     public static native byte[] toByteArray(long pointer, int size);
+    public static native int[] toUInt16Array(long pointer, int size);
 }
