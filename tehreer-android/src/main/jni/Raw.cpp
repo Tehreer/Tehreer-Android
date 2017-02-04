@@ -47,53 +47,41 @@ static jint getUInt16(JNIEnv *env, jobject obj, jlong pointer, jint index)
     return value;
 }
 
-static void putInt8(JNIEnv *env, jobject obj, jlong pointer, jint index, jbyte value)
+static jbyteArray arrayForInt8Values(JNIEnv *env, jobject obj, jlong pointer, jint count)
 {
     int8_t *memory = reinterpret_cast<int8_t *>(pointer);
-    memory[index] = static_cast<int8_t>(value);
+    jbyteArray array = env->NewByteArray(count);
+    env->SetByteArrayRegion(array, 0, count, memory);
+
+    return array;
 }
 
-static void putInt32(JNIEnv *env, jobject obj, jlong pointer, jint index, jint value)
-{
-    int32_t *memory = reinterpret_cast<int32_t *>(pointer);
-    memory[index] = static_cast<int32_t>(value);
-}
-
-static void putUInt16(JNIEnv *env, jobject obj, jlong pointer, jint index, jint value)
+static jintArray arrayForUInt16Values(JNIEnv *env, jobject obj, jlong pointer, jint count)
 {
     uint16_t *memory = reinterpret_cast<uint16_t *>(pointer);
-    memory[index] = static_cast<uint16_t>(value);
-}
-
-static jbyteArray arrayForInt8Values(JNIEnv *env, jobject obj, jlong index, jint size)
-{
-    int8_t *memory = reinterpret_cast<int8_t *>(index);
-    jbyteArray array = env->NewByteArray(size);
-    env->SetByteArrayRegion(array, 0, size, memory);
-
-    return array;
-}
-
-static jintArray arrayForInt32Values(JNIEnv *env, jobject obj, jlong index, jint size)
-{
-    int32_t *memory = reinterpret_cast<int32_t *>(index);
-    jintArray array = env->NewIntArray(size);
-    env->SetIntArrayRegion(array, 0, size, memory);
-
-    return array;
-}
-
-static jintArray arrayForUInt16Values(JNIEnv *env, jobject obj, jlong index, jint size)
-{
-    uint16_t *memory = reinterpret_cast<uint16_t *>(index);
-    jintArray array = env->NewIntArray(size);
+    jintArray array = env->NewIntArray(count);
     jint *elements = env->GetIntArrayElements(array, nullptr);
 
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < count; i++) {
         elements[i] = memory[i];
     }
 
     env->ReleaseIntArrayElements(array, elements, 0);
+
+    return array;
+}
+
+static jfloatArray arrayForInt32Floats(JNIEnv *env, jobject obj, jlong pointer, jint count, jfloat scale)
+{
+    int32_t *memory = reinterpret_cast<int32_t *>(pointer);
+    jfloatArray array = env->NewFloatArray(count);
+    jfloat *elements = env->GetFloatArrayElements(array, nullptr);
+
+    for (size_t i = 0; i < count; i++) {
+        elements[i] = memory[i] * scale;
+    }
+
+    env->ReleaseFloatArrayElements(array, elements, 0);
 
     return array;
 }
@@ -118,12 +106,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "getInt8", "(JI)B", (void *)getInt8 },
     { "getInt32", "(JI)I", (void *)getInt32 },
     { "getUInt16", "(JI)I", (void *)getUInt16 },
-    { "putInt8", "(JIB)V", (void *)putInt8 },
-    { "putInt32", "(JII)V", (void *)putInt32 },
-    { "putUInt16", "(JII)V", (void *)putUInt16 },
     { "arrayForInt8Values", "(JI)[B", (void *)arrayForInt8Values },
-    { "arrayForInt32Values", "(JI)[I", (void *)arrayForInt32Values },
     { "arrayForUInt16Values", "(JI)[I", (void *)arrayForUInt16Values },
+    { "arrayForInt32Floats", "(JIF)[F", (void *)arrayForInt32Floats },
     { "arrayForInt32Points", "(JIF)[F", (void *)arrayForInt32Points },
 };
 
