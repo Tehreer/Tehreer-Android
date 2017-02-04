@@ -68,6 +68,40 @@ public class Primitives {
         return true;
     }
 
+    public static int hashCode(PrimitiveList list) {
+        if (list instanceof ByteList) {
+            return hashCode((ByteList) list);
+        }
+
+        if (list instanceof IntList) {
+            return hashCode((IntList) list);
+        }
+
+        return 0;
+    }
+
+    public static int hashCode(ByteList list) {
+        int size = list.size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + list.get(i);
+        }
+
+        return result;
+    }
+
+    public static int hashCode(IntList list) {
+        int size = list.size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + list.get(i);
+        }
+
+        return result;
+    }
+
     private Primitives() {
     }
 }
