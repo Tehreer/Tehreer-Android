@@ -55,11 +55,7 @@ public class RawUInt16List implements IntList {
 
     @Override
     public void set(int index, int value) {
-        if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
-        }
-
-        Raw.putUInt16(pointer, index, value);
+        throw new UnsupportedOperationException();
     }
 
     @Override

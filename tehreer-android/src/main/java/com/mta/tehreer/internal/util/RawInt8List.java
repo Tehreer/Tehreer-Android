@@ -55,11 +55,7 @@ public class RawInt8List implements ByteList {
 
     @Override
     public void set(int index, byte value) {
-        if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
-        }
-
-        Raw.putInt8(pointer, index, value);
+        throw new UnsupportedOperationException();
     }
 
     @Override
