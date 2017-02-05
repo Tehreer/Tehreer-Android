@@ -58,4 +58,9 @@ public class RawInt32PointList implements PointList {
     public float[] toArray(float scale) {
         return Raw.arrayForInt32Points(pointer, size, scale);
     }
+
+    @Override
+    public String toString() {
+        return Description.forPointList(this);
+    }
 }
