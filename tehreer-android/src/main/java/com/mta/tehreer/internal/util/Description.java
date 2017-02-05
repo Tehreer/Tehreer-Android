@@ -19,6 +19,7 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 import java.util.Iterator;
 
@@ -69,6 +70,23 @@ public class Description {
             int size = list.size();
             for (int i = 0; i < size; i++) {
                 description.append(String.valueOf(list.get(i)));
+            }
+            description.end();
+
+            return description.toString();
+        }
+
+        return NULL;
+    }
+
+    public static String forPointList(PointList list) {
+        if (list != null) {
+            Description description = new Description();
+            description.begin();
+            int size = list.size();
+            for (int i = 0; i < size; i++) {
+                description.append(String.valueOf(list.getX(i)));
+                description.append(String.valueOf(list.getY(i)));
             }
             description.end();
 
