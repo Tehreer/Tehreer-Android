@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.ByteList;
 
-public class RawInt8List implements ByteList {
+public class RawInt8List extends ByteList {
 
     private final long pointer;
     private final int size;
@@ -27,16 +27,6 @@ public class RawInt8List implements ByteList {
     public RawInt8List(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Primitives.hashCode(this);
     }
 
     @Override
@@ -61,10 +51,5 @@ public class RawInt8List implements ByteList {
     @Override
     public byte[] toArray() {
         return Raw.arrayForInt8Values(pointer, size);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forByteList(this);
     }
 }

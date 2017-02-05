@@ -20,48 +20,12 @@ import com.mta.tehreer.util.ByteList;
 
 import java.util.Arrays;
 
-public class SafeByteList implements ByteList {
+public class SafeByteList extends ByteList {
 
     private final byte[] array;
 
     public SafeByteList(byte[] array) {
         this.array = array;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof ByteList)) {
-            return false;
-        }
-
-        ByteList other = (ByteList) obj;
-        if (array.length != other.size()) {
-            return false;
-        }
-
-        if (other.getClass() == SafeByteList.class) {
-            SafeByteList safe = (SafeByteList) other;
-            if (array != safe.array && !Arrays.equals(array, safe.array)) {
-                return false;
-            }
-        } else {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] != other.get(i)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(array);
     }
 
     @Override
@@ -76,16 +40,11 @@ public class SafeByteList implements ByteList {
 
     @Override
     public void set(int index, byte value) {
-        array[index] = value;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public byte[] toArray() {
         return Arrays.copyOf(array, array.length);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forByteList(this);
     }
 }

@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.IntList;
 
-public class RawSizeList implements IntList {
+public class RawSizeList extends IntList {
 
     private final long pointer;
     private final int size;
@@ -27,16 +27,6 @@ public class RawSizeList implements IntList {
     public RawSizeList(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Primitives.hashCode(this);
     }
 
     @Override
@@ -61,10 +51,5 @@ public class RawSizeList implements IntList {
     @Override
     public int[] toArray() {
         return Raw.arrayForSizeValues(pointer, size);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forIntList(this);
     }
 }

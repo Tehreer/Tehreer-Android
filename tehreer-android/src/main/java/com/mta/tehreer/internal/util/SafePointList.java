@@ -18,7 +18,7 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.PointList;
 
-public class SafePointList implements PointList {
+public class SafePointList extends PointList {
 
     private final float[] array;
     private final int offset;
@@ -28,16 +28,6 @@ public class SafePointList implements PointList {
         this.array = array;
         this.offset = offset;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Primitives.hashCode(this);
     }
 
     @Override
@@ -51,7 +41,7 @@ public class SafePointList implements PointList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return array[index * 2 + 0];
+        return array[(index + offset) * 2 + 0];
     }
 
     @Override
@@ -60,7 +50,7 @@ public class SafePointList implements PointList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return array[index * 2 + 1];
+        return array[(index + offset) * 2 + 1];
     }
 
     @Override
@@ -76,10 +66,5 @@ public class SafePointList implements PointList {
     @Override
     public float[] toArray(float scale) {
         return Primitives.copyScaled(array, scale);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forPointList(this);
     }
 }

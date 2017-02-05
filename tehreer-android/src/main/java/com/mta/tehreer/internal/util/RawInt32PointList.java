@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.PointList;
 
-public class RawInt32PointList implements PointList {
+public class RawInt32PointList extends PointList {
 
     private final long pointer;
     private final int size;
@@ -57,10 +57,5 @@ public class RawInt32PointList implements PointList {
     @Override
     public float[] toArray(float scale) {
         return Raw.arrayForInt32Points(pointer, size, scale);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forPointList(this);
     }
 }

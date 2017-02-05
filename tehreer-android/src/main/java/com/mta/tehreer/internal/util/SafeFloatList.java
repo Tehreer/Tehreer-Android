@@ -18,9 +18,7 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.FloatList;
 
-import java.util.Arrays;
-
-public class SafeFloatList implements FloatList {
+public class SafeFloatList extends FloatList {
 
     private final float[] array;
     private final int offset;
@@ -30,16 +28,6 @@ public class SafeFloatList implements FloatList {
         this.array = array;
         this.offset = offset;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(array);
     }
 
     @Override
@@ -53,7 +41,7 @@ public class SafeFloatList implements FloatList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return array[index];
+        return array[index + offset];
     }
 
     @Override
@@ -64,10 +52,5 @@ public class SafeFloatList implements FloatList {
     @Override
     public float[] toArray(float scale) {
         return Primitives.copyScaled(array, scale);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forFloatList(this);
     }
 }

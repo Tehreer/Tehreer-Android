@@ -20,7 +20,7 @@ import com.mta.tehreer.util.IntList;
 
 import java.util.Arrays;
 
-public class SafeIntList implements IntList {
+public class SafeIntList extends IntList {
 
     private final int[] array;
     private final int offset;
@@ -30,16 +30,6 @@ public class SafeIntList implements IntList {
         this.array = array;
         this.offset = offset;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Primitives.hashCode(this);
     }
 
     @Override
@@ -53,7 +43,7 @@ public class SafeIntList implements IntList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return array[index - offset];
+        return array[index + offset];
     }
 
     @Override
@@ -63,11 +53,6 @@ public class SafeIntList implements IntList {
 
     @Override
     public int[] toArray() {
-        return Arrays.copyOf(array, array.length);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forIntList(this);
+        return Arrays.copyOfRange(array, offset, size);
     }
 }

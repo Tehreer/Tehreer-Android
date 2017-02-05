@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.FloatList;
 
-public class RawInt32FloatList implements FloatList {
+public class RawInt32FloatList extends FloatList {
 
     private final long pointer;
     private final int size;
@@ -27,16 +27,6 @@ public class RawInt32FloatList implements FloatList {
     public RawInt32FloatList(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return Primitives.hashCode(this);
     }
 
     @Override
@@ -61,10 +51,5 @@ public class RawInt32FloatList implements FloatList {
     @Override
     public float[] toArray(float scale) {
         return Raw.arrayForInt32Floats(pointer, size, scale);
-    }
-
-    @Override
-    public String toString() {
-        return Description.forFloatList(this);
     }
 }
