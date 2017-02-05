@@ -21,9 +21,11 @@ public class Raw {
     public static native byte getInt8(long pointer, int index);
     public static native int getInt32(long pointer, int index);
     public static native int getUInt16(long pointer, int index);
+    public static native int getSizeValue(long pointer, int index);
 
     public static native byte[] arrayForInt8Values(long pointer, int count);
     public static native int[] arrayForUInt16Values(long pointer, int count);
+    public static native int[] arrayForSizeValues(long pointer, int count);
     public static native float[] arrayForInt32Floats(long pointer, int count, float scale);
     public static native float[] arrayForInt32Points(long pointer, int count, float scale);
 
