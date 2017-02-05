@@ -185,6 +185,17 @@ public class Primitives {
         return result;
     }
 
+    public static float[] copyScaled(float[] array, float scale) {
+        int size = array.length;
+        float[] copy = new float[size];
+
+        for (int i = 0; i < size; i++) {
+            copy[i] = array[i] * scale;
+        }
+
+        return copy;
+    }
+
     private Primitives() {
     }
 }
