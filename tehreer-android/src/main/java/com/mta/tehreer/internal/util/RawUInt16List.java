@@ -50,7 +50,7 @@ public class RawUInt16List implements IntList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getUInt16(pointer, index);
+        return Raw.getUInt16Value(pointer, index);
     }
 
     @Override

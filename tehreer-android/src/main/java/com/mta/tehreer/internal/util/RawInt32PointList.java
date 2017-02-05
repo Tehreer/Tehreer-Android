@@ -36,12 +36,12 @@ public class RawInt32PointList implements PointList {
 
     @Override
     public float getX(int index) {
-        return Raw.getInt32(pointer, index * 2 + 0);
+        return Raw.getInt32Value(pointer, index * 2 + 0);
     }
 
     @Override
     public float getY(int index) {
-        return Raw.getInt32(pointer, index * 2 + 1);
+        return Raw.getInt32Value(pointer, index * 2 + 1);
     }
 
     @Override

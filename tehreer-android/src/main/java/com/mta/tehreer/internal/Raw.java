@@ -18,9 +18,9 @@ package com.mta.tehreer.internal;
 
 public class Raw {
 
-    public static native byte getInt8(long pointer, int index);
-    public static native int getInt32(long pointer, int index);
-    public static native int getUInt16(long pointer, int index);
+    public static native byte getInt8Value(long pointer, int index);
+    public static native int getInt32Value(long pointer, int index);
+    public static native int getUInt16Value(long pointer, int index);
     public static native int getSizeValue(long pointer, int index);
 
     public static native byte[] arrayForInt8Values(long pointer, int count);

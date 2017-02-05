@@ -50,7 +50,7 @@ public class RawInt32FloatList implements FloatList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getInt32(pointer, index);
+        return Raw.getInt32Value(pointer, index);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class RawInt8List implements ByteList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getInt8(pointer, index);
+        return Raw.getInt8Value(pointer, index);
     }
 
     @Override
