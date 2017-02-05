@@ -16,12 +16,30 @@
 
 package com.mta.tehreer.util;
 
-public interface FloatList extends PrimitiveList {
+import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.Primitives;
 
-    int size();
+public abstract class FloatList implements PrimitiveList {
 
-    float get(int index);
-    void set(int index, float value);
+    public abstract int size();
 
-    float[] toArray(float scale);
+    public abstract float get(int index);
+    public abstract void set(int index, float value);
+
+    public abstract float[] toArray(float scale);
+
+    @Override
+    public boolean equals(Object obj) {
+        return Primitives.equals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return Primitives.hashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        return Description.forFloatList(this);
+    }
 }

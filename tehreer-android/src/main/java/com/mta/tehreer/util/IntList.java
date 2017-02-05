@@ -16,12 +16,30 @@
 
 package com.mta.tehreer.util;
 
-public interface IntList extends PrimitiveList {
+import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.Primitives;
 
-    int size();
+public abstract class IntList implements PrimitiveList {
 
-    int get(int index);
-    void set(int index, int value);
+    public abstract int size();
 
-    int[] toArray();
+    public abstract int get(int index);
+    public abstract void set(int index, int value);
+
+    public abstract int[] toArray();
+
+    @Override
+    public boolean equals(Object obj) {
+        return Primitives.equals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return Primitives.hashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        return Description.forIntList(this);
+    }
 }

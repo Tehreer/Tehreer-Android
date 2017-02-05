@@ -16,15 +16,34 @@
 
 package com.mta.tehreer.util;
 
-public interface PointList extends PrimitiveList {
+import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.Primitives;
 
-    int size();
+public abstract class PointList implements PrimitiveList {
 
-    float getX(int index);
-    float getY(int index);
+    public abstract int size();
 
-    void setX(int index, float value);
-    void setY(int index, float value);
+    public abstract float getX(int index);
+    public abstract float getY(int index);
 
-    float[] toArray(float scale);
+    public abstract void setX(int index, float value);
+    public abstract void setY(int index, float value);
+
+    public abstract float[] toArray(float scale);
+
+
+    @Override
+    public boolean equals(Object obj) {
+        return Primitives.equals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return Primitives.hashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        return Description.forPointList(this);
+    }
 }

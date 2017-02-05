@@ -16,12 +16,30 @@
 
 package com.mta.tehreer.util;
 
-public interface ByteList extends PrimitiveList {
+import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.Primitives;
 
-    int size();
+public abstract class ByteList implements PrimitiveList {
 
-    byte get(int index);
-    void set(int index, byte value);
+    public abstract int size();
 
-    byte[] toArray();
+    public abstract byte get(int index);
+    public abstract void set(int index, byte value);
+
+    public abstract byte[] toArray();
+
+    @Override
+    public boolean equals(Object obj) {
+        return Primitives.equals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return Primitives.hashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        return Description.forByteList(this);
+    }
 }
