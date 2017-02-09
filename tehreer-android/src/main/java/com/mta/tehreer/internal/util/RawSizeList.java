@@ -30,6 +30,19 @@ public class RawSizeList extends IntList {
     }
 
     @Override
+    public void copyTo(int[] array, int at, int from, int count) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (at < 0 || from < 0 || count < 0 || size - from < count || length - at < count) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copySizeValues(pointer, from, array, at, count);
+    }
+
+    @Override
     public int size() {
         return size;
     }
@@ -46,10 +59,5 @@ public class RawSizeList extends IntList {
     @Override
     public void set(int index, int value) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int[] toArray() {
-        return Raw.arrayForSizeValues(pointer, size);
     }
 }

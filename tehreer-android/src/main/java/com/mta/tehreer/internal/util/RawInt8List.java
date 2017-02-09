@@ -30,6 +30,19 @@ public class RawInt8List extends ByteList {
     }
 
     @Override
+    public void copyTo(byte[] array, int at, int from, int count) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (at < 0 || from < 0 || count < 0 || size - from < count || length - at < count) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copyInt8Values(pointer + from, array, at, count);
+    }
+
+    @Override
     public int size() {
         return size;
     }
@@ -46,10 +59,5 @@ public class RawInt8List extends ByteList {
     @Override
     public void set(int index, byte value) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public byte[] toArray() {
-        return Raw.arrayForInt8Values(pointer, size);
     }
 }
