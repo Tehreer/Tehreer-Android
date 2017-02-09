@@ -18,7 +18,7 @@ package com.mta.tehreer.bidi;
 
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.RawInt8List;
+import com.mta.tehreer.internal.util.RawInt8Values;
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.Disposable;
 
@@ -140,7 +140,8 @@ public class BidiParagraph implements Disposable {
      * @return An unmodifiable list containing the levels of all characters in this paragraph.
      */
 	public ByteList getCharLevels() {
-	    return new LevelList();
+	    return new RawInt8Values(nativeGetLevelsPtr(nativeParagraph),
+                                 nativeGetCharCount(nativeParagraph));
 	}
 
     /**
@@ -214,19 +215,6 @@ public class BidiParagraph implements Disposable {
     private static native BidiRun nativeGetOnwardRun(long nativeParagraph, int charIndex);
 
 	private static native long nativeCreateLine(long nativeParagraph, int charStart, int charEnd);
-
-    private class LevelList extends RawInt8List {
-
-        LevelList() {
-            super(nativeGetLevelsPtr(nativeParagraph),
-                  nativeGetCharCount(nativeParagraph));
-        }
-
-        @Override
-        public void set(int index, byte value) {
-            throw new UnsupportedOperationException();
-        }
-    }
 
     private class RunIterator implements Iterator<BidiRun> {
 
