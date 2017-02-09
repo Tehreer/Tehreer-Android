@@ -17,20 +17,20 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.ByteList;
 
-public class RawSizeList extends IntList {
+public class RawInt8Values extends ByteList {
 
     private final long pointer;
     private final int size;
 
-    public RawSizeList(long pointer, int size) {
+    public RawInt8Values(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
 
     @Override
-    public void copyTo(int[] array, int at, int from, int count) {
+    public void copyTo(byte[] array, int at, int from, int count) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -39,7 +39,7 @@ public class RawSizeList extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copySizeValues(pointer, from, array, at, count);
+        Raw.copyInt8Values(pointer + from, array, at, count);
     }
 
     @Override
@@ -48,16 +48,16 @@ public class RawSizeList extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public byte get(int index) {
         if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getSizeValue(pointer, index);
+        return Raw.getInt8Value(pointer, index);
     }
 
     @Override
-    public void set(int index, int value) {
+    public void set(int index, byte value) {
         throw new UnsupportedOperationException();
     }
 }

@@ -17,14 +17,14 @@
 package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.PointList;
 
-public class RawInt32FloatList extends FloatList {
+public class RawInt32Points extends PointList {
 
     private final long pointer;
     private final int size;
 
-    public RawInt32FloatList(long pointer, int size) {
+    public RawInt32Points(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
@@ -48,16 +48,22 @@ public class RawInt32FloatList extends FloatList {
     }
 
     @Override
-    public float get(int index) {
-        if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
-        }
-
-        return Raw.getInt32Value(pointer, index);
+    public float getX(int index) {
+        return Raw.getInt32Value(pointer, index * 2 + 0);
     }
 
     @Override
-    public void set(int index, float value) {
+    public float getY(int index) {
+        return Raw.getInt32Value(pointer, index * 2 + 1);
+    }
+
+    @Override
+    public void setX(int index, float value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setY(int index, float value) {
         throw new UnsupportedOperationException();
     }
 }

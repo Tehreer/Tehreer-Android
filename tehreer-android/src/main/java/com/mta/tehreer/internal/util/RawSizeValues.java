@@ -19,12 +19,12 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.IntList;
 
-public class RawUInt16List extends IntList {
+public class RawSizeValues extends IntList {
 
     private final long pointer;
     private final int size;
 
-    public RawUInt16List(long pointer, int size) {
+    public RawSizeValues(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
@@ -39,7 +39,7 @@ public class RawUInt16List extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUInt16Values(pointer + (from * 2), array, at, count);
+        Raw.copySizeValues(pointer, from, array, at, count);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class RawUInt16List extends IntList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getUInt16Value(pointer, index);
+        return Raw.getSizeValue(pointer, index);
     }
 
     @Override
