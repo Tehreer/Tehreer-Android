@@ -23,11 +23,10 @@ public class Raw {
     public static native int getUInt16Value(long pointer, int index);
     public static native int getSizeValue(long pointer, int index);
 
-    public static native byte[] arrayForInt8Values(long pointer, int count);
-    public static native int[] arrayForUInt16Values(long pointer, int count);
-    public static native int[] arrayForSizeValues(long pointer, int count);
-    public static native float[] arrayForInt32Floats(long pointer, int count, float scale);
-    public static native float[] arrayForInt32Points(long pointer, int count, float scale);
+    public static native void copyInt8Values(long pointer, byte[] array, int start, int length);
+    public static native void copyUInt16Values(long pointer, int[] array, int start, int length);
+    public static native void copySizeValues(long pointer, int skip, int[] array, int start, int length);
+    public static native void copyInt32Floats(long pointer, float[] array, int start, int length, float scale);
 
     private Raw() {
     }
