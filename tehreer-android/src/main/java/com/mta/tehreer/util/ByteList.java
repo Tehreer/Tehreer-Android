@@ -21,12 +21,19 @@ import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class ByteList implements PrimitiveList {
 
+    public abstract void copyTo(byte[] array, int at, int from, int count);
     public abstract int size();
 
     public abstract byte get(int index);
     public abstract void set(int index, byte value);
 
-    public abstract byte[] toArray();
+    public byte[] toArray() {
+        int length = size();
+        byte[] array = new byte[length];
+        copyTo(array, 0, 0, length);
+
+        return array;
+    }
 
     @Override
     public boolean equals(Object obj) {

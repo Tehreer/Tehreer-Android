@@ -21,12 +21,19 @@ import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class IntList implements PrimitiveList {
 
+    public abstract void copyTo(int[] array, int at, int from, int count);
     public abstract int size();
 
     public abstract int get(int index);
     public abstract void set(int index, int value);
 
-    public abstract int[] toArray();
+    public int[] toArray() {
+        int length = size();
+        int[] array = new int[length];
+        copyTo(array, 0, 0, length);
+
+        return array;
+    }
 
     @Override
     public boolean equals(Object obj) {

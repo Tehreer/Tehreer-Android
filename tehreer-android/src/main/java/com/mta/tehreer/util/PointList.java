@@ -21,6 +21,7 @@ import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class PointList implements PrimitiveList {
 
+    public abstract void copyTo(float[] array, int at, int from, int count, float scale);
     public abstract int size();
 
     public abstract float getX(int index);
@@ -29,8 +30,17 @@ public abstract class PointList implements PrimitiveList {
     public abstract void setX(int index, float value);
     public abstract void setY(int index, float value);
 
-    public abstract float[] toArray(float scale);
+    public float[] toArray(float scale) {
+        int length = size() * 2;
+        float[] array = new float[length];
+        copyTo(array, 0, 0, length, scale);
 
+        return array;
+    }
+
+    public float[] toArray() {
+        return toArray(1.0f);
+    }
 
     @Override
     public boolean equals(Object obj) {
