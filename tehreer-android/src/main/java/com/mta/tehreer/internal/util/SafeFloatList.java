@@ -31,6 +31,18 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
+    public void copyTo(float[] array, int at, int from, int count, float scale) {
+        if (scale == 1.0f) {
+            System.arraycopy(this.array, from + offset, array, at, count);
+        } else {
+            int till = at + count;
+            for (int i = at, j = from + offset; i < till; i++, j++) {
+                array[i] = this.array[j] * scale;
+            }
+        }
+    }
+
+    @Override
     public int size() {
         return size;
     }
@@ -47,10 +59,5 @@ public class SafeFloatList extends FloatList {
     @Override
     public void set(int index, float value) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public float[] toArray(float scale) {
-        return Primitives.copyScaled(array, scale);
     }
 }

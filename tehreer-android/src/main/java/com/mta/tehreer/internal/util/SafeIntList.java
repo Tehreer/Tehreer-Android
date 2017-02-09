@@ -18,8 +18,6 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.IntList;
 
-import java.util.Arrays;
-
 public class SafeIntList extends IntList {
 
     private final int[] array;
@@ -30,6 +28,11 @@ public class SafeIntList extends IntList {
         this.array = array;
         this.offset = offset;
         this.size = size;
+    }
+
+    @Override
+    public void copyTo(int[] array, int at, int from, int count) {
+        System.arraycopy(this.array, from, array, at, count);
     }
 
     @Override
@@ -49,10 +52,5 @@ public class SafeIntList extends IntList {
     @Override
     public void set(int index, int value) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int[] toArray() {
-        return Arrays.copyOfRange(array, offset, size);
     }
 }

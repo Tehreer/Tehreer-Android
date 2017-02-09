@@ -18,14 +18,17 @@ package com.mta.tehreer.internal.util;
 
 import com.mta.tehreer.util.ByteList;
 
-import java.util.Arrays;
-
 public class SafeByteList extends ByteList {
 
     private final byte[] array;
 
     public SafeByteList(byte[] array) {
         this.array = array;
+    }
+
+    @Override
+    public void copyTo(byte[] array, int at, int from, int count) {
+        System.arraycopy(this.array, from, array, at, count);
     }
 
     @Override
@@ -41,10 +44,5 @@ public class SafeByteList extends ByteList {
     @Override
     public void set(int index, byte value) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public byte[] toArray() {
-        return Arrays.copyOf(array, array.length);
     }
 }
