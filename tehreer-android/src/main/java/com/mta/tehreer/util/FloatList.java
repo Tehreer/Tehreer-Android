@@ -17,7 +17,6 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class FloatList implements PrimitiveList {
 
@@ -41,12 +40,40 @@ public abstract class FloatList implements PrimitiveList {
 
     @Override
     public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof FloatList)) {
+            return false;
+        }
+
+        FloatList other = (FloatList) obj;
+        int size = other.size();
+
+        if (size() != size) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (Float.floatToIntBits(get(i)) != Float.floatToIntBits(other.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Primitives.hashCode(this);
+        int size = size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + Float.floatToIntBits(get(i));
+        }
+
+        return result;
     }
 
     @Override

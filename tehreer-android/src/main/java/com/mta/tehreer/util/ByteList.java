@@ -17,7 +17,6 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class ByteList implements PrimitiveList {
 
@@ -37,12 +36,40 @@ public abstract class ByteList implements PrimitiveList {
 
     @Override
     public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof ByteList)) {
+            return false;
+        }
+
+        ByteList other = (ByteList) obj;
+        int size = other.size();
+
+        if (size() != size) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (get(i) != other.get(i)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Primitives.hashCode(this);
+        int size = size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + get(i);
+        }
+
+        return result;
     }
 
     @Override

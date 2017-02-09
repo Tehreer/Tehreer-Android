@@ -17,7 +17,6 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.Primitives;
 
 public abstract class PointList implements PrimitiveList {
 
@@ -44,12 +43,41 @@ public abstract class PointList implements PrimitiveList {
 
     @Override
     public boolean equals(Object obj) {
-        return Primitives.equals(this, obj);
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof PointList)) {
+            return false;
+        }
+
+        PointList other = (PointList) obj;
+        int size = other.size();
+
+        if (size() != size) {
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (getX(i) != other.getX(i) || getY(i) != other.getY(i)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Primitives.hashCode(this);
+        int size = size();
+        int result = 1;
+
+        for (int i = 0; i < size; i++) {
+            result = 31 * result + Float.floatToIntBits(getX(i));
+            result = 31 * result + Float.floatToIntBits(getY(i));
+        }
+
+        return result;
     }
 
     @Override
