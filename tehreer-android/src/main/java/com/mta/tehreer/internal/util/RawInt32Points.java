@@ -23,19 +23,21 @@ public class RawInt32Points extends PointList {
 
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawInt32Points(long pointer, int size) {
+    public RawInt32Points(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count, float scale) {
+    public void copyTo(float[] array, int at, int from, int count) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (at < 0 || from < 0 || count < 0 || size - from < count || length - at < count) {
+        if (at < 0 || from < 0 || count < 0 || (size * 2) - from < count || length - at < count) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -49,12 +51,12 @@ public class RawInt32Points extends PointList {
 
     @Override
     public float getX(int index) {
-        return Raw.getInt32Value(pointer, index * 2 + 0);
+        return Raw.getInt32Value(pointer, index * 2 + 0) * scale;
     }
 
     @Override
     public float getY(int index) {
-        return Raw.getInt32Value(pointer, index * 2 + 1);
+        return Raw.getInt32Value(pointer, index * 2 + 1) * scale;
     }
 
     @Override

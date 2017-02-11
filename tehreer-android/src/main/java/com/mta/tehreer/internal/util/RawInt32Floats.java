@@ -23,14 +23,16 @@ public class RawInt32Floats extends FloatList {
 
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawInt32Floats(long pointer, int size) {
+    public RawInt32Floats(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count, float scale) {
+    public void copyTo(float[] array, int at, int from, int count) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -53,7 +55,7 @@ public class RawInt32Floats extends FloatList {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return Raw.getInt32Value(pointer, index);
+        return Raw.getInt32Value(pointer, index) * scale;
     }
 
     @Override
