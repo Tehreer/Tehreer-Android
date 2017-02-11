@@ -25,6 +25,9 @@ import android.graphics.RectF;
 import android.util.Log;
 
 import com.mta.tehreer.text.TextDirection;
+import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 /**
  * The <code>Renderer</code> class represents a generic glyph renderer. It can be used to generate
@@ -567,7 +570,7 @@ public class Renderer {
     /**
      * Generates the path of the specified glyph.
      *
-     * @param glyphId The id of glyph whose path is generated.
+     * @param glyphId The ID of glyph whose path is generated.
      * @return The path of the glyph specified by <code>glyphId</code>.
      */
     public Path generatePath(int glyphId) {
@@ -580,26 +583,24 @@ public class Renderer {
     /**
      * Generates a cumulative path of the glyphs in specified range.
      *
-     * @param glyphIds The array containing the glyph ids.
-     * @param xOffsets The array containing the glyph x- offsets.
-     * @param yOffsets The array containing the glyph y- offsets.
-     * @param advances The array containing the glyph advances.
+     * @param glyphIds The list containing the glyph IDs.
+     * @param offsets The list containing the glyph offsets.
+     * @param advances The list containing the glyph advances.
      * @param fromIndex The index of the first element (inclusive) to process.
      * @param toIndex The index of the last element (exclusive) to process.
      * @return The cumulative path of the glyphs in specified range.
      */
-    public Path generatePath(int[] glyphIds,
-                             float[] xOffsets, float[] yOffsets, float[] advances,
+    public Path generatePath(IntList glyphIds, PointList offsets, FloatList advances,
                              int fromIndex, int toIndex) {
         Path cumulativePath = new Path();
 
         float penX = 0.0f;
 
         for (int i = fromIndex; i < toIndex; i++) {
-            int glyphId = glyphIds[i];
-            float xOffset = xOffsets[i] * mTextScaleX;
-            float yOffset = yOffsets[i] * mTextScaleY;
-            float advance = advances[i] * mTextScaleX;
+            int glyphId = glyphIds.get(i);
+            float xOffset = offsets.getX(i) * mTextScaleX;
+            float yOffset = offsets.getY(i) * mTextScaleY;
+            float advance = advances.get(i) * mTextScaleX;
 
             Path glyphPath = getGlyphPath(glyphId);
             cumulativePath.addPath(glyphPath, penX + xOffset, yOffset);
@@ -619,7 +620,7 @@ public class Renderer {
     /**
      * Calculates the bounding box of specified glyph.
      *
-     * @param glyphId The id of glyph whose bounding box is calculated.
+     * @param glyphId The ID of glyph whose bounding box is calculated.
      * @return A rectangle that tightly encloses the path of the specified glyph.
      */
     public RectF computeBoundingBox(int glyphId) {
@@ -632,30 +633,26 @@ public class Renderer {
     /**
      * Calculates the bounding box of the glyphs.
      *
-     * @param glyphIds The array containing the glyph ids.
-     * @param xOffsets The array containing the glyph x- offsets.
-     * @param yOffsets The array containing the glyph y- offsets.
-     * @param advances The array containing the glyph advances.
+     * @param glyphIds The list containing the glyph IDs.
+     * @param offsets The list containing the glyph offsets.
+     * @param advances The list containing the glyph advances.
      * @return A rectangle that tightly encloses the paths of glyphs.
      */
-    public RectF computeBoundingBox(int[] glyphIds,
-                                    float[] xOffsets, float[] yOffsets, float[] advances) {
-        return computeBoundingBox(glyphIds, xOffsets, yOffsets, advances, 0, glyphIds.length);
+    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances) {
+        return computeBoundingBox(glyphIds, offsets, advances, 0, glyphIds.size());
     }
 
     /**
      * Calculates the bounding box of the glyphs in specified range.
      *
-     * @param glyphIds The array containing the glyph ids.
-     * @param xOffsets The array containing the glyph x- offsets.
-     * @param yOffsets The array containing the glyph y- offsets.
-     * @param advances The array containing the glyph advances.
+     * @param glyphIds The list containing the glyph IDs.
+     * @param offsets The list containing the glyph offsets.
+     * @param advances The list containing the glyph advances.
      * @param fromIndex The index of the first element (inclusive) to process
      * @param toIndex The index of the last element (exclusive) to process
      * @return A rectangle that tightly encloses the paths of glyphs in the specified range.
      */
-    public RectF computeBoundingBox(int[] glyphIds,
-                                    float[] xOffsets, float[] yOffsets, float[] advances,
+    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances,
                                     int fromIndex, int toIndex) {
         RectF glyphBBox = new RectF();
         RectF cumulativeBBox = new RectF();
@@ -663,10 +660,10 @@ public class Renderer {
         float penX = 0.0f;
 
         for (int i = fromIndex; i < toIndex; i++) {
-            int glyphId = glyphIds[i];
-            float xOffset = xOffsets[i] * mTextScaleX;
-            float yOffset = yOffsets[i] * mTextScaleY;
-            float advance = advances[i] * mTextScaleX;
+            int glyphId = glyphIds.get(i);
+            float xOffset = offsets.getX(i) * mTextScaleX;
+            float yOffset = offsets.getY(i) * mTextScaleY;
+            float advance = advances.get(i) * mTextScaleX;
 
             copyBoundingBox(glyphId, glyphBBox);
             glyphBBox.offset(penX + xOffset, yOffset);
@@ -679,7 +676,7 @@ public class Renderer {
     }
 
     private void drawGlyphs(Canvas canvas,
-                            int[] glyphIds, float[] xOffsets, float[] yOffsets, float[] advances,
+                            IntList glyphIds, PointList offsets, FloatList advances,
                             int fromIndex, int toIndex, boolean strokeMode) {
         GlyphCache cache = GlyphCache.getInstance();
 
@@ -689,10 +686,10 @@ public class Renderer {
         for (int i = fromIndex; i < toIndex; i++) {
             int pos = (!reverseMode ? i : fromIndex + (toIndex - i) - 1);
 
-            int glyphId = glyphIds[pos];
-            float xOffset = xOffsets[pos] * mTextScaleX;
-            float yOffset = yOffsets[pos] * mTextScaleY;
-            float advance = advances[pos] * mTextScaleX;
+            int glyphId = glyphIds.get(pos);
+            float xOffset = offsets.getX(pos) * mTextScaleX;
+            float yOffset = offsets.getY(pos) * mTextScaleY;
+            float advance = advances.get(pos) * mTextScaleX;
 
             Glyph maskGlyph = (!strokeMode
                                ? cache.getMaskGlyph(mGlyphStrike, glyphId)
@@ -715,15 +712,14 @@ public class Renderer {
      * the canvas is hardware accelerated.
      *
      * @param canvas The canvas onto which to draw the glyphs.
-     * @param glyphIds The array containing the glyph ids.
-     * @param xOffsets The array containing the glyph x- offsets.
-     * @param yOffsets The array containing the glyph y- offsets.
-     * @param advances The array containing the glyph advances.
+     * @param glyphIds The list containing the glyph IDs.
+     * @param offsets The list containing the glyph offsets.
+     * @param advances The list containing the glyph advances.
      * @param fromIndex The index of the first element (inclusive) to draw.
      * @param toIndex The index of the last element (exclusive) to draw.
      */
     public void drawGlyphs(Canvas canvas,
-                           int[] glyphIds, float[] xOffsets, float[] yOffsets, float[] advances,
+                           IntList glyphIds, PointList offsets, FloatList advances,
                            int fromIndex, int toIndex) {
         if (mShouldRender) {
             syncShadowLayer();
@@ -734,12 +730,12 @@ public class Renderer {
 
             if (mRenderingStyle == Style.FILL || mRenderingStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mTextColor);
-                drawGlyphs(canvas, glyphIds, xOffsets, yOffsets, advances, fromIndex, toIndex, false);
+                drawGlyphs(canvas, glyphIds, offsets, advances, fromIndex, toIndex, false);
             }
 
             if (mRenderingStyle == Style.STROKE || mRenderingStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mStrokeColor);
-                drawGlyphs(canvas, glyphIds, xOffsets, yOffsets, advances, fromIndex, toIndex, true);
+                drawGlyphs(canvas, glyphIds, offsets, advances, fromIndex, toIndex, true);
             }
         }
     }
