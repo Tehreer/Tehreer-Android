@@ -33,23 +33,19 @@ public:
 
     SFAlbumRef sfAlbum() const { return m_sfAlbum; }
 
-    void associateText(jint charStart, jint charEnd, bool isBackward);
+    void associateText(jint charStart, jint charEnd, bool isBackward, jfloat sizeByEm);
 
     bool isBackward() const { return m_isBackward; }
     jint charStart() const { return m_charStart; }
     jint charEnd() const { return m_charEnd; }
-
-    jint getCharGlyphIndex(jint charIndex) const;
-
-    void copyGlyphInfos(jint fromIndex, jint toIndex, jfloat scaleFactor,
-        jint *glyphIDBuffer, jfloat *xOffsetBuffer, jfloat *yOffsetBuffer, jfloat *advanceBuffer) const;
-    void copyCharGlyphIndexes(jint fromIndex, jint toIndex, jint *glyphIndexBuffer) const;
+    jfloat sizeByEm() const { return m_sizeByEm; }
 
 private:
     SFAlbumRef m_sfAlbum;
     bool m_isBackward;
     jint m_charStart;
     jint m_charEnd;
+    jfloat m_sizeByEm;
 };
 
 }
