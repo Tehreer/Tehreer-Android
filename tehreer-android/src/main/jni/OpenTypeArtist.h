@@ -47,6 +47,9 @@ public:
     const Typeface *typeface() const { return m_typeface; }
     void setTypeface(Typeface *typeface) { m_typeface = typeface; }
 
+    jfloat fontSize() const { return m_fontSize; }
+    void setFontSize(jfloat fontSize) { m_fontSize = fontSize; }
+
     SFTag scriptTag() const { return m_scriptTag; }
     void setScriptTag(SFTag scriptTag) { m_scriptTag = scriptTag; }
 
@@ -71,6 +74,7 @@ private:
     SFArtistRef m_sfArtist;
     SFSchemeRef m_sfScheme;
     Typeface *m_typeface;
+    jfloat m_fontSize;
     SFTag m_scriptTag;
     SFTag m_languageTag;
     jchar *m_charArray;

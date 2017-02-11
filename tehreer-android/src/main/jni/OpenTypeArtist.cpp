@@ -66,6 +66,7 @@ OpenTypeArtist::OpenTypeArtist()
     : m_sfArtist(SFArtistCreate())
     , m_sfScheme(SFSchemeCreate())
     , m_typeface(nullptr)
+    , m_fontSize(16.0)
     , m_scriptTag(SFTagMake('D', 'F', 'L', 'T'))
     , m_languageTag(SFTagMake('d', 'f', 'l', 't'))
     , m_charArray(nullptr)
@@ -138,7 +139,10 @@ void OpenTypeArtist::fillAlbum(OpenTypeAlbum &album)
     SFArtistSetTextDirection(m_sfArtist, textDirection);
     SFArtistFillAlbum(m_sfArtist, album.sfAlbum());
 
-    album.associateText(m_charStart, m_charEnd, m_textMode == SFTextModeBackward);
+    bool isBackward = m_textMode == SFTextModeBackward;
+    jfloat sizeByEm = m_fontSize / m_typeface->ftFace()->units_per_EM;
+
+    album.associateText(m_charStart, m_charEnd, isBackward, sizeByEm);
 }
 
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
@@ -169,6 +173,18 @@ static void setTypeface(JNIEnv *env, jobject obj, jlong artistHandle, jobject jt
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
 
     opentypeArtist->setTypeface(typeface);
+}
+
+static jfloat getFontSize(JNIEnv *env, jobject obj, jlong artistHandle)
+{
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    return opentypeArtist->fontSize();
+}
+
+static void setFontSize(JNIEnv *env, jobject obj, jlong artistHandle, jfloat fontSize)
+{
+    OpenTypeArtist *opentypeArtist = reinterpret_cast<OpenTypeArtist *>(artistHandle);
+    opentypeArtist->setFontSize(fontSize);
 }
 
 static jint getScriptTag(JNIEnv *env, jobject obj, jlong artistHandle)
@@ -282,6 +298,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeDispose", "(J)V", (void *)dispose },
     { "nativeGetScriptDefaultDirection", "(I)I", (void *)getScriptDefaultDirection },
     { "nativeSetTypeface", "(JLcom/mta/tehreer/graphics/Typeface;)V", (void *)setTypeface },
+    { "nativeGetFontSize", "(J)F", (void *)getFontSize },
+    { "nativeSetFontSize", "(JF)V", (void *)setFontSize },
     { "nativeGetScriptTag", "(J)I", (void *)getScriptTag },
     { "nativeSetScriptTag", "(JI)V", (void *)setScriptTag },
     { "nativeGetLanguageTag", "(J)I", (void *)getLanguageTag },
