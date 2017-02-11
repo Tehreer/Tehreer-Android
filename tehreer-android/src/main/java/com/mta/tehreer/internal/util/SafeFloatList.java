@@ -31,15 +31,8 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count, float scale) {
-        if (scale == 1.0f) {
-            System.arraycopy(this.array, from + offset, array, at, count);
-        } else {
-            int till = at + count;
-            for (int i = at, j = from + offset; i < till; i++, j++) {
-                array[i] = this.array[j] * scale;
-            }
-        }
+    public void copyTo(float[] array, int at, int from, int count) {
+        System.arraycopy(this.array, from + offset, array, at, count);
     }
 
     @Override
