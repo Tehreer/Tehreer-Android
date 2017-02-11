@@ -20,7 +20,7 @@ import com.mta.tehreer.internal.util.Description;
 
 public abstract class PointList implements PrimitiveList {
 
-    public abstract void copyTo(float[] array, int at, int from, int count, float scale);
+    public abstract void copyTo(float[] array, int at, int from, int count);
     public abstract int size();
 
     public abstract float getX(int index);
@@ -29,16 +29,12 @@ public abstract class PointList implements PrimitiveList {
     public abstract void setX(int index, float value);
     public abstract void setY(int index, float value);
 
-    public float[] toArray(float scale) {
+    public float[] toArray() {
         int length = size() * 2;
         float[] array = new float[length];
-        copyTo(array, 0, 0, length, scale);
+        copyTo(array, 0, 0, length);
 
         return array;
-    }
-
-    public float[] toArray() {
-        return toArray(1.0f);
     }
 
     @Override
