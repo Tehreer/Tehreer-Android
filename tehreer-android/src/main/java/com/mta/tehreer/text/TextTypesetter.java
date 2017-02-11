@@ -295,6 +295,7 @@ public class TextTypesetter implements Disposable {
                                    OpenTypeArtist artist, OpenTypeAlbum album,
                                    Typeface typeface, float fontSize) {
         artist.setTypeface(typeface);
+        artist.setFontSize(fontSize);
         artist.setTextRange(charStart, charEnd);
         artist.fillAlbum(album);
 
