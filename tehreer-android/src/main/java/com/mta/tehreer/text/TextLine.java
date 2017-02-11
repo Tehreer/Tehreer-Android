@@ -19,6 +19,7 @@ package com.mta.tehreer.text;
 import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.text.internal.util.StringUtils;
 
 import java.util.Collections;
@@ -206,19 +207,6 @@ public class TextLine {
 
     @Override
     public String toString() {
-        StringBuilder runsBuilder = new StringBuilder();
-        runsBuilder.append("[");
-
-        int runCount = mRunList.size();
-        for (int i = 0; i < runCount; i++) {
-            runsBuilder.append(mRunList.get(i).toString());
-            if (i < runCount - 1) {
-                runsBuilder.append(", ");
-            }
-        }
-
-        runsBuilder.append("]");
-
         return "TextLine{charStart=" + mCharStart
                 + ", charEnd=" + mCharEnd
                 + ", originX=" + mOriginX
@@ -227,7 +215,7 @@ public class TextLine {
                 + ", descent=" + mDescent
                 + ", width=" + mWidth
                 + ", trailingWhitespaceWidth=" + mTrailingWhitespaceWidth
-                + ", runs=" + runsBuilder.toString()
+                + ", runs=" + Description.forIterable(mRunList)
                 + "}";
     }
 }
