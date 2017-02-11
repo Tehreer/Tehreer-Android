@@ -17,7 +17,14 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.util.RawInt32Floats;
+import com.mta.tehreer.internal.util.RawInt32Points;
+import com.mta.tehreer.internal.util.RawSizeValues;
+import com.mta.tehreer.internal.util.RawUInt16Values;
 import com.mta.tehreer.util.Disposable;
+import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 /**
  * An <code>OpenTypeAlbum</code> object is a container for the results of text shaping. It is filled
@@ -97,60 +104,6 @@ public class OpenTypeAlbum implements Disposable {
         this.nativeAlbum = other.nativeAlbum;
     }
 
-	private void verifyCharIndex(int charIndex) {
-	    int textStart = getCharStart();
-	    int textEnd = getCharEnd();
-
-	    if (charIndex < textStart || charIndex >= textEnd) {
-            throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Text Range: [" + textStart + ".." + textEnd + ")");
-        }
-	}
-
-	private void verifyCharRange(int fromIndex, int toIndex) {
-	    int textStart = getCharStart();
-        int textEnd = getCharEnd();
-
-        if (fromIndex < textStart) {
-            throw new IllegalArgumentException("From Index: " + fromIndex
-                                               + ", Text Range: [" + textStart + ".." + textEnd + ")");
-        }
-        if (toIndex > textEnd) {
-            throw new IllegalArgumentException("To Index: " + toIndex
-                                               + ", Text Range: [" + textStart + ".." + textEnd + ")");
-        }
-        if (fromIndex > toIndex) {
-            throw new IllegalArgumentException("From Index: " + fromIndex
-                                               + ", To Index: " + toIndex);
-        }
-	}
-
-	private void verifyGlyphIndex(int glyphIndex) {
-		if (glyphIndex < 0 || glyphIndex >= getGlyphCount()) {
-            throw new IndexOutOfBoundsException("Glyph Index: " + glyphIndex);
-        }
-	}
-
-	private void verifyGlyphRange(int fromIndex, int toIndex) {
-	    if (fromIndex < 0) {
-            throw new IllegalArgumentException("From Index: " + fromIndex);
-        }
-        if (toIndex > getGlyphCount()) {
-            throw new IllegalArgumentException("To Index: " + toIndex
-                                               + "Glyph Count: " + getGlyphCount());
-        }
-        if (fromIndex > toIndex) {
-            throw new IllegalArgumentException("From Index: " + fromIndex
-                                               + ", To Index: " + toIndex);
-        }
-	}
-
-	private void verifyCapacity(String paramName, int expectedCapacity, int actualCapacity) {
-	    if (actualCapacity < expectedCapacity) {
-            throw new IllegalArgumentException("'" + paramName + "' array cannot hold " + expectedCapacity + " elements");
-        }
-	}
-
     /**
      * Returns <code>true</code> if the text flows backward for this album.
      *
@@ -189,141 +142,49 @@ public class OpenTypeAlbum implements Disposable {
 	}
 
     /**
-     * Returns the glyph id at the specified index in this album.
+     * Returns a list of glyph codes in this album.
      *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph id at the specified index in this album.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
+     * is disposed.
      *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
+     * @return A list of glyph codes in this album.
      */
-	public int getGlyphId(int glyphIndex) {
-		verifyGlyphIndex(glyphIndex);
-		return nativeGetGlyphId(nativeAlbum, glyphIndex);
-	}
-
-    /**
-     * Returns the glyph's x- offset at the specified index in this album.
-     *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's x- offset at the specified index in this album.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
-     */
-	public int getGlyphXOffset(int glyphIndex) {
-		verifyGlyphIndex(glyphIndex);
-		return nativeGetGlyphXOffset(nativeAlbum, glyphIndex);
-	}
-
-    /**
-     * Returns the glyph's y- offset at the specified index in this album.
-     *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's y- offset at the specified index in this album.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
-     */
-	public int getGlyphYOffset(int glyphIndex) {
-		verifyGlyphIndex(glyphIndex);
-		return nativeGetGlyphYOffset(nativeAlbum, glyphIndex);
-	}
-
-    /**
-     * Returns the glyph's advance at the specified index in this album.
-     *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's advance at the specified index in this album.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
-     */
-	public int getGlyphAdvance(int glyphIndex) {
-		verifyGlyphIndex(glyphIndex);
-		return nativeGetGlyphAdvance(nativeAlbum, glyphIndex);
-	}
-
-    /**
-     * Returns the index of the first glyph associated with the character at the specified index in
-     * source text.
-     *
-     * @param charIndex The index of the character in source text.
-     * @return The index of the first glyph associated with the character at the specified index in
-     *         source text.
-     *
-     * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
-     */
-	public int getCharGlyphIndex(int charIndex) {
-        verifyCharIndex(charIndex);
-        return nativeGetCharGlyphIndex(nativeAlbum, charIndex);
+    public IntList getGlyphCodes() {
+        return new RawUInt16Values(nativeGetGlyphCodesPtr(nativeAlbum),
+                                   nativeGetGlyphCount(nativeAlbum));
     }
 
     /**
-     * Copies glyph infos in specified range to passed-in arrays.
+     * Returns a list of glyph offsets in this album.
      *
-     * @param fromIndex The index of the first element (inclusive) to be copied.
-     * @param toIndex The index of the last element (exclusive) to be copied.
-     * @param scaleFactor The scale factor to apply on glyph offsets and advances before copying.
-     * @param glyphIDs The array that receives the glyph ids in specified range.
-     * @param xOffsets The array that receives the scaled x- offsets in specified range.
-     * @param yOffsets The array that receives the scaled y- offsets in specified range.
-     * @param advances The array that receives the scaled advances in specified range.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
+     * is disposed.
      *
-     * @throws IllegalArgumentException if any of the following is true:
-     *         <ul>
-     *           <li><code>fromIndex</code> is negative</li>
-     *           <li><code>toIndex</code> is greater than {@link #getGlyphCount()}</li>
-     *           <li><code>fromIndex</code> is greater than <code>toIndex</code></li>
-     *           <li>Any of the non-null passed-in array does not have the capacity to hold
-     *               <code>toIndex - fromIndex</code> elements</li>
-     *         </ul>
+     * @return A list of glyph offsets in this album.
      */
-    public void copyGlyphInfos(int fromIndex, int toIndex, float scaleFactor,
-                               int[] glyphIDs, float[] xOffsets, float[] yOffsets, float[] advances) {
-        verifyGlyphRange(fromIndex, toIndex);
-        int glyphCapacity = toIndex - fromIndex;
-        if (glyphIDs != null) {
-            verifyCapacity("glyphIDs", glyphCapacity, glyphIDs.length);
-        }
-        if (xOffsets != null) {
-            verifyCapacity("xOffsets", glyphCapacity, xOffsets.length);
-        }
-        if (yOffsets != null) {
-            verifyCapacity("yOffsets", glyphCapacity, yOffsets.length);
-        }
-        if (advances != null) {
-            verifyCapacity("advances", glyphCapacity, advances.length);
-        }
-
-        nativeCopyGlyphInfos(nativeAlbum, fromIndex, toIndex, scaleFactor,
-                             glyphIDs, xOffsets, yOffsets, advances);
+    public PointList getGlyphOffsets() {
+        return new RawInt32Points(nativeGetGlyphOffsetsPtr(nativeAlbum),
+                                  nativeGetGlyphCount(nativeAlbum),
+                                  nativeGetSizeByEm(nativeAlbum));
     }
 
     /**
-     * Copies glyph indexes of characters in specified range to passed-in array.
+     * Returns a list of glyph advances in this album.
      *
-     * @param fromIndex The index of the first character (inclusive) in source text.
-     * @param toIndex The index of the last character (exclusive) in source text.
-     * @param charGlyphIndexes The array that receives the glyph indexes in specified range.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
+     * is disposed.
      *
-     * @throws IllegalArgumentException if any of the following is true:
-     *         <ul>
-     *           <li><code>fromIndex</code> is less than {@link #getCharStart()}</li>
-     *           <li><code>toIndex</code> is greater than {@link #getCharEnd()}</li>
-     *           <li><code>fromIndex</code> is greater than <code>toIndex</code></li>
-     *           <li><code>charGlyphIndexes</code> array does not have the capacity to hold
-     *               <code>toIndex - fromIndex</code> elements</li>
-     *         </ul>
+     * @return A list of glyph advances in this album.
      */
-    public void copyCharGlyphIndexes(int fromIndex, int toIndex, int[] charGlyphIndexes) {
-        verifyCharRange(fromIndex, toIndex);
+    public FloatList getGlyphAdvances() {
+        return new RawInt32Floats(nativeGetGlyphAdvancesPtr(nativeAlbum),
+                                  nativeGetGlyphCount(nativeAlbum),
+                                  nativeGetSizeByEm(nativeAlbum));
+    }
 
-        if (charGlyphIndexes != null) {
-            verifyCapacity("charGlyphIndexes", fromIndex - toIndex, charGlyphIndexes.length);
-            nativeCopyCharGlyphIndexes(nativeAlbum, fromIndex, toIndex, charGlyphIndexes);
-        }
+    public IntList getCharToGlyphMap() {
+        return new RawSizeValues(nativeGetCharToGlyphMapPtr(nativeAlbum),
+                                 nativeGetCharCount(nativeAlbum));
     }
 
 	@Override
@@ -333,59 +194,14 @@ public class OpenTypeAlbum implements Disposable {
 
     @Override
     public String toString() {
-        StringBuilder glyphIdsBuilder = new StringBuilder();
-        StringBuilder xOffsetsBuilder = new StringBuilder();
-        StringBuilder yOffsetsBuilder = new StringBuilder();
-        StringBuilder advancesBuilder = new StringBuilder();
-
-        glyphIdsBuilder.append("[");
-        xOffsetsBuilder.append("[");
-        yOffsetsBuilder.append("[");
-        advancesBuilder.append("[");
-
-        int glyphCount = getGlyphCount();
-        for (int i = 0; i < glyphCount; i++) {
-            glyphIdsBuilder.append(nativeGetGlyphId(nativeAlbum, i));
-            xOffsetsBuilder.append(nativeGetGlyphXOffset(nativeAlbum, i));
-            yOffsetsBuilder.append(nativeGetGlyphYOffset(nativeAlbum, i));
-            advancesBuilder.append(nativeGetGlyphAdvance(nativeAlbum, i));
-
-            if (i < glyphCount - 1) {
-                glyphIdsBuilder.append(", ");
-                xOffsetsBuilder.append(", ");
-                yOffsetsBuilder.append(", ");
-                advancesBuilder.append(", ");
-            }
-        }
-
-        glyphIdsBuilder.append("]");
-        xOffsetsBuilder.append("]");
-        yOffsetsBuilder.append("]");
-        advancesBuilder.append("]");
-
-        StringBuilder charToGlyphMapBuilder = new StringBuilder();
-        charToGlyphMapBuilder.append("[");
-
-        int charStart = getCharStart();
-        int charEnd = getCharEnd();
-        for (int i = charStart; i < charEnd; i++) {
-            charToGlyphMapBuilder.append(nativeGetCharGlyphIndex(nativeAlbum, i));
-            if (i < charEnd - 1) {
-                charToGlyphMapBuilder.append(", ");
-            }
-        }
-
-        charToGlyphMapBuilder.append("]");
-
         return "OpenTypeAlbum{isBackward=" + Boolean.toString(isBackward())
-                + ", charStart=" + charStart
-                + ", charEnd=" + charEnd
-                + ", glyphCount=" + glyphCount
-                + ", glyphIds=" + glyphIdsBuilder.toString()
-                + ", glyphXOffsets=" + xOffsetsBuilder.toString()
-                + ", glyphYOffsets=" + yOffsetsBuilder.toString()
-                + ", glyphAdvances=" + advancesBuilder.toString()
-                + ", charToGlyphMap=" + charToGlyphMapBuilder.toString()
+                + ", charStart=" + getCharStart()
+                + ", charEnd=" + getCharEnd()
+                + ", glyphCount=" + getGlyphCount()
+                + ", glyphCodes=" + getGlyphCodes().toString()
+                + ", glyphOffsets=" + getGlyphOffsets().toString()
+                + ", glyphAdvances=" + getGlyphAdvances().toString()
+                + ", charToGlyphMap=" + getCharToGlyphMap().toString()
                 + "}";
     }
 
@@ -393,19 +209,14 @@ public class OpenTypeAlbum implements Disposable {
 	private static native void nativeDispose(long nativeAlbum);
 
 	private static native boolean nativeIsBackward(long nativeAlbum);
+    private static native float nativeGetSizeByEm(long nativeAlbum);
 	private static native int nativeGetCharStart(long nativeAlbum);
 	private static native int nativeGetCharEnd(long nativeAlbum);
+    private static native int nativeGetCharCount(long nativeAlbum);
 	private static native int nativeGetGlyphCount(long nativeAlbum);
 
-	private static native int nativeGetGlyphId(long nativeAlbum, int glyphIndex);
-	private static native int nativeGetGlyphXOffset(long nativeAlbum, int glyphIndex);
-	private static native int nativeGetGlyphYOffset(long nativeAlbum, int glyphIndex);
-	private static native int nativeGetGlyphAdvance(long nativeAlbum, int glyphIndex);
-	private static native int nativeGetCharGlyphIndex(long nativeAlbum, int charIndex);
-
-	private static native void nativeCopyGlyphInfos(long nativeAlbum,
-	        int fromIndex, int toIndex, float scaleFactor,
-            int[] glyphIDs, float[] xOffsets, float[] yOffsets, float[] advances);
-	private static native void nativeCopyCharGlyphIndexes(long nativeAlbum,
-            int fromIndex, int toIndex, int[] charGlyphIndexes);
+    private static native long nativeGetGlyphCodesPtr(long nativeAlbum);
+    private static native long nativeGetGlyphOffsetsPtr(long nativeAlbum);
+    private static native long nativeGetGlyphAdvancesPtr(long nativeAlbum);
+    private static native long nativeGetCharToGlyphMapPtr(long nativeAlbum);
 }
