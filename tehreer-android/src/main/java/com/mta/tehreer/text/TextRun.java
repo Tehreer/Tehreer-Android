@@ -20,6 +20,12 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.internal.util.SafeFloatList;
+import com.mta.tehreer.internal.util.SafeIntList;
+import com.mta.tehreer.internal.util.SafePointList;
+import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 /**
  * A <code>TextRun</code> object is a collection of consecutive glyphs sharing the same attributes
@@ -53,12 +59,6 @@ public class TextRun {
         if (charIndex < mCharStart || charIndex >= mCharEnd) {
             throw new IndexOutOfBoundsException("Char Index: " + charIndex
                                                 + ", Run Range: [" + mCharStart + ".." + mCharEnd + ")");
-        }
-    }
-
-    private void verifyGlyphIndex(int glyphIndex) {
-        if (glyphIndex < 0 || glyphIndex >= mGlyphCount) {
-            throw new IndexOutOfBoundsException("Glyph Index: " + glyphIndex);
         }
     }
 
@@ -117,59 +117,34 @@ public class TextRun {
     }
 
     /**
-     * Returns the glyph id at the specified index in this run.
+     * Returns the list of glyph codes in this album.
      *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph id at the specified index in this run.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
+     * @return The list of glyph codes in this album.
      */
-    public int getGlyphId(int glyphIndex) {
-        verifyGlyphIndex(glyphIndex);
-        return mGlyphRun.glyphIds[glyphIndex + mGlyphOffset];
+    public IntList getGlyphCodes() {
+        return new SafeIntList(mGlyphRun.glyphCodes, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the glyph's x- offset at the specified index in this run.
+     * Returns the list of glyph offsets in this album.
      *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's x- offset at the specified index in this run.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
+     * @return The list of glyph offsets in this album.
      */
-    public float getGlyphXOffset(int glyphIndex) {
-        verifyGlyphIndex(glyphIndex);
-        return mGlyphRun.xOffsets[glyphIndex + mGlyphOffset];
+    public PointList getGlyphOffsets() {
+        return new SafePointList(mGlyphRun.glyphOffsets, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the glyph's y- offset at the specified index in this run.
+     * Returns the list of glyph advances in this album.
      *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's y- offset at the specified index in this run.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
+     * @return The list of glyph advances in this album.
      */
-    public float getGlyphYOffset(int glyphIndex) {
-        verifyGlyphIndex(glyphIndex);
-        return mGlyphRun.yOffsets[glyphIndex + mGlyphOffset];
+    public FloatList getGlyphAdvances() {
+        return new SafeFloatList(mGlyphRun.glyphAdvances, mGlyphOffset, mGlyphCount);
     }
 
-    /**
-     * Returns the glyph's advance at the specified index in this run.
-     *
-     * @param glyphIndex The index of the glyph record.
-     * @return The glyph's advance at the specified index in this run.
-     *
-     * @throws IndexOutOfBoundsException if <code>glyphIndex</code> is negative, or
-     *         <code>glyphIndex</code> is greater than or equal to {@link #getGlyphCount()}
-     */
-    public float getGlyphAdvance(int glyphIndex) {
-        verifyGlyphIndex(glyphIndex);
-        return mGlyphRun.advances[glyphIndex + mGlyphOffset];
+    public IntList getCharToGlyphMap() {
+        return new SafeIntList(mGlyphRun.charToGlyphMap, 0, mCharEnd - mCharStart);
     }
 
     /**
@@ -260,7 +235,7 @@ public class TextRun {
     public float computeWidth(int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
-        float[] advances = mGlyphRun.advances;
+        float[] advances = mGlyphRun.glyphAdvances;
         float width = 0.0f;
 
         glyphStart += mGlyphOffset;
@@ -295,9 +270,8 @@ public class TextRun {
 	    renderer.setTypeface(mGlyphRun.typeface);
 	    renderer.setTextSize(mGlyphRun.fontSize);
 
-        return renderer.computeBoundingBox(mGlyphRun.glyphIds,
-                                           mGlyphRun.xOffsets, mGlyphRun.yOffsets, mGlyphRun.advances,
-                                           glyphStart + mGlyphOffset, glyphEnd + mGlyphOffset);
+        return renderer.computeBoundingBox(getGlyphCodes(), getGlyphOffsets(), getGlyphAdvances(),
+                                           glyphStart, glyphEnd);
 	}
 
     /**
@@ -332,49 +306,18 @@ public class TextRun {
         renderer.setTextDirection(mGlyphRun.textDirection());
 
 	    renderer.drawGlyphs(canvas,
-                            mGlyphRun.glyphIds,
-                            mGlyphRun.xOffsets, mGlyphRun.yOffsets, mGlyphRun.advances,
-                            glyphStart + mGlyphOffset, glyphEnd + mGlyphOffset);
+                            getGlyphCodes(), getGlyphOffsets(), getGlyphAdvances(),
+                            glyphStart, glyphEnd);
 	}
 
     @Override
     public String toString() {
-        StringBuilder glyphIdsBuilder = new StringBuilder();
-        StringBuilder xOffsetsBuilder = new StringBuilder();
-        StringBuilder yOffsetsBuilder = new StringBuilder();
-        StringBuilder advancesBuilder = new StringBuilder();
-
-        glyphIdsBuilder.append("[");
-        xOffsetsBuilder.append("[");
-        yOffsetsBuilder.append("[");
-        advancesBuilder.append("[");
-
-        for (int i = 0; i < mGlyphCount; i++) {
-            glyphIdsBuilder.append(mGlyphRun.glyphIds[i + mGlyphOffset]);
-            xOffsetsBuilder.append(mGlyphRun.xOffsets[i + mGlyphOffset]);
-            yOffsetsBuilder.append(mGlyphRun.yOffsets[i + mGlyphOffset]);
-            advancesBuilder.append(mGlyphRun.advances[i + mGlyphOffset]);
-
-            if (i < mGlyphCount - 1) {
-                glyphIdsBuilder.append(", ");
-                xOffsetsBuilder.append(", ");
-                yOffsetsBuilder.append(", ");
-                advancesBuilder.append(", ");
-            }
-        }
-
-        glyphIdsBuilder.append("]");
-        xOffsetsBuilder.append("]");
-        yOffsetsBuilder.append("]");
-        advancesBuilder.append("]");
-
         return "TextRun{charStart=" + mCharStart
                 + ", charEnd=" + mCharEnd
                 + ", glyphCount=" + mGlyphCount
-                + ", glyphIds=" + glyphIdsBuilder.toString()
-                + ", glyphXOffsets=" + xOffsetsBuilder.toString()
-                + ", glyphYOffsets=" + yOffsetsBuilder.toString()
-                + ", glyphAdvances=" + advancesBuilder.toString()
+                + ", glyphCodes=" + getGlyphCodes().toString()
+                + ", glyphOffsets=" + getGlyphOffsets().toString()
+                + ", glyphAdvances=" + getGlyphAdvances().toString()
                 + ", originX=" + mOriginX
                 + ", originY=" + mOriginY
                 + ", ascent=" + getAscent()
