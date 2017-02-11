@@ -28,15 +28,13 @@ class GlyphRun {
     final boolean isBackward;
     final int charStart;
     final int charEnd;
-    final int[] glyphIds;
-    final float[] xOffsets;
-    final float[] yOffsets;
-    final float[] advances;
+    final int[] glyphCodes;
+    final float[] glyphOffsets;
+    final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
     GlyphRun(OpenTypeAlbum album, Typeface typeface, float fontSize, byte bidiLevel) {
         float sizeByEm = fontSize / typeface.getUnitsPerEm();
-        int glyphCount = album.getGlyphCount();
 
         this.typeface = typeface;
         this.fontSize = fontSize;
@@ -45,14 +43,10 @@ class GlyphRun {
         this.isBackward = album.isBackward();
         this.charStart = album.getCharStart();
         this.charEnd = album.getCharEnd();
-        this.glyphIds = new int[glyphCount];
-        this.xOffsets = new float[glyphCount];
-        this.yOffsets = new float[glyphCount];
-        this.advances = new float[glyphCount];
-        this.charToGlyphMap = new int[charEnd - charStart];
-
-        album.copyGlyphInfos(0, glyphCount, sizeByEm, glyphIds, xOffsets, yOffsets, advances);
-        album.copyCharGlyphIndexes(charStart, charEnd, charToGlyphMap);
+        this.glyphCodes = album.getGlyphCodes().toArray();
+        this.glyphOffsets = album.getGlyphOffsets().toArray();
+        this.glyphAdvances = album.getGlyphAdvances().toArray();
+        this.charToGlyphMap = album.getCharToGlyphMap().toArray();
     }
 
     TextDirection textDirection() {
@@ -62,7 +56,7 @@ class GlyphRun {
     }
 
     int glyphCount() {
-        return glyphIds.length;
+        return glyphCodes.length;
     }
 
     int charGlyphStart(int charIndex) {
@@ -101,7 +95,7 @@ class GlyphRun {
         float size = 0.0f;
 
         for (int i = glyphStart; i < glyphEnd; i++) {
-            size += advances[i];
+            size += glyphAdvances[i];
         }
 
         return size;
