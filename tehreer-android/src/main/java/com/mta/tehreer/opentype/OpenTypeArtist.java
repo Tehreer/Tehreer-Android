@@ -147,6 +147,18 @@ public class OpenTypeArtist implements Disposable {
 		nativeSetTypeface(nativeArtist, typeface);
 	}
 
+    public float getFontSize() {
+        return nativeGetFontSize(nativeArtist);
+    }
+
+    public void setFontSize(float fontSize) {
+        if (fontSize < 0.0) {
+            throw new IllegalArgumentException("The value of font size is negative");
+        }
+
+        nativeSetFontSize(nativeArtist, fontSize);
+    }
+
     /**
      * Returns this artist's current script tag.
      *
@@ -332,6 +344,9 @@ public class OpenTypeArtist implements Disposable {
 	private static native void nativeDispose(long nativeArtist);
 
 	private static native void nativeSetTypeface(long nativeArtist, Typeface typeface);
+
+    private static native float nativeGetFontSize(long nativeArtist);
+    private static native void nativeSetFontSize(long nativeArtist, float fontSize);
 
     private static native int nativeGetScriptTag(long nativeArtist);
 	private static native void nativeSetScriptTag(long nativeArtist, int scriptTag);
