@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.IntList;
 
@@ -30,16 +31,16 @@ public class RawSizeValues extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int at, int from, int count) {
+    public void copyTo(int[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (at < 0 || from < 0 || count < 0 || size - from < count || length - at < count) {
+        if (atIndex < 0 || (length - atIndex) < size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copySizeValues(pointer, from, array, at, count);
+        Raw.copySizeValues(pointer, array, atIndex, size);
     }
 
     @Override
@@ -50,7 +51,7 @@ public class RawSizeValues extends IntList {
     @Override
     public int get(int index) {
         if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
+            throw Exceptions.indexOutOfBounds(index, size);
         }
 
         return Raw.getSizeValue(pointer, index);
@@ -59,5 +60,14 @@ public class RawSizeValues extends IntList {
     @Override
     public void set(int index, int value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public IntList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new RawUInt16Values(pointer + (fromIndex * Raw.BYTES_IN_SIZE_TYPE), toIndex - fromIndex);
     }
 }

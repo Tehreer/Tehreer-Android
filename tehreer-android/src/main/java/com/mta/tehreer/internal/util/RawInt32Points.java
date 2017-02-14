@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.PointList;
 
@@ -32,16 +33,16 @@ public class RawInt32Points extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count) {
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (at < 0 || from < 0 || count < 0 || (size * 2) - from < count || length - at < count) {
+        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32Floats(pointer + (from * 4), array, at, count, scale);
+        Raw.copyInt32Floats(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override
@@ -51,11 +52,19 @@ public class RawInt32Points extends PointList {
 
     @Override
     public float getX(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
         return Raw.getInt32Value(pointer, index * 2 + 0) * scale;
     }
 
     @Override
     public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
         return Raw.getInt32Value(pointer, index * 2 + 1) * scale;
     }
 
@@ -67,5 +76,14 @@ public class RawInt32Points extends PointList {
     @Override
     public void setY(int index, float value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PointList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new RawInt32Points(pointer + (fromIndex * 8), toIndex - fromIndex, scale);
     }
 }

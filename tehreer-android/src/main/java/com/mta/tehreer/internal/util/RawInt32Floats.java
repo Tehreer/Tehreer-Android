@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.util.FloatList;
 
@@ -32,16 +33,16 @@ public class RawInt32Floats extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count) {
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (at < 0 || from < 0 || count < 0 || size - from < count || length - at < count) {
+        if (atIndex < 0 || (length - atIndex) < size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32Floats(pointer + (from * 4), array, at, count, scale);
+        Raw.copyInt32Floats(pointer, array, atIndex, size, scale);
     }
 
     @Override
@@ -52,7 +53,7 @@ public class RawInt32Floats extends FloatList {
     @Override
     public float get(int index) {
         if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
+            throw Exceptions.indexOutOfBounds(index, size);
         }
 
         return Raw.getInt32Value(pointer, index) * scale;
@@ -61,5 +62,14 @@ public class RawInt32Floats extends FloatList {
     @Override
     public void set(int index, float value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public FloatList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new RawInt32Floats(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
     }
 }
