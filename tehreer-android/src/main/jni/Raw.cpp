@@ -23,6 +23,11 @@
 
 using namespace Tehreer;
 
+static jint bytesInSizeType(JNIEnv *env, jobject obj)
+{
+    return sizeof(size_t);
+}
+
 static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
     int8_t *memory = reinterpret_cast<int8_t *>(pointer);
@@ -73,9 +78,9 @@ static void copyUInt16Values(JNIEnv *env, jobject obj, jlong pointer, jintArray 
     env->ReleaseIntArrayElements(array, elements, 0);
 }
 
-static void copySizeValues(JNIEnv *env, jobject obj, jlong pointer, jint skip, jintArray array, jint start, jint length)
+static void copySizeValues(JNIEnv *env, jobject obj, jlong pointer, jintArray array, jint start, jint length)
 {
-    size_t *buffer = reinterpret_cast<size_t *>(pointer) + skip;
+    size_t *buffer = reinterpret_cast<size_t *>(pointer);
     jint *elements = env->GetIntArrayElements(array, nullptr) + start;
 
     for (size_t i = 0; i < length; i++) {
@@ -98,13 +103,14 @@ static void copyInt32Floats(JNIEnv *env, jobject obj, jlong pointer, jfloatArray
 }
 
 static JNINativeMethod JNI_METHODS[] = {
+    { "bytesInSizeType", "()I", (void *)bytesInSizeType },
     { "getInt8Value", "(JI)B", (void *)getInt8Value },
     { "getInt32Value", "(JI)I", (void *)getInt32Value },
     { "getUInt16Value", "(JI)I", (void *)getUInt16Value },
     { "getSizeValue", "(JI)I", (void *)getSizeValue },
     { "copyInt8Values", "(J[BII)V", (void *)copyInt8Values },
     { "copyUInt16Values", "(J[III)V", (void *)copyUInt16Values },
-    { "copySizeValues", "(JI[III)V", (void *)copySizeValues },
+    { "copySizeValues", "(J[III)V", (void *)copySizeValues },
     { "copyInt32Floats", "(J[FIIF)V", (void *)copyInt32Floats },
 };
 
