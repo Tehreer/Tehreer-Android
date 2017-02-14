@@ -20,16 +20,18 @@ import com.mta.tehreer.internal.util.Description;
 
 public abstract class FloatList implements PrimitiveList {
 
-    public abstract void copyTo(float[] array, int at, int from, int count);
+    public abstract void copyTo(float[] array, int atIndex);
     public abstract int size();
 
     public abstract float get(int index);
     public abstract void set(int index, float value);
 
+    public abstract FloatList subList(int fromIndex, int toIndex);
+
     public float[] toArray() {
         int length = size();
         float[] array = new float[length];
-        copyTo(array, 0, 0, length);
+        copyTo(array, 0);
 
         return array;
     }

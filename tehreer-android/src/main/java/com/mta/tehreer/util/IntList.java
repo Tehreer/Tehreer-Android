@@ -20,16 +20,18 @@ import com.mta.tehreer.internal.util.Description;
 
 public abstract class IntList implements PrimitiveList {
 
-    public abstract void copyTo(int[] array, int at, int from, int count);
+    public abstract void copyTo(int[] array, int atIndex);
     public abstract int size();
 
     public abstract int get(int index);
     public abstract void set(int index, int value);
 
+    public abstract IntList subList(int fromIndex, int toIndex);
+
     public int[] toArray() {
         int length = size();
         int[] array = new int[length];
-        copyTo(array, 0, 0, length);
+        copyTo(array, 0);
 
         return array;
     }
