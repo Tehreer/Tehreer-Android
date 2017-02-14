@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.util.FloatList;
 
 public class SafeFloatList extends FloatList {
@@ -31,8 +32,8 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count) {
-        System.arraycopy(this.array, from + offset, array, at, count);
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
@@ -43,7 +44,7 @@ public class SafeFloatList extends FloatList {
     @Override
     public float get(int index) {
         if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
+            throw Exceptions.indexOutOfBounds(index, size);
         }
 
         return array[index + offset];
@@ -52,5 +53,14 @@ public class SafeFloatList extends FloatList {
     @Override
     public void set(int index, float value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public FloatList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new SafeFloatList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

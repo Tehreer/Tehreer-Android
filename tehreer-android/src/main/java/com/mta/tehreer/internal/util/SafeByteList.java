@@ -16,19 +16,24 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.util.ByteList;
 
 public class SafeByteList extends ByteList {
 
     private final byte[] array;
+    private final int offset;
+    private final int size;
 
-    public SafeByteList(byte[] array) {
+    public SafeByteList(byte[] array, int offset, int size) {
         this.array = array;
+        this.offset = offset;
+        this.size = size;
     }
 
     @Override
-    public void copyTo(byte[] array, int at, int from, int count) {
-        System.arraycopy(this.array, from, array, at, count);
+    public void copyTo(byte[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
@@ -38,11 +43,24 @@ public class SafeByteList extends ByteList {
 
     @Override
     public byte get(int index) {
-        return array[index];
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return array[index + offset];
     }
 
     @Override
     public void set(int index, byte value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ByteList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new SafeByteList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

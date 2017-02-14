@@ -31,8 +31,8 @@ public class SafePointList extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int at, int from, int count) {
-        System.arraycopy(this.array, from + offset, array, at, count);
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size * 2);
     }
 
     @Override
@@ -66,5 +66,14 @@ public class SafePointList extends PointList {
     @Override
     public void setY(int index, float value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PointList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new SafePointList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

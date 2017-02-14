@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.util.IntList;
 
 public class SafeIntList extends IntList {
@@ -31,8 +32,8 @@ public class SafeIntList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int at, int from, int count) {
-        System.arraycopy(this.array, from, array, at, count);
+    public void copyTo(int[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
@@ -43,7 +44,7 @@ public class SafeIntList extends IntList {
     @Override
     public int get(int index) {
         if (index < 0 || index >= size) {
-            throw new ArrayIndexOutOfBoundsException(index);
+            throw Exceptions.indexOutOfBounds(index, size);
         }
 
         return array[index + offset];
@@ -52,5 +53,14 @@ public class SafeIntList extends IntList {
     @Override
     public void set(int index, int value) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public IntList subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }
