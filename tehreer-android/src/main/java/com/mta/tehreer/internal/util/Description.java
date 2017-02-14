@@ -28,7 +28,7 @@ public class Description {
     private static final String NULL = "null";
 
     public static String forByteArray(byte[] array) {
-        return forByteList(new SafeByteList(array));
+        return forByteList(new SafeByteList(array, 0, array.length));
     }
 
     public static String forByteList(ByteList list) {
