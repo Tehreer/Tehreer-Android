@@ -17,8 +17,13 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.SafeIntList;
 
 public abstract class IntList implements PrimitiveList {
+
+    public static IntList forArray(int[] array) {
+        return new SafeIntList(array, 0, array.length);
+    }
 
     public abstract void copyTo(int[] array, int atIndex);
     public abstract int size();

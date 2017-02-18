@@ -17,8 +17,13 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.SafeFloatList;
 
 public abstract class FloatList implements PrimitiveList {
+
+    public static FloatList forArray(float[] array) {
+        return new SafeFloatList(array, 0, array.length);
+    }
 
     public abstract void copyTo(float[] array, int atIndex);
     public abstract int size();

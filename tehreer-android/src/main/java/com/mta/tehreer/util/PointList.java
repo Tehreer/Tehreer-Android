@@ -17,8 +17,13 @@
 package com.mta.tehreer.util;
 
 import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.util.SafePointList;
 
 public abstract class PointList implements PrimitiveList {
+
+    public static PointList forArray(float[] array) {
+        return new SafePointList(array, 0, array.length / 2);
+    }
 
     public abstract void copyTo(float[] array, int atIndex);
     public abstract int size();
