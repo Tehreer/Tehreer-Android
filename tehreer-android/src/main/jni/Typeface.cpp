@@ -51,7 +51,12 @@ static inline FT_Fixed toF16Dot16(float value)
     return static_cast<FT_Fixed>((value * 0x10000) + 0.5);
 }
 
-static inline float toFloat(FT_F26Dot6 value)
+static inline float f26Dot6FixedtoFloat(FT_Fixed value)
+{
+    return static_cast<float>(value / 64.0);
+}
+
+static inline float f26Dot6PosToFloat(FT_Pos value)
 {
     return static_cast<float>(value / 64.0);
 }
@@ -96,14 +101,16 @@ struct PathContext {
 static int processMoveTo(const FT_Vector *to, void *user)
 {
     PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_moveTo(context->path, toFloat(to->x), toFloat(to->y));
+    context->bridge->Path_moveTo(context->path,
+                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
     return 0;
 }
 
 static int processLineTo(const FT_Vector *to, void *user)
 {
     PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_lineTo(context->path, toFloat(to->x), toFloat(to->y));
+    context->bridge->Path_lineTo(context->path,
+                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
     return 0;
 }
 
@@ -111,8 +118,8 @@ static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *u
 {
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_quadTo(context->path,
-                                 toFloat(control1->x), toFloat(control1->y),
-                                 toFloat(to->x), toFloat(to->y));
+                                 f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
+                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
     return 0;
 }
 
@@ -120,9 +127,9 @@ static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, 
 {
     PathContext *context = reinterpret_cast<PathContext *>(user);
     context->bridge->Path_cubicTo(context->path,
-                                  toFloat(control1->x), toFloat(control1->y),
-                                  toFloat(control2->x), toFloat(control2->y),
-                                  toFloat(to->x), toFloat(to->y));
+                                  f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
+                                  f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
+                                  f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
     return 0;
 }
 
@@ -262,9 +269,11 @@ Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
     m_buffer = buffer;
     m_ftStream = ftStream;
     m_ftFace = ftFace;
-    m_ftSize = ftFace->size;
+    m_ftSize = nullptr;
     m_ftStroker = nullptr;
     m_sfFont = SFFontCreateWithProtocol(&protocol, this);
+
+    FT_New_Size(m_ftFace, &m_ftSize);
 }
 
 Typeface::~Typeface()
@@ -273,6 +282,14 @@ Typeface::~Typeface()
 
     if (m_ftStroker) {
         FT_Stroker_Done(m_ftStroker);
+    }
+
+    if (m_ftSize) {
+        m_mutex.lock();
+
+        FT_Done_Size(m_ftSize);
+
+        m_mutex.unlock();
     }
 
     if (m_ftFace) {
@@ -535,7 +552,7 @@ static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
     FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
     FT_Fixed advance = typeface->getGlyphAdvance(glyphIndex, fixedSize, vertical);
 
-    return toFloat(advance);
+    return f26Dot6FixedtoFloat(advance);
 }
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
