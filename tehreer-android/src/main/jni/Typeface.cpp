@@ -18,6 +18,7 @@ extern "C" {
 #include <ft2build.h>
 #include FT_ADVANCES_H
 #include FT_FREETYPE_H
+#include FT_SIZES_H
 #include FT_STROKER_H
 #include FT_SYSTEM_H
 #include FT_TRUETYPE_TABLES_H
@@ -40,17 +41,27 @@ extern "C" {
 
 using namespace Tehreer;
 
+static inline FT_F26Dot6 toF26Dot6(float value)
+{
+    return static_cast<FT_F26Dot6>((value * 64) + 0.5);
+}
+
+static inline FT_Fixed toF16Dot16(float value)
+{
+    return static_cast<FT_Fixed>((value * 0x10000) + 0.5);
+}
+
+static inline float toFloat(FT_F26Dot6 value)
+{
+    return static_cast<float>(value / 64.0);
+}
+
 static void protocolLoadTable(void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_Face baseFace = typeface->ftFace();
     FT_ULong tableSize = 0;
 
-    typeface->lock();
-
-    FT_Load_Sfnt_Table(baseFace, tag, 0, buffer, length ? &tableSize : nullptr);
-
-    typeface->unlock();
+    typeface->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
 
     if (length) {
         *length = tableSize;
@@ -60,15 +71,7 @@ static void protocolLoadTable(void *object, SFTag tag, SFUInt8 *buffer, SFUInteg
 static SFGlyphID protocolGetGlyphIDForCodepoint(void *object, SFCodepoint codepoint)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_Face baseFace = typeface->ftFace();
-    FT_UInt glyphID = 0;
-
-    typeface->lock();
-
-    glyphID = FT_Get_Char_Index(baseFace, codepoint);
-
-    typeface->unlock();
-
+    FT_UInt glyphID = typeface->getGlyphID(codepoint);
     if (glyphID > 0xFFFF) {
         LOGW("Received invalid glyph id for code point: %u", codepoint);
         glyphID = 0;
@@ -77,26 +80,50 @@ static SFGlyphID protocolGetGlyphIDForCodepoint(void *object, SFCodepoint codepo
     return static_cast<SFGlyphID>(glyphID);
 }
 
-static SFAdvance protocolGetAdvanceForGlyph(void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
+static SFInt32 protocolGetAdvanceForGlyph(void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Fixed glyphAdvance = 0;
-
-    FT_Int32 loadFlags = FT_LOAD_NO_SCALE;
-    if (fontLayout == SFFontLayoutVertical) {
-        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-    }
-
-    typeface->lock();
-
-    FT_Get_Advance(baseFace, glyphID, loadFlags, &glyphAdvance);
-
-    typeface->unlock();
-
-    // TODO: Cache the advances.
+    FT_Fixed glyphAdvance = typeface->getGlyphAdvance(glyphID, fontLayout == SFFontLayoutVertical);
 
     return static_cast<SFInt32>(glyphAdvance);
+}
+
+struct PathContext {
+    const JavaBridge *bridge;
+    jobject path;
+};
+
+static int processMoveTo(const FT_Vector *to, void *user)
+{
+    PathContext *context = reinterpret_cast<PathContext *>(user);
+    context->bridge->Path_moveTo(context->path, toFloat(to->x), toFloat(to->y));
+    return 0;
+}
+
+static int processLineTo(const FT_Vector *to, void *user)
+{
+    PathContext *context = reinterpret_cast<PathContext *>(user);
+    context->bridge->Path_lineTo(context->path, toFloat(to->x), toFloat(to->y));
+    return 0;
+}
+
+static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *user)
+{
+    PathContext *context = reinterpret_cast<PathContext *>(user);
+    context->bridge->Path_quadTo(context->path,
+                                 toFloat(control1->x), toFloat(control1->y),
+                                 toFloat(to->x), toFloat(to->y));
+    return 0;
+}
+
+static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user)
+{
+    PathContext *context = reinterpret_cast<PathContext *>(user);
+    context->bridge->Path_cubicTo(context->path,
+                                  toFloat(control1->x), toFloat(control1->y),
+                                  toFloat(control2->x), toFloat(control2->y),
+                                  toFloat(to->x), toFloat(to->y));
+    return 0;
 }
 
 static unsigned long assetStreamRead(FT_Stream assetStream,
@@ -235,6 +262,7 @@ Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
     m_buffer = buffer;
     m_ftStream = ftStream;
     m_ftFace = ftFace;
+    m_ftSize = ftFace->size;
     m_ftStroker = nullptr;
     m_sfFont = SFFontCreateWithProtocol(&protocol, this);
 }
@@ -283,6 +311,99 @@ FT_Stroker Typeface::ftStroker()
     return m_ftStroker;
 }
 
+void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
+{
+    m_mutex.lock();
+
+    FT_Load_Sfnt_Table(m_ftFace, tag, 0, buffer, length);
+
+    m_mutex.unlock();
+}
+
+FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
+{
+    m_mutex.lock();
+
+    FT_UInt glyphID = FT_Get_Char_Index(m_ftFace, codePoint);
+
+    m_mutex.unlock();
+
+    return glyphID;
+}
+
+FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, bool vertical)
+{
+    FT_Int32 loadFlags = FT_LOAD_NO_SCALE;
+    if (vertical) {
+        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+    }
+
+    m_mutex.lock();
+
+    FT_Fixed advance;
+    FT_Get_Advance(m_ftFace, glyphID, loadFlags, &advance);
+
+    m_mutex.unlock();
+
+    return advance;
+}
+
+FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical)
+{
+    FT_Int32 loadFlags = FT_LOAD_DEFAULT;
+    if (vertical) {
+        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+    }
+
+    m_mutex.lock();
+
+    FT_Activate_Size(m_ftSize);
+    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
+
+    FT_Fixed advance;
+    FT_Get_Advance(m_ftFace, glyphID, loadFlags, &advance);
+
+    m_mutex.unlock();
+
+    return advance;
+}
+
+jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta)
+{
+    jobject path = nullptr;
+
+    m_mutex.lock();
+
+    FT_Activate_Size(m_ftSize);
+    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
+    FT_Set_Transform(m_ftFace, matrix, delta);
+
+    FT_Error error = FT_Load_Glyph(m_ftFace, glyphID, FT_LOAD_NO_BITMAP);
+    if (error == FT_Err_Ok) {
+        FT_Outline_Funcs funcs;
+        funcs.move_to = processMoveTo;
+        funcs.line_to = processLineTo;
+        funcs.conic_to = processQuadTo;
+        funcs.cubic_to = processCubicTo;
+        funcs.shift = 0;
+        funcs.delta = 0;
+
+        PathContext pathContext;
+        pathContext.bridge = &bridge;
+        pathContext.path = bridge.Path_construct();
+
+        FT_Outline *outline = &m_ftFace->glyph->outline;
+        error = FT_Outline_Decompose(outline, &funcs, &pathContext);
+        if (error == FT_Err_Ok) {
+            path = pathContext.path;
+        }
+    }
+
+    m_mutex.unlock();
+
+    return path;
+}
+
 static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)
 {
     if (path) {
@@ -328,21 +449,21 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
     delete typeface;
 }
 
-static jbyteArray copyTable(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
+static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    SFTag inputTag = static_cast<SFTag>(tableTag);
+    FT_ULong inputTag = static_cast<SFTag>(tableTag);
+    FT_ULong length = 0;
 
-    SFUInteger length;
-    protocolLoadTable(typeface, inputTag, nullptr, &length);
+    typeface->loadSfntTable(inputTag, nullptr, &length);
 
     if (length > 0) {
-        jsize dataLength = static_cast<jint>(length);
+        jint dataLength = static_cast<jint>(length);
         jbyteArray dataArray = env->NewByteArray(dataLength);
         void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-        SFUInt8 *dataBytes = static_cast<SFUInt8 *>(dataBuffer);
-        protocolLoadTable(nullptr, inputTag, dataBytes, nullptr);
+        FT_Byte *dataBytes = static_cast<FT_Byte *>(dataBuffer);
+        typeface->loadSfntTable(inputTag, dataBytes, nullptr);
 
         env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 
@@ -399,6 +520,52 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
     return static_cast<jint>(glyphCount);
 }
 
+static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint codePoint)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_UInt glyphId = typeface->getGlyphID(static_cast<FT_ULong>(codePoint));
+
+    return static_cast<jint>(glyphId);
+}
+
+static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jboolean vertical)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
+    FT_Fixed advance = typeface->getGlyphAdvance(glyphIndex, fixedSize, vertical);
+
+    return toFloat(advance);
+}
+
+static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
+    FT_Matrix transform;
+    FT_Vector delta;
+
+    if (!matrixArray) {
+        transform = { 0x10000, 0, 0, 0x10000 };
+        delta = { 0, 0 };
+    } else {
+        jfloat *matrixValues = env->GetFloatArrayElements(matrixArray, nullptr);
+
+        transform = {
+            toF16Dot16(matrixValues[0]), toF16Dot16(matrixValues[1]),
+            toF16Dot16(matrixValues[3]), toF16Dot16(matrixValues[4]),
+        };
+        delta = {
+            toF16Dot16(matrixValues[2]), toF16Dot16(matrixValues[5]),
+        };
+
+        env->ReleaseFloatArrayElements(matrixArray, matrixValues, 0);
+    }
+
+    return typeface->getGlyphPath(JavaBridge(env), glyphIndex, fixedSize, &transform, &delta);
+}
+
 static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobject rect)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -433,12 +600,15 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nativeCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeCopyTable", "(JI)[B", (void *)copyTable },
+    { "nativeGetTableData", "(JI)[B", (void *)getTableData },
     { "nativeGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nativeGetAscent", "(J)I", (void *)getAscent },
     { "nativeGetDescent", "(J)I", (void *)getDescent },
     { "nativeGetLeading", "(J)I", (void *)getLeading },
     { "nativeGetGlyphCount", "(J)I", (void *)getGlyphCount },
+    { "nativeGetGlyphId", "(JI)I", (void *)getGlyphId },
+    { "nativeGetGlyphAdvance", "(JIFZ)F", (void *)getGlyphAdvance },
+    { "nativeGetGlyphPath", "(JIF[F)Landroid/graphics/Path;", (void *)getGlyphPath },
     { "nativeGetBoundingBox", "(JLandroid/graphics/Rect;)V", (void *)getBoundingBox },
     { "nativeGetUnderlinePosition", "(J)I", (void *)getUnderlinePosition },
     { "nativeGetUnderlineThickness", "(J)I", (void *)getUnderlineThickness },

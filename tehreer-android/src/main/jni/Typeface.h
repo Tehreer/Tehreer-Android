@@ -30,6 +30,7 @@ extern "C" {
 #include <jni.h>
 #include <mutex>
 
+#include "JavaBridge.h"
 #include "PatternCache.h"
 
 namespace Tehreer {
@@ -51,11 +52,19 @@ public:
     SFFontRef sfFont() const { return m_sfFont; }
     PatternCache &patternCache() { return m_patternCache; }
 
+    void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
+
+    FT_UInt getGlyphID(FT_ULong codePoint);
+    FT_Fixed getGlyphAdvance(FT_UInt glyphID, bool vertical);
+    FT_Fixed getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical);
+    jobject getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta);
+
 private:
     std::mutex m_mutex;
     void *m_buffer;
     FT_Stream m_ftStream;
     FT_Face m_ftFace;
+    FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
