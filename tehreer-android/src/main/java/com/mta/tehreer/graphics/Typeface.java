@@ -220,8 +220,11 @@ public class Typeface implements Disposable {
     }
 
     public Path getGlyphPath(int glyphId, float typeSize, Matrix matrix) {
-        float[] values = new float[9];
-        matrix.getValues(values);
+        float[] values = null;
+        if (matrix != null) {
+            values = new float[9];
+            matrix.getValues(values);
+        }
 
         return nativeGetGlyphPath(nativeTypeface, glyphId, typeSize, values);
     }
