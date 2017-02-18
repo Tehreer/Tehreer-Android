@@ -17,6 +17,8 @@
 package com.mta.tehreer.graphics;
 
 import android.content.res.AssetManager;
+import android.graphics.Matrix;
+import android.graphics.Path;
 import android.graphics.Rect;
 
 import com.mta.tehreer.internal.util.Constants;
@@ -25,7 +27,6 @@ import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.util.Disposable;
 
 import java.io.InputStream;
-import java.lang.String;
 
 /**
  * The Typeface class specifies the typeface and intrinsic style of a font. This is used in the
@@ -161,8 +162,8 @@ public class Typeface implements Disposable {
      * @return An array of bytes containing the data of the table, or <code>null</code> if no such
      *         table exists.
      */
-    public byte[] copyTable(int tableTag) {
-        return nativeCopyTable(nativeTypeface, tableTag);
+    public byte[] getTableData(int tableTag) {
+        return nativeGetTableData(nativeTypeface, tableTag);
     }
 
     /**
@@ -209,6 +210,21 @@ public class Typeface implements Disposable {
 	public int getGlyphCount() {
 	    return nativeGetGlyphCount(nativeTypeface);
 	}
+
+    public int getGlyphId(int codePoint) {
+        return nativeGetGlyphId(nativeTypeface, codePoint);
+    }
+
+    public float getGlyphAdvance(int glyphId, float typeSize, boolean vertical) {
+        return nativeGetGlyphAdvance(nativeTypeface, glyphId, typeSize, vertical);
+    }
+
+    public Path getGlyphPath(int glyphId, float typeSize, Matrix matrix) {
+        float[] values = new float[9];
+        matrix.getValues(values);
+
+        return nativeGetGlyphPath(nativeTypeface, glyphId, typeSize, values);
+    }
 
     /**
      * Returns the font bounding box expressed in font units. The box is large enough to contain any
@@ -264,7 +280,7 @@ public class Typeface implements Disposable {
     private static native long nativeCreateFromStream(InputStream stream);
 	private static native void nativeDispose(long nativeTypeface);
 
-    private static native byte[] nativeCopyTable(long nativeTypeface, int tableTag);
+    private static native byte[] nativeGetTableData(long nativeTypeface, int tableTag);
 
 	private static native int nativeGetUnitsPerEm(long nativeTypeface);
 	private static native int nativeGetAscent(long nativeTypeface);
@@ -272,6 +288,10 @@ public class Typeface implements Disposable {
     private static native int nativeGetLeading(long nativeTypeface);
 
 	private static native int nativeGetGlyphCount(long nativeTypeface);
+    private static native int nativeGetGlyphId(long nativeTypeface, int codePoint);
+    private static native float nativeGetGlyphAdvance(long nativeTypeface, int glyphId, float typeSize, boolean vertical);
+    private static native Path nativeGetGlyphPath(long nativeTypeface, int glyphId, float typeSize, float[] matrix);
+
 	private static native void nativeGetBoundingBox(long nativeTypeface, Rect boundingBox);
 
 	private static native int nativeGetUnderlinePosition(long nativeTypeface);
