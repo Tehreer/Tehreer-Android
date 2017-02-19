@@ -116,19 +116,19 @@ public class Renderer {
     private boolean mShouldRender;
     private boolean mShadowLayerSynced;
 
+    private Style mStyle;
+    private int mFillColor;
+    private TextDirection mFlowDirection;
     private Typeface mTypeface;
-    private Style mRenderingStyle;
-    private TextDirection mTextDirection;
-    private float mTextSize;
-    private float mTextScaleX;
-    private float mTextScaleY;
-    private float mTextSkewX;
-    private int mTextColor;
+    private float mTypeSize;
+    private float mSlantAngle;
+    private float mScaleX;
+    private float mScaleY;
+    private int mStrokeColor;
     private float mStrokeWidth;
     private Cap mStrokeCap;
     private Join mStrokeJoin;
     private float mStrokeMiter;
-    private int mStrokeColor;
     private float mShadowRadius;
     private float mShadowDx;
     private float mShadowDy;
@@ -145,23 +145,23 @@ public class Renderer {
         mShadowDy = 0.0f;
         mShadowColor = Color.TRANSPARENT;
 
-        setRenderingStyle(Style.FILL);
-        setTextDirection(TextDirection.LEFT_TO_RIGHT);
-        setTextSize(16.0f);
-        setTextScaleX(1.0f);
-        setTextScaleY(1.0f);
-        setTextSkewX(0.0f);
-        setTextColor(Color.BLACK);
+        setStyle(Style.FILL);
+        setFillColor(Color.BLACK);
+        setFlowDirection(TextDirection.LEFT_TO_RIGHT);
+        setTypeSize(16.0f);
+        setScaleX(1.0f);
+        setScaleY(1.0f);
+        setSlantAngle(0.0f);
+        setStrokeColor(Color.BLACK);
         setStrokeWidth(1.0f);
         setStrokeCap(Cap.BUTT);
         setStrokeJoin(Join.ROUND);
         setStrokeMiter(1.0f);
-        setStrokeColor(Color.BLACK);
     }
 
     private void updatePixelSizes() {
-        int pixelWidth = (int) ((mTextSize * mTextScaleX * 64.0f) + 0.5f);
-        int pixelHeight = (int) ((mTextSize * mTextScaleY * 64.0f) + 0.5f);
+        int pixelWidth = (int) ((mTypeSize * mScaleX * 64.0f) + 0.5f);
+        int pixelHeight = (int) ((mTypeSize * mScaleY * 64.0f) + 0.5f);
 
         // Minimum size supported by Freetype is 64x64.
         mShouldRender = (pixelWidth >= 64 && pixelHeight >= 64);
@@ -170,7 +170,7 @@ public class Renderer {
     }
 
     private void updateTransform() {
-        mGlyphStrike.skewX = (int) ((mTextSkewX * 0x10000) + 0.5f);
+        mGlyphStrike.skewX = (int) ((mSlantAngle * 0x10000) + 0.5f);
     }
 
     private void syncShadowLayer() {
@@ -186,8 +186,8 @@ public class Renderer {
      *
      * @return The style setting of this renderer.
      */
-    public Style getRenderingStyle() {
-        return mRenderingStyle;
+    public Style getStyle() {
+        return mStyle;
     }
 
     /**
@@ -198,12 +198,52 @@ public class Renderer {
      *
      * @throws NullPointerException if <code>renderingStyle</code> is null.
      */
-    public void setRenderingStyle(Style renderingStyle) {
-    	if (renderingStyle == null) {
-    		throw new NullPointerException("Rendering style is null");
-    	}
+    public void setStyle(Style renderingStyle) {
+        if (renderingStyle == null) {
+            throw new NullPointerException("Rendering style is null");
+        }
 
-        mRenderingStyle = renderingStyle;
+        mStyle = renderingStyle;
+    }
+
+    /**
+     * Returns this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @return The text color of this renderer expressed as ARGB integer.
+     */
+    public int getFillColor() {
+        return mFillColor;
+    }
+
+    /**
+     * Sets this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @param textColor The 32-bit value of color expressed as ARGB.
+     */
+    public void setFillColor(int textColor) {
+        mFillColor = textColor;
+    }
+
+    /**
+     * Returns this renderer's text direction, used to move pen while drawing glyphs. The default
+     * value is {@link TextDirection#LEFT_TO_RIGHT}.
+     *
+     * @return The text direction of this renderer.
+     */
+    public TextDirection getFlowDirection() {
+        return mFlowDirection;
+    }
+
+    /**
+     * Sets this renderer's text direction, used to move pen while drawing glyphs. The default value
+     * is {@link TextDirection#LEFT_TO_RIGHT}.
+     *
+     * @param textDirection The new text direction to set.
+     */
+    public void setFlowDirection(TextDirection textDirection) {
+        mFlowDirection = textDirection;
     }
 
     /**
@@ -226,52 +266,12 @@ public class Renderer {
     }
 
     /**
-     * Returns this renderer's text direction, used to move pen while drawing glyphs. The default
-     * value is {@link TextDirection#LEFT_TO_RIGHT}.
-     *
-     * @return The text direction of this renderer.
-     */
-    public TextDirection getTextDirection() {
-        return mTextDirection;
-    }
-
-    /**
-     * Sets this renderer's text direction, used to move pen while drawing glyphs. The default value
-     * is {@link TextDirection#LEFT_TO_RIGHT}.
-     *
-     * @param textDirection The new text direction to set.
-     */
-    public void setTextDirection(TextDirection textDirection) {
-        mTextDirection = textDirection;
-    }
-
-    /**
-     * Returns this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
-     *
-     * @return The text color of this renderer expressed as ARGB integer.
-     */
-    public int getTextColor() {
-        return mTextColor;
-    }
-
-    /**
-     * Sets this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
-     *
-     * @param textColor The 32-bit value of color expressed as ARGB.
-     */
-    public void setTextColor(int textColor) {
-        mTextColor = textColor;
-    }
-
-    /**
      * Returns this renderer's text size, applied on glyphs while drawing.
      *
      * @return The text size of this renderer in pixels.
      */
-    public float getTextSize() {
-        return mTextSize;
+    public float getTypeSize() {
+        return mTypeSize;
     }
 
     /**
@@ -281,13 +281,32 @@ public class Renderer {
      *
      * @throws IllegalArgumentException if <code>textSize</code> is negative.
      */
-    public void setTextSize(float textSize) {
+    public void setTypeSize(float textSize) {
         if (textSize < 0.0) {
             throw new IllegalArgumentException("The value of text size is negative");
         }
 
-        mTextSize = textSize;
+        mTypeSize = textSize;
         updatePixelSizes();
+    }
+
+    /**
+     * Returns this renderer's horizontal skew factor for glyphs. The default value is 0.
+     *
+     * @return The horizontal skew factor of this renderer for drawing glyphs.
+     */
+    public float getSlantAngle() {
+        return mSlantAngle;
+    }
+
+    /**
+     * Sets this renderer's horizontal skew factor for glyphs. The default value is 0.
+     *
+     * @param textSkewX The horizontal skew factor for drawing glyphs.
+     */
+    public void setSlantAngle(float textSkewX) {
+        mSlantAngle = textSkewX;
+        updateTransform();
     }
 
     /**
@@ -295,8 +314,8 @@ public class Renderer {
      *
      * @return The horizontal scale factor of this renderer for drawing/measuring glyphs.
      */
-    public float getTextScaleX() {
-        return mTextScaleX;
+    public float getScaleX() {
+        return mScaleX;
     }
 
     /**
@@ -306,12 +325,12 @@ public class Renderer {
      *
      * @param textScaleX The horizontal scale factor for drawing/measuring glyphs.
      */
-    public void setTextScaleX(float textScaleX) {
+    public void setScaleX(float textScaleX) {
         if (textScaleX < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
         }
 
-        mTextScaleX = textScaleX;
+        mScaleX = textScaleX;
         updatePixelSizes();
     }
 
@@ -320,8 +339,8 @@ public class Renderer {
      *
      * @return The vertical scale factor of this renderer for drawing/measuring glyphs.
      */
-    public float getTextScaleY() {
-        return mTextScaleY;
+    public float getScaleY() {
+        return mScaleY;
     }
 
     /**
@@ -331,32 +350,13 @@ public class Renderer {
      *
      * @param textScaleY The vertical scale factor for drawing/measuring glyphs.
      */
-    public void setTextScaleY(float textScaleY) {
+    public void setScaleY(float textScaleY) {
         if (textScaleY < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
         }
 
-        mTextScaleY = textScaleY;
+        mScaleY = textScaleY;
         updatePixelSizes();
-    }
-
-    /**
-     * Returns this renderer's horizontal skew factor for glyphs. The default value is 0.
-     *
-     * @return The horizontal skew factor of this renderer for drawing glyphs.
-     */
-    public float getTextSkewX() {
-        return mTextSkewX;
-    }
-
-    /**
-     * Sets this renderer's horizontal skew factor for glyphs. The default value is 0.
-     *
-     * @param textSkewX The horizontal skew factor for drawing glyphs.
-     */
-    public void setTextSkewX(float textSkewX) {
-        mTextSkewX = textSkewX;
-        updateTransform();
     }
 
     /**
@@ -586,21 +586,19 @@ public class Renderer {
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
-     * @param fromIndex The index of the first element (inclusive) to process.
-     * @param toIndex The index of the last element (exclusive) to process.
      * @return The cumulative path of the glyphs in specified range.
      */
-    public Path generatePath(IntList glyphIds, PointList offsets, FloatList advances,
-                             int fromIndex, int toIndex) {
+    public Path generatePath(IntList glyphIds, PointList offsets, FloatList advances) {
         Path cumulativePath = new Path();
-
         float penX = 0.0f;
 
-        for (int i = fromIndex; i < toIndex; i++) {
+        int size = glyphIds.size();
+
+        for (int i = 0; i < size; i++) {
             int glyphId = glyphIds.get(i);
-            float xOffset = offsets.getX(i) * mTextScaleX;
-            float yOffset = offsets.getY(i) * mTextScaleY;
-            float advance = advances.get(i) * mTextScaleX;
+            float xOffset = offsets.getX(i) * mScaleX;
+            float yOffset = offsets.getY(i) * mScaleY;
+            float advance = advances.get(i) * mScaleX;
 
             Path glyphPath = getGlyphPath(glyphId);
             cumulativePath.addPath(glyphPath, penX + xOffset, yOffset);
@@ -611,7 +609,7 @@ public class Renderer {
         return cumulativePath;
     }
 
-    private void copyBoundingBox(int glyphId, RectF boundingBox) {
+    private void getBoundingBox(int glyphId, RectF boundingBox) {
         Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId);
         boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
                         glyph.rightSideBearing(), glyph.bottomSideBearing());
@@ -625,21 +623,9 @@ public class Renderer {
      */
     public RectF computeBoundingBox(int glyphId) {
         RectF boundingBox = new RectF();
-        copyBoundingBox(glyphId, boundingBox);
+        getBoundingBox(glyphId, boundingBox);
 
         return boundingBox;
-    }
-
-    /**
-     * Calculates the bounding box of the glyphs.
-     *
-     * @param glyphIds The list containing the glyph IDs.
-     * @param offsets The list containing the glyph offsets.
-     * @param advances The list containing the glyph advances.
-     * @return A rectangle that tightly encloses the paths of glyphs.
-     */
-    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances) {
-        return computeBoundingBox(glyphIds, offsets, advances, 0, glyphIds.size());
     }
 
     /**
@@ -648,24 +634,22 @@ public class Renderer {
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
-     * @param fromIndex The index of the first element (inclusive) to process
-     * @param toIndex The index of the last element (exclusive) to process
      * @return A rectangle that tightly encloses the paths of glyphs in the specified range.
      */
-    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances,
-                                    int fromIndex, int toIndex) {
+    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances) {
         RectF glyphBBox = new RectF();
         RectF cumulativeBBox = new RectF();
-
         float penX = 0.0f;
 
-        for (int i = fromIndex; i < toIndex; i++) {
-            int glyphId = glyphIds.get(i);
-            float xOffset = offsets.getX(i) * mTextScaleX;
-            float yOffset = offsets.getY(i) * mTextScaleY;
-            float advance = advances.get(i) * mTextScaleX;
+        int size = glyphIds.size();
 
-            copyBoundingBox(glyphId, glyphBBox);
+        for (int i = 0; i < size; i++) {
+            int glyphId = glyphIds.get(i);
+            float xOffset = offsets.getX(i) * mScaleX;
+            float yOffset = offsets.getY(i) * mScaleY;
+            float advance = advances.get(i) * mScaleX;
+
+            getBoundingBox(glyphId, glyphBBox);
             glyphBBox.offset(penX + xOffset, yOffset);
             cumulativeBBox.union(cumulativeBBox);
 
@@ -677,19 +661,20 @@ public class Renderer {
 
     private void drawGlyphs(Canvas canvas,
                             IntList glyphIds, PointList offsets, FloatList advances,
-                            int fromIndex, int toIndex, boolean strokeMode) {
+                            boolean strokeMode) {
         GlyphCache cache = GlyphCache.getInstance();
-
-        boolean reverseMode = (mTextDirection == TextDirection.RIGHT_TO_LEFT);
+        boolean reverseMode = (mFlowDirection == TextDirection.RIGHT_TO_LEFT);
         float penX = 0.0f;
 
-        for (int i = fromIndex; i < toIndex; i++) {
-            int pos = (!reverseMode ? i : fromIndex + (toIndex - i) - 1);
+        int size = glyphIds.size();
+
+        for (int i = 0; i < size; i++) {
+            int pos = (!reverseMode ? i : (size - i) - 1);
 
             int glyphId = glyphIds.get(pos);
-            float xOffset = offsets.getX(pos) * mTextScaleX;
-            float yOffset = offsets.getY(pos) * mTextScaleY;
-            float advance = advances.get(pos) * mTextScaleX;
+            float xOffset = offsets.getX(pos) * mScaleX;
+            float yOffset = offsets.getY(pos) * mScaleY;
+            float advance = advances.get(pos) * mScaleX;
 
             Glyph maskGlyph = (!strokeMode
                                ? cache.getMaskGlyph(mGlyphStrike, glyphId)
@@ -715,12 +700,9 @@ public class Renderer {
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
-     * @param fromIndex The index of the first element (inclusive) to draw.
-     * @param toIndex The index of the last element (exclusive) to draw.
      */
     public void drawGlyphs(Canvas canvas,
-                           IntList glyphIds, PointList offsets, FloatList advances,
-                           int fromIndex, int toIndex) {
+                           IntList glyphIds, PointList offsets, FloatList advances) {
         if (mShouldRender) {
             syncShadowLayer();
 
@@ -728,14 +710,14 @@ public class Renderer {
                 Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered");
             }
 
-            if (mRenderingStyle == Style.FILL || mRenderingStyle == Style.FILL_STROKE) {
-                mPaint.setColor(mTextColor);
-                drawGlyphs(canvas, glyphIds, offsets, advances, fromIndex, toIndex, false);
+            if (mStyle == Style.FILL || mStyle == Style.FILL_STROKE) {
+                mPaint.setColor(mFillColor);
+                drawGlyphs(canvas, glyphIds, offsets, advances, false);
             }
 
-            if (mRenderingStyle == Style.STROKE || mRenderingStyle == Style.FILL_STROKE) {
+            if (mStyle == Style.STROKE || mStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mStrokeColor);
-                drawGlyphs(canvas, glyphIds, offsets, advances, fromIndex, toIndex, true);
+                drawGlyphs(canvas, glyphIds, offsets, advances, true);
             }
         }
     }
