@@ -196,8 +196,8 @@ public class TextLine {
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
         for (TextRun textRun : mRunList) {
-            float translateX = x + (textRun.getOriginX() * renderer.getTextScaleX());
-            float translateY = y + (textRun.getOriginY() * renderer.getTextScaleY());
+            float translateX = x + (textRun.getOriginX() * renderer.getScaleX());
+            float translateY = y + (textRun.getOriginY() * renderer.getScaleY());
 
             canvas.translate(translateX, translateY);
             textRun.draw(renderer, canvas);

@@ -268,10 +268,11 @@ public class TextRun {
 	    verifyGlyphRange(glyphStart, glyphEnd);
 
 	    renderer.setTypeface(mGlyphRun.typeface);
-	    renderer.setTextSize(mGlyphRun.fontSize);
+	    renderer.setTypeSize(mGlyphRun.fontSize);
 
-        return renderer.computeBoundingBox(getGlyphCodes(), getGlyphOffsets(), getGlyphAdvances(),
-                                           glyphStart, glyphEnd);
+        return renderer.computeBoundingBox(getGlyphCodes().subList(glyphStart, glyphEnd),
+                                           getGlyphOffsets().subList(glyphStart, glyphEnd),
+                                           getGlyphAdvances().subList(glyphStart, glyphEnd));
 	}
 
     /**
@@ -302,12 +303,13 @@ public class TextRun {
         verifyGlyphRange(glyphStart, glyphEnd);
 
 	    renderer.setTypeface(mGlyphRun.typeface);
-        renderer.setTextSize(mGlyphRun.fontSize);
-        renderer.setTextDirection(mGlyphRun.textDirection());
+        renderer.setTypeSize(mGlyphRun.fontSize);
+        renderer.setFlowDirection(mGlyphRun.textDirection());
 
 	    renderer.drawGlyphs(canvas,
-                            getGlyphCodes(), getGlyphOffsets(), getGlyphAdvances(),
-                            glyphStart, glyphEnd);
+                            getGlyphCodes().subList(glyphStart, glyphEnd),
+                            getGlyphOffsets().subList(glyphStart, glyphEnd),
+                            getGlyphAdvances().subList(glyphStart, glyphEnd));
 	}
 
     @Override

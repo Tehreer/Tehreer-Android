@@ -324,7 +324,7 @@ public class Label extends View {
         if (mAttached) {
             Typeface typeface = mRenderer.getTypeface();
             if (typeface != null && mText != null && mText.length() != 0) {
-                mTypesetter = new TextTypesetter(mText, typeface, mRenderer.getTextSize());
+                mTypesetter = new TextTypesetter(mText, typeface, mRenderer.getTypeSize());
             }
 
             requestLayout();
@@ -450,7 +450,7 @@ public class Label extends View {
      * @return The text size to use for displaying text.
      */
     public float getTextSize() {
-        return mRenderer.getTextSize();
+        return mRenderer.getTypeSize();
     }
 
     /**
@@ -459,7 +459,7 @@ public class Label extends View {
      * @param textSize The text size to use for displaying text.
      */
     public void setTextSize(float textSize) {
-        mRenderer.setTextSize(Math.max(0.0f, textSize));
+        mRenderer.setTypeSize(Math.max(0.0f, textSize));
         requestLayout();
         invalidate();
     }
@@ -470,7 +470,7 @@ public class Label extends View {
      * @return The color being used for displaying text.
      */
     public int getTextColor() {
-        return mRenderer.getTextColor();
+        return mRenderer.getFillColor();
     }
 
     /**
@@ -479,7 +479,7 @@ public class Label extends View {
      * @param textColor The color to use for displaying text.
      */
     public void setTextColor(int textColor) {
-        mRenderer.setTextColor(textColor);
+        mRenderer.setFillColor(textColor);
         invalidate();
     }
 
