@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.opentype.SfntTag;
-import com.mta.tehreer.opentype.ShapingDirection;
 import com.mta.tehreer.opentype.ShapingEngine;
 import com.mta.tehreer.opentype.ShapingResult;
+import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.text.internal.util.StringUtils;
 import com.mta.tehreer.text.internal.util.TopSpanIterator;
 import com.mta.tehreer.text.style.FontSizeSpan;
@@ -222,10 +222,10 @@ public class TextTypesetter implements Disposable {
             BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
             for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
                 int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                ShapingDirection shapingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
+                WritingDirection writingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
 
                 shapingEngine.setScriptTag(scriptTag);
-                shapingEngine.setShapingDirection(shapingDirection);
+                shapingEngine.setWritingDirection(writingDirection);
 
                 resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
                                  bidiRun.embeddingLevel, shapingEngine);
