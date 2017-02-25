@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.internal.util.Convert;
-import com.mta.tehreer.text.TextDirection;
 import com.mta.tehreer.util.Disposable;
 
 /**
@@ -90,7 +89,7 @@ public class ShapingEngine implements Disposable {
      * @param scriptTag The tag of the script whose default direction is returned.
      * @return The default direction of the script identified by <code>scriptTag</code>.
      */
-    public static TextDirection getScriptDefaultDirection(int scriptTag) {
+    public static ShapingDirection getScriptDefaultDirection(int scriptTag) {
         return Convert.toJavaTextDirection(nativeGetScriptDefaultDirection(scriptTag));
     }
 
@@ -140,15 +139,15 @@ public class ShapingEngine implements Disposable {
 	}
 
     public float getTypeSize() {
-        return nativeGetFontSize(nativeArtist);
+        return nativeGetTypeSize(nativeArtist);
     }
 
-    public void setTypeSize(float fontSize) {
-        if (fontSize < 0.0) {
+    public void setTypeSize(float typeSize) {
+        if (typeSize < 0.0) {
             throw new IllegalArgumentException("The value of font size is negative");
         }
 
-        nativeSetFontSize(nativeArtist, fontSize);
+        nativeSetTypeSize(nativeArtist, typeSize);
     }
 
     /**
@@ -161,7 +160,7 @@ public class ShapingEngine implements Disposable {
 	}
 
     /**
-     * Sets this artist's script tag for text shaping. The default value is <code>'dflt'</code>.
+     * Sets this artist's script tag for text shaping. The default value is <code>'DFLT'</code>.
      * <p>
      * A tag can be created from string by using {@link SfntTag#make(String)} method.
      *
@@ -192,50 +191,51 @@ public class ShapingEngine implements Disposable {
 	}
 
     /**
-     * Returns this artist's current text direction.
+     * Returns the order in which this shaping engine will process the text.
      *
-     * @return This artist's current text direction.
+     * @return The current shaping order.
      */
-	public TextDirection getTextDirection() {
-		return Convert.toJavaTextDirection(nativeGetTextDirection(nativeArtist));
+	public ShapingOrder getShapingOrder() {
+		return Convert.toJavaTextMode(nativeGetShapingOrder(nativeArtist));
 	}
 
     /**
-     * Sets this artist's text direction for shaping.
-     * <p>
-     * The value of <code>textDirection</code> must reflect the rendering direction of source script
-     * so that cursive and mark glyphs are placed at appropriate locations. It should not be
-     * confused with the direction of a bidirectional run as that may not reflect the script
-     * direction if overridden explicitly.
-     *
-     * @param textDirection The text direction to use for shaping.
-     */
-	public void setTextDirection(TextDirection textDirection) {
-		nativeSetTextDirection(nativeArtist, Convert.toNativeTextDirection(textDirection));
-	}
-
-    /**
-     * Returns this artist's current text mode.
-     *
-     * @return This artist's current text mode.
-     */
-	public ShapingMode getShapingMode() {
-		return Convert.toJavaTextMode(nativeGetTextMode(nativeArtist));
-	}
-
-    /**
-     * Sets this artist's text mode for shaping.
+     * Sets the order in which this shaping engine will process the text. The default value is
+     * {@link ShapingOrder#FORWARD}.
      * <p>
      * This method provides a convenient way to shape a bidirectional run whose direction is
      * opposite to that of script. For example, if the direction of a run, 'car' is explicitly set
-     * as right-to-left, backward mode will automatically read it as 'rac' without reordering the
+     * as right-to-left, backward order will automatically read it as 'rac' without reordering the
      * original text.
      *
-     * @param shapingMode The text mode to use for shaping.
+     * @param shapingOrder The new shaping order.
      */
-	public void setShapingMode(ShapingMode shapingMode) {
-		nativeSetTextMode(nativeArtist, Convert.toNativeTextMode(shapingMode));
+	public void setShapingOrder(ShapingOrder shapingOrder) {
+		nativeSetShapingOrder(nativeArtist, shapingOrder.value);
 	}
+
+    /**
+     * Returns the direction in which this shaping engine will place the resultant glyphs.
+     *
+     * @return The current shaping direction.
+     */
+    public ShapingDirection getShapingDirection() {
+        return Convert.toJavaTextDirection(nativeGetShapingDirection(nativeArtist));
+    }
+
+    /**
+     * Sets the direction in which this shaping engine will place the resultant glyphs.
+     * <p>
+     * The value of <code>shapingDirection</code> must reflect the rendering direction of source
+     * script so that cursive and mark glyphs are placed at appropriate locations. It should not be
+     * confused with the direction of a bidirectional run as that may not reflect the script
+     * direction if overridden explicitly.
+     *
+     * @param shapingDirection The new shaping direction.
+     */
+    public void setShapingDirection(ShapingDirection shapingDirection) {
+        nativeSetShapingDirection(nativeArtist, shapingDirection.value);
+    }
 
     /**
      * Shapes the specified range of source text with appropriate shaping engine, filling the album
@@ -250,7 +250,7 @@ public class ShapingEngine implements Disposable {
      *
      * @throws IllegalStateException if either artist's current typeface is <code>null</code>, or
      *         artist's current text is <code>null</code>.
-     * @throws NullPointerException if <code>album</code> is <code>null</code>.
+     * @throws NullPointerException if <code>text</code> is <code>null</code>.
      */
     public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
         if (text == null) {
@@ -269,10 +269,7 @@ public class ShapingEngine implements Disposable {
         }
 
         ShapingResult result = new ShapingResult();
-
-        nativeSetText(nativeArtist, text);
-        nativeSetTextRange(nativeArtist, fromIndex, toIndex);
-        nativeFillAlbum(nativeArtist, result.nativeAlbum);
+        nativeShapeText(nativeArtist, result.nativeAlbum, text, fromIndex, toIndex);
 
         return result;
     }
@@ -287,8 +284,8 @@ public class ShapingEngine implements Disposable {
         return "ShapingEngine{typeface=" + getTypeface().toString()
                 + ", scriptTag=" + Convert.toStringTag(getScriptTag())
                 + ", languageTag=" + Convert.toStringTag(getLanguageTag())
-                + ", textDirection=" + getTextDirection().toString()
-                + ", textMode=" + getShapingMode().toString()
+                + ", textDirection=" + getShapingDirection().toString()
+                + ", textMode=" + getShapingOrder().toString()
                 + "}";
     }
 
@@ -299,8 +296,8 @@ public class ShapingEngine implements Disposable {
 
 	private static native void nativeSetTypeface(long nativeArtist, Typeface typeface);
 
-    private static native float nativeGetFontSize(long nativeArtist);
-    private static native void nativeSetFontSize(long nativeArtist, float fontSize);
+    private static native float nativeGetTypeSize(long nativeArtist);
+    private static native void nativeSetTypeSize(long nativeArtist, float fontSize);
 
     private static native int nativeGetScriptTag(long nativeArtist);
 	private static native void nativeSetScriptTag(long nativeArtist, int scriptTag);
@@ -308,17 +305,11 @@ public class ShapingEngine implements Disposable {
     private static native int nativeGetLanguageTag(long nativeArtist);
     private static native void nativeSetLanguageTag(long nativeArtist, int languageTag);
 
-    private static native void nativeSetText(long nativeArtist, String text);
+    private static native int nativeGetShapingOrder(long nativeArtist);
+    private static native void nativeSetShapingOrder(long nativeArtist, int shapingOrder);
 
-    private static native int nativeGetTextStart(long nativeArtist);
-    private static native int nativeGetTextEnd(long nativeArtist);
-    private static native void nativeSetTextRange(long nativeArtist, int charStart, int charEnd);
+    private static native int nativeGetShapingDirection(long nativeArtist);
+	private static native void nativeSetShapingDirection(long nativeArtist, int shapingDirection);
 
-    private static native int nativeGetTextDirection(long nativeArtist);
-	private static native void nativeSetTextDirection(long nativeArtist, int textDirection);
-
-    private static native int nativeGetTextMode(long nativeArtist);
-	private static native void nativeSetTextMode(long nativeArtist, int textMode);
-
-	private static native void nativeFillAlbum(long nativeArtist, long nativeAlbum);
+	private static native void nativeShapeText(long nativeArtist, long nativeAlbum, String text, int fromIndex, int toIndex);
 }

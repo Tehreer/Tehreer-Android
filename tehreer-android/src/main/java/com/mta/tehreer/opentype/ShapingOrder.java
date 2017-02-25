@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,19 @@ package com.mta.tehreer.opentype;
 /**
  * Specifies text's flow mode in memory.
  */
-public enum ShapingMode {
+public enum ShapingOrder {
     /**
      * Text flows in forward mode starting from first index (inclusive) to last index (exclusive).
      */
-    FORWARD,
+    FORWARD(0),
     /**
      * Text flows in backward mode starting from last index (exclusive) to first index (inclusive).
      */
-    BACKWARD,
+    BACKWARD(1);
+
+    final int value;
+
+    ShapingOrder(int value) {
+        this.value = value;
+    }
 }

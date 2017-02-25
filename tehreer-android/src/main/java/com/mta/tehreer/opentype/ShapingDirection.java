@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.opentype;
 
 /**
  * Specifies the rendering direction of text.
  */
-public enum TextDirection {
-    /**
-     * Text is rendered in default direction of script as determined by the shaping engine.
-     */
-	DEFAULT,
+public enum ShapingDirection {
     /**
      * Text is rendered from left-to-right.
      */
-	LEFT_TO_RIGHT,
+	LEFT_TO_RIGHT(0),
     /**
      * Text is rendered from right-to-left.
      */
-	RIGHT_TO_LEFT,
+	RIGHT_TO_LEFT(1);
+
+    final int value;
+
+    ShapingDirection(int value) {
+        this.value = value;
+    }
 }
