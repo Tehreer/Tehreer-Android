@@ -26,10 +26,10 @@
 #include "Glyph.h"
 #include "GlyphRasterizer.h"
 #include "Miscellaneous.h"
-#include "OpenTypeAlbum.h"
-#include "OpenTypeArtist.h"
 #include "Raw.h"
 #include "SfntNames.h"
+#include "ShapingEngine.h"
+#include "ShapingResult.h"
 #include "Typeface.h"
 
 #endif

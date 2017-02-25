@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__OPEN_TYPE_ALBUM_H
-#define _TEHREER__OPEN_TYPE_ALBUM_H
+#ifndef _TEHREER__SHAPING_RESULT_H
+#define _TEHREER__SHAPING_RESULT_H
 
 extern "C" {
 #include <SFAlbum.h>
@@ -26,30 +26,30 @@ extern "C" {
 
 namespace Tehreer {
 
-class OpenTypeAlbum {
+class ShapingResult {
 public:
-    OpenTypeAlbum();
-    ~OpenTypeAlbum();
+    ShapingResult();
+    ~ShapingResult();
 
     SFAlbumRef sfAlbum() const { return m_sfAlbum; }
 
-    void associateText(jint charStart, jint charEnd, bool isBackward, jfloat sizeByEm);
+    void setAdditionalInfo(jfloat sizeByEm, bool isBackward, jint charStart, jint charEnd);
 
+    jfloat sizeByEm() const { return m_sizeByEm; }
     bool isBackward() const { return m_isBackward; }
     jint charStart() const { return m_charStart; }
     jint charEnd() const { return m_charEnd; }
-    jfloat sizeByEm() const { return m_sizeByEm; }
 
 private:
     SFAlbumRef m_sfAlbum;
+    jfloat m_sizeByEm;
     bool m_isBackward;
     jint m_charStart;
     jint m_charEnd;
-    jfloat m_sizeByEm;
 };
 
 }
 
-jint register_com_mta_tehreer_opentype_OpenTypeAlbum(JNIEnv *env);
+jint register_com_mta_tehreer_opentype_ShapingResult(JNIEnv *env);
 
 #endif

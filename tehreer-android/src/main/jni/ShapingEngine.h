@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__OPEN_TYPE_ARTIST_H
-#define _TEHREER__OPEN_TYPE_ARTIST_H
+#ifndef _TEHREER__SHAPING_ENGINE_H
+#define _TEHREER__SHAPING_ENGINE_H
 
 extern "C" {
 #include <SFArtist.h>
@@ -29,26 +29,25 @@ extern "C" {
 #include <map>
 #include <memory>
 
-#include "TextDirection.h"
 #include "Typeface.h"
-#include "OpenTypeAlbum.h"
+#include "ShapingResult.h"
 
 class OpenTypeScheme;
 
 namespace Tehreer {
 
-class OpenTypeArtist {
+class ShapingEngine {
 public:
-    static TextDirection getScriptDefaultDirection(uint32_t scriptTag);
+    static SFTextDirection getScriptDefaultDirection(uint32_t scriptTag);
 
-    OpenTypeArtist();
-    ~OpenTypeArtist();
+    ShapingEngine();
+    ~ShapingEngine();
 
     const Typeface *typeface() const { return m_typeface; }
     void setTypeface(Typeface *typeface) { m_typeface = typeface; }
 
-    jfloat fontSize() const { return m_fontSize; }
-    void setFontSize(jfloat fontSize) { m_fontSize = fontSize; }
+    jfloat typeSize() const { return m_typeSize; }
+    void setTypeSize(jfloat typeSize) { m_typeSize = typeSize; }
 
     SFTag scriptTag() const { return m_scriptTag; }
     void setScriptTag(SFTag scriptTag) { m_scriptTag = scriptTag; }
@@ -56,36 +55,27 @@ public:
     SFTag languageTag() const { return m_languageTag; }
     void setLanguageTag(SFTag languageTag) { m_languageTag = languageTag; }
 
-    void setText(const jchar *charArray, jint charCount);
-
-    jint charStart() const { return m_charStart; }
-    jint charEnd() const { return m_charEnd; }
-    void setTextRange(jint charStart, jint charEnd);
-
-    TextDirection textDirection() const { return m_textDirection; }
-    void setTextDirection(TextDirection textDirection) { m_textDirection = textDirection; }
-
     SFTextMode textMode() const { return m_textMode; }
     void setTextMode(SFTextMode textMode);
 
-    void fillAlbum(OpenTypeAlbum &album);
+    SFTextDirection textDirection() const { return m_textDirection; }
+    void setTextDirection(SFTextDirection textDirection);
+
+    void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd);
 
 private:
     SFArtistRef m_sfArtist;
     SFSchemeRef m_sfScheme;
     Typeface *m_typeface;
-    jfloat m_fontSize;
+    jfloat m_typeSize;
     SFTag m_scriptTag;
     SFTag m_languageTag;
-    jchar *m_charArray;
-    jint m_charStart;
-    jint m_charEnd;
-    TextDirection m_textDirection;
     SFTextMode m_textMode;
+    SFTextDirection m_textDirection;
 };
 
 }
 
-jint register_com_mta_tehreer_opentype_OpenTypeArtist(JNIEnv *env);
+jint register_com_mta_tehreer_opentype_ShapingEngine(JNIEnv *env);
 
 #endif
