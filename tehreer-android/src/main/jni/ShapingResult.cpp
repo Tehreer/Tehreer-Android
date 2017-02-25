@@ -106,7 +106,7 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
     return static_cast<jint>(glyphCount);
 }
 
-static jlong getGlyphCodesPtr(JNIEnv *env, jobject obj, jlong resultHandle)
+static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
@@ -151,7 +151,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
     { "nativeGetCharCount", "(J)I", (void *)getCharCount },
     { "nativeGetGlyphCount", "(J)I", (void *)getGlyphCount },
-    { "nativeGetGlyphCodesPtr", "(J)J", (void *)getGlyphCodesPtr },
+    { "nativeGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
     { "nativeGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
     { "nativeGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
     { "nativeGetCharToGlyphMapPtr", "(J)J", (void *)getCharToGlyphMapPtr },
