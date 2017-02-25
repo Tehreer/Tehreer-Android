@@ -170,6 +170,22 @@ static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint la
     shapingEngine->setLanguageTag(inputTag);
 }
 
+static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
+{
+    ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
+    SFTextDirection textDirection = shapingEngine->textDirection();
+
+    return static_cast<jint>(textDirection);
+}
+
+static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingDirection)
+{
+    ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
+    SFTextDirection textDirection = static_cast<SFTextDirection>(shapingDirection);
+
+    shapingEngine->setTextDirection(textDirection);
+}
+
 static jint getShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
@@ -184,22 +200,6 @@ static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint s
     SFTextMode textMode = static_cast<SFTextMode>(shapingOrder);
 
     shapingEngine->setTextMode(textMode);
-}
-
-static jint getShapingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
-{
-    ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextDirection textDirection = shapingEngine->textDirection();
-
-    return static_cast<jint>(textDirection);
-}
-
-static void setShapingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingDirection)
-{
-    ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextDirection textDirection = static_cast<SFTextDirection>(shapingDirection);
-
-    shapingEngine->setTextDirection(textDirection);
 }
 
 static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong albumHandle, jstring text, jint fromIndex, jint toIndex)
@@ -225,10 +225,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeSetScriptTag", "(JI)V", (void *)setScriptTag },
     { "nativeGetLanguageTag", "(J)I", (void *)getLanguageTag },
     { "nativeSetLanguageTag", "(JI)V", (void *)setLanguageTag },
+    { "nativeGetWritingDirection", "(J)I", (void *)getWritingDirection },
+    { "nativeSetWritingDirection", "(JI)V", (void *)setWritingDirection },
     { "nativeGetShapingOrder", "(J)I", (void *)getShapingOrder },
     { "nativeSetShapingOrder", "(JI)V", (void *)setShapingOrder },
-    { "nativeGetShapingDirection", "(J)I", (void *)getShapingDirection },
-    { "nativeSetShapingDirection", "(JI)V", (void *)setShapingDirection },
     { "nativeShapeText", "(JJLjava/lang/String;II)V", (void *)shapeText },
 };
 
