@@ -17,21 +17,21 @@
 package com.mta.tehreer.opentype;
 
 /**
- * Specifies the rendering direction of text.
+ * Specifies the writing direction of text.
  */
-public enum ShapingDirection {
+public enum WritingDirection {
     /**
-     * Text is rendered from left-to-right.
+     * Text is written from left-to-right.
      */
 	LEFT_TO_RIGHT(0),
     /**
-     * Text is rendered from right-to-left.
+     * Text is written from right-to-left.
      */
 	RIGHT_TO_LEFT(1);
 
     final int value;
 
-    ShapingDirection(int value) {
+    WritingDirection(int value) {
         this.value = value;
     }
 }
