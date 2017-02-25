@@ -89,7 +89,7 @@ public class ShapingEngine implements Disposable {
      * @param scriptTag The tag of the script whose default direction is returned.
      * @return The default direction of the script identified by <code>scriptTag</code>.
      */
-    public static ShapingDirection getScriptDefaultDirection(int scriptTag) {
+    public static WritingDirection getScriptDefaultDirection(int scriptTag) {
         return Convert.toJavaTextDirection(nativeGetScriptDefaultDirection(scriptTag));
     }
 
@@ -197,13 +197,36 @@ public class ShapingEngine implements Disposable {
 	}
 
     /**
+     * Returns the direction in which this shaping engine will place the resultant glyphs.
+     *
+     * @return The current writing direction.
+     */
+    public WritingDirection getWritingDirection() {
+        return Convert.toJavaTextDirection(nativeGetWritingDirection(nativeEngine));
+    }
+
+    /**
+     * Sets the direction in which this shaping engine will place the resultant glyphs.
+     * <p>
+     * The value of <code>writingDirection</code> must reflect the rendering direction of source
+     * script so that cursive and mark glyphs are placed at appropriate locations. It should not be
+     * confused with the direction of a bidirectional run as that may not reflect the script
+     * direction if overridden explicitly.
+     *
+     * @param writingDirection The new writing direction.
+     */
+    public void setWritingDirection(WritingDirection writingDirection) {
+        nativeSetWritingDirection(nativeEngine, writingDirection.value);
+    }
+
+    /**
      * Returns the order in which this shaping engine will process the text.
      *
      * @return The current shaping order.
      */
-	public ShapingOrder getShapingOrder() {
-		return Convert.toJavaTextMode(nativeGetShapingOrder(nativeEngine));
-	}
+    public ShapingOrder getShapingOrder() {
+        return Convert.toJavaTextMode(nativeGetShapingOrder(nativeEngine));
+    }
 
     /**
      * Sets the order in which this shaping engine will process the text. The default value is
@@ -216,41 +239,17 @@ public class ShapingEngine implements Disposable {
      *
      * @param shapingOrder The new shaping order.
      */
-	public void setShapingOrder(ShapingOrder shapingOrder) {
-		nativeSetShapingOrder(nativeEngine, shapingOrder.value);
-	}
-
-    /**
-     * Returns the direction in which this shaping engine will place the resultant glyphs.
-     *
-     * @return The current shaping direction.
-     */
-    public ShapingDirection getShapingDirection() {
-        return Convert.toJavaTextDirection(nativeGetShapingDirection(nativeEngine));
+    public void setShapingOrder(ShapingOrder shapingOrder) {
+        nativeSetShapingOrder(nativeEngine, shapingOrder.value);
     }
 
     /**
-     * Sets the direction in which this shaping engine will place the resultant glyphs.
+     * Shapes the specified range of text into glyphs.
      * <p>
-     * The value of <code>shapingDirection</code> must reflect the rendering direction of source
-     * script so that cursive and mark glyphs are placed at appropriate locations. It should not be
-     * confused with the direction of a bidirectional run as that may not reflect the script
-     * direction if overridden explicitly.
-     *
-     * @param shapingDirection The new shaping direction.
-     */
-    public void setShapingDirection(ShapingDirection shapingDirection) {
-        nativeSetShapingDirection(nativeEngine, shapingDirection.value);
-    }
-
-    /**
-     * Shapes the specified range of source text with appropriate shaping engine, filling the album
-     * with shaping results. The <code>album</code> is cleared first, if not empty.
-     * <p>
-     * The output glyphs in the album flow in logical shaping direction. For left-to-right
-     * direction, the position of pen is incremented with glyph's advance after rendering it.
-     * Similarly, for right-to-left direction, the position of pen is decremented with glyph's
-     * advance after rendering it.
+     * The output glyphs in the <code>ShapingResult</code> object flow visually in writing
+     * direction. For left-to-right direction, the position of pen is incremented with glyph's
+     * advance after rendering it. Similarly, for right-to-left direction, the position of pen is
+     * decremented with glyph's advance after rendering it.
      *
      * @param text The text to shape into glyphs.
      * @param fromIndex
@@ -258,6 +257,10 @@ public class ShapingEngine implements Disposable {
      *
      * @throws IllegalStateException if current typeface is <code>null</code>.
      * @throws NullPointerException if <code>text</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>fromIndex</code> is negative, or
+     *         <code>toIndex</code> is greater than <code>text.length()</code>, or
+     *         <code>fromIndex</code> is greater than <code>toIndex</code>
+
      */
     public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
         if (base.typeface == null) {
@@ -294,7 +297,7 @@ public class ShapingEngine implements Disposable {
         return "ShapingEngine{typeface=" + getTypeface().toString()
                 + ", scriptTag=" + Convert.toStringTag(getScriptTag())
                 + ", languageTag=" + Convert.toStringTag(getLanguageTag())
-                + ", textDirection=" + getShapingDirection().toString()
+                + ", textDirection=" + getWritingDirection().toString()
                 + ", textMode=" + getShapingOrder().toString()
                 + "}";
     }
@@ -315,11 +318,11 @@ public class ShapingEngine implements Disposable {
     private static native int nativeGetLanguageTag(long nativeEngine);
     private static native void nativeSetLanguageTag(long nativeEngine, int languageTag);
 
+    private static native int nativeGetWritingDirection(long nativeEngine);
+	private static native void nativeSetWritingDirection(long nativeEngine, int shapingDirection);
+
     private static native int nativeGetShapingOrder(long nativeEngine);
     private static native void nativeSetShapingOrder(long nativeEngine, int shapingOrder);
 
-    private static native int nativeGetShapingDirection(long nativeEngine);
-	private static native void nativeSetShapingDirection(long nativeEngine, int shapingDirection);
-
-	private static native void nativeShapeText(long nativeEngine, long nativeAlbum, String text, int fromIndex, int toIndex);
+	private static native void nativeShapeText(long nativeEngine, long nativeResult, String text, int fromIndex, int toIndex);
 }
