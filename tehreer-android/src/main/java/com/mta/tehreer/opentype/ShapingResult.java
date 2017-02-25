@@ -27,16 +27,16 @@ import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 
 /**
- * An <code>OpenTypeAlbum</code> object is a container for the results of text shaping. It is filled
- * by <code>OpenTypeArtist</code> to provide the information related to characters, their glyphs,
+ * An <code>ShapingResult</code> object is a container for the results of text shaping. It is filled
+ * by <code>ShapingEngine</code> to provide the information related to characters, their glyphs,
  * offsets, and advances. It can be safely accessed from multiple threads but only one thread should
  * be allowed to manipulate it at a time.
  */
-public class OpenTypeAlbum implements Disposable {
+public class ShapingResult implements Disposable {
 
-    private static class Finalizable extends OpenTypeAlbum {
+    private static class Finalizable extends ShapingResult {
 
-        private Finalizable(OpenTypeAlbum parent) {
+        private Finalizable(ShapingResult parent) {
             super(parent);
         }
 
@@ -65,30 +65,30 @@ public class OpenTypeAlbum implements Disposable {
      * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
      * as a parameter.
      *
-     * @param openTypeAlbum The open type album object to wrap into a finalizable instance.
+     * @param shapingResult The open type album object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in open type album object.
      */
-    public static OpenTypeAlbum finalizable(OpenTypeAlbum openTypeAlbum) {
-        if (openTypeAlbum.getClass() == OpenTypeAlbum.class) {
-            return new Finalizable(openTypeAlbum);
+    public static ShapingResult finalizable(ShapingResult shapingResult) {
+        if (shapingResult.getClass() == ShapingResult.class) {
+            return new Finalizable(shapingResult);
         }
 
-        if (openTypeAlbum.getClass() != Finalizable.class) {
+        if (shapingResult.getClass() != Finalizable.class) {
             throw new IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED);
         }
 
-        return openTypeAlbum;
+        return shapingResult;
     }
 
     /**
      * Checks whether an open type album object is finalizable or not.
      *
-     * @param openTypeAlbum The open type album object to check.
+     * @param shapingResult The open type album object to check.
      * @return <code>true</code> if the passed-in open type album object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(OpenTypeAlbum openTypeAlbum) {
-        return (openTypeAlbum.getClass() == Finalizable.class);
+    public static boolean isFinalizable(ShapingResult shapingResult) {
+        return (shapingResult.getClass() == Finalizable.class);
     }
 
 	long nativeAlbum;
@@ -96,11 +96,11 @@ public class OpenTypeAlbum implements Disposable {
     /**
      * Constructs an open type album object.
      */
-	public OpenTypeAlbum() {
+	ShapingResult() {
 	    nativeAlbum = nativeCreate();
 	}
 
-    private OpenTypeAlbum(OpenTypeAlbum other) {
+    private ShapingResult(ShapingResult other) {
         this.nativeAlbum = other.nativeAlbum;
     }
 
@@ -194,7 +194,7 @@ public class OpenTypeAlbum implements Disposable {
 
     @Override
     public String toString() {
-        return "OpenTypeAlbum{isBackward=" + Boolean.toString(isBackward())
+        return "ShapingResult{isBackward=" + Boolean.toString(isBackward())
                 + ", charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", glyphCount=" + getGlyphCount()

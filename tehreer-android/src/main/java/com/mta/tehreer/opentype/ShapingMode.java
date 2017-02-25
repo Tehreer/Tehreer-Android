@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.opentype;
 
 /**
  * Specifies text's flow mode in memory.
  */
-public enum TextMode {
+public enum ShapingMode {
     /**
-     * Text flows in forward mode starting from index zero (inclusive) to length (exclusive).
+     * Text flows in forward mode starting from first index (inclusive) to last index (exclusive).
      */
     FORWARD,
     /**
-     * Text flows in backward mode starting from index length (exclusive) to zero (inclusive).
+     * Text flows in backward mode starting from last index (exclusive) to first index (inclusive).
      */
     BACKWARD,
 }

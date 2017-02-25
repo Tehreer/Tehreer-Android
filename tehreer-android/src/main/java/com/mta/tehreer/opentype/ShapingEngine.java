@@ -20,17 +20,16 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Constants;
 import com.mta.tehreer.internal.util.Convert;
 import com.mta.tehreer.text.TextDirection;
-import com.mta.tehreer.text.TextMode;
 import com.mta.tehreer.util.Disposable;
 
 /**
- * The <code>OpenTypeArtist</code> class represents the text shaping engine.
+ * The <code>ShapingEngine</code> class represents the text shaping engine.
  */
-public class OpenTypeArtist implements Disposable {
+public class ShapingEngine implements Disposable {
 
-    private static class Finalizable extends OpenTypeArtist {
+    private static class Finalizable extends ShapingEngine {
 
-        private Finalizable(OpenTypeArtist parent) {
+        private Finalizable(ShapingEngine parent) {
             super(parent);
         }
 
@@ -59,30 +58,30 @@ public class OpenTypeArtist implements Disposable {
      * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
      * as a parameter.
      *
-     * @param openTypeArtist The open type artist object to wrap into a finalizable instance.
+     * @param shapingEngine The open type artist object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in open type artist object.
      */
-    public static OpenTypeArtist finalizable(OpenTypeArtist openTypeArtist) {
-        if (openTypeArtist.getClass() == OpenTypeArtist.class) {
-            return new Finalizable(openTypeArtist);
+    public static ShapingEngine finalizable(ShapingEngine shapingEngine) {
+        if (shapingEngine.getClass() == ShapingEngine.class) {
+            return new Finalizable(shapingEngine);
         }
 
-        if (openTypeArtist.getClass() != Finalizable.class) {
+        if (shapingEngine.getClass() != Finalizable.class) {
             throw new IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED);
         }
 
-        return openTypeArtist;
+        return shapingEngine;
     }
 
     /**
      * Checks whether an open type artist object is finalizable or not.
      *
-     * @param openTypeArtist The open type artist object to check.
+     * @param shapingEngine The open type artist object to check.
      * @return <code>true</code> if the passed-in open type artist object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(OpenTypeArtist openTypeArtist) {
-        return (openTypeArtist.getClass() == Finalizable.class);
+    public static boolean isFinalizable(ShapingEngine shapingEngine) {
+        return (shapingEngine.getClass() == Finalizable.class);
     }
 
     /**
@@ -97,7 +96,6 @@ public class OpenTypeArtist implements Disposable {
 
     private static class Base {
         Typeface typeface;
-        String text;
     }
 
     private final Base base;
@@ -106,12 +104,12 @@ public class OpenTypeArtist implements Disposable {
     /**
      * Constructs an open type artist object.
      */
-    public OpenTypeArtist() {
+    public ShapingEngine() {
         base = new Base();
         nativeArtist = nativeCreate();
     }
 
-    private OpenTypeArtist(OpenTypeArtist other) {
+    private ShapingEngine(ShapingEngine other) {
         this.base = other.base;
         this.nativeArtist = other.nativeArtist;
     }
@@ -119,12 +117,6 @@ public class OpenTypeArtist implements Disposable {
 	private void ensureTypeface() {
 	    if (base.typeface == null) {
             throw new IllegalStateException("Typeface has not been set");
-        }
-	}
-
-	private void ensureText() {
-	    if (base.text == null) {
-            throw new IllegalStateException("Text has not been set");
         }
 	}
 
@@ -147,11 +139,11 @@ public class OpenTypeArtist implements Disposable {
 		nativeSetTypeface(nativeArtist, typeface);
 	}
 
-    public float getFontSize() {
+    public float getTypeSize() {
         return nativeGetFontSize(nativeArtist);
     }
 
-    public void setFontSize(float fontSize) {
+    public void setTypeSize(float fontSize) {
         if (fontSize < 0.0) {
             throw new IllegalArgumentException("The value of font size is negative");
         }
@@ -200,56 +192,6 @@ public class OpenTypeArtist implements Disposable {
 	}
 
     /**
-     * Returns this artist's current text.
-     *
-     * @return This artist's current text.
-     */
-    public String getText() {
-        return base.text;
-    }
-
-    /**
-     * Sets this artist's text to shape while resetting the range to occupy whole text.
-     *
-     * @param text The text to shape.
-     */
-    public void setText(String text) {
-        base.text = text;
-        nativeSetText(nativeArtist, text);
-    }
-
-    /**
-     * Sets the input range of text to shape.
-     * <p>
-     * The use of this method is preferred over manually taking substrings of continuous text for
-     * shaping.
-     *
-     * @param charStart The index to the first character in source text.
-     * @param charEnd The index after the last character in source text.
-     *
-     * @throws IllegalStateException if current text of artist is null.
-     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
-     *         <code>charEnd</code> is greater than <code>getText().length()</code>, or
-     *         <code>charStart</code> is greater than <code>charEnd</code>
-     */
-    public void setTextRange(int charStart, int charEnd) {
-        ensureText();
-        if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
-        }
-        if (charEnd > base.text.length()) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Text Length: " + base.text.length());
-        }
-        if (charStart > charEnd) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Char End: " + charEnd);
-        }
-
-        nativeSetTextRange(nativeArtist, charStart, charEnd);
-    }
-
-    /**
      * Returns this artist's current text direction.
      *
      * @return This artist's current text direction.
@@ -277,7 +219,7 @@ public class OpenTypeArtist implements Disposable {
      *
      * @return This artist's current text mode.
      */
-	public TextMode getTextMode() {
+	public ShapingMode getShapingMode() {
 		return Convert.toJavaTextMode(nativeGetTextMode(nativeArtist));
 	}
 
@@ -289,10 +231,10 @@ public class OpenTypeArtist implements Disposable {
      * as right-to-left, backward mode will automatically read it as 'rac' without reordering the
      * original text.
      *
-     * @param textMode The text mode to use for shaping.
+     * @param shapingMode The text mode to use for shaping.
      */
-	public void setTextMode(TextMode textMode) {
-		nativeSetTextMode(nativeArtist, Convert.toNativeTextMode(textMode));
+	public void setShapingMode(ShapingMode shapingMode) {
+		nativeSetTextMode(nativeArtist, Convert.toNativeTextMode(shapingMode));
 	}
 
     /**
@@ -310,15 +252,30 @@ public class OpenTypeArtist implements Disposable {
      *         artist's current text is <code>null</code>.
      * @throws NullPointerException if <code>album</code> is <code>null</code>.
      */
-	public void fillAlbum(OpenTypeAlbum album) {
-		ensureTypeface();
-		ensureText();
-        if (album == null) {
-            throw new NullPointerException("Album is null");
+    public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
+        if (text == null) {
+            throw new NullPointerException("Text is null");
+        }
+        if (fromIndex < 0) {
+            throw new IllegalArgumentException("Char Start: " + fromIndex);
+        }
+        if (toIndex > text.length()) {
+            throw new IllegalArgumentException("Char End: " + toIndex
+                    + ", Text Length: " + text.length());
+        }
+        if (fromIndex > toIndex) {
+            throw new IllegalArgumentException("Char Start: " + fromIndex
+                    + ", Char End: " + toIndex);
         }
 
-		nativeFillAlbum(nativeArtist, album.nativeAlbum);
-	}
+        ShapingResult result = new ShapingResult();
+
+        nativeSetText(nativeArtist, text);
+        nativeSetTextRange(nativeArtist, fromIndex, toIndex);
+        nativeFillAlbum(nativeArtist, result.nativeAlbum);
+
+        return result;
+    }
 
 	@Override
 	public void dispose() {
@@ -327,14 +284,11 @@ public class OpenTypeArtist implements Disposable {
 
     @Override
     public String toString() {
-        return "OpenTypeArtist{typeface=" + getTypeface().toString()
+        return "ShapingEngine{typeface=" + getTypeface().toString()
                 + ", scriptTag=" + Convert.toStringTag(getScriptTag())
                 + ", languageTag=" + Convert.toStringTag(getLanguageTag())
-                + ", text=" + getText()
-                + ", textRange=Range(" + nativeGetTextStart(nativeArtist)
-                                + ", " + nativeGetTextEnd(nativeArtist) + ")"
                 + ", textDirection=" + getTextDirection().toString()
-                + ", textMode=" + getTextMode().toString()
+                + ", textMode=" + getShapingMode().toString()
                 + "}";
     }
 
