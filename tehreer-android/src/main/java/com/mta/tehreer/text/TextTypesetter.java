@@ -27,11 +27,12 @@ import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.opentype.SfntTag;
+import com.mta.tehreer.opentype.ShapingDirection;
+import com.mta.tehreer.opentype.ShapingEngine;
+import com.mta.tehreer.opentype.ShapingResult;
 import com.mta.tehreer.text.internal.util.StringUtils;
 import com.mta.tehreer.text.internal.util.TopSpanIterator;
-import com.mta.tehreer.opentype.OpenTypeAlbum;
-import com.mta.tehreer.opentype.OpenTypeArtist;
-import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.text.style.FontSizeSpan;
 import com.mta.tehreer.text.style.TypefaceSpan;
 import com.mta.tehreer.util.Disposable;
@@ -208,11 +209,7 @@ public class TextTypesetter implements Disposable {
         // TODO: Analyze script runs.
 
         final BidiAlgorithm bidiAlgorithm = new BidiAlgorithm(base.text);
-
-        final OpenTypeArtist openTypeArtist = new OpenTypeArtist();
-        openTypeArtist.setText(base.text);
-
-        final OpenTypeAlbum openTypeAlbum = new OpenTypeAlbum();
+        final ShapingEngine shapingEngine = new ShapingEngine();
 
         BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
         byte forwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
@@ -225,13 +222,13 @@ public class TextTypesetter implements Disposable {
             BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
             for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
                 int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                TextDirection textDirection = OpenTypeArtist.getScriptDefaultDirection(scriptTag);
+                ShapingDirection shapingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
 
-                openTypeArtist.setScriptTag(scriptTag);
-                openTypeArtist.setTextDirection(textDirection);
+                shapingEngine.setScriptTag(scriptTag);
+                shapingEngine.setShapingDirection(shapingDirection);
 
                 resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
-                                 bidiRun.embeddingLevel, openTypeArtist, openTypeAlbum);
+                                 bidiRun.embeddingLevel, shapingEngine);
             }
             base.bidiParagraphs.add(paragraph);
 
@@ -241,13 +238,12 @@ public class TextTypesetter implements Disposable {
             paragraphStart = paragraph.getCharEnd();
         }
 
-        openTypeArtist.dispose();
-        openTypeAlbum.dispose();
+        shapingEngine.dispose();
         bidiAlgorithm.dispose();
     }
 
     private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
-                                  OpenTypeArtist artist, OpenTypeAlbum album) {
+                                  ShapingEngine artist) {
         Spanned spanned = base.spanned;
         TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypefaceSpan.class);
 
@@ -261,12 +257,12 @@ public class TextTypesetter implements Disposable {
                                                    + spanStart + ".." + spanEnd + ")");
             }
 
-            resolveFonts(spanStart, spanEnd, bidiLevel, artist, album, spanObject.getTypeface());
+            resolveFonts(spanStart, spanEnd, bidiLevel, artist, spanObject.getTypeface());
         }
     }
 
     private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
-                              OpenTypeArtist artist, OpenTypeAlbum album, Typeface typeface) {
+                              ShapingEngine artist, Typeface typeface) {
         Spanned spanned = base.spanned;
         TopSpanIterator<FontSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, FontSizeSpan.class);
 
@@ -286,20 +282,19 @@ public class TextTypesetter implements Disposable {
                 }
             }
 
-            GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, artist, album, typeface, fontSize);
+            GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, artist, typeface, fontSize);
             base.glyphRuns.add(glyphRun);
         }
     }
 
     private GlyphRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
-                                   OpenTypeArtist artist, OpenTypeAlbum album,
+                                   ShapingEngine artist,
                                    Typeface typeface, float fontSize) {
         artist.setTypeface(typeface);
-        artist.setFontSize(fontSize);
-        artist.setTextRange(charStart, charEnd);
-        artist.fillAlbum(album);
+        artist.setTypeSize(fontSize);
+        ShapingResult shapingResult = artist.shapeText(base.text, charStart, charEnd);
 
-        return new GlyphRun(album, artist.getTypeface(), fontSize, bidiLevel);
+        return new GlyphRun(shapingResult, artist.getTypeface(), fontSize, bidiLevel);
     }
 
     private void verifyTextRange(int charStart, int charEnd) {
