@@ -23,6 +23,7 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.util.SafeFloatList;
 import com.mta.tehreer.internal.util.SafeIntList;
 import com.mta.tehreer.internal.util.SafePointList;
+import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
@@ -107,6 +108,10 @@ public class TextRun {
         return mGlyphRun.bidiLevel;
     }
 
+    public WritingDirection getWritingDirection() {
+        return mGlyphRun.writingDirection();
+    }
+
     /**
      * Returns the number of glyphs in this run.
      *
@@ -117,27 +122,27 @@ public class TextRun {
     }
 
     /**
-     * Returns the list of glyph IDs in this album.
+     * Returns the list of glyph IDs in this run.
      *
-     * @return The list of glyph IDs in this album.
+     * @return The list of glyph IDs in this run.
      */
     public IntList getGlyphIds() {
         return new SafeIntList(mGlyphRun.glyphIds, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the list of glyph offsets in this album.
+     * Returns the list of glyph offsets in this run.
      *
-     * @return The list of glyph offsets in this album.
+     * @return The list of glyph offsets in this run.
      */
     public PointList getGlyphOffsets() {
         return new SafePointList(mGlyphRun.glyphOffsets, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the list of glyph advances in this album.
+     * Returns the list of glyph advances in this run.
      *
-     * @return The list of glyph advances in this album.
+     * @return The list of glyph advances in this run.
      */
     public FloatList getGlyphAdvances() {
         return new SafeFloatList(mGlyphRun.glyphAdvances, mGlyphOffset, mGlyphCount);
@@ -308,9 +313,8 @@ public class TextRun {
 
 	    renderer.setTypeface(mGlyphRun.typeface);
         renderer.setTypeSize(mGlyphRun.fontSize);
-        renderer.setFlowDirection(mGlyphRun.textDirection());
 
-	    renderer.drawGlyphs(canvas,
+	    renderer.drawGlyphs(canvas, getWritingDirection(),
                             getGlyphIds().subList(glyphStart, glyphEnd),
                             getGlyphOffsets().subList(glyphStart, glyphEnd),
                             getGlyphAdvances().subList(glyphStart, glyphEnd));
