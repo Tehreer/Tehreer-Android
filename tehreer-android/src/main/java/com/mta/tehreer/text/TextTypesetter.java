@@ -33,7 +33,7 @@ import com.mta.tehreer.opentype.ShapingResult;
 import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.text.internal.util.StringUtils;
 import com.mta.tehreer.text.internal.util.TopSpanIterator;
-import com.mta.tehreer.text.style.FontSizeSpan;
+import com.mta.tehreer.text.style.TypeSizeSpan;
 import com.mta.tehreer.text.style.TypefaceSpan;
 import com.mta.tehreer.util.Disposable;
 
@@ -147,7 +147,7 @@ public class TextTypesetter implements Disposable {
 
         SpannableString spanned = new SpannableString(text);
         spanned.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        spanned.setSpan(new FontSizeSpan(fontSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        spanned.setSpan(new TypeSizeSpan(fontSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
         base = new Base();
         init(text, spanned);
@@ -264,10 +264,10 @@ public class TextTypesetter implements Disposable {
     private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
                               ShapingEngine artist, Typeface typeface) {
         Spanned spanned = base.spanned;
-        TopSpanIterator<FontSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, FontSizeSpan.class);
+        TopSpanIterator<TypeSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypeSizeSpan.class);
 
         while (iterator.hasNext()) {
-            FontSizeSpan spanObject = iterator.next();
+            TypeSizeSpan spanObject = iterator.next();
             int spanStart = iterator.getSpanStart();
             int spanEnd = iterator.getSpanEnd();
 
