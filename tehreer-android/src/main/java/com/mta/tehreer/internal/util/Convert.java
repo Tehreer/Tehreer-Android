@@ -16,18 +16,18 @@
 
 package com.mta.tehreer.internal.util;
 
-import com.mta.tehreer.opentype.ShapingDirection;
+import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.opentype.ShapingOrder;
 
 public class Convert {
 
-    private static final ShapingDirection[] NATIVE_TEXT_DIRECTION_MAP;
+    private static final WritingDirection[] NATIVE_TEXT_DIRECTION_MAP;
     private static final ShapingOrder[] NATIVE_TEXT_MODE_MAP;
 
     static {
-        NATIVE_TEXT_DIRECTION_MAP = new ShapingDirection[] {
-                ShapingDirection.LEFT_TO_RIGHT,
-                ShapingDirection.RIGHT_TO_LEFT
+        NATIVE_TEXT_DIRECTION_MAP = new WritingDirection[] {
+                WritingDirection.LEFT_TO_RIGHT,
+                WritingDirection.RIGHT_TO_LEFT
         };
 
         NATIVE_TEXT_MODE_MAP = new ShapingOrder[] {
@@ -36,7 +36,7 @@ public class Convert {
         };
     }
 
-    public static ShapingDirection toJavaTextDirection(int nativeTextDirection) {
+    public static WritingDirection toJavaTextDirection(int nativeTextDirection) {
         return NATIVE_TEXT_DIRECTION_MAP[nativeTextDirection];
     }
 
