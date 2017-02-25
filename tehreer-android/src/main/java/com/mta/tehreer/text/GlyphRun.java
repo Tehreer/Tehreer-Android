@@ -17,7 +17,7 @@
 package com.mta.tehreer.text;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.opentype.ShapingDirection;
+import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.opentype.ShapingResult;
 
 class GlyphRun {
@@ -34,26 +34,26 @@ class GlyphRun {
     final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
-    GlyphRun(ShapingResult album, Typeface typeface, float fontSize, byte bidiLevel) {
+    GlyphRun(ShapingResult shapingResult, Typeface typeface, float fontSize, byte bidiLevel) {
         float sizeByEm = fontSize / typeface.getUnitsPerEm();
 
         this.typeface = typeface;
         this.fontSize = fontSize;
         this.sizeByEm = sizeByEm;
         this.bidiLevel = bidiLevel;
-        this.isBackward = album.isBackward();
-        this.charStart = album.getCharStart();
-        this.charEnd = album.getCharEnd();
-        this.glyphIds = album.getGlyphIds().toArray();
-        this.glyphOffsets = album.getGlyphOffsets().toArray();
-        this.glyphAdvances = album.getGlyphAdvances().toArray();
-        this.charToGlyphMap = album.getCharToGlyphMap().toArray();
+        this.isBackward = shapingResult.isBackward();
+        this.charStart = shapingResult.getCharStart();
+        this.charEnd = shapingResult.getCharEnd();
+        this.glyphIds = shapingResult.getGlyphIds().toArray();
+        this.glyphOffsets = shapingResult.getGlyphOffsets().toArray();
+        this.glyphAdvances = shapingResult.getGlyphAdvances().toArray();
+        this.charToGlyphMap = shapingResult.getCharToGlyphMap().toArray();
     }
 
-    ShapingDirection textDirection() {
+    WritingDirection writingDirection() {
         return (((bidiLevel & 1) ^ (isBackward ? 1 : 0)) == 0
-                ? ShapingDirection.LEFT_TO_RIGHT
-                : ShapingDirection.RIGHT_TO_LEFT);
+                ? WritingDirection.LEFT_TO_RIGHT
+                : WritingDirection.RIGHT_TO_LEFT);
     }
 
     int glyphCount() {
