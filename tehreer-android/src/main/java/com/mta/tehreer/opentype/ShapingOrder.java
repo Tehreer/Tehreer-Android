@@ -17,15 +17,17 @@
 package com.mta.tehreer.opentype;
 
 /**
- * Specifies text's flow mode in memory.
+ * Specifies the order in which the text is shaped.
  */
 public enum ShapingOrder {
     /**
-     * Text flows in forward mode starting from first index (inclusive) to last index (exclusive).
+     * Text is shaped in forward order starting from first index (inclusive) to last index
+     * (exclusive).
      */
     FORWARD(0),
     /**
-     * Text flows in backward mode starting from last index (exclusive) to first index (inclusive).
+     * Text is shaped in backward order starting from last index (exclusive) to first index
+     * (inclusive).
      */
     BACKWARD(1);
 
