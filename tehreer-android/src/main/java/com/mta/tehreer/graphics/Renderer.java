@@ -24,7 +24,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.Log;
 
-import com.mta.tehreer.text.TextDirection;
+import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
@@ -118,7 +118,6 @@ public class Renderer {
 
     private Style mStyle;
     private int mFillColor;
-    private TextDirection mFlowDirection;
     private Typeface mTypeface;
     private float mTypeSize;
     private float mSlantAngle;
@@ -147,11 +146,10 @@ public class Renderer {
 
         setStyle(Style.FILL);
         setFillColor(Color.BLACK);
-        setFlowDirection(TextDirection.LEFT_TO_RIGHT);
         setTypeSize(16.0f);
+        setSlantAngle(0.0f);
         setScaleX(1.0f);
         setScaleY(1.0f);
-        setSlantAngle(0.0f);
         setStrokeColor(Color.BLACK);
         setStrokeWidth(1.0f);
         setStrokeCap(Cap.BUTT);
@@ -224,26 +222,6 @@ public class Renderer {
      */
     public void setFillColor(int textColor) {
         mFillColor = textColor;
-    }
-
-    /**
-     * Returns this renderer's text direction, used to move pen while drawing glyphs. The default
-     * value is {@link TextDirection#LEFT_TO_RIGHT}.
-     *
-     * @return The text direction of this renderer.
-     */
-    public TextDirection getFlowDirection() {
-        return mFlowDirection;
-    }
-
-    /**
-     * Sets this renderer's text direction, used to move pen while drawing glyphs. The default value
-     * is {@link TextDirection#LEFT_TO_RIGHT}.
-     *
-     * @param textDirection The new text direction to set.
-     */
-    public void setFlowDirection(TextDirection textDirection) {
-        mFlowDirection = textDirection;
     }
 
     /**
@@ -413,7 +391,7 @@ public class Renderer {
 
     /**
      * Sets this renderer's cap, controlling how the start and end of stroked lines and paths are
-     * treated.  The default value is {@link Cap#BUTT}.
+     * treated. The default value is {@link Cap#BUTT}.
      *
      * @param strokeCap The new stroke cap style.
      *
@@ -659,11 +637,11 @@ public class Renderer {
         return cumulativeBBox;
     }
 
-    private void drawGlyphs(Canvas canvas,
+    private void drawGlyphs(Canvas canvas, WritingDirection direction,
                             IntList glyphIds, PointList offsets, FloatList advances,
                             boolean strokeMode) {
         GlyphCache cache = GlyphCache.getInstance();
-        boolean reverseMode = (mFlowDirection == TextDirection.RIGHT_TO_LEFT);
+        boolean reverseMode = (direction == WritingDirection.RIGHT_TO_LEFT);
         float penX = 0.0f;
 
         int size = glyphIds.size();
@@ -697,11 +675,12 @@ public class Renderer {
      * the canvas is hardware accelerated.
      *
      * @param canvas The canvas onto which to draw the glyphs.
+     * @param direction The direction in which the glyphs are laid out.
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
      */
-    public void drawGlyphs(Canvas canvas,
+    public void drawGlyphs(Canvas canvas, WritingDirection direction,
                            IntList glyphIds, PointList offsets, FloatList advances) {
         if (mShouldRender) {
             syncShadowLayer();
@@ -712,12 +691,12 @@ public class Renderer {
 
             if (mStyle == Style.FILL || mStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mFillColor);
-                drawGlyphs(canvas, glyphIds, offsets, advances, false);
+                drawGlyphs(canvas, direction, glyphIds, offsets, advances, false);
             }
 
             if (mStyle == Style.STROKE || mStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mStrokeColor);
-                drawGlyphs(canvas, glyphIds, offsets, advances, true);
+                drawGlyphs(canvas, direction, glyphIds, offsets, advances, true);
             }
         }
     }
