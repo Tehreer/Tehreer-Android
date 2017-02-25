@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,25 @@
 package com.mta.tehreer.text.style;
 
 /**
- * The <code>FontSizeSpan</code> class represents a span for specifying absolute font size.
+ * The <code>TypeSizeSpan</code> class represents a span for specifying absolute type size.
  */
-public class FontSizeSpan extends TehreerSpan {
+public class TypeSizeSpan extends TehreerSpan {
 
     private final float size;
 
     /**
-     * Constructs a font size span object.
+     * Constructs a type size span object.
      *
-     * @param size The absolute font size in pixels.
+     * @param size The absolute type size in pixels.
      */
-    public FontSizeSpan(float size) {
+    public TypeSizeSpan(float size) {
         this.size = size;
     }
 
     /**
-     * Returns this span's font size.
+     * Returns this span's type size.
      *
-     * @return The font size of this span.
+     * @return The font type of this span.
      */
     public float getSize() {
         return size;
@@ -44,11 +44,11 @@ public class FontSizeSpan extends TehreerSpan {
     @Override
     public boolean equals(Object obj) {
         if (this != obj) {
-            if (obj == null || !(obj instanceof FontSizeSpan)) {
+            if (obj == null || !(obj instanceof TypeSizeSpan)) {
                 return false;
             }
 
-            FontSizeSpan other = (FontSizeSpan) obj;
+            TypeSizeSpan other = (TypeSizeSpan) obj;
             if (size != other.size) {
                 return false;
             }
