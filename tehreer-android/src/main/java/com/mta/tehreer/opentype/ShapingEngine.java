@@ -48,8 +48,8 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Wraps an open type artist object into a finalizable instance which is guaranteed to be
-     * disposed automatically by the GC when no longer in use. After calling this method,
+     * Wraps a shaping engine object into a finalizable instance which is guaranteed to be disposed
+     * automatically by the GC when no longer in use. After calling this method,
      * <code>dispose()</code> should not be called on either original object or returned object.
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
@@ -57,8 +57,8 @@ public class ShapingEngine implements Disposable {
      * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
      * as a parameter.
      *
-     * @param shapingEngine The open type artist object to wrap into a finalizable instance.
-     * @return The finalizable instance of the passed-in open type artist object.
+     * @param shapingEngine The shaping engine object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in shaping engine object.
      */
     public static ShapingEngine finalizable(ShapingEngine shapingEngine) {
         if (shapingEngine.getClass() == ShapingEngine.class) {
@@ -73,10 +73,10 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Checks whether an open type artist object is finalizable or not.
+     * Checks whether a shaping engine object is finalizable or not.
      *
-     * @param shapingEngine The open type artist object to check.
-     * @return <code>true</code> if the passed-in open type artist object is finalizable,
+     * @param shapingEngine The shaping engine object to check.
+     * @return <code>true</code> if the passed-in shaping engine object is finalizable,
      *         <code>false</code> otherwise.
      */
     public static boolean isFinalizable(ShapingEngine shapingEngine) {
@@ -98,96 +98,102 @@ public class ShapingEngine implements Disposable {
     }
 
     private final Base base;
-    long nativeArtist;
+    long nativeEngine;
 
     /**
-     * Constructs an open type artist object.
+     * Constructs a shaping engine object.
      */
     public ShapingEngine() {
         base = new Base();
-        nativeArtist = nativeCreate();
+        nativeEngine = nativeCreate();
     }
 
     private ShapingEngine(ShapingEngine other) {
         this.base = other.base;
-        this.nativeArtist = other.nativeArtist;
+        this.nativeEngine = other.nativeEngine;
     }
 
-	private void ensureTypeface() {
-	    if (base.typeface == null) {
-            throw new IllegalStateException("Typeface has not been set");
-        }
-	}
-
     /**
-     * Returns this artist's current typeface.
+     * Returns the typeface which this shaping engine will use for shaping text.
      *
-     * @return This artist's current typeface.
+     * @return This current typeface.
      */
 	public Typeface getTypeface() {
 		return base.typeface;
 	}
 
     /**
-     * Sets this artist's typeface for text shaping.
+     * Sets the typeface which this shaping engine will use for shaping text.
      *
-     * @param typeface The typeface to use for text shaping.
+     * @param typeface The new typeface.
      */
 	public void setTypeface(Typeface typeface) {
         base.typeface = typeface;
-		nativeSetTypeface(nativeArtist, typeface);
+		nativeSetTypeface(nativeEngine, typeface);
 	}
 
+    /**
+     * Returns the type size which this shaping engine will use for shaping text.
+     *
+     * @return This current type size.
+     */
     public float getTypeSize() {
-        return nativeGetTypeSize(nativeArtist);
+        return nativeGetTypeSize(nativeEngine);
     }
 
+    /**
+     * Sets the type size which this shaping engine will use for shaping text.
+     *
+     * @param typeSize The new type size.
+     */
     public void setTypeSize(float typeSize) {
         if (typeSize < 0.0) {
             throw new IllegalArgumentException("The value of font size is negative");
         }
 
-        nativeSetTypeSize(nativeArtist, typeSize);
+        nativeSetTypeSize(nativeEngine, typeSize);
     }
 
     /**
-     * Returns this artist's current script tag.
+     * Returns the script tag which this shaping engine will use for shaping text.
      *
-     * @return This artist's current script tag.
+     * @return The current script tag.
      */
     public int getScriptTag() {
-		return nativeGetScriptTag(nativeArtist);
+		return nativeGetScriptTag(nativeEngine);
 	}
 
     /**
-     * Sets this artist's script tag for text shaping. The default value is <code>'DFLT'</code>.
+     * Sets the script tag which this shaping engine will use for shaping text. The default value is
+     * <code>'DFLT'</code>.
      * <p>
      * A tag can be created from string by using {@link SfntTag#make(String)} method.
      *
-     * @param scriptTag The script tag to use for text shaping.
+     * @param scriptTag The new script tag.
      */
 	public void setScriptTag(int scriptTag) {
-		nativeSetScriptTag(nativeArtist, scriptTag);
+		nativeSetScriptTag(nativeEngine, scriptTag);
 	}
 
     /**
-     * Returns this artist's current language tag.
+     * Returns the language tag which this shaping engine will use for shaping text.
      *
-     * @return This artist's current language tag.
+     * @return The current language tag.
      */
 	public int getLanguageTag() {
-		return nativeGetLanguageTag(nativeArtist);
+		return nativeGetLanguageTag(nativeEngine);
 	}
 
     /**
-     * Sets this artist's language tag for text shaping. The default value is <code>'dflt'</code>.
+     * Sets the language tag which this shaping engine will use for shaping text. The default value
+     * is <code>'dflt'</code>.
      * <p>
      * A tag can be created from string by using {@link SfntTag#make(String)} method.
      *
-     * @param languageTag The language tag to use for text shaping.
+     * @param languageTag The new language tag.
      */
 	public void setLanguageTag(int languageTag) {
-		nativeSetLanguageTag(nativeArtist, languageTag);
+		nativeSetLanguageTag(nativeEngine, languageTag);
 	}
 
     /**
@@ -196,7 +202,7 @@ public class ShapingEngine implements Disposable {
      * @return The current shaping order.
      */
 	public ShapingOrder getShapingOrder() {
-		return Convert.toJavaTextMode(nativeGetShapingOrder(nativeArtist));
+		return Convert.toJavaTextMode(nativeGetShapingOrder(nativeEngine));
 	}
 
     /**
@@ -211,7 +217,7 @@ public class ShapingEngine implements Disposable {
      * @param shapingOrder The new shaping order.
      */
 	public void setShapingOrder(ShapingOrder shapingOrder) {
-		nativeSetShapingOrder(nativeArtist, shapingOrder.value);
+		nativeSetShapingOrder(nativeEngine, shapingOrder.value);
 	}
 
     /**
@@ -220,7 +226,7 @@ public class ShapingEngine implements Disposable {
      * @return The current shaping direction.
      */
     public ShapingDirection getShapingDirection() {
-        return Convert.toJavaTextDirection(nativeGetShapingDirection(nativeArtist));
+        return Convert.toJavaTextDirection(nativeGetShapingDirection(nativeEngine));
     }
 
     /**
@@ -234,25 +240,29 @@ public class ShapingEngine implements Disposable {
      * @param shapingDirection The new shaping direction.
      */
     public void setShapingDirection(ShapingDirection shapingDirection) {
-        nativeSetShapingDirection(nativeArtist, shapingDirection.value);
+        nativeSetShapingDirection(nativeEngine, shapingDirection.value);
     }
 
     /**
      * Shapes the specified range of source text with appropriate shaping engine, filling the album
      * with shaping results. The <code>album</code> is cleared first, if not empty.
      * <p>
-     * The output glyphs in the album flow in logical text direction. For left-to-right direction,
-     * the position of pen is incremented with glyph's advance after rendering it. Similarly, for
-     * right-to-left direction, the position of pen is decremented with glyph's advance after
-     * rendering it.
+     * The output glyphs in the album flow in logical shaping direction. For left-to-right
+     * direction, the position of pen is incremented with glyph's advance after rendering it.
+     * Similarly, for right-to-left direction, the position of pen is decremented with glyph's
+     * advance after rendering it.
      *
-     * @param album The album that should be filled with shaping results.
+     * @param text The text to shape into glyphs.
+     * @param fromIndex
+     * @param toIndex
      *
-     * @throws IllegalStateException if either artist's current typeface is <code>null</code>, or
-     *         artist's current text is <code>null</code>.
+     * @throws IllegalStateException if current typeface is <code>null</code>.
      * @throws NullPointerException if <code>text</code> is <code>null</code>.
      */
     public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
+        if (base.typeface == null) {
+            throw new IllegalStateException("Typeface has not been set");
+        }
         if (text == null) {
             throw new NullPointerException("Text is null");
         }
@@ -269,14 +279,14 @@ public class ShapingEngine implements Disposable {
         }
 
         ShapingResult result = new ShapingResult();
-        nativeShapeText(nativeArtist, result.nativeAlbum, text, fromIndex, toIndex);
+        nativeShapeText(nativeEngine, result.nativeResult, text, fromIndex, toIndex);
 
         return result;
     }
 
 	@Override
 	public void dispose() {
-        nativeDispose(nativeArtist);
+        nativeDispose(nativeEngine);
     }
 
     @Override
@@ -292,24 +302,24 @@ public class ShapingEngine implements Disposable {
     private static native int nativeGetScriptDefaultDirection(int scriptTag);
 
 	private static native long nativeCreate();
-	private static native void nativeDispose(long nativeArtist);
+	private static native void nativeDispose(long nativeEngine);
 
-	private static native void nativeSetTypeface(long nativeArtist, Typeface typeface);
+	private static native void nativeSetTypeface(long nativeEngine, Typeface typeface);
 
-    private static native float nativeGetTypeSize(long nativeArtist);
-    private static native void nativeSetTypeSize(long nativeArtist, float fontSize);
+    private static native float nativeGetTypeSize(long nativeEngine);
+    private static native void nativeSetTypeSize(long nativeEngine, float fontSize);
 
-    private static native int nativeGetScriptTag(long nativeArtist);
-	private static native void nativeSetScriptTag(long nativeArtist, int scriptTag);
+    private static native int nativeGetScriptTag(long nativeEngine);
+	private static native void nativeSetScriptTag(long nativeEngine, int scriptTag);
 
-    private static native int nativeGetLanguageTag(long nativeArtist);
-    private static native void nativeSetLanguageTag(long nativeArtist, int languageTag);
+    private static native int nativeGetLanguageTag(long nativeEngine);
+    private static native void nativeSetLanguageTag(long nativeEngine, int languageTag);
 
-    private static native int nativeGetShapingOrder(long nativeArtist);
-    private static native void nativeSetShapingOrder(long nativeArtist, int shapingOrder);
+    private static native int nativeGetShapingOrder(long nativeEngine);
+    private static native void nativeSetShapingOrder(long nativeEngine, int shapingOrder);
 
-    private static native int nativeGetShapingDirection(long nativeArtist);
-	private static native void nativeSetShapingDirection(long nativeArtist, int shapingDirection);
+    private static native int nativeGetShapingDirection(long nativeEngine);
+	private static native void nativeSetShapingDirection(long nativeEngine, int shapingDirection);
 
-	private static native void nativeShapeText(long nativeArtist, long nativeAlbum, String text, int fromIndex, int toIndex);
+	private static native void nativeShapeText(long nativeEngine, long nativeAlbum, String text, int fromIndex, int toIndex);
 }

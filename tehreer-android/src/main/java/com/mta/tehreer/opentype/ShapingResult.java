@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ public class ShapingResult implements Disposable {
     }
 
     /**
-     * Wraps an open type album object into a finalizable instance which is guaranteed to be
+     * Wraps a shaping result object into a finalizable instance which is guaranteed to be
      * disposed automatically by the GC when no longer in use. After calling this method,
      * <code>dispose()</code> should not be called on either original object or returned object.
      * Calling <code>dispose()</code> on returned object will throw an
@@ -65,8 +65,8 @@ public class ShapingResult implements Disposable {
      * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
      * as a parameter.
      *
-     * @param shapingResult The open type album object to wrap into a finalizable instance.
-     * @return The finalizable instance of the passed-in open type album object.
+     * @param shapingResult The shaping result object to wrap into a finalizable instance.
+     * @return The finalizable instance of the passed-in shaping result object.
      */
     public static ShapingResult finalizable(ShapingResult shapingResult) {
         if (shapingResult.getClass() == ShapingResult.class) {
@@ -81,115 +81,117 @@ public class ShapingResult implements Disposable {
     }
 
     /**
-     * Checks whether an open type album object is finalizable or not.
+     * Checks whether a shaping result object is finalizable or not.
      *
-     * @param shapingResult The open type album object to check.
-     * @return <code>true</code> if the passed-in open type album object is finalizable,
+     * @param shapingResult The shaping result object to check.
+     * @return <code>true</code> if the passed-in shaping result object is finalizable,
      *         <code>false</code> otherwise.
      */
     public static boolean isFinalizable(ShapingResult shapingResult) {
         return (shapingResult.getClass() == Finalizable.class);
     }
 
-	long nativeAlbum;
+	long nativeResult;
 
     /**
-     * Constructs an open type album object.
+     * Constructs a shaping result object.
      */
 	ShapingResult() {
-	    nativeAlbum = nativeCreate();
+	    nativeResult = nativeCreate();
 	}
 
     private ShapingResult(ShapingResult other) {
-        this.nativeAlbum = other.nativeAlbum;
+        this.nativeResult = other.nativeResult;
     }
 
     /**
-     * Returns <code>true</code> if the text flows backward for this album.
+     * Returns <code>true</code> if the text flows backward for this <code>ShapingResult</code>
+     * object.
      *
-     * @return <code>true</code> if the text flows backward for this album, <code>false</code>
-     *         otherwise.
+     * @return <code>true</code> if the text flows backward, <code>false</code> otherwise.
      */
 	public boolean isBackward() {
-	    return nativeIsBackward(nativeAlbum);
+	    return nativeIsBackward(nativeResult);
 	}
 
     /**
-     * Returns the index to the first character of this album in source text.
+     * Returns the index to the first character in source text for this <code>ShapingResult</code>
+     * object.
      *
-     * @return The index to the first character of this album in source text.
+     * @return The index to the first character in source text.
      */
 	public int getCharStart() {
-        return nativeGetCharStart(nativeAlbum);
+        return nativeGetCharStart(nativeResult);
     }
 
     /**
-     * Returns the index after the last character of this album in source text.
+     * Returns the index after the last character in source text for this <code>ShapingResult</code>
+     * object.
      *
-     * @return The index after the last character of this album in source text.
+     * @return The index after the last character in source text.
      */
     public int getCharEnd() {
-        return nativeGetCharEnd(nativeAlbum);
+        return nativeGetCharEnd(nativeResult);
     }
 
     /**
-     * Returns the number of glyphs in this album.
+     * Returns the number of glyphs in this <code>ShapingResult</code> object.
      *
-     * @return The number of glyphs in this album.
+     * @return The number of glyphs in this <code>ShapingResult</code> object.
      */
 	public int getGlyphCount() {
-		return nativeGetGlyphCount(nativeAlbum);
+		return nativeGetGlyphCount(nativeResult);
 	}
 
     /**
-     * Returns a list of glyph codes in this album.
+     * Returns a list of glyph IDs in this <code>ShapingResult</code> object.
      *
-     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
-     * is disposed.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the
+     * <code>ShapingResult</code> object is disposed.
      *
-     * @return A list of glyph codes in this album.
+     * @return A list of glyph IDs.
      */
-    public IntList getGlyphCodes() {
-        return new RawUInt16Values(nativeGetGlyphCodesPtr(nativeAlbum),
-                                   nativeGetGlyphCount(nativeAlbum));
+    public IntList getGlyphIds() {
+        return new RawUInt16Values(nativeGetGlyphIdsPtr(nativeResult),
+                                   nativeGetGlyphCount(nativeResult));
     }
 
     /**
-     * Returns a list of glyph offsets in this album.
+     * Returns a list of glyph offsets in this <code>ShapingResult</code> object.
      *
-     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
-     * is disposed.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the
+     * <code>ShapingResult</code> object is disposed.
      *
-     * @return A list of glyph offsets in this album.
+     * @return A list of glyph offsets.
      */
     public PointList getGlyphOffsets() {
-        return new RawInt32Points(nativeGetGlyphOffsetsPtr(nativeAlbum),
-                                  nativeGetGlyphCount(nativeAlbum),
-                                  nativeGetSizeByEm(nativeAlbum));
+        return new RawInt32Points(nativeGetGlyphOffsetsPtr(nativeResult),
+                                  nativeGetGlyphCount(nativeResult),
+                                  nativeGetSizeByEm(nativeResult));
     }
 
     /**
-     * Returns a list of glyph advances in this album.
+     * Returns a list of glyph advances in this <code>ShapingResult</code> object.
      *
-     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the album object
-     * is disposed.
+     * <strong>Note:</strong> The returned list might exhibit undefined behavior if the
+     * <code>ShapingResult</code> object is disposed.
      *
-     * @return A list of glyph advances in this album.
+     * @return A list of glyph advances.
      */
     public FloatList getGlyphAdvances() {
-        return new RawInt32Floats(nativeGetGlyphAdvancesPtr(nativeAlbum),
-                                  nativeGetGlyphCount(nativeAlbum),
-                                  nativeGetSizeByEm(nativeAlbum));
+        return new RawInt32Floats(nativeGetGlyphAdvancesPtr(nativeResult),
+                                  nativeGetGlyphCount(nativeResult),
+                                  nativeGetSizeByEm(nativeResult));
     }
 
     public IntList getCharToGlyphMap() {
-        return new RawSizeValues(nativeGetCharToGlyphMapPtr(nativeAlbum),
-                                 nativeGetCharCount(nativeAlbum));
+        return new RawSizeValues(nativeGetCharToGlyphMapPtr(nativeResult),
+                                 nativeGetCharCount(nativeResult));
     }
 
 	@Override
 	public void dispose() {
-        nativeDispose(nativeAlbum);
+        nativeDispose(nativeResult);
     }
 
     @Override
@@ -198,7 +200,7 @@ public class ShapingResult implements Disposable {
                 + ", charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", glyphCount=" + getGlyphCount()
-                + ", glyphCodes=" + getGlyphCodes().toString()
+                + ", glyphIds=" + getGlyphIds().toString()
                 + ", glyphOffsets=" + getGlyphOffsets().toString()
                 + ", glyphAdvances=" + getGlyphAdvances().toString()
                 + ", charToGlyphMap=" + getCharToGlyphMap().toString()
@@ -206,17 +208,17 @@ public class ShapingResult implements Disposable {
     }
 
 	private static native long nativeCreate();
-	private static native void nativeDispose(long nativeAlbum);
+	private static native void nativeDispose(long nativeResult);
 
-	private static native boolean nativeIsBackward(long nativeAlbum);
-    private static native float nativeGetSizeByEm(long nativeAlbum);
-	private static native int nativeGetCharStart(long nativeAlbum);
-	private static native int nativeGetCharEnd(long nativeAlbum);
-    private static native int nativeGetCharCount(long nativeAlbum);
-	private static native int nativeGetGlyphCount(long nativeAlbum);
+	private static native boolean nativeIsBackward(long nativeResult);
+    private static native float nativeGetSizeByEm(long nativeResult);
+	private static native int nativeGetCharStart(long nativeResult);
+	private static native int nativeGetCharEnd(long nativeResult);
+    private static native int nativeGetCharCount(long nativeResult);
+	private static native int nativeGetGlyphCount(long nativeResult);
 
-    private static native long nativeGetGlyphCodesPtr(long nativeAlbum);
-    private static native long nativeGetGlyphOffsetsPtr(long nativeAlbum);
-    private static native long nativeGetGlyphAdvancesPtr(long nativeAlbum);
-    private static native long nativeGetCharToGlyphMapPtr(long nativeAlbum);
+    private static native long nativeGetGlyphIdsPtr(long nativeResult);
+    private static native long nativeGetGlyphOffsetsPtr(long nativeResult);
+    private static native long nativeGetGlyphAdvancesPtr(long nativeResult);
+    private static native long nativeGetCharToGlyphMapPtr(long nativeResult);
 }
