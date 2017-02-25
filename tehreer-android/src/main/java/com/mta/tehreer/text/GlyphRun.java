@@ -17,7 +17,8 @@
 package com.mta.tehreer.text;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.opentype.OpenTypeAlbum;
+import com.mta.tehreer.opentype.ShapingDirection;
+import com.mta.tehreer.opentype.ShapingResult;
 
 class GlyphRun {
 
@@ -28,12 +29,12 @@ class GlyphRun {
     final boolean isBackward;
     final int charStart;
     final int charEnd;
-    final int[] glyphCodes;
+    final int[] glyphIds;
     final float[] glyphOffsets;
     final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
-    GlyphRun(OpenTypeAlbum album, Typeface typeface, float fontSize, byte bidiLevel) {
+    GlyphRun(ShapingResult album, Typeface typeface, float fontSize, byte bidiLevel) {
         float sizeByEm = fontSize / typeface.getUnitsPerEm();
 
         this.typeface = typeface;
@@ -43,20 +44,20 @@ class GlyphRun {
         this.isBackward = album.isBackward();
         this.charStart = album.getCharStart();
         this.charEnd = album.getCharEnd();
-        this.glyphCodes = album.getGlyphCodes().toArray();
+        this.glyphIds = album.getGlyphIds().toArray();
         this.glyphOffsets = album.getGlyphOffsets().toArray();
         this.glyphAdvances = album.getGlyphAdvances().toArray();
         this.charToGlyphMap = album.getCharToGlyphMap().toArray();
     }
 
-    TextDirection textDirection() {
+    ShapingDirection textDirection() {
         return (((bidiLevel & 1) ^ (isBackward ? 1 : 0)) == 0
-                ? TextDirection.LEFT_TO_RIGHT
-                : TextDirection.RIGHT_TO_LEFT);
+                ? ShapingDirection.LEFT_TO_RIGHT
+                : ShapingDirection.RIGHT_TO_LEFT);
     }
 
     int glyphCount() {
-        return glyphCodes.length;
+        return glyphIds.length;
     }
 
     int charGlyphStart(int charIndex) {
@@ -89,6 +90,10 @@ class GlyphRun {
 
     float descent() {
         return typeface.getDescent() * sizeByEm;
+    }
+
+    float leading() {
+        return typeface.getLeading() * sizeByEm;
     }
 
     float measureGlyphs(int glyphStart, int glyphEnd) {

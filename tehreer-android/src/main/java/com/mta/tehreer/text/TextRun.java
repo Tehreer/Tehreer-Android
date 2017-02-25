@@ -117,12 +117,12 @@ public class TextRun {
     }
 
     /**
-     * Returns the list of glyph codes in this album.
+     * Returns the list of glyph IDs in this album.
      *
-     * @return The list of glyph codes in this album.
+     * @return The list of glyph IDs in this album.
      */
-    public IntList getGlyphCodes() {
-        return new SafeIntList(mGlyphRun.glyphCodes, mGlyphOffset, mGlyphCount);
+    public IntList getGlyphIds() {
+        return new SafeIntList(mGlyphRun.glyphIds, mGlyphOffset, mGlyphCount);
     }
 
     /**
@@ -225,6 +225,10 @@ public class TextRun {
         return mGlyphRun.descent();
     }
 
+    public float getLeading() {
+        return mGlyphRun.leading();
+    }
+
     /**
      * Calculates the advance width for the given glyph range in this run.
      *
@@ -270,7 +274,7 @@ public class TextRun {
 	    renderer.setTypeface(mGlyphRun.typeface);
 	    renderer.setTypeSize(mGlyphRun.fontSize);
 
-        return renderer.computeBoundingBox(getGlyphCodes().subList(glyphStart, glyphEnd),
+        return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
                                            getGlyphOffsets().subList(glyphStart, glyphEnd),
                                            getGlyphAdvances().subList(glyphStart, glyphEnd));
 	}
@@ -307,7 +311,7 @@ public class TextRun {
         renderer.setFlowDirection(mGlyphRun.textDirection());
 
 	    renderer.drawGlyphs(canvas,
-                            getGlyphCodes().subList(glyphStart, glyphEnd),
+                            getGlyphIds().subList(glyphStart, glyphEnd),
                             getGlyphOffsets().subList(glyphStart, glyphEnd),
                             getGlyphAdvances().subList(glyphStart, glyphEnd));
 	}
@@ -317,7 +321,7 @@ public class TextRun {
         return "TextRun{charStart=" + mCharStart
                 + ", charEnd=" + mCharEnd
                 + ", glyphCount=" + mGlyphCount
-                + ", glyphCodes=" + getGlyphCodes().toString()
+                + ", glyphIds=" + getGlyphIds().toString()
                 + ", glyphOffsets=" + getGlyphOffsets().toString()
                 + ", glyphAdvances=" + getGlyphAdvances().toString()
                 + ", originX=" + mOriginX
