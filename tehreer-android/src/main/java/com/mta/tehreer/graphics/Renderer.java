@@ -116,8 +116,9 @@ public class Renderer {
     private boolean mShouldRender;
     private boolean mShadowLayerSynced;
 
-    private Style mStyle;
     private int mFillColor;
+    private Style mStyle;
+    private WritingDirection mWritingDirection;
     private Typeface mTypeface;
     private float mTypeSize;
     private float mSlantAngle;
@@ -144,8 +145,9 @@ public class Renderer {
         mShadowDy = 0.0f;
         mShadowColor = Color.TRANSPARENT;
 
-        setStyle(Style.FILL);
         setFillColor(Color.BLACK);
+        setStyle(Style.FILL);
+        setWritingDirection(WritingDirection.LEFT_TO_RIGHT);
         setTypeSize(16.0f);
         setSlantAngle(0.0f);
         setScaleX(1.0f);
@@ -179,6 +181,26 @@ public class Renderer {
     }
 
     /**
+     * Returns this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @return The text color of this renderer expressed as ARGB integer.
+     */
+    public int getFillColor() {
+        return mFillColor;
+    }
+
+    /**
+     * Sets this renderer's text color, used for filling glyphs. The default value is
+     * <code>Color.BLACK</code>.
+     *
+     * @param textColor The 32-bit value of color expressed as ARGB.
+     */
+    public void setFillColor(int textColor) {
+        mFillColor = textColor;
+    }
+
+    /**
      * Returns this renderer's style, used for controlling how glyphs should appear while drawing.
      * The default value is {@link Style#FILL}.
      *
@@ -205,23 +227,27 @@ public class Renderer {
     }
 
     /**
-     * Returns this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
+     * Returns the direction in which the pen will advance after drawing a glyph. The default value
+     * is {@link WritingDirection#LEFT_TO_RIGHT}.
      *
-     * @return The text color of this renderer expressed as ARGB integer.
+     * @return The current writing direction.
      */
-    public int getFillColor() {
-        return mFillColor;
+    public WritingDirection getWritingDirection() {
+        return mWritingDirection;
     }
 
     /**
-     * Sets this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
+     * Sets the direction in which the pen will advance after drawing a glyph. The default value is
+     * {@link WritingDirection#LEFT_TO_RIGHT}.
      *
-     * @param textColor The 32-bit value of color expressed as ARGB.
+     * @param writingDirection The new writing direction.
      */
-    public void setFillColor(int textColor) {
-        mFillColor = textColor;
+    public void setWritingDirection(WritingDirection writingDirection) {
+        if (writingDirection == null) {
+            throw new NullPointerException("Writing direction is null");
+        }
+
+        mWritingDirection = writingDirection;
     }
 
     /**
@@ -637,11 +663,11 @@ public class Renderer {
         return cumulativeBBox;
     }
 
-    private void drawGlyphs(Canvas canvas, WritingDirection direction,
+    private void drawGlyphs(Canvas canvas,
                             IntList glyphIds, PointList offsets, FloatList advances,
                             boolean strokeMode) {
         GlyphCache cache = GlyphCache.getInstance();
-        boolean reverseMode = (direction == WritingDirection.RIGHT_TO_LEFT);
+        boolean reverseMode = (mWritingDirection == WritingDirection.RIGHT_TO_LEFT);
         float penX = 0.0f;
 
         int size = glyphIds.size();
@@ -675,12 +701,11 @@ public class Renderer {
      * the canvas is hardware accelerated.
      *
      * @param canvas The canvas onto which to draw the glyphs.
-     * @param direction The direction in which the glyphs are laid out.
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
      */
-    public void drawGlyphs(Canvas canvas, WritingDirection direction,
+    public void drawGlyphs(Canvas canvas,
                            IntList glyphIds, PointList offsets, FloatList advances) {
         if (mShouldRender) {
             syncShadowLayer();
@@ -691,12 +716,12 @@ public class Renderer {
 
             if (mStyle == Style.FILL || mStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mFillColor);
-                drawGlyphs(canvas, direction, glyphIds, offsets, advances, false);
+                drawGlyphs(canvas, glyphIds, offsets, advances, false);
             }
 
             if (mStyle == Style.STROKE || mStyle == Style.FILL_STROKE) {
                 mPaint.setColor(mStrokeColor);
-                drawGlyphs(canvas, direction, glyphIds, offsets, advances, true);
+                drawGlyphs(canvas, glyphIds, offsets, advances, true);
             }
         }
     }
