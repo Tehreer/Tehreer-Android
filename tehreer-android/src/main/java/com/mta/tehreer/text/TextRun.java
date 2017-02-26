@@ -235,18 +235,24 @@ public class TextRun {
         return mGlyphRun.descent();
     }
 
+    /**
+     * Returns the leading of this run. The leading is the distance that should be placed between
+     * two lines.
+     *
+     * @return The leading of this run.
+     */
     public float getLeading() {
         return mGlyphRun.leading();
     }
 
     /**
-     * Calculates the advance width for the given glyph range in this run.
+     * Returns the advance width for the given glyph range in this run.
      *
      * @param glyphStart The index to first glyph being measured.
      * @param glyphEnd The index after the last glyph being measured.
      * @return The advance width for the given glyph range in this run.
      */
-    public float computeWidth(int glyphStart, int glyphEnd) {
+    public float getWidth(int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
         float[] advances = mGlyphRun.glyphAdvances;
@@ -339,6 +345,7 @@ public class TextRun {
                 + ", originY=" + mOriginY
                 + ", ascent=" + getAscent()
                 + ", descent=" + getDescent()
+                + ", leading=" + getLeading()
                 + "}";
     }
 }
