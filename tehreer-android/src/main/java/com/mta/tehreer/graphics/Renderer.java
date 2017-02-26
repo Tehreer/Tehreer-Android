@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,75 +37,6 @@ public class Renderer {
 
     private static final String TAG = Renderer.class.getSimpleName();
 
-    /**
-     * Specifies the treatment for the beginning and ending of stroked lines and paths.
-     */
-    public enum Cap {
-        /**
-         * The stroke ends with the path, and does not project beyond it.
-         */
-        BUTT(GlyphRasterizer.LINECAP_BUTT),
-        /**
-         * The stroke projects out as a semicircle, with the center at the end of the path.
-         */
-        ROUND(GlyphRasterizer.LINECAP_ROUND),
-        /**
-         * The stroke projects out as a square, with the center at the end of the path.
-         */
-        SQUARE(GlyphRasterizer.LINECAP_SQUARE);
-
-        private final int value;
-
-        Cap(int value) {
-            this.value = value;
-        }
-    }
-
-    /**
-     * Specifies the treatment where lines and curve segments join on a stroked path.
-     */
-    public enum Join {
-        /**
-         * The outer edges of a join meet with a straight line.
-         */
-        BEVEL(GlyphRasterizer.LINEJOIN_BEVEL),
-        /**
-         * The outer edges of a join meet at a sharp angle.
-         */
-        MITER(GlyphRasterizer.LINEJOIN_MITER),
-        /**
-         * The outer edges of a join meet in a circular arc.
-         */
-        ROUND(GlyphRasterizer.LINEJOIN_ROUND);
-
-        private final int value;
-
-        Join(int value) {
-            this.value = value;
-        }
-    }
-
-    /**
-     * Specifies if the primitive being drawn is filled, stroked, or both.
-     */
-    public enum Style {
-        /**
-         * Glyphs drawn with this style will be filled, ignoring all stroke-related settings in the
-         * renderer.
-         */
-        FILL,
-        /**
-         * Glyphs drawn with this style will be both filled and stroked at the same time, respecting
-         * the stroke-related settings in the renderer.
-         */
-        FILL_STROKE,
-        /**
-         * Glyphs drawn with this style will be stroked, respecting the stroke-related settings in
-         * the renderer.
-         */
-        STROKE,
-    }
-
     private GlyphStrike mGlyphStrike;
     private int mGlyphLineRadius;
     private int mGlyphLineCap;
@@ -117,7 +48,7 @@ public class Renderer {
     private boolean mShadowLayerSynced;
 
     private int mFillColor;
-    private Style mStyle;
+    private RenderingStyle mRenderingStyle;
     private WritingDirection mWritingDirection;
     private Typeface mTypeface;
     private float mTypeSize;
@@ -126,8 +57,8 @@ public class Renderer {
     private float mScaleY;
     private int mStrokeColor;
     private float mStrokeWidth;
-    private Cap mStrokeCap;
-    private Join mStrokeJoin;
+    private StrokeCap mStrokeCap;
+    private StrokeJoin mStrokeJoin;
     private float mStrokeMiter;
     private float mShadowRadius;
     private float mShadowDx;
@@ -146,7 +77,7 @@ public class Renderer {
         mShadowColor = Color.TRANSPARENT;
 
         setFillColor(Color.BLACK);
-        setStyle(Style.FILL);
+        setRenderingStyle(RenderingStyle.FILL);
         setWritingDirection(WritingDirection.LEFT_TO_RIGHT);
         setTypeSize(16.0f);
         setSlantAngle(0.0f);
@@ -154,8 +85,8 @@ public class Renderer {
         setScaleY(1.0f);
         setStrokeColor(Color.BLACK);
         setStrokeWidth(1.0f);
-        setStrokeCap(Cap.BUTT);
-        setStrokeJoin(Join.ROUND);
+        setStrokeCap(StrokeCap.BUTT);
+        setStrokeJoin(StrokeJoin.ROUND);
         setStrokeMiter(1.0f);
     }
 
@@ -202,28 +133,28 @@ public class Renderer {
 
     /**
      * Returns this renderer's style, used for controlling how glyphs should appear while drawing.
-     * The default value is {@link Style#FILL}.
+     * The default value is {@link RenderingStyle#FILL}.
      *
      * @return The style setting of this renderer.
      */
-    public Style getStyle() {
-        return mStyle;
+    public RenderingStyle getRenderingStyle() {
+        return mRenderingStyle;
     }
 
     /**
      * Sets this renderer's style, used for controlling how glyphs should appear while drawing. The
-     * default value is {@link Style#FILL}.
+     * default value is {@link RenderingStyle#FILL}.
      *
-     * @param renderingStyle The new style to set in the renderer.
+     * @param renderingStyle The new style setting for the renderer.
      *
      * @throws NullPointerException if <code>renderingStyle</code> is null.
      */
-    public void setStyle(Style renderingStyle) {
+    public void setRenderingStyle(RenderingStyle renderingStyle) {
         if (renderingStyle == null) {
             throw new NullPointerException("Rendering style is null");
         }
 
-        mStyle = renderingStyle;
+        mRenderingStyle = renderingStyle;
     }
 
     /**
@@ -407,23 +338,23 @@ public class Renderer {
 
     /**
      * Returns this renderer's cap, controlling how the start and end of stroked lines and paths are
-     * treated. The default value is {@link Cap#BUTT}.
+     * treated. The default value is {@link StrokeCap#BUTT}.
      *
      * @return The stroke cap style of this renderer.
      */
-    public Cap getStrokeCap() {
+    public StrokeCap getStrokeCap() {
         return mStrokeCap;
     }
 
     /**
      * Sets this renderer's cap, controlling how the start and end of stroked lines and paths are
-     * treated. The default value is {@link Cap#BUTT}.
+     * treated. The default value is {@link StrokeCap#BUTT}.
      *
      * @param strokeCap The new stroke cap style.
      *
      * @throws NullPointerException if <code>strokeCap</code> is null.
      */
-    public void setStrokeCap(Cap strokeCap) {
+    public void setStrokeCap(StrokeCap strokeCap) {
         if (strokeCap == null) {
             throw new NullPointerException("Stroke cap is null");
         }
@@ -433,22 +364,22 @@ public class Renderer {
     }
 
     /**
-     * Returns this renderer's stroke join type. The default value is {@link Join#ROUND}.
+     * Returns this renderer's stroke join type. The default value is {@link StrokeJoin#ROUND}.
      *
      * @return The stroke join type of this renderer.
      */
-    public Join getStrokeJoin() {
+    public StrokeJoin getStrokeJoin() {
         return mStrokeJoin;
     }
 
     /**
-     * Sets this renderer's stroke join type. The default value is {@link Join#ROUND}.
+     * Sets this renderer's stroke join type. The default value is {@link StrokeJoin#ROUND}.
      *
      * @param strokeJoin The new stroke join type.
      *
      * @throws NullPointerException if <code>strokeJoin</code> is null.
      */
-    public void setStrokeJoin(Join strokeJoin) {
+    public void setStrokeJoin(StrokeJoin strokeJoin) {
         if (strokeJoin == null) {
             throw new NullPointerException("Stroke join is null");
         }
@@ -714,12 +645,12 @@ public class Renderer {
                 Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered");
             }
 
-            if (mStyle == Style.FILL || mStyle == Style.FILL_STROKE) {
+            if (mRenderingStyle == RenderingStyle.FILL || mRenderingStyle == RenderingStyle.FILL_STROKE) {
                 mPaint.setColor(mFillColor);
                 drawGlyphs(canvas, glyphIds, offsets, advances, false);
             }
 
-            if (mStyle == Style.STROKE || mStyle == Style.FILL_STROKE) {
+            if (mRenderingStyle == RenderingStyle.STROKE || mRenderingStyle == RenderingStyle.FILL_STROKE) {
                 mPaint.setColor(mStrokeColor);
                 drawGlyphs(canvas, glyphIds, offsets, advances, true);
             }
