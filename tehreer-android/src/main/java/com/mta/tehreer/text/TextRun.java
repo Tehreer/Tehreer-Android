@@ -108,6 +108,11 @@ public class TextRun {
         return mGlyphRun.bidiLevel;
     }
 
+    /**
+     * Returns the writing direction of this run.
+     *
+     * @return The writing direction of this run.
+     */
     public WritingDirection getWritingDirection() {
         return mGlyphRun.writingDirection();
     }
@@ -314,7 +319,7 @@ public class TextRun {
 	    renderer.setTypeface(mGlyphRun.typeface);
         renderer.setTypeSize(mGlyphRun.fontSize);
 
-	    renderer.drawGlyphs(canvas, getWritingDirection(),
+	    renderer.drawGlyphs(canvas,
                             getGlyphIds().subList(glyphStart, glyphEnd),
                             getGlyphOffsets().subList(glyphStart, glyphEnd),
                             getGlyphAdvances().subList(glyphStart, glyphEnd));
