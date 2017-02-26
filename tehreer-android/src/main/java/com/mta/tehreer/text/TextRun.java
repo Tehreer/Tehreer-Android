@@ -283,6 +283,7 @@ public class TextRun {
 
 	    renderer.setTypeface(mGlyphRun.typeface);
 	    renderer.setTypeSize(mGlyphRun.fontSize);
+        renderer.setWritingDirection(mGlyphRun.writingDirection());
 
         return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
                                            getGlyphOffsets().subList(glyphStart, glyphEnd),
@@ -318,6 +319,7 @@ public class TextRun {
 
 	    renderer.setTypeface(mGlyphRun.typeface);
         renderer.setTypeSize(mGlyphRun.fontSize);
+        renderer.setWritingDirection(mGlyphRun.writingDirection());
 
 	    renderer.drawGlyphs(canvas,
                             getGlyphIds().subList(glyphStart, glyphEnd),
