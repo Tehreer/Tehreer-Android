@@ -37,6 +37,7 @@ public class TextLine {
     private float mOriginY;
     private float mAscent;
     private float mDescent;
+    private float mLeading;
     private float mWidth;
     private float mTrailingWhitespaceWidth;
 	private List<TextRun> mRunList;
@@ -54,22 +55,24 @@ public class TextLine {
 
             float runAscent = textRun.getAscent();
             float runDescent = textRun.getDescent();
+            float runLeading = textRun.getLeading();
 
             int runCharStart = textRun.getCharStart();
             int runCharEnd = textRun.getCharEnd();
             int runGlyphCount = textRun.getGlyphCount();
-            float runWidth = textRun.computeWidth(0, runGlyphCount);
+            float runWidth = textRun.getWidth(0, runGlyphCount);
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
                 int whitespaceGlyphStart = textRun.getCharGlyphStart(trailingWhitespaceStart);
                 int whitespaceGlyphEnd = textRun.getCharGlyphEnd(runCharEnd - 1);
-                float whitespaceWidth = textRun.computeWidth(whitespaceGlyphStart, whitespaceGlyphEnd);
+                float whitespaceWidth = textRun.getWidth(whitespaceGlyphStart, whitespaceGlyphEnd);
 
                 mTrailingWhitespaceWidth += whitespaceWidth;
             }
 
             mAscent = Math.max(mAscent, runAscent);
             mDescent = Math.max(mDescent, runDescent);
+            mLeading = Math.max(mLeading, runLeading);
             mWidth += runWidth;
         }
 	}
@@ -136,6 +139,16 @@ public class TextLine {
      */
     public float getDescent() {
         return mDescent;
+    }
+
+    /**
+     * Returns the leading of this line which is the maximum leading from the baseline of all the
+     * runs in the <code>TextLine</code>.
+     *
+     * @return The leading of this line.
+     */
+    public float getLeading() {
+        return mLeading;
     }
 
     /**
@@ -213,6 +226,7 @@ public class TextLine {
                 + ", originY=" + mOriginY
                 + ", ascent=" + mAscent
                 + ", descent=" + mDescent
+                + ", leading=" + mLeading
                 + ", width=" + mWidth
                 + ", trailingWhitespaceWidth=" + mTrailingWhitespaceWidth
                 + ", runs=" + Description.forIterable(mRunList)
