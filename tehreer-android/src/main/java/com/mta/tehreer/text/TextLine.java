@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ public class TextLine {
     private float mAscent;
     private float mDescent;
     private float mLeading;
-    private float mWidth;
-    private float mTrailingWhitespaceWidth;
+    private float mExtent;
+    private float mTrailingWhitespaceExtent;
 	private List<TextRun> mRunList;
 
 	TextLine(String text, int charStart, int charEnd, List<TextRun> runList, byte paragraphLevel) {
@@ -51,7 +51,7 @@ public class TextLine {
         int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
 
         for (TextRun textRun : runList) {
-            textRun.setOriginX(mWidth);
+            textRun.setOriginX(mExtent);
 
             float runAscent = textRun.getAscent();
             float runDescent = textRun.getDescent();
@@ -60,20 +60,20 @@ public class TextLine {
             int runCharStart = textRun.getCharStart();
             int runCharEnd = textRun.getCharEnd();
             int runGlyphCount = textRun.getGlyphCount();
-            float runWidth = textRun.getWidth(0, runGlyphCount);
+            float runWidth = textRun.getExtent(0, runGlyphCount);
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
                 int whitespaceGlyphStart = textRun.getCharGlyphStart(trailingWhitespaceStart);
                 int whitespaceGlyphEnd = textRun.getCharGlyphEnd(runCharEnd - 1);
-                float whitespaceWidth = textRun.getWidth(whitespaceGlyphStart, whitespaceGlyphEnd);
+                float whitespaceWidth = textRun.getExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
 
-                mTrailingWhitespaceWidth += whitespaceWidth;
+                mTrailingWhitespaceExtent += whitespaceWidth;
             }
 
             mAscent = Math.max(mAscent, runAscent);
             mDescent = Math.max(mDescent, runDescent);
             mLeading = Math.max(mLeading, runLeading);
-            mWidth += runWidth;
+            mExtent += runWidth;
         }
 	}
 
@@ -152,23 +152,23 @@ public class TextLine {
     }
 
     /**
-     * Returns the advance width of all glyphs in this line.
+     * Returns the typographic extent of all glyphs in this line.
      *
-     * @return The advance width of all glyphs in this line.
+     * @return The extent of all glyphs in this line.
      */
-    public float getWidth() {
-        return mWidth;
+    public float getExtent() {
+        return mExtent;
     }
 
     /**
-     * Returns the advance width of the glyphs corresponding to trailing whitespace characters of
-     * this line in source text.
+     * Returns the typographic extent for the glyphs corresponding to the trailing whitespace
+     * characters of this line in source text.
      *
-     * @return The advance width of the glyphs corresponding to trailing whitespace characters of
-     *         this line in source text.
+     * @return The typographic extent for the glyphs corresponding to the trailing whitespace
+     *         characters of this line in source text.
      */
-    public float getTrailingWhitespaceWidth() {
-        return mTrailingWhitespaceWidth;
+    public float getTrailingWhitespaceExtent() {
+        return mTrailingWhitespaceExtent;
     }
 
     /**
@@ -191,9 +191,9 @@ public class TextLine {
      * @return A value which can be used to offset the current pen position for the flush operation.
      */
     public float getFlushPenOffset(float flushFactor, float flushWidth) {
-        float penOffset = (flushWidth - (mWidth - mTrailingWhitespaceWidth)) * flushFactor;
+        float penOffset = (flushWidth - (mExtent - mTrailingWhitespaceExtent)) * flushFactor;
         if ((mParagraphLevel & 1) == 1) {
-            penOffset -= mTrailingWhitespaceWidth;
+            penOffset -= mTrailingWhitespaceExtent;
         }
 
         return penOffset;
@@ -227,8 +227,8 @@ public class TextLine {
                 + ", ascent=" + mAscent
                 + ", descent=" + mDescent
                 + ", leading=" + mLeading
-                + ", width=" + mWidth
-                + ", trailingWhitespaceWidth=" + mTrailingWhitespaceWidth
+                + ", width=" + mExtent
+                + ", trailingWhitespaceWidth=" + mTrailingWhitespaceExtent
                 + ", runs=" + Description.forIterable(mRunList)
                 + "}";
     }

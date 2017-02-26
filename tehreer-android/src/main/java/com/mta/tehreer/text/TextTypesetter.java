@@ -663,7 +663,7 @@ public class TextTypesetter implements Disposable {
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
         }
-        float tokenWidth = truncationToken.getWidth();
+        float tokenWidth = truncationToken.getExtent();
         if (maxWidth < tokenWidth) {
             throw new IllegalArgumentException("Max Width: " + maxWidth + ", Token Width: " + tokenWidth);
         }

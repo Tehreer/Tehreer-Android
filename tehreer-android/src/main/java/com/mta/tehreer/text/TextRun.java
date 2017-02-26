@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -246,13 +246,13 @@ public class TextRun {
     }
 
     /**
-     * Returns the advance width for the given glyph range in this run.
+     * Returns the typographic extent for the given glyph range in this run.
      *
      * @param glyphStart The index to first glyph being measured.
      * @param glyphEnd The index after the last glyph being measured.
-     * @return The advance width for the given glyph range in this run.
+     * @return The extent for given glyph range in this run.
      */
-    public float getWidth(int glyphStart, int glyphEnd) {
+    public float getExtent(int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
         float[] advances = mGlyphRun.glyphAdvances;
