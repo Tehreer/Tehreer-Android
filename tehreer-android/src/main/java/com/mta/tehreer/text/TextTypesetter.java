@@ -26,7 +26,7 @@ import com.mta.tehreer.bidi.BidiLine;
 import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.util.Sustain;
 import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.opentype.ShapingEngine;
 import com.mta.tehreer.opentype.ShapingResult;
@@ -35,7 +35,6 @@ import com.mta.tehreer.text.internal.util.StringUtils;
 import com.mta.tehreer.text.internal.util.TopSpanIterator;
 import com.mta.tehreer.text.style.TypeSizeSpan;
 import com.mta.tehreer.text.style.TypefaceSpan;
-import com.mta.tehreer.util.Disposable;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -47,65 +46,20 @@ import java.util.List;
  * Represents a typesetter which performs text layout. It can be used to create lines, perform line
  * breaking, and do other contextual analysis based on the characters in the string.
  */
-public class TextTypesetter implements Disposable {
+public class TextTypesetter {
 
     private static final float DEFAULT_FONT_SIZE = 16.0f;
 
-    private static class Finalizable extends TextTypesetter {
-
-        private Finalizable(TextTypesetter parent) {
-            super(parent);
-        }
-
-        @Override
-        public void dispose() {
-            throw new UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT);
-        }
+    private class Finalizable {
 
         @Override
         protected void finalize() throws Throwable {
             try {
-                super.dispose();
+                dispose();
             } finally {
                 super.finalize();
             }
         }
-    }
-
-    /**
-     * Wraps a typesetter object into a finalizable instance which is guaranteed to be disposed
-     * automatically by the GC when no longer in use. After calling this method,
-     * <code>dispose()</code> should not be called on either original object or returned object.
-     * Calling <code>dispose()</code> on returned object will throw an
-     * <code>UnsupportedOperationException</code>.
-     * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
-     *
-     * @param textTypesetter The typesetter object to wrap into a finalizable instance.
-     * @return The finalizable instance of the passed-in typesetter object.
-     */
-    public static TextTypesetter finalizable(TextTypesetter textTypesetter) {
-        if (textTypesetter.getClass() == TextTypesetter.class) {
-            return new Finalizable(textTypesetter);
-        }
-
-        if (textTypesetter.getClass() != Finalizable.class) {
-            throw new IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED);
-        }
-
-        return textTypesetter;
-    }
-
-    /**
-     * Checks whether a typesetter object is finalizable or not.
-     *
-     * @param textTypesetter The typesetter object to check.
-     * @return <code>true</code> if the passed-in typesetter object is finalizable,
-     *         <code>false</code> otherwise.
-     */
-    public static boolean isFinalizable(TextTypesetter textTypesetter) {
-        return (textTypesetter.getClass() == Finalizable.class);
     }
 
     private static final byte BREAK_TYPE_NONE = 0;
@@ -117,19 +71,13 @@ public class TextTypesetter implements Disposable {
         return (byte) (forward ? breakType : breakType << 1);
     }
 
-    private static class Base {
-        String text;
-        Spanned spanned;
-        byte[] breakRecord;
-        ArrayList<BidiParagraph> bidiParagraphs;
-        ArrayList<GlyphRun> glyphRuns;
-    }
-
-    private final Base base;
-
-    private TextTypesetter(TextTypesetter other) {
-        this.base = other.base;
-    }
+    @Sustain
+    private final Finalizable finalizable = new Finalizable();
+    private String mText;
+    private Spanned mSpanned;
+    private byte[] mBreakRecord;
+    private ArrayList<BidiParagraph> mBidiParagraphs;
+    private ArrayList<GlyphRun> mGlyphRuns;
 
     /**
      * Constructs the typesetter object using given text, typeface and type size.
@@ -149,7 +97,6 @@ public class TextTypesetter implements Disposable {
         spanned.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         spanned.setSpan(new TypeSizeSpan(typeSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-        base = new Base();
         init(text, spanned);
 	}
 
@@ -162,19 +109,18 @@ public class TextTypesetter implements Disposable {
      */
     public TextTypesetter(Spanned spanned) {
         if (spanned == null || spanned.length() == 0) {
-            throw new IllegalArgumentException("Spanned text is null or empty");
+            throw new IllegalArgumentException("Spanned mText is null or empty");
         }
 
-        base = new Base();
         init(StringUtils.copyString(spanned), spanned);
     }
 
     private void init(String text, Spanned spanned) {
-        base.text = text;
-        base.spanned = spanned;
-        base.breakRecord = new byte[text.length()];
-        base.bidiParagraphs = new ArrayList<>();
-        base.glyphRuns = new ArrayList<>();
+        mText = text;
+        mSpanned = spanned;
+        mBreakRecord = new byte[text.length()];
+        mBidiParagraphs = new ArrayList<>();
+        mGlyphRuns = new ArrayList<>();
 
         resolveBreaks();
         resolveBidi();
@@ -186,14 +132,14 @@ public class TextTypesetter implements Disposable {
     }
 
     private void resolveBreaks(BreakIterator breakIterator, byte breakType) {
-        breakIterator.setText(base.text);
+        breakIterator.setText(mText);
         breakIterator.first();
 
         byte forwardType = specializeBreakType(breakType, true);
         int charNext;
 
         while ((charNext = breakIterator.next()) != BreakIterator.DONE) {
-            base.breakRecord[charNext - 1] |= forwardType;
+            mBreakRecord[charNext - 1] |= forwardType;
         }
 
         breakIterator.last();
@@ -201,22 +147,22 @@ public class TextTypesetter implements Disposable {
         int charIndex;
 
         while ((charIndex = breakIterator.previous()) != BreakIterator.DONE) {
-            base.breakRecord[charIndex] |= backwardType;
+            mBreakRecord[charIndex] |= backwardType;
         }
     }
 
     private void resolveBidi() {
         // TODO: Analyze script runs.
 
-        final BidiAlgorithm bidiAlgorithm = new BidiAlgorithm(base.text);
-        final ShapingEngine shapingEngine = new ShapingEngine();
+        BidiAlgorithm bidiAlgorithm = new BidiAlgorithm(mText);
+        ShapingEngine shapingEngine = new ShapingEngine();
 
         BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
         byte forwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
         byte backwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, false);
 
         int paragraphStart = 0;
-        int suggestedEnd = base.text.length();
+        int suggestedEnd = mText.length();
 
         while (paragraphStart != suggestedEnd) {
             BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
@@ -230,10 +176,10 @@ public class TextTypesetter implements Disposable {
                 resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
                                  bidiRun.embeddingLevel, shapingEngine);
             }
-            base.bidiParagraphs.add(paragraph);
+            mBidiParagraphs.add(paragraph);
 
-            base.breakRecord[paragraph.getCharStart()] |= backwardType;
-            base.breakRecord[paragraph.getCharEnd() - 1] |= forwardType;
+            mBreakRecord[paragraph.getCharStart()] |= backwardType;
+            mBreakRecord[paragraph.getCharEnd() - 1] |= forwardType;
 
             paragraphStart = paragraph.getCharEnd();
         }
@@ -244,7 +190,7 @@ public class TextTypesetter implements Disposable {
 
     private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
                                   ShapingEngine shapingEngine) {
-        Spanned spanned = base.spanned;
+        Spanned spanned = mSpanned;
         TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypefaceSpan.class);
 
         while (iterator.hasNext()) {
@@ -263,7 +209,7 @@ public class TextTypesetter implements Disposable {
 
     private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
                               ShapingEngine shapingEngine, Typeface typeface) {
-        Spanned spanned = base.spanned;
+        Spanned spanned = mSpanned;
         TopSpanIterator<TypeSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypeSizeSpan.class);
 
         while (iterator.hasNext()) {
@@ -283,27 +229,37 @@ public class TextTypesetter implements Disposable {
             }
 
             GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
-            base.glyphRuns.add(glyphRun);
+            mGlyphRuns.add(glyphRun);
         }
     }
 
     private GlyphRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
-                                   ShapingEngine shapingEngine,
-                                   Typeface typeface, float typeSize) {
+                                   ShapingEngine shapingEngine, Typeface typeface, float typeSize) {
         shapingEngine.setTypeface(typeface);
         shapingEngine.setTypeSize(typeSize);
-        ShapingResult shapingResult = shapingEngine.shapeText(base.text, charStart, charEnd);
 
-        return new GlyphRun(shapingResult, shapingEngine.getTypeface(), typeSize, bidiLevel);
+        ShapingResult shapingResult = null;
+        GlyphRun glyphRun = null;
+
+        try {
+            shapingResult = shapingEngine.shapeText(mText, charStart, charEnd);
+            glyphRun = new GlyphRun(shapingResult, shapingEngine.getTypeface(), typeSize, bidiLevel);
+        } finally {
+            if (shapingResult != null) {
+                shapingResult.dispose();
+            }
+        }
+
+        return glyphRun;
     }
 
     private void verifyTextRange(int charStart, int charEnd) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
-        if (charEnd > base.text.length()) {
+        if (charEnd > mText.length()) {
             throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Text Length: " + base.text.length());
+                                               + ", Text Length: " + mText.length());
         }
         if (charStart >= charEnd) {
             throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
@@ -311,7 +267,7 @@ public class TextTypesetter implements Disposable {
     }
 
     private int indexOfBidiParagraph(final int charIndex) {
-        return Collections.binarySearch(base.bidiParagraphs, null, new Comparator<BidiParagraph>() {
+        return Collections.binarySearch(mBidiParagraphs, null, new Comparator<BidiParagraph>() {
             @Override
             public int compare(BidiParagraph obj1, BidiParagraph obj2) {
                 if (charIndex < obj1.getCharStart()) {
@@ -328,7 +284,7 @@ public class TextTypesetter implements Disposable {
     }
 
     private int indexOfGlyphRun(final int charIndex) {
-        return Collections.binarySearch(base.glyphRuns, null, new Comparator<GlyphRun>() {
+        return Collections.binarySearch(mGlyphRuns, null, new Comparator<GlyphRun>() {
             @Override
             public int compare(GlyphRun obj1, GlyphRun obj2) {
                 if (charIndex < obj1.charStart) {
@@ -346,7 +302,7 @@ public class TextTypesetter implements Disposable {
 
     private byte getCharParagraphLevel(int charIndex) {
         int paragraphIndex = indexOfBidiParagraph(charIndex);
-        BidiParagraph charParagraph = base.bidiParagraphs.get(paragraphIndex);
+        BidiParagraph charParagraph = mBidiParagraphs.get(paragraphIndex);
         return charParagraph.getBaseLevel();
     }
 
@@ -357,7 +313,7 @@ public class TextTypesetter implements Disposable {
             int runIndex = indexOfGlyphRun(charStart);
 
             do {
-                GlyphRun glyphRun = base.glyphRuns.get(runIndex);
+                GlyphRun glyphRun = mGlyphRuns.get(runIndex);
                 int glyphStart = glyphRun.charGlyphStart(charStart);
                 int glyphEnd;
 
@@ -383,7 +339,7 @@ public class TextTypesetter implements Disposable {
         breakType = specializeBreakType(breakType, true);
 
         while (charIndex < charEnd) {
-            byte charType = base.breakRecord[charIndex];
+            byte charType = mBreakRecord[charIndex];
 
             // Handle necessary break.
             if ((charType & mustType) == mustType) {
@@ -402,7 +358,7 @@ public class TextTypesetter implements Disposable {
 
                 measuredWidth += measureChars(forwardBreak, segmentEnd);
                 if (measuredWidth > maxWidth) {
-                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(base.text, forwardBreak, segmentEnd);
+                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(mText, forwardBreak, segmentEnd);
                     float whitespaceWidth = measureChars(whitespaceStart, segmentEnd);
 
                     // Break if excluding whitespaces width helps.
@@ -430,7 +386,7 @@ public class TextTypesetter implements Disposable {
         breakType = specializeBreakType(breakType, false);
 
         while (charIndex >= charStart) {
-            byte charType = base.breakRecord[charIndex];
+            byte charType = mBreakRecord[charIndex];
 
             // Handle necessary break.
             if ((charType & mustType) == mustType) {
@@ -445,7 +401,7 @@ public class TextTypesetter implements Disposable {
             if ((charType & breakType) == breakType) {
                 measuredWidth += measureChars(charIndex, backwardBreak);
                 if (measuredWidth > maxWidth) {
-                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(base.text, charIndex, backwardBreak);
+                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(mText, charIndex, backwardBreak);
                     float whitespaceWidth = measureChars(whitespaceStart, backwardBreak);
 
                     // Break if excluding trailing whitespaces helps.
@@ -470,7 +426,7 @@ public class TextTypesetter implements Disposable {
         // Take at least one character (grapheme) if max size is too small.
         if (forwardBreak == charStart) {
             for (int i = charStart; i < charEnd; i++) {
-                if ((base.breakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
+                if ((mBreakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
                     forwardBreak = i + 1;
                     break;
                 }
@@ -491,7 +447,7 @@ public class TextTypesetter implements Disposable {
         // Take at least one character (grapheme) if max size is too small.
         if (backwardBreak == charEnd) {
             for (int i = charEnd - 1; i >= charStart; i++) {
-                if ((base.breakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
+                if ((mBreakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
                     backwardBreak = i;
                     break;
                 }
@@ -569,14 +525,14 @@ public class TextTypesetter implements Disposable {
      *         </ul>
      */
     public int suggestCharBoundary(int charStart, float maxWidth) {
-        if (charStart < 0 || charStart >= base.text.length()) {
+        if (charStart < 0 || charStart >= mText.length()) {
             throw new IndexOutOfBoundsException("Char Start: " + charStart);
         }
         if (maxWidth <= 0.0f) {
             throw new IllegalArgumentException("Max Width: " + maxWidth);
         }
 
-        return suggestForwardCharBreak(charStart, base.text.length(), maxWidth);
+        return suggestForwardCharBreak(charStart, mText.length(), maxWidth);
     }
 
     /**
@@ -598,15 +554,15 @@ public class TextTypesetter implements Disposable {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
-        if (charStart > base.text.length()) {
+        if (charStart > mText.length()) {
             throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Text Length: " + base.text.length());
+                                               + ", Text Length: " + mText.length());
         }
         if (maxWidth <= 0.0f) {
             throw new IllegalArgumentException("Max Width: " + maxWidth);
         }
 
-        return suggestForwardLineBreak(charStart, base.text.length(), maxWidth);
+        return suggestForwardLineBreak(charStart, mText.length(), maxWidth);
     }
 
     /**
@@ -626,7 +582,7 @@ public class TextTypesetter implements Disposable {
         ArrayList<TextRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
 
-		return new TextLine(base.text, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
+		return new TextLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
 	}
 
     /**
@@ -734,7 +690,7 @@ public class TextTypesetter implements Disposable {
             } else {
                 // If previous character belongs to a different glyph run, follow paragraph direction.
                 int paragraphIndex = indexOfBidiParagraph(charStart);
-                BidiParagraph bidiParagraph = base.bidiParagraphs.get(paragraphIndex);
+                BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
                 int paragraphLevel = bidiParagraph.getBaseLevel();
 
                 if ((paragraphLevel & 1) == 1) {
@@ -759,7 +715,7 @@ public class TextTypesetter implements Disposable {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new TextLine(base.text, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
+            return new TextLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
         }
 
         return createLine(truncatedStart, charEnd);
@@ -775,8 +731,8 @@ public class TextTypesetter implements Disposable {
             ArrayList<TextRun> runList = new ArrayList<>();
 
             // Exclude inner whitespaces as truncation token replaces them.
-            firstMidEnd = StringUtils.getTrailingWhitespaceStart(base.text, charStart, firstMidEnd);
-            secondMidStart = StringUtils.getLeadingWhitespaceEnd(base.text, secondMidStart, charEnd);
+            firstMidEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, firstMidEnd);
+            secondMidStart = StringUtils.getLeadingWhitespaceEnd(mText, secondMidStart, charEnd);
 
             if (charStart < firstMidEnd) {
                 addContinuousLineRuns(charStart, firstMidEnd, runList);
@@ -786,7 +742,7 @@ public class TextTypesetter implements Disposable {
                 addContinuousLineRuns(secondMidStart, charEnd, runList);
             }
 
-            return new TextLine(base.text, charStart, charEnd, runList, getCharParagraphLevel(charStart));
+            return new TextLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
         }
 
         return createLine(charStart, charEnd);
@@ -833,7 +789,7 @@ public class TextTypesetter implements Disposable {
             } else {
                 // If next character belongs to a different glyph run, follow paragraph direction.
                 int paragraphIndex = indexOfBidiParagraph(charStart);
-                BidiParagraph bidiParagraph = base.bidiParagraphs.get(paragraphIndex);
+                BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
                 int paragraphLevel = bidiParagraph.getBaseLevel();
 
                 if ((paragraphLevel & 1) == 0) {
@@ -853,7 +809,7 @@ public class TextTypesetter implements Disposable {
             int tokenInsertIndex = 0;
 
             // Exclude trailing whitespaces as truncation token replaces them.
-            truncatedEnd = StringUtils.getTrailingWhitespaceStart(base.text, charStart, truncatedEnd);
+            truncatedEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, truncatedEnd);
 
             if (charStart < truncatedEnd) {
                 EndTruncationHandler truncationHandler = new EndTruncationHandler(charStart, truncatedEnd, runList);
@@ -861,7 +817,7 @@ public class TextTypesetter implements Disposable {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new TextLine(base.text, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
+            return new TextLine(mText, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
         }
 
         return createLine(charStart, truncatedEnd);
@@ -882,7 +838,7 @@ public class TextTypesetter implements Disposable {
         int feasibleEnd;
 
         do {
-            BidiParagraph bidiParagraph = base.bidiParagraphs.get(paragraphIndex);
+            BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
             feasibleStart = Math.max(bidiParagraph.getCharStart(), charStart);
             feasibleEnd = Math.min(bidiParagraph.getCharEnd(), charEnd);
 
@@ -920,7 +876,7 @@ public class TextTypesetter implements Disposable {
         do {
             int runIndex = indexOfGlyphRun(visualStart);
 
-            GlyphRun glyphRun = base.glyphRuns.get(runIndex);
+            GlyphRun glyphRun = mGlyphRuns.get(runIndex);
             int feasibleStart = Math.max(glyphRun.charStart, visualStart);
             int feasibleEnd = Math.min(glyphRun.charEnd, visualEnd);
 
@@ -1004,9 +960,8 @@ public class TextTypesetter implements Disposable {
         return new TextFrame(charStart, lineStart, frameLines);
     }
 
-    @Override
-    public void dispose() {
-        for (BidiParagraph paragraph : base.bidiParagraphs) {
+    void dispose() {
+        for (BidiParagraph paragraph : mBidiParagraphs) {
             paragraph.dispose();
         }
     }
