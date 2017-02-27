@@ -41,6 +41,7 @@ public class TextRun {
     private int mGlyphCount;
     private float mOriginX;
     private float mOriginY;
+    private float mWidth = Float.NEGATIVE_INFINITY;
 
 	TextRun(GlyphRun glyphRun, int charStart, int charEnd) {
         mGlyphRun = glyphRun;
@@ -246,13 +247,37 @@ public class TextRun {
     }
 
     /**
-     * Returns the typographic extent for the given glyph range in this run.
+     * Returns the typographic width of this run.
+     *
+     * @return The typographic width of this run.
+     */
+    public float getWidth() {
+        // Locking is not required for constant width.
+        if (mWidth == Float.NEGATIVE_INFINITY) {
+            mWidth = computeTypographicExtent(0, mGlyphCount);
+        }
+
+        return mWidth;
+    }
+
+    /**
+     * Returns the typographic height of this run.
+     *
+     * @return The typographic height of this run.
+     */
+    public float getHeight() {
+        return (mGlyphRun.ascent() + mGlyphRun.descent() + mGlyphRun.leading());
+    }
+
+    /**
+     * Calculates the typographic extent for the given glyph range in this run. The typographic
+     * extent is equal to the sum of advances of glyphs.
      *
      * @param glyphStart The index to first glyph being measured.
      * @param glyphEnd The index after the last glyph being measured.
-     * @return The extent for given glyph range in this run.
+     * @return The typographic extent for the given glyph range in this run.
      */
-    public float getExtent(int glyphStart, int glyphEnd) {
+    public float computeTypographicExtent(int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
         float[] advances = mGlyphRun.glyphAdvances;
@@ -335,17 +360,22 @@ public class TextRun {
 
     @Override
     public String toString() {
-        return "TextRun{charStart=" + mCharStart
-                + ", charEnd=" + mCharEnd
-                + ", glyphCount=" + mGlyphCount
+        return "TextRun{charStart=" + getCharStart()
+                + ", charEnd=" + getCharEnd()
+                + ", bidiLevel=" + getBidiLevel()
+                + ", writingDirection=" + getWritingDirection().toString()
+                + ", glyphCount=" + getGlyphCount()
                 + ", glyphIds=" + getGlyphIds().toString()
                 + ", glyphOffsets=" + getGlyphOffsets().toString()
                 + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", originX=" + mOriginX
-                + ", originY=" + mOriginY
+                + ", charToGlyphMap=" + getCharToGlyphMap().toString()
+                + ", originX=" + getOriginX()
+                + ", originY=" + getOriginY()
                 + ", ascent=" + getAscent()
                 + ", descent=" + getDescent()
                 + ", leading=" + getLeading()
+                + ", width=" + getWidth()
+                + ", height=" + getHeight()
                 + "}";
     }
 }
