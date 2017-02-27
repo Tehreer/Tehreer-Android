@@ -38,7 +38,7 @@ public class TextLine {
     private float mAscent;
     private float mDescent;
     private float mLeading;
-    private float mExtent;
+    private float mWidth;
     private float mTrailingWhitespaceExtent;
 	private List<TextRun> mRunList;
 
@@ -51,7 +51,7 @@ public class TextLine {
         int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
 
         for (TextRun textRun : runList) {
-            textRun.setOriginX(mExtent);
+            textRun.setOriginX(mWidth);
 
             float runAscent = textRun.getAscent();
             float runDescent = textRun.getDescent();
@@ -60,12 +60,12 @@ public class TextLine {
             int runCharStart = textRun.getCharStart();
             int runCharEnd = textRun.getCharEnd();
             int runGlyphCount = textRun.getGlyphCount();
-            float runWidth = textRun.getExtent(0, runGlyphCount);
+            float runWidth = textRun.computeTypographicExtent(0, runGlyphCount);
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
                 int whitespaceGlyphStart = textRun.getCharGlyphStart(trailingWhitespaceStart);
                 int whitespaceGlyphEnd = textRun.getCharGlyphEnd(runCharEnd - 1);
-                float whitespaceWidth = textRun.getExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
+                float whitespaceWidth = textRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
 
                 mTrailingWhitespaceExtent += whitespaceWidth;
             }
@@ -73,7 +73,7 @@ public class TextLine {
             mAscent = Math.max(mAscent, runAscent);
             mDescent = Math.max(mDescent, runDescent);
             mLeading = Math.max(mLeading, runLeading);
-            mExtent += runWidth;
+            mWidth += runWidth;
         }
 	}
 
@@ -152,16 +152,25 @@ public class TextLine {
     }
 
     /**
-     * Returns the typographic extent of all glyphs in this line.
+     * Returns the typographic width of this line.
      *
-     * @return The extent of all glyphs in this line.
+     * @return The typographic width of this line.
      */
-    public float getExtent() {
-        return mExtent;
+    public float getWidth() {
+        return mWidth;
     }
 
     /**
-     * Returns the typographic extent for the glyphs corresponding to the trailing whitespace
+     * Returns the typographic height of this line.
+     *
+     * @return The typographic height of this line.
+     */
+    public float getHeight() {
+        return (mAscent + mDescent + mLeading);
+    }
+
+    /**
+     * Returns the advance extent for the glyphs corresponding to the trailing whitespace
      * characters of this line in source text.
      *
      * @return The typographic extent for the glyphs corresponding to the trailing whitespace
@@ -187,11 +196,11 @@ public class TextLine {
      *                    left flush. A flushFactor of 1.0 or more indicates right flush. Flush
      *                    factors between 0 and 1.0 indicate varying degrees of center flush, with a
      *                    value of 0.5 being totally center flush.
-     * @param flushWidth Specifies the width that the flushness operation should apply to.
+     * @param flushExtent Specifies the extent that the flushness operation should apply to.
      * @return A value which can be used to offset the current pen position for the flush operation.
      */
-    public float getFlushPenOffset(float flushFactor, float flushWidth) {
-        float penOffset = (flushWidth - (mExtent - mTrailingWhitespaceExtent)) * flushFactor;
+    public float getFlushPenOffset(float flushFactor, float flushExtent) {
+        float penOffset = (flushExtent - (mWidth - mTrailingWhitespaceExtent)) * flushFactor;
         if ((mParagraphLevel & 1) == 1) {
             penOffset -= mTrailingWhitespaceExtent;
         }
@@ -220,15 +229,16 @@ public class TextLine {
 
     @Override
     public String toString() {
-        return "TextLine{charStart=" + mCharStart
-                + ", charEnd=" + mCharEnd
-                + ", originX=" + mOriginX
-                + ", originY=" + mOriginY
-                + ", ascent=" + mAscent
-                + ", descent=" + mDescent
-                + ", leading=" + mLeading
-                + ", width=" + mExtent
-                + ", trailingWhitespaceWidth=" + mTrailingWhitespaceExtent
+        return "TextLine{charStart=" + getCharStart()
+                + ", charEnd=" + getCharEnd()
+                + ", originX=" + getOriginX()
+                + ", originY=" + getOriginY()
+                + ", ascent=" + getAscent()
+                + ", descent=" + getDescent()
+                + ", leading=" + getLeading()
+                + ", width=" + getWidth()
+                + ", height=" + getHeight()
+                + ", trailingWhitespaceExtent=" + getTrailingWhitespaceExtent()
                 + ", runs=" + Description.forIterable(mRunList)
                 + "}";
     }
