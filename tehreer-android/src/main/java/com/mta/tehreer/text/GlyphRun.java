@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import com.mta.tehreer.opentype.ShapingResult;
 class GlyphRun {
 
     final Typeface typeface;
-    final float fontSize;
+    final float typeSize;
     final float sizeByEm;
     final byte bidiLevel;
     final boolean isBackward;
@@ -34,11 +34,11 @@ class GlyphRun {
     final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
-    GlyphRun(ShapingResult shapingResult, Typeface typeface, float fontSize, byte bidiLevel) {
-        float sizeByEm = fontSize / typeface.getUnitsPerEm();
+    GlyphRun(ShapingResult shapingResult, Typeface typeface, float typeSize, byte bidiLevel) {
+        float sizeByEm = typeSize / typeface.getUnitsPerEm();
 
         this.typeface = typeface;
-        this.fontSize = fontSize;
+        this.typeSize = typeSize;
         this.sizeByEm = sizeByEm;
         this.bidiLevel = bidiLevel;
         this.isBackward = shapingResult.isBackward();

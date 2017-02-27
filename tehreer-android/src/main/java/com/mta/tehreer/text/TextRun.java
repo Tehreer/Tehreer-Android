@@ -313,7 +313,7 @@ public class TextRun {
 	    verifyGlyphRange(glyphStart, glyphEnd);
 
 	    renderer.setTypeface(mGlyphRun.typeface);
-	    renderer.setTypeSize(mGlyphRun.fontSize);
+	    renderer.setTypeSize(mGlyphRun.typeSize);
         renderer.setWritingDirection(mGlyphRun.writingDirection());
 
         return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
@@ -349,7 +349,7 @@ public class TextRun {
         verifyGlyphRange(glyphStart, glyphEnd);
 
 	    renderer.setTypeface(mGlyphRun.typeface);
-        renderer.setTypeSize(mGlyphRun.fontSize);
+        renderer.setTypeSize(mGlyphRun.typeSize);
         renderer.setWritingDirection(mGlyphRun.writingDirection());
 
 	    renderer.drawGlyphs(canvas,
