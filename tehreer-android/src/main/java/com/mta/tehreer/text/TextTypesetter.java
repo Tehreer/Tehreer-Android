@@ -132,22 +132,22 @@ public class TextTypesetter implements Disposable {
     }
 
     /**
-     * Constructs the typesetter object using given text, typeface and font size.
+     * Constructs the typesetter object using given text, typeface and type size.
      *
      * @param text The text to typeset.
      * @param typeface The typeface to use.
-     * @param fontSize The font size to apply.
+     * @param typeSize The type size to apply.
      *
      * @throws IllegalArgumentException if <code>text</code> is null or empty, or typeface is null
      */
-	public TextTypesetter(String text, Typeface typeface, float fontSize) {
+	public TextTypesetter(String text, Typeface typeface, float typeSize) {
         if (text == null || text.length() == 0) {
             throw new IllegalArgumentException("Text is null or empty");
         }
 
         SpannableString spanned = new SpannableString(text);
         spanned.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        spanned.setSpan(new TypeSizeSpan(fontSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        spanned.setSpan(new TypeSizeSpan(typeSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
         base = new Base();
         init(text, spanned);
@@ -243,7 +243,7 @@ public class TextTypesetter implements Disposable {
     }
 
     private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
-                                  ShapingEngine artist) {
+                                  ShapingEngine shapingEngine) {
         Spanned spanned = base.spanned;
         TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypefaceSpan.class);
 
@@ -257,12 +257,12 @@ public class TextTypesetter implements Disposable {
                                                    + spanStart + ".." + spanEnd + ")");
             }
 
-            resolveFonts(spanStart, spanEnd, bidiLevel, artist, spanObject.getTypeface());
+            resolveFonts(spanStart, spanEnd, bidiLevel, shapingEngine, spanObject.getTypeface());
         }
     }
 
     private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
-                              ShapingEngine artist, Typeface typeface) {
+                              ShapingEngine shapingEngine, Typeface typeface) {
         Spanned spanned = base.spanned;
         TopSpanIterator<TypeSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypeSizeSpan.class);
 
@@ -271,30 +271,30 @@ public class TextTypesetter implements Disposable {
             int spanStart = iterator.getSpanStart();
             int spanEnd = iterator.getSpanEnd();
 
-            float fontSize;
+            float typeSize;
 
             if (spanObject == null) {
-                fontSize = DEFAULT_FONT_SIZE;
+                typeSize = DEFAULT_FONT_SIZE;
             } else {
-                fontSize = spanObject.getSize();
-                if (fontSize < 0.0f) {
-                    fontSize = 0.0f;
+                typeSize = spanObject.getSize();
+                if (typeSize < 0.0f) {
+                    typeSize = 0.0f;
                 }
             }
 
-            GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, artist, typeface, fontSize);
+            GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
             base.glyphRuns.add(glyphRun);
         }
     }
 
     private GlyphRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
-                                   ShapingEngine artist,
-                                   Typeface typeface, float fontSize) {
-        artist.setTypeface(typeface);
-        artist.setTypeSize(fontSize);
-        ShapingResult shapingResult = artist.shapeText(base.text, charStart, charEnd);
+                                   ShapingEngine shapingEngine,
+                                   Typeface typeface, float typeSize) {
+        shapingEngine.setTypeface(typeface);
+        shapingEngine.setTypeSize(typeSize);
+        ShapingResult shapingResult = shapingEngine.shapeText(base.text, charStart, charEnd);
 
-        return new GlyphRun(shapingResult, artist.getTypeface(), fontSize, bidiLevel);
+        return new GlyphRun(shapingResult, shapingEngine.getTypeface(), typeSize, bidiLevel);
     }
 
     private void verifyTextRange(int charStart, int charEnd) {
