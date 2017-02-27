@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -245,7 +245,6 @@ public class Label extends View {
         if (mTruncationToken == null) {
             TextTypesetter tokenTypesetter = new TextTypesetter(TRUNCATION_STRING, getTypeface(), getTextSize());
             mTruncationToken = tokenTypesetter.createLine(0, TRUNCATION_STRING.length());
-            tokenTypesetter.dispose();
         }
     }
 
@@ -310,11 +309,7 @@ public class Label extends View {
     }
 
     private void revokeTypesetter() {
-        if (mTypesetter != null) {
-            mTypesetter.dispose();
-            mTypesetter = null;
-        }
-
+        mTypesetter = null;
         mTruncationToken = null;
     }
 
