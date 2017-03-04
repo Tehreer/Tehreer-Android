@@ -34,49 +34,6 @@ extern "C" {
 
 using namespace Tehreer;
 
-struct PathContext {
-    const JavaBridge *bridge;
-    jobject path;
-};
-
-static inline jfloat toJfloat(FT_Pos pos)
-{
-    return (pos / 64.0f);
-}
-
-static int processMoveTo(const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_moveTo(context->path, toJfloat(to->x), toJfloat(to->y));
-    return 0;
-}
-
-static int processLineTo(const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_lineTo(context->path, toJfloat(to->x), toJfloat(to->y));
-    return 0;
-}
-
-static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_quadTo(context->path,
-                                 toJfloat(control1->x), toJfloat(control1->y),
-                                 toJfloat(to->x), toJfloat(to->y));
-    return 0;
-}
-
-static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_cubicTo(context->path,
-                                  toJfloat(control1->x), toJfloat(control1->y),
-                                  toJfloat(control2->x), toJfloat(control2->y),
-                                  toJfloat(to->x), toJfloat(to->y));
-    return 0;
-}
-
 GlyphRasterizer::GlyphRasterizer(Typeface &typeface, FT_F26Dot6 pixelWidth, FT_F26Dot6 pixelHeight, FT_Matrix transform)
     : m_typeface(typeface)
     , m_size(nullptr)
@@ -187,33 +144,13 @@ void GlyphRasterizer::loadOutline(const JavaBridge &bridge, jobject glyph)
 void GlyphRasterizer::loadPath(const JavaBridge &bridge, jobject glyph)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
-    jobject glyphPath = nullptr;
 
     m_typeface.lock();
 
     FT_Face baseFace = m_typeface.ftFace();
     unsafeActivate(baseFace);
 
-    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_NO_BITMAP);
-    if (error == FT_Err_Ok) {
-        FT_Outline_Funcs funcs;
-        funcs.move_to = processMoveTo;
-        funcs.line_to = processLineTo;
-        funcs.conic_to = processQuadTo;
-        funcs.cubic_to = processCubicTo;
-        funcs.shift = 0;
-        funcs.delta = 0;
-
-        PathContext pathContext;
-        pathContext.bridge = &bridge;
-        pathContext.path = bridge.Path_construct();
-
-        FT_Outline *outline = &baseFace->glyph->outline;
-        error = FT_Outline_Decompose(outline, &funcs, &pathContext);
-        if (error == FT_Err_Ok) {
-            glyphPath = pathContext.path;
-        }
-    }
+    jobject glyphPath = m_typeface.getGlyphPathNoLock(bridge, glyphID);
 
     m_typeface.unlock();
 

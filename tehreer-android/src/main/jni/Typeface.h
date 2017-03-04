@@ -57,6 +57,8 @@ public:
     FT_UInt getGlyphID(FT_ULong codePoint);
     FT_Fixed getGlyphAdvance(FT_UInt glyphID, bool vertical);
     FT_Fixed getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical);
+
+    jobject getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID);
     jobject getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta);
 
 private:

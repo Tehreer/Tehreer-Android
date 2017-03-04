@@ -385,15 +385,9 @@ FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool ve
     return advance;
 }
 
-jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta)
+jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
 {
-    jobject path = nullptr;
-
-    m_mutex.lock();
-
-    FT_Activate_Size(m_ftSize);
-    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
-    FT_Set_Transform(m_ftFace, matrix, delta);
+    jobject glyphPath = nullptr;
 
     FT_Error error = FT_Load_Glyph(m_ftFace, glyphID, FT_LOAD_NO_BITMAP);
     if (error == FT_Err_Ok) {
@@ -412,13 +406,28 @@ jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 ty
         FT_Outline *outline = &m_ftFace->glyph->outline;
         error = FT_Outline_Decompose(outline, &funcs, &pathContext);
         if (error == FT_Err_Ok) {
-            path = pathContext.path;
+            glyphPath = pathContext.path;
         }
     }
 
+    return glyphPath;
+}
+
+jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta)
+{
+    jobject glyphPath = nullptr;
+
+    m_mutex.lock();
+
+    FT_Activate_Size(m_ftSize);
+    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
+    FT_Set_Transform(m_ftFace, matrix, delta);
+
+    glyphPath = getGlyphPathNoLock(bridge, glyphID);
+
     m_mutex.unlock();
 
-    return path;
+    return glyphPath;
 }
 
 static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)
