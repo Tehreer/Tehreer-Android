@@ -573,17 +573,23 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint
     FT_Vector delta;
 
     if (!matrixArray) {
-        transform = { 0x10000, 0, 0, 0x10000 };
+        transform = { 0x10000, 0, 0, -0x10000 };
         delta = { 0, 0 };
     } else {
         jfloat *matrixValues = env->GetFloatArrayElements(matrixArray, nullptr);
 
-        transform = {
+        FT_Matrix actual = {
             toF16Dot16(matrixValues[0]), toF16Dot16(matrixValues[1]),
             toF16Dot16(matrixValues[3]), toF16Dot16(matrixValues[4]),
         };
+        FT_Matrix flip = { 1, 0, 0, -1 };
+
+        transform = {
+            (actual.xx * flip.xx) + (actual.xy * flip.yx), (actual.xx * flip.xy) + (actual.xy * flip.yy),
+            (actual.yx * flip.xx) + (actual.yy * flip.yx), (actual.yx * flip.xy) + (actual.yy * flip.yy)
+        };
         delta = {
-            toF16Dot16(matrixValues[2]), toF16Dot16(matrixValues[5]),
+            toF26Dot6(matrixValues[2]), toF26Dot6(matrixValues[5]),
         };
 
         env->ReleaseFloatArrayElements(matrixArray, matrixValues, 0);
