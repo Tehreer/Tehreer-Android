@@ -33,19 +33,6 @@ public class RawInt32Points extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyInt32Floats(pointer, array, atIndex, size * 2, scale);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -69,13 +56,16 @@ public class RawInt32Points extends PointList {
     }
 
     @Override
-    public void setX(int index, float value) {
-        throw new UnsupportedOperationException();
-    }
+    public void copyTo(float[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
 
-    @Override
-    public void setY(int index, float value) {
-        throw new UnsupportedOperationException();
+        Raw.copyInt32Floats(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override

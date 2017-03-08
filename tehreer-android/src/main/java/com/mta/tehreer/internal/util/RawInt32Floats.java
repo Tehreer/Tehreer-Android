@@ -33,19 +33,6 @@ public class RawInt32Floats extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyInt32Floats(pointer, array, atIndex, size, scale);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -60,8 +47,16 @@ public class RawInt32Floats extends FloatList {
     }
 
     @Override
-    public void set(int index, float value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(float[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copyInt32Floats(pointer, array, atIndex, size, scale);
     }
 
     @Override

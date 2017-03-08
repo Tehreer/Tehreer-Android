@@ -31,19 +31,6 @@ public class RawUInt16Values extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyUInt16Values(pointer, array, atIndex, size);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -58,8 +45,16 @@ public class RawUInt16Values extends IntList {
     }
 
     @Override
-    public void set(int index, int value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(int[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copyUInt16Values(pointer, array, atIndex, size);
     }
 
     @Override
