@@ -34,8 +34,7 @@ public abstract class FloatList implements PrimitiveList {
     public abstract FloatList subList(int fromIndex, int toIndex);
 
     public float[] toArray() {
-        int length = size();
-        float[] array = new float[length];
+        float[] array = new float[size()];
         copyTo(array, 0);
 
         return array;

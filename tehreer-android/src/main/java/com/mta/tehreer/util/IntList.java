@@ -34,8 +34,7 @@ public abstract class IntList implements PrimitiveList {
     public abstract IntList subList(int fromIndex, int toIndex);
 
     public int[] toArray() {
-        int length = size();
-        int[] array = new int[length];
+        int[] array = new int[size()];
         copyTo(array, 0);
 
         return array;

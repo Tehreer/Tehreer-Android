@@ -29,8 +29,7 @@ public abstract class ByteList implements PrimitiveList {
     public abstract ByteList subList(int fromIndex, int toIndex);
 
     public byte[] toArray() {
-        int length = size();
-        byte[] array = new byte[length];
+        byte[] array = new byte[size()];
         copyTo(array, 0);
 
         return array;

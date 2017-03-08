@@ -37,8 +37,7 @@ public abstract class PointList implements PrimitiveList {
     public abstract PointList subList(int fromIndex, int toIndex);
 
     public float[] toArray() {
-        int length = size() * 2;
-        float[] array = new float[length];
+        float[] array = new float[size() * 2];
         copyTo(array, 0);
 
         return array;
