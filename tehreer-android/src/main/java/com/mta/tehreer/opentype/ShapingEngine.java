@@ -220,7 +220,8 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Returns the order in which this shaping engine will process the text.
+     * Returns the order in which this shaping engine will process the text. The default value is
+     * {@link ShapingOrder#FORWARD}.
      *
      * @return The current shaping order.
      */
@@ -295,10 +296,11 @@ public class ShapingEngine implements Disposable {
     @Override
     public String toString() {
         return "ShapingEngine{typeface=" + getTypeface().toString()
+                + ", typeSize=" + String.valueOf(getTypeSize())
                 + ", scriptTag=" + Convert.toStringTag(getScriptTag())
                 + ", languageTag=" + Convert.toStringTag(getLanguageTag())
-                + ", textDirection=" + getWritingDirection().toString()
-                + ", textMode=" + getShapingOrder().toString()
+                + ", writingDirection=" + getWritingDirection().toString()
+                + ", shapingOrder=" + getShapingOrder().toString()
                 + "}";
     }
 
