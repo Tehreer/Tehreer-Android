@@ -25,15 +25,11 @@ public abstract class PointList implements PrimitiveList {
         return new SafePointList(array, 0, array.length / 2);
     }
 
-    public abstract void copyTo(float[] array, int atIndex);
     public abstract int size();
-
     public abstract float getX(int index);
     public abstract float getY(int index);
 
-    public abstract void setX(int index, float value);
-    public abstract void setY(int index, float value);
-
+    public abstract void copyTo(float[] array, int atIndex);
     public abstract PointList subList(int fromIndex, int toIndex);
 
     public float[] toArray() {

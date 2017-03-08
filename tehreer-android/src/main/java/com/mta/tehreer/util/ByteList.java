@@ -20,12 +20,10 @@ import com.mta.tehreer.internal.util.Description;
 
 public abstract class ByteList implements PrimitiveList {
 
-    public abstract void copyTo(byte[] array, int atIndex);
     public abstract int size();
-
     public abstract byte get(int index);
-    public abstract void set(int index, byte value);
 
+    public abstract void copyTo(byte[] array, int atIndex);
     public abstract ByteList subList(int fromIndex, int toIndex);
 
     public byte[] toArray() {

@@ -25,12 +25,10 @@ public abstract class FloatList implements PrimitiveList {
         return new SafeFloatList(array, 0, array.length);
     }
 
-    public abstract void copyTo(float[] array, int atIndex);
     public abstract int size();
-
     public abstract float get(int index);
-    public abstract void set(int index, float value);
 
+    public abstract void copyTo(float[] array, int atIndex);
     public abstract FloatList subList(int fromIndex, int toIndex);
 
     public float[] toArray() {

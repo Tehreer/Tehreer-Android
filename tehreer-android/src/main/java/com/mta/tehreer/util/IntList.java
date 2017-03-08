@@ -25,12 +25,10 @@ public abstract class IntList implements PrimitiveList {
         return new SafeIntList(array, 0, array.length);
     }
 
-    public abstract void copyTo(int[] array, int atIndex);
     public abstract int size();
-
     public abstract int get(int index);
-    public abstract void set(int index, int value);
 
+    public abstract void copyTo(int[] array, int atIndex);
     public abstract IntList subList(int fromIndex, int toIndex);
 
     public int[] toArray() {
