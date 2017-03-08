@@ -31,11 +31,6 @@ public class SafePointList extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size * 2);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -59,13 +54,8 @@ public class SafePointList extends PointList {
     }
 
     @Override
-    public void setX(int index, float value) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setY(int index, float value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size * 2);
     }
 
     @Override

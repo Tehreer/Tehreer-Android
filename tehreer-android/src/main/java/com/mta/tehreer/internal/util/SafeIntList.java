@@ -32,11 +32,6 @@ public class SafeIntList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -51,8 +46,8 @@ public class SafeIntList extends IntList {
     }
 
     @Override
-    public void set(int index, int value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(int[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override

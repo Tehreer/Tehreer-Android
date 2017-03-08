@@ -32,11 +32,6 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
-    }
-
-    @Override
     public int size() {
         return size;
     }
@@ -51,8 +46,8 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public void set(int index, float value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override

@@ -32,11 +32,6 @@ public class SafeByteList extends ByteList {
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
-    }
-
-    @Override
     public int size() {
         return array.length;
     }
@@ -51,8 +46,8 @@ public class SafeByteList extends ByteList {
     }
 
     @Override
-    public void set(int index, byte value) {
-        throw new UnsupportedOperationException();
+    public void copyTo(byte[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
