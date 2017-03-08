@@ -154,38 +154,47 @@ public class TextTypesetter {
     private void resolveBidi() {
         // TODO: Analyze script runs.
 
-        BidiAlgorithm bidiAlgorithm = new BidiAlgorithm(mText);
-        ShapingEngine shapingEngine = new ShapingEngine();
+        BidiAlgorithm bidiAlgorithm = null;
+        ShapingEngine shapingEngine = null;
 
-        BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
-        byte forwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
-        byte backwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, false);
+        try {
+            bidiAlgorithm = new BidiAlgorithm(mText);
+            shapingEngine = new ShapingEngine();
 
-        int paragraphStart = 0;
-        int suggestedEnd = mText.length();
+            BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
+            byte forwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
+            byte backwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, false);
 
-        while (paragraphStart != suggestedEnd) {
-            BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
-            for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
-                int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                WritingDirection writingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
+            int paragraphStart = 0;
+            int suggestedEnd = mText.length();
 
-                shapingEngine.setScriptTag(scriptTag);
-                shapingEngine.setWritingDirection(writingDirection);
+            while (paragraphStart != suggestedEnd) {
+                BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
+                for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
+                    int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
+                    WritingDirection writingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
 
-                resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
-                                 bidiRun.embeddingLevel, shapingEngine);
+                    shapingEngine.setScriptTag(scriptTag);
+                    shapingEngine.setWritingDirection(writingDirection);
+
+                    resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
+                            bidiRun.embeddingLevel, shapingEngine);
+                }
+                mBidiParagraphs.add(paragraph);
+
+                mBreakRecord[paragraph.getCharStart()] |= backwardType;
+                mBreakRecord[paragraph.getCharEnd() - 1] |= forwardType;
+
+                paragraphStart = paragraph.getCharEnd();
             }
-            mBidiParagraphs.add(paragraph);
-
-            mBreakRecord[paragraph.getCharStart()] |= backwardType;
-            mBreakRecord[paragraph.getCharEnd() - 1] |= forwardType;
-
-            paragraphStart = paragraph.getCharEnd();
+        } finally {
+            if (shapingEngine != null) {
+                shapingEngine.dispose();
+            }
+            if (bidiAlgorithm != null) {
+                bidiAlgorithm.dispose();
+            }
         }
-
-        shapingEngine.dispose();
-        bidiAlgorithm.dispose();
     }
 
     private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
