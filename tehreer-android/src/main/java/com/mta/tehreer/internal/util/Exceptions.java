@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,12 @@
 
 package com.mta.tehreer.internal.util;
 
-public class Constants {
+public class Exceptions {
 
-    public static final String EXCEPTION_FINALIZABLE_OBJECT = "Attempt to dispose a finalizable object";
-    public static final String EXCEPTION_SUBCLASS_NOT_SUPPORTED = "The object of a subclass is not supported";
+    public static IndexOutOfBoundsException indexOutOfBounds(int index, int size) {
+        return new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+    }
+
+    private Exceptions() {
+    }
 }

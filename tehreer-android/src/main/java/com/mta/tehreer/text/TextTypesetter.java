@@ -26,7 +26,7 @@ import com.mta.tehreer.bidi.BidiLine;
 import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.opentype.ShapingEngine;
 import com.mta.tehreer.opentype.ShapingResult;

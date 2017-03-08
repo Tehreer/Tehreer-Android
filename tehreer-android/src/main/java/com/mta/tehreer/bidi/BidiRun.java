@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.bidi;
 
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Sustain;
 
 /**
  * A <code>BidiRun</code> object represents a sequence of characters which have the same embedding

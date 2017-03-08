@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.internal.util;
 
-import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.util.FloatList;
 
 public class SafeFloatList extends FloatList {

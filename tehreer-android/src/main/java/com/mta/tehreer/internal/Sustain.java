@@ -16,12 +16,12 @@
 
 package com.mta.tehreer.internal;
 
-public class Exceptions {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public static IndexOutOfBoundsException indexOutOfBounds(int index, int size) {
-        return new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-    }
-
-    private Exceptions() {
-    }
+@Target({ ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR })
+@Retention(RetentionPolicy.CLASS)
+public @interface Sustain {
 }

@@ -17,7 +17,7 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.util.Convert;
 import com.mta.tehreer.util.Disposable;
 

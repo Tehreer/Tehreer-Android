@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.bidi;
 
-import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.util.Disposable;
 
 /**

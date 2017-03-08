@@ -21,7 +21,7 @@ import android.util.SparseArray;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Sustain;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;

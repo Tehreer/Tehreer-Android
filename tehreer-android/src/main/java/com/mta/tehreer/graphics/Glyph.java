@@ -19,7 +19,7 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Sustain;
 
 class Glyph {
 

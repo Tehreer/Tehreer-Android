@@ -21,8 +21,8 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
-import com.mta.tehreer.internal.util.Constants;
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.opentype.SfntTag;
 import com.mta.tehreer.util.Disposable;
 
@@ -208,8 +208,8 @@ public class Typeface implements Disposable {
      * @return The number of glyphs in this typeface.
      */
 	public int getGlyphCount() {
-	    return nativeGetGlyphCount(nativeTypeface);
-	}
+        return nativeGetGlyphCount(nativeTypeface);
+    }
 
     public int getGlyphId(int codePoint) {
         return nativeGetGlyphId(nativeTypeface, codePoint);

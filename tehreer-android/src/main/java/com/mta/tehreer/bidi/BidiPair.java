@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.bidi;
 
-import com.mta.tehreer.internal.util.Sustain;
+import com.mta.tehreer.internal.Sustain;
 
 /**
  * A <code>BidiPair</code> object provides the pair of a unicode code point at a specific index in

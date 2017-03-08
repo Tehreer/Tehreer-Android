@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.opentype;
 
-import com.mta.tehreer.internal.util.Constants;
+import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.util.RawInt32Floats;
 import com.mta.tehreer.internal.util.RawInt32Points;
 import com.mta.tehreer.internal.util.RawSizeValues;
