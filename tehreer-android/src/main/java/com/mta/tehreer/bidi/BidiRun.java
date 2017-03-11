@@ -37,6 +37,13 @@ public class BidiRun {
      */
     public byte embeddingLevel;
 
+    /**
+     * Constructs a bidi run object.
+     *
+     * @param charStart The index to the first character of run.
+     * @param charEnd The index after the last character of run.
+     * @param embeddingLevel The embedding level of run.
+     */
     @Sustain
     public BidiRun(int charStart, int charEnd, byte embeddingLevel) {
         this.charStart = charStart;
@@ -44,6 +51,9 @@ public class BidiRun {
         this.embeddingLevel = embeddingLevel;
     }
 
+    /**
+     * Constructs a bidi run object.
+     */
     public BidiRun() {
     }
 

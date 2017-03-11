@@ -22,7 +22,7 @@ import com.mta.tehreer.internal.util.Convert;
 import com.mta.tehreer.util.Disposable;
 
 /**
- * The <code>ShapingEngine</code> class represents the text shaping engine.
+ * The <code>ShapingEngine</code> class represents the OpenType text shaping engine.
  */
 public class ShapingEngine implements Disposable {
 
@@ -54,8 +54,8 @@ public class ShapingEngine implements Disposable {
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
      * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
+     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
+     * or wrapped into another finalizable instance.
      *
      * @param shapingEngine The shaping engine object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in shaping engine object.
@@ -84,10 +84,10 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Returns the default rendering direction of a script.
+     * Returns the default writing direction of a script.
      *
      * @param scriptTag The tag of the script whose default direction is returned.
-     * @return The default direction of the script identified by <code>scriptTag</code>.
+     * @return The default writing direction of the script identified by <code>scriptTag</code>.
      */
     public static WritingDirection getScriptDefaultDirection(int scriptTag) {
         return Convert.toJavaTextDirection(nativeGetScriptDefaultDirection(scriptTag));
@@ -155,7 +155,8 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Returns the script tag which this shaping engine will use for shaping text.
+     * Returns the script tag which this shaping engine will use for shaping text. The default value
+     * is <code>'DFLT'</code>.
      *
      * @return The current script tag.
      */
@@ -176,7 +177,8 @@ public class ShapingEngine implements Disposable {
 	}
 
     /**
-     * Returns the language tag which this shaping engine will use for shaping text.
+     * Returns the language tag which this shaping engine will use for shaping text. The default
+     * value is <code>'dflt'</code>.
      *
      * @return The current language tag.
      */
@@ -197,7 +199,8 @@ public class ShapingEngine implements Disposable {
 	}
 
     /**
-     * Returns the direction in which this shaping engine will place the resultant glyphs.
+     * Returns the direction in which this shaping engine will place the resultant glyphs. The
+     * default value is {@link WritingDirection#LEFT_TO_RIGHT}.
      *
      * @return The current writing direction.
      */
@@ -206,7 +209,8 @@ public class ShapingEngine implements Disposable {
     }
 
     /**
-     * Sets the direction in which this shaping engine will place the resultant glyphs.
+     * Sets the direction in which this shaping engine will place the resultant glyphs. The default
+     * value is {@link WritingDirection#LEFT_TO_RIGHT}.
      * <p>
      * The value of <code>writingDirection</code> must reflect the rendering direction of source
      * script so that cursive and mark glyphs are placed at appropriate locations. It should not be
@@ -253,8 +257,8 @@ public class ShapingEngine implements Disposable {
      * decremented with glyph's advance after rendering it.
      *
      * @param text The text to shape into glyphs.
-     * @param fromIndex
-     * @param toIndex
+     * @param fromIndex The index of the first character (inclusive) to be shaped.
+     * @param toIndex The index of the last character (exclusive) to be shaped.
      *
      * @throws IllegalStateException if current typeface is <code>null</code>.
      * @throws NullPointerException if <code>text</code> is <code>null</code>.

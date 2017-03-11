@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import com.mta.tehreer.util.Disposable;
 
 /**
  * This class implements Unicode Bidirectional Algorithm available at
- * http://www.unicode.org/reports/tr9.
+ * <a href="http://www.unicode.org/reports/tr9">http://www.unicode.org/reports/tr9</a>.
  * <p>
  * A <code>BidiAlgorithm</code> object provides information related to individual paragraphs in
  * source text by applying rule P1. It can be used to create paragraph objects by explicitly
@@ -63,8 +63,8 @@ public class BidiAlgorithm implements Disposable {
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
      * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
+     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
+     * or wrapped into another finalizable instance.
      *
      * @param bidiAlgorithm The bidi algorithm object to wrap into a finalizable instance.
      *
@@ -211,7 +211,7 @@ public class BidiAlgorithm implements Disposable {
      *           <li><code>charEnd</code> is greater than the length of source text</li>
      *           <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
      *           <li><code>baseLevel</code> is less than zero</li>
-     *           <li><code>baseLevel</code> is greater than <code>MAX_LEVEL</code></li>
+     *           <li><code>baseLevel</code> is greater than {@link #MAX_LEVEL}</li>
      *         </ul>
      */
     public BidiParagraph createParagraph(int charStart, int charEnd, byte baseLevel) {

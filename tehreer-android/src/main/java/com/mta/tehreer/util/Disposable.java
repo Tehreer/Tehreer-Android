@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ public interface Disposable {
      * Releases the native memory of this object. Failing to call this method will cause memory
      * leaks.
      * <p>
-     * <strong>Note:</strong> The behaviour of this method is undefined if called more than once on
+     * <strong>Note:</strong> The behavior is undefined if this method is called more than once on
      * the same object.
      */
     void dispose();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,9 +58,9 @@ public class TextFrame {
     }
 
     /**
-     * Returns a readonly list that contains all the lines of this frame.
+     * Returns an unmodifiable list that contains all the lines of this frame.
      *
-     * @return A readonly list that contains all the lines of this frame.
+     * @return An unmodifiable list that contains all the lines of this frame.
      */
     public List<TextLine> getLines() {
         return mLineList;

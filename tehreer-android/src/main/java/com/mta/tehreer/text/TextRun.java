@@ -128,34 +128,57 @@ public class TextRun {
     }
 
     /**
-     * Returns the list of glyph IDs in this run.
+     * Returns a list of glyph IDs in this run.
      *
-     * @return The list of glyph IDs in this run.
+     * @return A list of glyph IDs in this run.
      */
     public IntList getGlyphIds() {
         return new SafeIntList(mGlyphRun.glyphIds, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the list of glyph offsets in this run.
+     * Returns a list of glyph offsets in this run.
      *
-     * @return The list of glyph offsets in this run.
+     * @return A list of glyph offsets in this run.
      */
     public PointList getGlyphOffsets() {
         return new SafePointList(mGlyphRun.glyphOffsets, mGlyphOffset, mGlyphCount);
     }
 
     /**
-     * Returns the list of glyph advances in this run.
+     * Returns a list of glyph advances in this run.
      *
-     * @return The list of glyph advances in this run.
+     * @return A list of glyph advances in this run.
      */
     public FloatList getGlyphAdvances() {
         return new SafeFloatList(mGlyphRun.glyphAdvances, mGlyphOffset, mGlyphCount);
     }
 
+    /**
+     * Returns a list of indexes, mapping each character in this run to corresponding glyph.
+     *
+     * @return A list of indexes, mapping each character in this run to corresponding glyph.
+     */
     public IntList getCharToGlyphMap() {
-        return new SafeIntList(mGlyphRun.charToGlyphMap, 0, mCharEnd - mCharStart);
+        return new IndexList(mGlyphRun.charToGlyphMap,
+                             mCharStart - mGlyphRun.charStart,
+                             mCharEnd - mCharStart,
+                             mGlyphOffset);
+    }
+
+    private static class IndexList extends SafeIntList {
+
+        final int difference;
+
+        public IndexList(int[] array, int offset, int size, int difference) {
+            super(array, offset, size);
+            this.difference = difference;
+        }
+
+        @Override
+        public int get(int index) {
+            return super.get(index) - difference;
+        }
     }
 
     /**

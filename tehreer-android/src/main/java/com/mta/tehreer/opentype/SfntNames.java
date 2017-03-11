@@ -167,7 +167,7 @@ public class SfntNames {
      * @param platforms A collection of platforms used for matching.
      * @return A new {@link java.util.Map Map&lt;K, V&gt;} object that contains the filtered names.
      *
-     * @throws NullPointerException if <code>names</code> or <code>platform</code> is null.
+     * @throws NullPointerException if <code>names</code> or <code>platforms</code> is null.
      */
     public static Map<Locale, String> filterPlatforms(Map<Locale, String> names, Collection<String> platforms) {
         if (names == null) {
@@ -228,12 +228,17 @@ public class SfntNames {
         return Collections.unmodifiableMap(map);
     }
 
+    /**
+     * Returns the typeface whose names are represented by this object.
+     *
+     * @return The typeface whose names are represented by this object.
+     */
     public Typeface getTypeface() {
         return typeface;
     }
 
     /**
-     * Returns the number of name entries in the SFNT 'name' table.
+     * Returns the number of name entries in SFNT 'name' table.
      *
      * @return The number of name entries in SFNT 'name' table.
      */
@@ -242,10 +247,10 @@ public class SfntNames {
     }
 
     /**
-     * Retrieves an entry of the SFNT 'name' table for a given index.
+     * Retrieves an entry of SFNT 'name' table at a given index.
      *
      * @param index The index of the 'name' entry.
-     * @return An entry of the SFNT 'name' table for a given index.
+     * @return An entry of SFNT 'name' table at a given index.
      *
      * @throws IndexOutOfBoundsException if <code>index</code> is negative, or
      *         <code>index</code> is greater than or equal to {@link #getNameCount()}
@@ -574,7 +579,7 @@ public class SfntNames {
      * @return A {@link java.util.Map Map&lt;K, V&gt;} object that contains key/value pairs that
      *         represent light background palette information. The key is a
      *         {@link java.util.Locale Locale} object that identifies the locale. The value is a
-     *         string that specify the user interface string associated with the palette.
+     *         string that specifies the user interface string associated with the palette.
      */
     public Map<Locale, String> getLightBackgroundPalette() {
         return getNameById(LIGHT_BACKGROUND_PALETTE);
@@ -586,7 +591,7 @@ public class SfntNames {
      * @return A {@link java.util.Map Map&lt;K, V&gt;} object that contains key/value pairs that
      *         represent dark background palette information. The key is a
      *         {@link java.util.Locale Locale} object that identifies the locale. The value is a
-     *         string that specify the user interface string associated with the palette.
+     *         string that specifies the user interface string associated with the palette.
      */
     public Map<Locale, String> getDarkBackgroundPalette() {
         return getNameById(DARK_BACKGROUND_PALETTE);

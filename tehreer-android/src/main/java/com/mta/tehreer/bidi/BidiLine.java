@@ -61,8 +61,8 @@ public class BidiLine implements Disposable {
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
      * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
+     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
+     * or wrapped into another finalizable instance.
      *
      * @param bidiLine The bidi line object to wrap into a finalizable instance.
      *
@@ -125,7 +125,7 @@ public class BidiLine implements Disposable {
 
     /**
      * Returns an unmodifiable list of visually ordered runs in this line.
-     *
+     * <p>
      * <strong>Note:</strong> The returned list might exhibit undefined behavior if the line object
      * is disposed.
      *
@@ -138,7 +138,7 @@ public class BidiLine implements Disposable {
     /**
      * Returns an iterable of mirroring pairs in this line. You can use the iterable to implement
      * Rule L4 of Unicode Bidirectional Algorithm.
-     *
+     * <p>
      * <strong>Note:</strong> The returned iterable might exhibit undefined behavior if the line
      * object is disposed.
      *

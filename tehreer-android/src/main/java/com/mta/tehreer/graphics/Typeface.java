@@ -63,8 +63,8 @@ public class Typeface implements Disposable {
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
      * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
+     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
+     * or wrapped into another finalizable instance.
      *
      * @param typeface The typeface object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in typeface object.
@@ -211,14 +211,37 @@ public class Typeface implements Disposable {
         return nativeGetGlyphCount(nativeTypeface);
     }
 
+    /**
+     * Returns the glyph id for the specified code point.
+     *
+     * @param codePoint The code point for which the glyph id is obtained.
+     * @return The glyph id for the specified code point.
+     */
     public int getGlyphId(int codePoint) {
         return nativeGetGlyphId(nativeTypeface, codePoint);
     }
 
+    /**
+     * Retrieves the advance for the specified glyph.
+     *
+     * @param glyphId The glyph id for which to retrieve the advance.
+     * @param typeSize The size for which the advance is retrieved.
+     * @param vertical The flag which indicates the type of advance, either horizontal or vertical.
+     * @return The advance for the specified glyph.
+     */
     public float getGlyphAdvance(int glyphId, float typeSize, boolean vertical) {
         return nativeGetGlyphAdvance(nativeTypeface, glyphId, typeSize, vertical);
     }
 
+    /**
+     * Generates the path for the specified glyph.
+     *
+     * @param glyphId The glyph id for which the path is generated.
+     * @param typeSize The size for which the glyph path is required.
+     * @param matrix The matrix applied to the path. Can be <code>null</code> if no transformation
+     *               is required.
+     * @return The path for the specified glyph.
+     */
     public Path getGlyphPath(int glyphId, float typeSize, Matrix matrix) {
         float[] values = null;
         if (matrix != null) {

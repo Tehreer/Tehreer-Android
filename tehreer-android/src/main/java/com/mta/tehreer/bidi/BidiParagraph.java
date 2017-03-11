@@ -60,8 +60,8 @@ public class BidiParagraph implements Disposable {
      * Calling <code>dispose()</code> on returned object will throw an
      * <code>UnsupportedOperationException</code>.
      * <p>
-     * <strong>Note:</strong> The behaviour is undefined if an already disposed object is passed-in
-     * as a parameter.
+     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
+     * or wrapped into another finalizable instance.
      *
      * @param bidiParagraph The bidi paragraph object to wrap into a finalizable instance.
      *
@@ -132,12 +132,12 @@ public class BidiParagraph implements Disposable {
 	}
 
     /**
-     * Returns an unmodifiable list containing the levels of all characters in this paragraph.
-     *
+     * Returns a list containing the levels of all characters in this paragraph.
+     * <p>
      * <strong>Note:</strong> The returned list might exhibit undefined behavior if the paragraph
      * object is disposed.
      *
-     * @return An unmodifiable list containing the levels of all characters in this paragraph.
+     * @return A list containing the levels of all characters in this paragraph.
      */
 	public ByteList getCharLevels() {
 	    return new RawInt8Values(nativeGetLevelsPtr(nativeParagraph),
@@ -146,7 +146,7 @@ public class BidiParagraph implements Disposable {
 
     /**
      * Returns an iterable of logically ordered runs in this paragraph.
-     *
+     * <p>
      * <strong>Note:</strong> The returned iterable might exhibit undefined behavior if the
      * paragraph object is disposed.
      *

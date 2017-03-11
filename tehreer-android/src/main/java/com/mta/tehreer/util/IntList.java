@@ -19,18 +19,65 @@ package com.mta.tehreer.util;
 import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.internal.util.SafeIntList;
 
+/**
+ * Represents a primitive list of integers.
+ */
 public abstract class IntList implements PrimitiveList {
 
     public static IntList forArray(int[] array) {
         return new SafeIntList(array, 0, array.length);
     }
 
+    /**
+     * Returns the number of integers in this list.
+     *
+     * @return The number of integers in this list.
+     */
     public abstract int size();
+
+    /**
+     * Returns the integer at the specified index in this list.
+     *
+     * @param index Index of the integer to return.
+     * @return The integer at the specified index in this list.
+     *
+     * @throws IndexOutOfBoundsException if the index is out of range (<code>index &lt; 0 || index
+     *         &gt;= size()</code>).
+     */
     public abstract int get(int index);
 
+    /**
+     * Copies all of the integers in this list to an array, starting at the specified index of the
+     * target array.
+     *
+     * @param array The array into which the integers of this list are to be copied.
+     * @param atIndex The index in the target array at which copying begins.
+     *
+     * @throws NullPointerException if <code>array</code> is null.
+     * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>atIndex &lt; 0
+     *         || (array.length - atIndex) &lt; size()</code>).
+     */
     public abstract void copyTo(int[] array, int atIndex);
+
+    /**
+     * Returns a view of the portion of this list between the specified <code>fromIndex</code>,
+     * inclusive, and <code>toIndex</code>, exclusive.
+     *
+     * @param fromIndex Low endpoint (inclusive) of the sub list.
+     * @param toIndex High endpoint (exclusive) of the sub list.
+     * @return A view of the specified range within this list.
+     *
+     * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>fromIndex &lt; 0
+     *         || toIndex &gt; size() || fromIndex &gt; toIndex</code>).
+     */
     public abstract IntList subList(int fromIndex, int toIndex);
 
+    /**
+     * Returns a new array containing all of the integers in this list in proper sequence (from
+     * first to last element).
+     *
+     * @return A new array containing all of the integers in this list in proper sequence.
+     */
     public int[] toArray() {
         int[] array = new int[size()];
         copyTo(array, 0);

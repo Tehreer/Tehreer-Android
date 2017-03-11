@@ -99,10 +99,10 @@ public class TypefaceManager {
     }
 
     /**
-     * Returns an array containing tags of registered typefaces.
+     * Returns an array containing the tags of registered typefaces.
      *
-     * @return A new array containing tags of registered typefaces, or an empty array if no typeface
-     * is registered.
+     * @return A new array containing the tags of registered typefaces, or an empty array if no
+     * typeface is registered.
      */
     public static Object[] getTakenTags() {
         synchronized (TYPEFACE_MAP) {

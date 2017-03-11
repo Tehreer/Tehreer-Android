@@ -122,8 +122,8 @@ public class TextLine {
     }
 
     /**
-     * Returns the ascent of this line which is the maximum ascent from the baseline of all the runs
-     * in the <code>TextLine</code>.
+     * Returns the ascent of this line which is the maximum ascent from the baseline of all runs in
+     * the <code>TextLine</code>.
      *
      * @return The ascent of this line.
      */
@@ -132,8 +132,8 @@ public class TextLine {
     }
 
     /**
-     * Returns the descent of this line which is the maximum descent from the baseline of all the
-     * runs in the <code>TextLine</code>.
+     * Returns the descent of this line which is the maximum descent from the baseline of all runs
+     * in the <code>TextLine</code>.
      *
      * @return The descent of this line.
      */
@@ -142,8 +142,8 @@ public class TextLine {
     }
 
     /**
-     * Returns the leading of this line which is the maximum leading from the baseline of all the
-     * runs in the <code>TextLine</code>.
+     * Returns the leading of this line which is the maximum leading of all runs in the
+     * <code>TextLine</code>.
      *
      * @return The leading of this line.
      */
@@ -171,19 +171,19 @@ public class TextLine {
 
     /**
      * Returns the advance extent for the glyphs corresponding to the trailing whitespace
-     * characters of this line in source text.
+     * characters of this line.
      *
      * @return The typographic extent for the glyphs corresponding to the trailing whitespace
-     *         characters of this line in source text.
+     *         characters of this line.
      */
     public float getTrailingWhitespaceExtent() {
         return mTrailingWhitespaceExtent;
     }
 
     /**
-     * Returns a readonly list that contains all the runs of this line.
+     * Returns an unmodifiable list that contains all the runs of this line.
      *
-     * @return A readonly list that contains all the runs of this line.
+     * @return An unmodifiable list that contains all the runs of this line.
      */
     public List<TextRun> getRuns() {
         return mRunList;
