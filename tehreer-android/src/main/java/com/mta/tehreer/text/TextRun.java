@@ -20,6 +20,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.internal.util.Exceptions;
 import com.mta.tehreer.internal.util.SafeFloatList;
 import com.mta.tehreer.internal.util.SafeIntList;
 import com.mta.tehreer.internal.util.SafePointList;
@@ -159,18 +160,53 @@ public class TextRun {
                              mGlyphOffset);
     }
 
-    private static class IndexList extends SafeIntList {
+    private static class IndexList extends IntList {
 
+        final int[] array;
+        final int offset;
+        final int size;
         final int difference;
 
-        public IndexList(int[] array, int offset, int size, int difference) {
-            super(array, offset, size);
+        IndexList(int[] array, int offset, int size, int difference) {
+            this.array = array;
+            this.offset = offset;
+            this.size = size;
             this.difference = difference;
         }
 
         @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
         public int get(int index) {
-            return super.get(index) - difference;
+            if (index < 0 || index >= size) {
+                throw Exceptions.indexOutOfBounds(index, size);
+            }
+
+            return array[index + offset] - difference;
+        }
+
+        @Override
+        public void copyTo(int[] array, int atIndex) {
+            System.arraycopy(this.array, offset, array, atIndex, size);
+
+            if (difference != 0) {
+                int length = size();
+                for (int i = atIndex; i < length; i++) {
+                    array[i] -= difference;
+                }
+            }
+        }
+
+        @Override
+        public IntList subList(int fromIndex, int toIndex) {
+            if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
+                throw new IndexOutOfBoundsException();
+            }
+
+            return new IndexList(array, offset + fromIndex, toIndex - fromIndex, difference);
         }
     }
 
