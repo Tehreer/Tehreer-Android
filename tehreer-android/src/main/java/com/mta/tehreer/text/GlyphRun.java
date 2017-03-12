@@ -26,6 +26,7 @@ class GlyphRun {
     final float typeSize;
     final float sizeByEm;
     final byte bidiLevel;
+    final WritingDirection writingDirection;
     final boolean isBackward;
     final int charStart;
     final int charEnd;
@@ -34,13 +35,15 @@ class GlyphRun {
     final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
-    GlyphRun(ShapingResult shapingResult, Typeface typeface, float typeSize, byte bidiLevel) {
+    GlyphRun(ShapingResult shapingResult, Typeface typeface, float typeSize,
+             byte bidiLevel, WritingDirection writingDirection) {
         float sizeByEm = typeSize / typeface.getUnitsPerEm();
 
         this.typeface = typeface;
         this.typeSize = typeSize;
         this.sizeByEm = sizeByEm;
         this.bidiLevel = bidiLevel;
+        this.writingDirection = writingDirection;
         this.isBackward = shapingResult.isBackward();
         this.charStart = shapingResult.getCharStart();
         this.charEnd = shapingResult.getCharEnd();
@@ -51,9 +54,7 @@ class GlyphRun {
     }
 
     WritingDirection writingDirection() {
-        return (((bidiLevel & 1) ^ (isBackward ? 1 : 0)) == 0
-                ? WritingDirection.LEFT_TO_RIGHT
-                : WritingDirection.RIGHT_TO_LEFT);
+        return writingDirection;
     }
 
     int glyphCount() {

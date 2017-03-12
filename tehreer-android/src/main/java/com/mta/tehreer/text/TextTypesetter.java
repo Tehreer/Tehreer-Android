@@ -252,7 +252,7 @@ public class TextTypesetter {
 
         try {
             shapingResult = shapingEngine.shapeText(mText, charStart, charEnd);
-            glyphRun = new GlyphRun(shapingResult, shapingEngine.getTypeface(), typeSize, bidiLevel);
+            glyphRun = new GlyphRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
         } finally {
             if (shapingResult != null) {
                 shapingResult.dispose();
