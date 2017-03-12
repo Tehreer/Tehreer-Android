@@ -57,13 +57,6 @@ public class TextRun {
         mGlyphCount = otherRun.mGlyphCount;
     }
 
-    private void verifyCharIndex(int charIndex) {
-        if (charIndex < mCharStart || charIndex >= mCharEnd) {
-            throw new IndexOutOfBoundsException("Char Index: " + charIndex
-                                                + ", Run Range: [" + mCharStart + ".." + mCharEnd + ")");
-        }
-    }
-
     private void verifyGlyphRange(int glyphStart, int glyphEnd) {
         if (glyphStart < 0) {
             throw new IllegalArgumentException("Glyph Start: " + glyphStart);
@@ -181,35 +174,11 @@ public class TextRun {
         }
     }
 
-    /**
-     * Returns the index to the first glyph associated with the character at the specified index in
-     * source text.
-     *
-     * @param charIndex The index of the character in source text.
-     * @return The index of the first glyph associated with the character at the specified index in
-     *         source text.
-     *
-     * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
-     */
-    public int getCharGlyphStart(int charIndex) {
-        verifyCharIndex(charIndex);
+    int getCharGlyphStart(int charIndex) {
         return (mGlyphRun.charGlyphStart(charIndex) - mGlyphOffset);
     }
 
-    /**
-     * Returns the index after the last glyph associated with the character at the specified index
-     * in source text.
-     *
-     * @param charIndex The index of the character in source text.
-     * @return The index after the last glyph associated with the character at the specified index
-     *         in source text.
-     *
-     * @throws IllegalArgumentException if <code>charIndex</code> is less than
-     *         {@link #getCharStart()}, or greater than or equal to {@link #getCharEnd()}
-     */
-    public int getCharGlyphEnd(int charIndex) {
-        verifyCharIndex(charIndex);
+    int getCharGlyphEnd(int charIndex) {
         return (mGlyphRun.charGlyphEnd(charIndex) - mGlyphOffset);
     }
 
