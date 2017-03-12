@@ -272,17 +272,10 @@ public class TextRun {
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
-        float[] advances = mGlyphRun.glyphAdvances;
-        float width = 0.0f;
-
         glyphStart += mGlyphOffset;
         glyphEnd += mGlyphOffset;
 
-        for (int i = glyphStart; i < glyphEnd; i++) {
-            width += advances[i];
-        }
-
-        return width;
+        return mGlyphRun.measureGlyphs(glyphStart, glyphEnd);
     }
 
     /**
