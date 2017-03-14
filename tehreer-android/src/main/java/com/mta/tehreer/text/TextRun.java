@@ -20,6 +20,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Exceptions;
 import com.mta.tehreer.internal.util.SafeFloatList;
 import com.mta.tehreer.internal.util.SafeIntList;
@@ -101,6 +102,24 @@ public class TextRun {
      */
     public byte getBidiLevel() {
         return mGlyphRun.bidiLevel;
+    }
+
+    /**
+     * Returns the typeface of this run.
+     *
+     * @return The typeface of this run.
+     */
+    public Typeface getTypeface() {
+        return mGlyphRun.typeface;
+    }
+
+    /**
+     * Returns the type size of this run.
+     *
+     * @return The type size of this run.
+     */
+    public float getTypeSize() {
+        return mGlyphRun.typeSize;
     }
 
     /**
