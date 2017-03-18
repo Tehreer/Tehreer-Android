@@ -40,7 +40,7 @@ public class RawUInt16Values extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getUInt16Value(pointer, index);
+        return Raw.getUInt16FromArray(pointer, index);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class RawUInt16Values extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUInt16Values(pointer, array, atIndex, size);
+        Raw.copyUInt16Array(pointer, array, atIndex, size);
     }
 
     @Override

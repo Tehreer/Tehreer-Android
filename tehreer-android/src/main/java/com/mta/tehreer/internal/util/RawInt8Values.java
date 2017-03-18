@@ -40,7 +40,7 @@ public class RawInt8Values extends ByteList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt8Value(pointer, index);
+        return Raw.getInt8FromArray(pointer, index);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class RawInt8Values extends ByteList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt8Values(pointer, array, atIndex, size);
+        Raw.copyInt8Array(pointer, array, atIndex, size);
     }
 
     @Override

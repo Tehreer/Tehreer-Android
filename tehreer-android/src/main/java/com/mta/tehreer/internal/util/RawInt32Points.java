@@ -42,7 +42,7 @@ public class RawInt32Points extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer, index * 2 + 0) * scale;
+        return Raw.getInt32FromArray(pointer, index * 2 + 0) * scale;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class RawInt32Points extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer, index * 2 + 1) * scale;
+        return Raw.getInt32FromArray(pointer, index * 2 + 1) * scale;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class RawInt32Points extends PointList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32Floats(pointer, array, atIndex, size * 2, scale);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override

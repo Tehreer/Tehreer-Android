@@ -40,7 +40,7 @@ public class RawSizeValues extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getSizeValue(pointer, index);
+        return Raw.getSizeFromArray(pointer, index);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class RawSizeValues extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copySizeValues(pointer, array, atIndex, size);
+        Raw.copySizeArray(pointer, array, atIndex, size);
     }
 
     @Override

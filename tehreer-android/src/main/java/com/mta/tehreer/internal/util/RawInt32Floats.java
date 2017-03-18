@@ -42,7 +42,7 @@ public class RawInt32Floats extends FloatList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer, index) * scale;
+        return Raw.getInt32FromArray(pointer, index) * scale;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RawInt32Floats extends FloatList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32Floats(pointer, array, atIndex, size, scale);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
     }
 
     @Override
