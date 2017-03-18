@@ -28,7 +28,7 @@ static jint bytesInSizeType(JNIEnv *env, jobject obj)
     return sizeof(size_t);
 }
 
-static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
+static jbyte getInt8FromArray(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
     int8_t *memory = reinterpret_cast<int8_t *>(pointer);
     jbyte value = static_cast<jbyte>(memory[index]);
@@ -36,7 +36,7 @@ static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
     return value;
 }
 
-static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
+static jint getInt32FromArray(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
     int32_t *memory = reinterpret_cast<int32_t *>(pointer);
     jint value = static_cast<jint>(memory[index]);
@@ -44,7 +44,7 @@ static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
     return value;
 }
 
-static jint getUInt16Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
+static jint getUInt16FromArray(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
     uint16_t *memory = reinterpret_cast<uint16_t *>(pointer);
     jint value = static_cast<jint>(memory[index]);
@@ -52,7 +52,7 @@ static jint getUInt16Value(JNIEnv *env, jobject obj, jlong pointer, jint index)
     return value;
 }
 
-static jint getSizeValue(JNIEnv *env, jobject obj, jlong pointer, jint index)
+static jint getSizeFromArray(JNIEnv *env, jobject obj, jlong pointer, jint index)
 {
     size_t *memory = reinterpret_cast<size_t *>(pointer);
     jint value = static_cast<jint>(memory[index]);
@@ -60,58 +60,58 @@ static jint getSizeValue(JNIEnv *env, jobject obj, jlong pointer, jint index)
     return value;
 }
 
-static void copyInt8Values(JNIEnv *env, jobject obj, jlong pointer, jbyteArray array, jint start, jint length)
+static void copyInt8Array(JNIEnv *env, jobject obj, jlong pointer, jbyteArray destination, jint start, jint length)
 {
     int8_t *buffer = reinterpret_cast<int8_t *>(pointer);
-    env->SetByteArrayRegion(array, start, length, buffer);
+    env->SetByteArrayRegion(destination, start, length, buffer);
 }
 
-static void copyUInt16Values(JNIEnv *env, jobject obj, jlong pointer, jintArray array, jint start, jint length)
+static void copyUInt16Array(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
 {
     uint16_t *buffer = reinterpret_cast<uint16_t *>(pointer);
-    jint *elements = env->GetIntArrayElements(array, nullptr) + start;
+    jint *elements = env->GetIntArrayElements(destination, nullptr) + start;
 
     for (size_t i = 0; i < length; i++) {
         elements[i] = static_cast<jint>(buffer[i]);
     }
 
-    env->ReleaseIntArrayElements(array, elements, 0);
+    env->ReleaseIntArrayElements(destination, elements, 0);
 }
 
-static void copySizeValues(JNIEnv *env, jobject obj, jlong pointer, jintArray array, jint start, jint length)
+static void copySizeArray(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
 {
     size_t *buffer = reinterpret_cast<size_t *>(pointer);
-    jint *elements = env->GetIntArrayElements(array, nullptr) + start;
+    jint *elements = env->GetIntArrayElements(destination, nullptr) + start;
 
     for (size_t i = 0; i < length; i++) {
         elements[i] = static_cast<jint>(buffer[i]);
     }
 
-    env->ReleaseIntArrayElements(array, elements, 0);
+    env->ReleaseIntArrayElements(destination, elements, 0);
 }
 
-static void copyInt32Floats(JNIEnv *env, jobject obj, jlong pointer, jfloatArray array, jint start, jint length, jfloat scale)
+static void copyInt32FloatArray(JNIEnv *env, jobject obj, jlong pointer, jfloatArray destination, jint start, jint length, jfloat scale)
 {
     int32_t *buffer = reinterpret_cast<int32_t *>(pointer);
-    jfloat *elements = env->GetFloatArrayElements(array, nullptr) + start;
+    jfloat *elements = env->GetFloatArrayElements(destination, nullptr) + start;
 
     for (size_t i = 0; i < length; i++) {
         elements[i] = buffer[i] * scale;
     }
 
-    env->ReleaseFloatArrayElements(array, elements, 0);
+    env->ReleaseFloatArrayElements(destination, elements, 0);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
     { "bytesInSizeType", "()I", (void *)bytesInSizeType },
-    { "getInt8Value", "(JI)B", (void *)getInt8Value },
-    { "getInt32Value", "(JI)I", (void *)getInt32Value },
-    { "getUInt16Value", "(JI)I", (void *)getUInt16Value },
-    { "getSizeValue", "(JI)I", (void *)getSizeValue },
-    { "copyInt8Values", "(J[BII)V", (void *)copyInt8Values },
-    { "copyUInt16Values", "(J[III)V", (void *)copyUInt16Values },
-    { "copySizeValues", "(J[III)V", (void *)copySizeValues },
-    { "copyInt32Floats", "(J[FIIF)V", (void *)copyInt32Floats },
+    { "getInt8FromArray", "(JI)B", (void *)getInt8FromArray },
+    { "getInt32FromArray", "(JI)I", (void *)getInt32FromArray },
+    { "getUInt16FromArray", "(JI)I", (void *)getUInt16FromArray },
+    { "getSizeFromArray", "(JI)I", (void *)getSizeFromArray },
+    { "copyInt8Array", "(J[BII)V", (void *)copyInt8Array },
+    { "copyUInt16Array", "(J[III)V", (void *)copyUInt16Array },
+    { "copySizeArray", "(J[III)V", (void *)copySizeArray },
+    { "copyInt32FloatArray", "(J[FIIF)V", (void *)copyInt32FloatArray },
 };
 
 jint register_com_mta_tehreer_internal_Raw(JNIEnv *env)
