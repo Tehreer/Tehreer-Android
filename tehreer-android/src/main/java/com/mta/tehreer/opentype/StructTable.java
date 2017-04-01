@@ -20,9 +20,11 @@ import com.mta.tehreer.internal.Raw;
 
 class StructTable implements SfntTable {
 
+    private final Object source;
     private final long pointer;
 
-    StructTable(long pointer) {
+    StructTable(Object source, long pointer) {
+        this.source = source;
         this.pointer = pointer;
     }
 
