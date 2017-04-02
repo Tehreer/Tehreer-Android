@@ -42,7 +42,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_graphics_GlyphRasterizer(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
-          && register_com_mta_tehreer_opentype_SfntNames(env) == JNI_OK
+          && register_com_mta_tehreer_opentype_NameTable(env) == JNI_OK
           && register_com_mta_tehreer_opentype_ShapingEngine(env) == JNI_OK
           && register_com_mta_tehreer_opentype_ShapingResult(env) == JNI_OK;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__SFNT_NAMES_H
-#define _TEHREER__SFNT_NAMES_H
+#ifndef _TEHREER__NAME_TABLE_H
+#define _TEHREER__NAME_TABLE_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_opentype_SfntNames(JNIEnv *env);
+jint register_com_mta_tehreer_opentype_NameTable(JNIEnv *env);
 
 #endif

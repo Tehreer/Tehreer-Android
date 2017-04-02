@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,28 +29,18 @@ extern "C" {
 
 #include "JavaBridge.h"
 #include "Typeface.h"
-#include "SfntNames.h"
+#include "NameTable.h"
 
 using namespace std;
 using namespace Tehreer;
 
 class Locale {
 private:
-    const string *m_platform;
     const vector<string> *m_values;
 
 public:
     Locale(uint16_t platformID, uint16_t languageID)
     {
-        static const vector<string> AllPlatforms = {
-            "ucd",  // Unicode
-            "mac",  // Macintosh
-            "iso",  // ISO
-            "win",  // Windows
-            "cst",  // Custom
-        };
-        static const string UnrecognizedPlatform = "unr";
-
         // Format: <ID, <Language, Region, Script, Variant>>
         static const map<uint16_t, vector<string>> MacLanguages = {
             {0, {"en"}},
@@ -383,12 +373,6 @@ public:
         };
         static const vector<string> UndeterminedLanguage = {"und"};
 
-        if (platformID < AllPlatforms.size()) {
-            m_platform = &AllPlatforms[platformID];
-        } else {
-            m_platform = &UnrecognizedPlatform;
-        }
-
         switch (platformID) {
         case 1: {
             auto pair = MacLanguages.find(languageID);
@@ -412,7 +396,6 @@ public:
         }
     }
 
-    const char *platform() const { return (m_platform ? m_platform->c_str() : nullptr); }
     const char *language() const { return (m_values->size() > 0 ? m_values->at(0).c_str() : nullptr); }
     const char *region() const { return (m_values->size() > 1 ? m_values->at(1).c_str() : nullptr); }
     const char *script() const { return (m_values->size() > 2 ? m_values->at(2).c_str() : nullptr); }
@@ -566,24 +549,6 @@ public:
     const char *name() const { return (m_name.length() > 0 ? m_name.c_str() : nullptr); }
 };
 
-static jobject createLocale(JNIEnv *env, Locale &locale)
-{
-    jstring platform = env->NewStringUTF(locale.platform());
-    jstring language = env->NewStringUTF(locale.language());
-    jstring region = env->NewStringUTF(locale.region());
-    jstring script = env->NewStringUTF(locale.script());
-    jstring variant = env->NewStringUTF(locale.variant());
-    jobject result = JavaBridge(env).SfntNames_createLocale(platform, language, region, script, variant);
-
-    env->DeleteLocalRef(variant);
-    env->DeleteLocalRef(script);
-    env->DeleteLocalRef(region);
-    env->DeleteLocalRef(language);
-    env->DeleteLocalRef(platform);
-
-    return result;
-}
-
 static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
 {
     jbyteArray bytes = env->NewByteArray(length);
@@ -592,40 +557,12 @@ static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
     return bytes;
 }
 
-static jstring decodeBytes(JNIEnv *env, Encoding &encoding, jbyteArray bytes)
-{
-    if (encoding.name()) {
-        jstring charsetName = env->NewStringUTF(encoding.name());
-        jstring decodedString = JavaBridge(env).SfntNames_decodeBytes(charsetName, bytes);
-
-        env->DeleteLocalRef(charsetName);
-
-        return decodedString;
-    }
-
-    return nullptr;
-}
-
-static jstring decodeBuffer(JNIEnv *env, Encoding &encoding, FT_Byte *buffer, FT_UInt length)
-{
-    jbyteArray encodedBytes = createBytes(env, buffer, length);
-    jstring decodedString = decodeBytes(env, encoding, encodedBytes);
-
-    env->DeleteLocalRef(encodedBytes);
-
-    return decodedString;
-}
-
 jstring getLocaleTag(JNIEnv *env, jobject obj, jint tagId, jint platformId, jint languageId)
 {
     Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
     jstring tag = nullptr;
 
     switch(tagId) {
-    case 0:
-        tag = env->NewStringUTF(locale.platform());
-        break;
-
     case 1:
         tag = env->NewStringUTF(locale.language());
         break;
@@ -658,44 +595,7 @@ jstring getCharsetName(JNIEnv *env, jobject obj, jint platformId, jint encodingI
     return name;
 }
 
-void addStandardNames(JNIEnv *env, jobject obj, jobject jsfntNames, jobject jtypeface)
-{
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(baseFace);
-
-    for (FT_UInt i = 0; i < nameCount; i++) {
-        // Lock the typeface as FreeType loads the name on demand.
-        typeface->lock();
-
-        FT_SfntName sfntName;
-        FT_Error error = FT_Get_Sfnt_Name(baseFace, i, &sfntName);
-
-        typeface->unlock();
-
-        if (error != FT_Err_Ok) {
-            continue;
-        }
-
-        if (sfntName.name_id <= 25) {
-            Locale locale(sfntName.platform_id, sfntName.language_id);
-            Encoding encoding(sfntName.platform_id, sfntName.encoding_id);
-
-            jobject relevantLocale = createLocale(env, locale);
-            jstring decodedString = decodeBuffer(env, encoding, sfntName.string, sfntName.string_len);
-
-            if (decodedString) {
-                JavaBridge(env).SfntNames_addName(jsfntNames, sfntName.name_id, relevantLocale, decodedString);
-            }
-
-            env->DeleteLocalRef(decodedString);
-            env->DeleteLocalRef(relevantLocale);
-        }
-    }
-}
-
-jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
+jint getRecordCount(JNIEnv *env, jobject obj, jobject jtypeface)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -705,7 +605,7 @@ jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
     return static_cast<jint>(nameCount);
 }
 
-jobject getNameAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
+jobject getRecordAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -721,20 +621,19 @@ jobject getNameAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 
     jbyteArray bytes = createBytes(env, sfntName.string, sfntName.string_len);
 
-    return JavaBridge(env).SfntNamesEntry_construct(sfntName.name_id, sfntName.platform_id,
-                                                    sfntName.language_id, sfntName.encoding_id,
-                                                    bytes);
+    return JavaBridge(env).NameTableRecord_construct(sfntName.name_id, sfntName.platform_id,
+                                                     sfntName.language_id, sfntName.encoding_id,
+                                                     bytes);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetLocaleTag", "(III)Ljava/lang/String;", (void *)getLocaleTag },
     { "nativeGetCharsetName", "(II)Ljava/lang/String;", (void *)getCharsetName },
-    { "nativeAddStandardNames", "(Lcom/mta/tehreer/opentype/SfntNames;Lcom/mta/tehreer/graphics/Typeface;)V", (void *)addStandardNames },
-    { "nativeGetNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
-    { "nativeGetNameAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/SfntNames$Entry;", (void *)getNameAt },
+    { "nativeGetRecordCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getRecordCount },
+    { "nativeGetRecordAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameTable$Record;", (void *)getRecordAt },
 };
 
-jint register_com_mta_tehreer_opentype_SfntNames(JNIEnv *env)
+jint register_com_mta_tehreer_opentype_NameTable(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/SfntNames", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/NameTable", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }
