@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * Represents a collection of entries in SFNT 'name' table.
  */
-public class SfntNames {
+public class NameTable {
 
     /**
      * Private use subtag representing unicode platform in a {@link java.util.Locale Locale} object.
@@ -59,7 +59,7 @@ public class SfntNames {
      */
     public static final String CUSTOM_PLATFORM = "cst";
     /**
-     * Private use subtag representing unrecoginzed platform in a {@link java.util.Locale Locale}
+     * Private use subtag representing unrecognized platform in a {@link java.util.Locale Locale}
      * object.
      */
     public static final String UNRECOGNIZED_PLATFORM = "unr";
@@ -145,19 +145,19 @@ public class SfntNames {
     }
 
     /**
-     * Returns an <code>SfntNames</code> object for the specified typeface.
+     * Returns an <code>NameTable</code> object for the specified typeface.
      *
-     * @param typeface The typeface for which to create the <code>SfntNames</code> object.
-     * @return A new <code>SfntNames</code> object for the specified typeface.
+     * @param typeface The typeface for which to create the <code>NameTable</code> object.
+     * @return A new <code>NameTable</code> object for the specified typeface.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      */
-    public static SfntNames forTypeface(Typeface typeface) {
+    public static NameTable forTypeface(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
 
-        return new SfntNames(typeface);
+        return new NameTable(typeface);
     }
 
     /**
@@ -203,7 +203,7 @@ public class SfntNames {
         return Collections.unmodifiableMap(filter);
     }
 
-    private SfntNames(Typeface typeface) {
+    private NameTable(Typeface typeface) {
         this.typeface = typeface;
         nativeAddStandardNames(this, typeface);
     }
@@ -229,20 +229,11 @@ public class SfntNames {
     }
 
     /**
-     * Returns the typeface whose names are represented by this object.
-     *
-     * @return The typeface whose names are represented by this object.
-     */
-    public Typeface getTypeface() {
-        return typeface;
-    }
-
-    /**
      * Returns the number of name entries in SFNT 'name' table.
      *
      * @return The number of name entries in SFNT 'name' table.
      */
-    public int getNameCount() {
+    public int recordCount() {
         return nativeGetNameCount(typeface);
     }
 
@@ -253,10 +244,10 @@ public class SfntNames {
      * @return An entry of SFNT 'name' table at a given index.
      *
      * @throws IndexOutOfBoundsException if <code>index</code> is negative, or
-     *         <code>index</code> is greater than or equal to {@link #getNameCount()}
+     *         <code>index</code> is greater than or equal to {@link #recordCount()}
      */
-    public Entry getNameAt(int index) {
-        if (index < 0 || index >= getNameCount()) {
+    public Record recordAt(int index) {
+        if (index < 0 || index >= recordCount()) {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
 
@@ -614,14 +605,14 @@ public class SfntNames {
     private static native String nativeGetLocaleTag(int tagId, int platformId, int languageId);
     private static native String nativeGetCharsetName(int platformId, int encodingId);
 
-    private static native void nativeAddStandardNames(SfntNames sfntNames, Typeface typeface);
+    private static native void nativeAddStandardNames(NameTable nameTable, Typeface typeface);
     private static native int nativeGetNameCount(Typeface typeface);
-    private static native Entry nativeGetNameAt(Typeface typeface, int index);
+    private static native Record nativeGetNameAt(Typeface typeface, int index);
 
     /**
      * Represents a single entry of SFNT 'name' table.
      */
-    public static class Entry {
+    public static class Record {
 
         /**
          * The name id of this entry.
@@ -645,7 +636,7 @@ public class SfntNames {
         public byte[] bytes;
 
         @Sustain
-        public Entry(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
+        public Record(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
             this.nameId = nameId;
             this.platformId = platformId;
             this.languageId = languageId;
@@ -653,7 +644,7 @@ public class SfntNames {
             this.bytes = bytes;
         }
 
-        public Entry() {
+        public Record() {
         }
 
         /**
@@ -712,7 +703,7 @@ public class SfntNames {
         public String toString() {
             Charset charset = charset();
 
-            return "SfntNames.Entry{nameId=" + nameId
+            return "NameTable.Record{nameId=" + nameId
                     + ", platformId=" + platformId
                     + ", languageId=" + languageId
                     + ", encodingId=" + encodingId
