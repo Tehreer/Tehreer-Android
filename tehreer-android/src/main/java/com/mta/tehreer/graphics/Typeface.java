@@ -21,90 +21,47 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
-import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.opentype.SfntTag;
-import com.mta.tehreer.util.Disposable;
 
+import java.io.File;
 import java.io.InputStream;
 
 /**
  * The Typeface class specifies the typeface and intrinsic style of a font. This is used in the
- * renderer, along with optionally Renderer settings like textSize, textSkewX, textScaleX to specify
+ * renderer, along with optionally Renderer settings like typeSize, slantAngle, scaleX, to specify
  * how text appears when drawn (and measured).
  */
-public class Typeface implements Disposable {
+public class Typeface {
 
-    private static class Finalizable extends Typeface {
-
-        private Finalizable(Typeface parent) {
-            super(parent);
-        }
-
-        @Override
-        public void dispose() {
-            throw new UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT);
-        }
+    private class Finalizable {
 
         @Override
         protected void finalize() throws Throwable {
             try {
-                super.dispose();
+                dispose();
             } finally {
                 super.finalize();
             }
         }
     }
 
-    /**
-     * Wraps a typeface object into a finalizable instance which is guaranteed to be disposed
-     * automatically by the GC when no longer in use. After calling this method,
-     * <code>dispose()</code> should not be called on either original object or returned object.
-     * Calling <code>dispose()</code> on returned object will throw an
-     * <code>UnsupportedOperationException</code>.
-     * <p>
-     * <strong>Note:</strong> The behavior is undefined if the passed-in object is already disposed
-     * or wrapped into another finalizable instance.
-     *
-     * @param typeface The typeface object to wrap into a finalizable instance.
-     * @return The finalizable instance of the passed-in typeface object.
-     */
-    public static Typeface finalizable(Typeface typeface) {
-        if (typeface.getClass() == Typeface.class) {
-            return new Finalizable(typeface);
-        }
-
-        if (typeface.getClass() != Finalizable.class) {
-            throw new IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED);
-        }
-
-        return typeface;
-    }
-
-    /**
-     * Checks whether a typeface object is finalizable or not.
-     *
-     * @param typeface The typeface object to check.
-     * @return <code>true</code> if the passed-in typeface object is finalizable, <code>false</code>
-     *         otherwise.
-     */
-    public static boolean isFinalizable(Typeface typeface) {
-        return (typeface.getClass() == Finalizable.class);
-    }
-
     @Sustain
     long nativeTypeface;
+    @Sustain
+    private final Finalizable finalizable = new Finalizable();
+    private final TypefaceDescription description;
 
     /**
-     * Creates a new typeface with the specified asset. The data of the asset is not copied into the
+     * Creates a new typeface from the specified asset. The data of the asset is not copied into the
      * memory. Rather, it is directly read from the stream when needed. So the performance of
-     * resulting typeface might be slower and should be used with precaution.
+     * resulting typeface might be slower and should be used with caution.
      *
      * @param assetManager The application's asset manager.
      * @param path The path of the font file in the assets directory.
      * @return The new typeface, or <code>null</code> if an error occurred while creating it.
      */
-    public static Typeface createWithAsset(AssetManager assetManager, String path) {
+    public static Typeface create(AssetManager assetManager, String path) {
         long nativeTypeface = nativeCreateWithAsset(assetManager, path);
         if (nativeTypeface != 0) {
             return new Typeface(nativeTypeface);
@@ -117,11 +74,11 @@ public class Typeface implements Disposable {
      * Creates a new typeface with the specified file. The data for the font is directly read from
      * the file when needed.
      *
-     * @param path The absolute path of the font file.
+     * @param file The font file.
      * @return The new typeface, or <code>null</code> if an error occurred while creating it.
      */
-    public static Typeface createWithFile(String path) {
-        long nativeTypeface = nativeCreateWithFile(path);
+    public static Typeface create(File file) {
+        long nativeTypeface = nativeCreateWithFile(file.getAbsolutePath());
         if (nativeTypeface != 0) {
             return new Typeface(nativeTypeface);
         }
@@ -136,7 +93,7 @@ public class Typeface implements Disposable {
      * @param stream The input stream that contains the data of the font.
      * @return The new typeface, or <code>null</code> if an error occurred while creating it.
      */
-    public static Typeface createFromStream(InputStream stream) {
+    public static Typeface create(InputStream stream) {
         long nativeTypeface = nativeCreateFromStream(stream);
         if (nativeTypeface != 0) {
             return new Typeface(nativeTypeface);
@@ -147,12 +104,28 @@ public class Typeface implements Disposable {
 
 	private Typeface(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
+        this.description = new TypefaceDescription(this);
 	}
 
-    private Typeface(Typeface other) {
-        this.nativeTypeface = other.nativeTypeface;
+    public String getFamilyName() {
+        return description.getFamilyName();
     }
 
+    public String getFaceName() {
+        return description.getFaceName();
+    }
+
+    public TypeStyle getStyle() {
+        return description.getStyle();
+    }
+
+    public TypeWeight getWeight() {
+        return description.getWeight();
+    }
+
+    public TypeStretch getStretch() {
+        return description.getStretch();
+    }
 
     /**
      * Generates an array of bytes containing the data of the intended table.
@@ -283,8 +256,7 @@ public class Typeface implements Disposable {
 	    return nativeGetUnderlineThickness(nativeTypeface);
 	}
 
-    @Override
-    public void dispose() {
+    void dispose() {
         nativeDispose(nativeTypeface);
     }
 
