@@ -53,13 +53,8 @@ static jmethodID PATH__QUAD_TO;
 
 static jmethodID RECT__SET;
 
-static jclass    SFNT_NAMES;
-static jmethodID SFNT_NAMES__CREATE_LOCALE;
-static jmethodID SFNT_NAMES__DECODE_BYTES;
-static jmethodID SFNT_NAMES__ADD_NAME;
-
-static jclass    SFNT_NAMES_ENTRY;
-static jmethodID SFNT_NAMES_ENTRY__CONSTRUCTOR;
+static jclass    NAME_TABLE_RECORD;
+static jmethodID NAME_TABLE_RECORD__CONSTRUCTOR;
 
 static jfieldID  TYPEFACE__NATIVE_TYPEFACE;
 
@@ -110,15 +105,9 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("android/graphics/Rect");
     RECT__SET = env->GetMethodID(clazz, "set", "(IIII)V");
 
-    clazz = env->FindClass("com/mta/tehreer/opentype/SfntNames");
-    SFNT_NAMES = (jclass)env->NewGlobalRef(clazz);
-    SFNT_NAMES__CREATE_LOCALE = env->GetStaticMethodID(clazz, "createLocale", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/Locale;");
-    SFNT_NAMES__DECODE_BYTES = env->GetStaticMethodID(clazz, "decodeBytes", "(Ljava/lang/String;[B)Ljava/lang/String;");
-    SFNT_NAMES__ADD_NAME = env->GetMethodID(clazz, "addName", "(ILjava/util/Locale;Ljava/lang/String;)V");
-
-    clazz = env->FindClass("com/mta/tehreer/opentype/SfntNames$Entry");
-    SFNT_NAMES_ENTRY = (jclass)env->NewGlobalRef(clazz);
-    SFNT_NAMES_ENTRY__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
+    clazz = env->FindClass("com/mta/tehreer/opentype/NameTable$Record");
+    NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
+    NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
 
     clazz = env->FindClass("com/mta/tehreer/graphics/Typeface");
     TYPEFACE__NATIVE_TYPEFACE = env->GetFieldID(clazz, "nativeTypeface", "J");
@@ -245,24 +234,9 @@ void JavaBridge::Rect_set(jobject rect, jint left, jint top, jint right, jint bo
     m_env->CallVoidMethod(rect, RECT__SET, left, top, right, bottom);
 }
 
-jobject JavaBridge::SfntNames_createLocale(jstring platform, jstring language, jstring region, jstring script, jstring variant) const
+jobject JavaBridge::NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
 {
-    return m_env->CallStaticObjectMethod(SFNT_NAMES, SFNT_NAMES__CREATE_LOCALE, platform, language, region, script, variant);
-}
-
-jstring JavaBridge::SfntNames_decodeBytes(jstring encoding, jbyteArray bytes) const
-{
-    return static_cast<jstring>(m_env->CallStaticObjectMethod(SFNT_NAMES, SFNT_NAMES__DECODE_BYTES, encoding, bytes));
-}
-
-void JavaBridge::SfntNames_addName(jobject sfntNames, jint nameId, jobject relevantLocale, jstring decodedString) const
-{
-    m_env->CallVoidMethod(sfntNames, SFNT_NAMES__ADD_NAME, nameId, relevantLocale, decodedString);
-}
-
-jobject JavaBridge::SfntNamesEntry_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
-{
-    return m_env->NewObject(SFNT_NAMES_ENTRY, SFNT_NAMES_ENTRY__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
+    return m_env->NewObject(NAME_TABLE_RECORD, NAME_TABLE_RECORD__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
 }
 
 jlong JavaBridge::Typeface_getNativeTypeface(jobject typeface) const

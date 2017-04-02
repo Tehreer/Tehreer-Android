@@ -60,11 +60,7 @@ public:
 
     void Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const;
 
-    jobject SfntNames_createLocale(jstring platform, jstring language, jstring region, jstring script, jstring variant) const;
-    jstring SfntNames_decodeBytes(jstring encoding, jbyteArray bytes) const;
-    void SfntNames_addName(jobject sfntNames, jint nameId, jobject relevantLocale, jstring decodedString) const;
-
-    jobject SfntNamesEntry_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
+    jobject NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
 
     jlong Typeface_getNativeTypeface(jobject typeface) const;
 
