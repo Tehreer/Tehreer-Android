@@ -17,6 +17,7 @@
 package com.mta.tehreer.graphics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -35,32 +36,52 @@ import java.util.TreeSet;
  */
 public class TypefaceManager {
 
+    private static final List<TypeFamily> TYPE_FAMILIES = new ArrayList<>();
     private static final Map<Object, Typeface> TYPEFACE_TAGS = new HashMap<>();
-    private static final Set<TypeFamily> TYPE_FAMILIES = new TreeSet<>(new Comparator<TypeFamily>() {
+
+    private static class FamilyNameComparator implements Comparator {
         @Override
-        public int compare(TypeFamily typeFamily, TypeFamily t1) {
-            return typeFamily.getFamilyName().compareTo(t1.getFamilyName());
-        }
-    });
+        public int compare(Object obj1, Object obj2) {
+            TypeFamily family = (TypeFamily) obj1;
+            String name = (String) obj2;
 
-    private static TypeFamily getFamilyForName(String familyName) {
-        for (TypeFamily family : TYPE_FAMILIES) {
-            if (family.getFamilyName().equalsIgnoreCase(familyName)) {
-                return family;
-            }
+            return family.getFamilyName().compareToIgnoreCase(name);
         }
-
-        return new TypeFamily(familyName, new ArrayList<Typeface>());
     }
 
-    private static TypeFamily getTypefaceFamily(Typeface typeface) {
-        for (TypeFamily family : TYPE_FAMILIES) {
-            if (family.typefaces.contains(typeface)) {
-                return family;
+    private static class TypefaceComparator implements Comparator<Typeface> {
+        @Override
+        public int compare(Typeface obj1, Typeface obj2) {
+            int result = obj1.getFamilyName().compareToIgnoreCase(obj2.getFamilyName());
+            if (result == 0) {
+                return obj1.getFaceName().compareToIgnoreCase(obj2.getFaceName());
             }
+
+            return result;
+        }
+    }
+
+    private static TypeFamily getTypeFamily(String familyName) {
+        Comparator comparator = new FamilyNameComparator();
+        int index = Collections.binarySearch(TYPE_FAMILIES, familyName, comparator);
+        if (index < 0) {
+            TypeFamily typeFamily = new TypeFamily(familyName, new ArrayList<Typeface>());
+            TYPE_FAMILIES.add(-(index + 1), typeFamily);
+            return typeFamily;
         }
 
-        return null;
+        return TYPE_FAMILIES.get(index);
+    }
+
+    private static void addTypeface(TypeFamily typeFamily, Typeface typeface) {
+        List<Typeface> list = typeFamily.typefaces;
+        Comparator<Typeface> comparator = new TypefaceComparator();
+        int index = Collections.binarySearch(list, typeface, comparator) + 1;
+        if (index < 0) {
+            index *= -1;
+        }
+
+        list.add(index, typeface);
     }
 
     /**
@@ -82,7 +103,7 @@ public class TypefaceManager {
         }
 
         synchronized (TypefaceManager.class) {
-            if (TYPEFACE_TAGS.containsValue(typeface)) {
+            if (typeface.faceTag != null) {
                 throw new IllegalArgumentException("This typeface is already registered for a different tag");
             }
             if (TYPEFACE_TAGS.containsKey(tag)) {
@@ -90,9 +111,11 @@ public class TypefaceManager {
             }
 
             TYPEFACE_TAGS.put(tag, typeface);
+            typeface.faceTag = tag;
 
-            TypeFamily typeFamily = getFamilyForName(typeface.getFamilyName());
-            typeFamily.typefaces.add(typeface);
+            TypeFamily typeFamily = getTypeFamily(typeface.getFamilyName());
+            addTypeface(typeFamily, typeface);
+            typeface.typeFamily = typeFamily;
         }
     }
 
@@ -111,22 +134,33 @@ public class TypefaceManager {
         }
 
         synchronized (TypefaceManager.class) {
-            Object tag = null;
-
-            for (Map.Entry<Object, Typeface> entry : TYPEFACE_TAGS.entrySet()) {
-                if (entry.getValue().equals(typeface)) {
-                    tag = entry.getKey();
-                }
-            }
-
-            if (tag == null) {
+            Object faceTag = typeface.faceTag;
+            if (faceTag == null) {
                 throw new IllegalArgumentException("This typeface is not registered");
             }
 
-            TYPEFACE_TAGS.remove(tag);
+            typeface.faceTag = null;
+            TYPEFACE_TAGS.remove(faceTag);
 
-            TypeFamily typeFamily = getTypefaceFamily(typeface);
+            TypeFamily typeFamily = typeface.typeFamily;
+            typeface.typeFamily = null;
             typeFamily.typefaces.remove(typeface);
+        }
+    }
+
+    public static List<TypeFamily> getAllFamilies() {
+        synchronized (TypefaceManager.class) {
+            return Collections.unmodifiableList(TYPE_FAMILIES);
+        }
+    }
+
+    public static List<Typeface> getAllTypefaces() {
+        synchronized (TypefaceManager.class) {
+            Comparator<Typeface> comparator = new TypefaceComparator();
+            Set<Typeface> typefaces = new TreeSet<>(comparator);
+            typefaces.addAll(TYPEFACE_TAGS.values());
+
+            return Collections.unmodifiableList(new ArrayList<>(typefaces));
         }
     }
 
@@ -136,34 +170,9 @@ public class TypefaceManager {
      * @return A list containing the tags of registered typefaces, or an empty list if no typeface
      *         is registered.
      */
-    public static List<Object> getTakenTags() {
+    public static Set<Object> getTakenTags() {
         synchronized (TypefaceManager.class) {
-            return new ArrayList<>(TYPEFACE_TAGS.keySet());
-        }
-    }
-
-    public static List<TypeFamily> getAllFamilies() {
-        synchronized (TypefaceManager.class) {
-            return new ArrayList<>(TYPE_FAMILIES);
-        }
-    }
-
-    public static List<Typeface> getAllTypefaces() {
-        synchronized (TypefaceManager.class) {
-            Set<Typeface> sortedTypefaces = new TreeSet<>(new Comparator<Typeface>() {
-                @Override
-                public int compare(Typeface typeface, Typeface t1) {
-                    int result = typeface.getFamilyName().compareTo(t1.getFamilyName());
-                    if (result == 0) {
-                        return typeface.getFaceName().compareTo(t1.getFaceName());
-                    }
-
-                    return result;
-                }
-            });
-            sortedTypefaces.addAll(TYPEFACE_TAGS.values());
-
-            return new ArrayList<>(sortedTypefaces);
+            return Collections.unmodifiableSet(TYPEFACE_TAGS.keySet());
         }
     }
 

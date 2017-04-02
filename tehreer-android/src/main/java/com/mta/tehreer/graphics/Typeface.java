@@ -51,6 +51,8 @@ public class Typeface {
     @Sustain
     private final Finalizable finalizable = new Finalizable();
     private final TypefaceDescription description;
+    TypeFamily typeFamily;
+    Object faceTag;
 
     /**
      * Creates a new typeface from the specified asset. The data of the asset is not copied into the
