@@ -20,11 +20,19 @@ import com.mta.tehreer.opentype.FontHeaderTable;
 import com.mta.tehreer.opentype.NameTable;
 import com.mta.tehreer.opentype.Os2WinMetricsTable;
 
-import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 
 class TypefaceDescription {
+
+    private static final int PLATFORM_MACINTOSH = 1;
+    private static final int PLATFORM_WINDOWS = 3;
+
+    private static final int NAME_FONT_FAMILY = 1;
+    private static final int NAME_FONT_SUBFAMILY = 2;
+    private static final int NAME_TYPOGRAPHIC_FAMILY = 16;
+    private static final int NAME_TYPOGRAPHIC_SUBFAMILY = 17;
+    private static final int NAME_WWS_FAMILY = 21;
+    private static final int NAME_WWS_SUBFAMILY = 22;
 
     private static final int MAC_STYLE_BOLD = 1 << 0;
     private static final int MAC_STYLE_ITALIC = 1 << 1;
@@ -41,80 +49,69 @@ class TypefaceDescription {
     private TypeStretch mStretch;
     private TypeStyle mStyle;
 
-    private static String getEnglishName(Map<Locale, String> names) {
-        String fallback = null;
+    private static String getEnglishName(NameTable nameTable, int nameId) {
+        int recordCount = nameTable.recordCount();
+        NameTable.Record candidate = null;
 
-        for (Map.Entry<Locale, String> entry : names.entrySet()) {
-            Locale locale = entry.getKey();
-            String name = entry.getValue();
+        for (int i = 0; i < recordCount; i++) {
+            NameTable.Record record = nameTable.recordAt(i);
 
-            if (locale.getLanguage().equals("en")) {
-                if (locale.getCountry().equals("US")) {
-                    return name;
+            if (record.nameId == nameId) {
+                Locale locale = record.locale();
+
+                if (locale.getLanguage().equals("en")) {
+                    if (record.platformId == PLATFORM_WINDOWS && locale.getCountry().equals("US")) {
+                        return record.string();
+                    }
+
+                    if (candidate == null || record.platformId == PLATFORM_MACINTOSH) {
+                        candidate = record;
+                    }
                 }
-
-                fallback = name;
             }
         }
 
-        return fallback;
-    }
-
-    private static String getSuitableName(Map<Locale, String> names) {
-        String englishName = null;
-
-        if (names.size() > 0) {
-            Map<Locale, String> filteredFamily = NameTable.filterPlatforms(names, Collections.singleton(NameTable.WINDOWS_PLATFORM));
-            englishName = getEnglishName(filteredFamily);
-
-            if (englishName == null) {
-                filteredFamily = NameTable.filterPlatforms(names, Collections.singleton(NameTable.UNICODE_PLATFORM));
-                englishName = getEnglishName(filteredFamily);
-            }
-
-            if (englishName == null) {
-                filteredFamily = NameTable.filterPlatforms(names, Collections.singleton(NameTable.MACINTOSH_PLATFORM));
-                englishName = getEnglishName(filteredFamily);
-            }
+        if (candidate != null) {
+            return candidate.string();
         }
 
-        return englishName;
+        return null;
     }
 
     private static String getFamilyName(NameTable nameTable, Os2WinMetricsTable os2Table) {
-        Map<Locale, String> fontFamily = Collections.emptyMap();
+        String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
-            fontFamily = nameTable.getWwsFamily();
+            familyName = getEnglishName(nameTable, NAME_WWS_FAMILY);
         }
 
-        if (fontFamily.size() == 0) {
-            fontFamily = nameTable.getTypographicFamily();
+        if (familyName == null) {
+            familyName = getEnglishName(nameTable, NAME_TYPOGRAPHIC_FAMILY);
         }
 
-        if (fontFamily.size() == 0) {
-            fontFamily = nameTable.getFontFamily();
+        if (familyName == null) {
+            familyName = getEnglishName(nameTable, NAME_FONT_FAMILY);
         }
 
-        return getSuitableName(fontFamily);
+        return familyName;
     }
 
     private static String getFaceName(NameTable nameTable, Os2WinMetricsTable os2Table) {
-        Map<Locale, String> fontSubfamily = Collections.emptyMap();
+        String familyName = null;
 
-        if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) != 0) {
-            fontSubfamily = nameTable.getWwsSubfamily();
+        if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
+            familyName = getEnglishName(nameTable, NAME_WWS_SUBFAMILY);
         }
 
-        if (fontSubfamily.size() == 0) {
-            fontSubfamily = nameTable.getTypographicSubfamily();
+        if (familyName == null) {
+            familyName = getEnglishName(nameTable, NAME_TYPOGRAPHIC_SUBFAMILY);
         }
 
-        if (fontSubfamily.size() == 0) {
-            fontSubfamily = nameTable.getFontSubfamily();
+        if (familyName == null) {
+            familyName = getEnglishName(nameTable, NAME_FONT_SUBFAMILY);
         }
 
-        return getSuitableName(fontSubfamily);
+        return familyName;
     }
 
     TypefaceDescription(Typeface typeface) {
