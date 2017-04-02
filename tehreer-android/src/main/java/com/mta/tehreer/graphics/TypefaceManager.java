@@ -16,8 +16,13 @@
 
 package com.mta.tehreer.graphics;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * The <code>TypefaceManager</code> class provides management activities related to typefaces.
@@ -30,45 +35,69 @@ import java.util.Map;
  */
 public class TypefaceManager {
 
-    private static final Map<Object, Typeface> TYPEFACE_MAP = new LinkedHashMap<>();
+    private static final Map<Object, Typeface> TYPEFACE_TAGS = new HashMap<>();
+    private static final Set<TypeFamily> TYPE_FAMILIES = new TreeSet<>(new Comparator<TypeFamily>() {
+        @Override
+        public int compare(TypeFamily typeFamily, TypeFamily t1) {
+            return typeFamily.getFamilyName().compareTo(t1.getFamilyName());
+        }
+    });
+
+    private static TypeFamily getFamilyForName(String familyName) {
+        for (TypeFamily family : TYPE_FAMILIES) {
+            if (family.getFamilyName().equalsIgnoreCase(familyName)) {
+                return family;
+            }
+        }
+
+        return new TypeFamily(familyName, new ArrayList<Typeface>());
+    }
+
+    private static TypeFamily getTypefaceFamily(Typeface typeface) {
+        for (TypeFamily family : TYPE_FAMILIES) {
+            if (family.typefaces.contains(typeface)) {
+                return family;
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Registers a typeface against a specified tag in <code>TypefaceManager</code>.
      *
-     * @param tag The tag to identify the typeface.
      * @param typeface The finalizable instance of the typeface.
+     * @param tag The tag to identify the typeface.
      *
-     * @throws NullPointerException if <code>tag</code> is null or <code>typeface</code> is null.
-     * @throws IllegalArgumentException if <code>typeface</code> is not finalizable, or
-     *         <code>typeface</code> is already registered for a different tag, or another typeface
-     *         is registered for specified <code>tag</code>.
+     * @throws NullPointerException if either <code>typeface</code> or <code>tag</code> is null.
+     * @throws IllegalArgumentException if <code>typeface</code> is already registered for a
+     *         different tag, or another typeface is registered for specified <code>tag</code>.
      */
-    public static void registerTypeface(Object tag, Typeface typeface) {
-        if (tag == null) {
-            throw new NullPointerException("Tag is null");
-        }
+    public static void registerTypeface(Typeface typeface, Object tag) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        if (!Typeface.isFinalizable(typeface)) {
-            throw new IllegalArgumentException("Typeface is not finalizable");
+        if (tag == null) {
+            throw new NullPointerException("Tag is null");
         }
 
-        synchronized (TYPEFACE_MAP) {
-            if (TYPEFACE_MAP.containsValue(typeface)) {
+        synchronized (TypefaceManager.class) {
+            if (TYPEFACE_TAGS.containsValue(typeface)) {
                 throw new IllegalArgumentException("This typeface is already registered for a different tag");
             }
-
-            if (TYPEFACE_MAP.containsKey(tag)) {
-                throw new IllegalArgumentException("A different typeface is already registered for tag: " + tag);
+            if (TYPEFACE_TAGS.containsKey(tag)) {
+                throw new IllegalArgumentException("Another typeface is already registered for specified tag");
             }
 
-            TYPEFACE_MAP.put(tag, typeface);
+            TYPEFACE_TAGS.put(tag, typeface);
+
+            TypeFamily typeFamily = getFamilyForName(typeface.getFamilyName());
+            typeFamily.typefaces.add(typeface);
         }
     }
 
     /**
-     * Unregisters a typeface in <code>TypefaceManager</code> thus making it available for GC.
+     * Unregisters a typeface in <code>TypefaceManager</code>.
      *
      * @param typeface The typeface to unregister.
      *
@@ -81,10 +110,10 @@ public class TypefaceManager {
             throw new NullPointerException("Typeface is null");
         }
 
-        synchronized (TYPEFACE_MAP) {
+        synchronized (TypefaceManager.class) {
             Object tag = null;
 
-            for (Map.Entry<Object, Typeface> entry : TYPEFACE_MAP.entrySet()) {
+            for (Map.Entry<Object, Typeface> entry : TYPEFACE_TAGS.entrySet()) {
                 if (entry.getValue().equals(typeface)) {
                     tag = entry.getKey();
                 }
@@ -94,19 +123,47 @@ public class TypefaceManager {
                 throw new IllegalArgumentException("This typeface is not registered");
             }
 
-            TYPEFACE_MAP.remove(tag);
+            TYPEFACE_TAGS.remove(tag);
+
+            TypeFamily typeFamily = getTypefaceFamily(typeface);
+            typeFamily.typefaces.remove(typeface);
         }
     }
 
     /**
-     * Returns an array containing the tags of registered typefaces.
+     * Returns a list containing the tags of registered typefaces.
      *
-     * @return A new array containing the tags of registered typefaces, or an empty array if no
-     * typeface is registered.
+     * @return A list containing the tags of registered typefaces, or an empty list if no typeface
+     *         is registered.
      */
-    public static Object[] getTakenTags() {
-        synchronized (TYPEFACE_MAP) {
-            return TYPEFACE_MAP.keySet().toArray();
+    public static List<Object> getTakenTags() {
+        synchronized (TypefaceManager.class) {
+            return new ArrayList<>(TYPEFACE_TAGS.keySet());
+        }
+    }
+
+    public static List<TypeFamily> getAllFamilies() {
+        synchronized (TypefaceManager.class) {
+            return new ArrayList<>(TYPE_FAMILIES);
+        }
+    }
+
+    public static List<Typeface> getAllTypefaces() {
+        synchronized (TypefaceManager.class) {
+            Set<Typeface> sortedTypefaces = new TreeSet<>(new Comparator<Typeface>() {
+                @Override
+                public int compare(Typeface typeface, Typeface t1) {
+                    int result = typeface.getFamilyName().compareTo(t1.getFamilyName());
+                    if (result == 0) {
+                        return typeface.getFaceName().compareTo(t1.getFaceName());
+                    }
+
+                    return result;
+                }
+            });
+            sortedTypefaces.addAll(TYPEFACE_TAGS.values());
+
+            return new ArrayList<>(sortedTypefaces);
         }
     }
 
@@ -118,8 +175,8 @@ public class TypefaceManager {
      *         the specified tag.
      */
     public static Typeface getTypeface(Object tag) {
-        synchronized (TYPEFACE_MAP) {
-            return TYPEFACE_MAP.get(tag);
+        synchronized (TypefaceManager.class) {
+            return TYPEFACE_TAGS.get(tag);
         }
     }
 
