@@ -50,42 +50,55 @@ public class Typeface {
     long nativeTypeface;
     @Sustain
     private final Finalizable finalizable = new Finalizable();
-    private final TypefaceDescription description;
-    TypeFamily typeFamily;
-    Object faceTag;
+    private TypefaceDescription description;
 
     /**
-     * Creates a new typeface from the specified asset. The data of the asset is not copied into the
-     * memory. Rather, it is directly read from the stream when needed. So the performance of
-     * resulting typeface might be slower and should be used with caution.
+     * Constructs a typeface object from the specified asset. The data of the asset is not copied
+     * into the memory. Rather, it is directly read from the stream when needed. So the performance
+     * of resulting typeface might be slower and should be used with caution.
      *
      * @param assetManager The application's asset manager.
-     * @param path The path of the font file in the assets directory.
-     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     * @param filePath The path of the font file in the assets directory.
+     *
+     * @throws NullPointerException if <code>assetManager</code> or <code>filePath</code> is null.
+     * @throws RuntimeException if an error occurred while initialization.
      */
-    public static Typeface create(AssetManager assetManager, String path) {
-        long nativeTypeface = nativeCreateWithAsset(assetManager, path);
-        if (nativeTypeface != 0) {
-            return new Typeface(nativeTypeface);
+    public Typeface(AssetManager assetManager, String filePath) {
+        if (assetManager == null) {
+            throw new NullPointerException("Asset manager is null");
+        }
+        if (filePath == null) {
+            throw new NullPointerException("File path is null");
         }
 
-        return null;
+        long nativeTypeface = nativeCreateWithAsset(assetManager, filePath);
+        if (nativeTypeface == 0) {
+            throw new RuntimeException("Could not create typeface from specified asset");
+        }
+
+        init(nativeTypeface);
     }
 
     /**
-     * Creates a new typeface with the specified file. The data for the font is directly read from
-     * the file when needed.
+     * Constructs a typeface object from the specified file. The data for the font is directly read
+     * from the file when needed.
      *
      * @param file The font file.
-     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     *
+     * @throws NullPointerException if <code>file</code> is null.
+     * @throws RuntimeException if an error occurred while initialization.
      */
-    public static Typeface create(File file) {
-        long nativeTypeface = nativeCreateWithFile(file.getAbsolutePath());
-        if (nativeTypeface != 0) {
-            return new Typeface(nativeTypeface);
+    public Typeface(File file) {
+        if (file == null) {
+            throw new NullPointerException("File is null");
         }
 
-        return null;
+        long nativeTypeface = nativeCreateWithFile(file.getAbsolutePath());
+        if (nativeTypeface == 0) {
+            throw new RuntimeException("Could not create typeface from specified file");
+        }
+
+        init(nativeTypeface);
     }
 
     /**
@@ -93,18 +106,24 @@ public class Typeface {
      * So it may take time to create the typeface if the stream holds larger data.
      *
      * @param stream The input stream that contains the data of the font.
-     * @return The new typeface, or <code>null</code> if an error occurred while creating it.
+     *
+     * @throws NullPointerException if <code>stream</code> is null.
+     * @throws RuntimeException if an error occurred while initialization.
      */
-    public static Typeface create(InputStream stream) {
-        long nativeTypeface = nativeCreateFromStream(stream);
-        if (nativeTypeface != 0) {
-            return new Typeface(nativeTypeface);
+    public Typeface(InputStream stream) {
+        if (stream == null) {
+            throw new NullPointerException("Stream is null");
         }
 
-        return null;
+        long nativeTypeface = nativeCreateFromStream(stream);
+        if (nativeTypeface == 0) {
+            throw new RuntimeException("Could not create typeface from specified stream");
+        }
+
+        init(nativeTypeface);
     }
 
-	private Typeface(long nativeTypeface) {
+	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
         this.description = new TypefaceDescription(this);
 	}
