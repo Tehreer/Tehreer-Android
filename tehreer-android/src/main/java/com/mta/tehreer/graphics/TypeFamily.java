@@ -16,24 +16,23 @@
 
 package com.mta.tehreer.graphics;
 
-import java.util.Collections;
 import java.util.List;
 
 public class TypeFamily {
 
-    final String familyName;
-    final List<Typeface> typefaces;
+    private final String familyName;
+    private final List<Typeface> typefaces;
 
-    TypeFamily(String familyName, List<Typeface> typefaces) {
+    public TypeFamily(String familyName, List<Typeface> typefaces) {
         this.familyName = familyName;
         this.typefaces = typefaces;
     }
 
-    public String getFamilyName() {
+    public String familyName() {
         return familyName;
     }
 
-    public List<Typeface> getTypefaces() {
-        return Collections.unmodifiableList(typefaces);
+    public List<Typeface> typefaces() {
+        return typefaces;
     }
 }
