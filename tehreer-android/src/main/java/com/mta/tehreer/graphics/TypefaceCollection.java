@@ -42,7 +42,9 @@ public class TypefaceCollection {
     }
 
     private static TypefaceCollection sShared;
-    private Map<Object, Typeface> mEntries;
+
+    private HashMap<Object, Typeface> mTagToTypefaceMap;
+    private TreeMap<Typeface, Object> mTypefaceToTagMap;
 
     public static TypefaceCollection shared() {
         if (sShared == null) {
@@ -57,7 +59,8 @@ public class TypefaceCollection {
     }
 
     public TypefaceCollection() {
-        mEntries = new HashMap<>();
+        mTagToTypefaceMap = new HashMap<>();
+        mTypefaceToTagMap = new TreeMap<>(new TypefaceComparator());
     }
 
     /**
@@ -79,14 +82,15 @@ public class TypefaceCollection {
         }
 
         synchronized (this) {
-            if (mEntries.containsValue(typeface)) {
+            if (mTagToTypefaceMap.containsValue(typeface)) {
                 throw new IllegalArgumentException("The specified typeface has already been added");
             }
-            if (mEntries.containsKey(tag)) {
+            if (mTagToTypefaceMap.containsKey(tag)) {
                 throw new IllegalArgumentException("The specified tag has already been taken");
             }
 
-            mEntries.put(tag, typeface);
+            mTagToTypefaceMap.put(tag, typeface);
+            mTypefaceToTagMap.put(typeface, tag);
         }
     }
 
@@ -110,7 +114,8 @@ public class TypefaceCollection {
                 throw new IllegalArgumentException("The specified typeface is not available in the collection");
             }
 
-            mEntries.remove(tag);
+            mTagToTypefaceMap.remove(tag);
+            mTypefaceToTagMap.remove(typeface);
         }
     }
 
@@ -122,42 +127,27 @@ public class TypefaceCollection {
      */
     public Typeface get(Object tag) {
         synchronized (this) {
-            return mEntries.get(tag);
+            return mTagToTypefaceMap.get(tag);
+        }
+    }
+
+    public int size() {
+        synchronized (this) {
+            return mTagToTypefaceMap.size();
         }
     }
 
     public Object tagOf(Typeface typeface) {
         synchronized (this) {
-            for (Map.Entry<Object, Typeface> entry : mEntries.entrySet()) {
-                Typeface value = entry.getValue();
-                if (value == typeface) {
-                    return entry.getKey();
-                }
-            }
+            return mTypefaceToTagMap.get(typeface);
         }
-
-        return null;
-    }
-
-    public List<Typeface> list() {
-        List<Typeface> typefaces = new ArrayList<>(mEntries.size());
-
-        synchronized (this) {
-            typefaces.addAll(mEntries.values());
-        }
-
-        Comparator<Typeface> sortOrder = new TypefaceComparator();
-        Collections.sort(typefaces, sortOrder);
-
-        return Collections.unmodifiableList(typefaces);
-
     }
 
     public List<TypeFamily> families() {
         Map<String, List<Typeface>> familyMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         synchronized (this) {
-            for (Typeface typeface : mEntries.values()) {
+            for (Typeface typeface : mTypefaceToTagMap.keySet()) {
                 List<Typeface> entryList = familyMap.get(typeface.getFamilyName());
                 if (entryList == null) {
                     entryList = new ArrayList<>();
@@ -169,16 +159,21 @@ public class TypefaceCollection {
         }
 
         List<TypeFamily> familyList = new ArrayList<>(familyMap.size());
-        Comparator<Typeface> sortOrder = new TypefaceComparator();
 
         for (Map.Entry<String, List<Typeface>> entry : familyMap.entrySet()) {
             String familyName = entry.getKey();
             List<Typeface> typefaces = entry.getValue();
-            Collections.sort(typefaces, sortOrder);
 
             familyList.add(new TypeFamily(familyName, typefaces));
         }
 
         return Collections.unmodifiableList(familyList);
+    }
+
+    public List<Typeface> typefaces() {
+        synchronized (this) {
+            List<Typeface> list = new ArrayList<>(mTypefaceToTagMap.keySet());
+            return Collections.unmodifiableList(list);
+        }
     }
 }
