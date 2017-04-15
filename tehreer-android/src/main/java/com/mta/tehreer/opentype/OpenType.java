@@ -25,5 +25,11 @@ class OpenType {
     static final int TABLE_OS_2 = 3;
     static final int TABLE_HHEA = 4;
 
+    static native String[] getNameLocale(int platformId, int languageId);
+    static native String getNameCharset(int platformId, int encodingId);
+
+    static native int getNameCount(Typeface typeface);
+    static native NameTable.Record getNameRecord(Typeface typeface, int index);
+
     static native long getTablePointer(Typeface typeface, int table);
 }
