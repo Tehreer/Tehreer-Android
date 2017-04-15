@@ -43,6 +43,9 @@ static jmethodID GLYPH__OWN_PATH;
 
 static jmethodID INPUT_STREAM__READ;
 
+static jclass    NAME_TABLE_RECORD;
+static jmethodID NAME_TABLE_RECORD__CONSTRUCTOR;
+
 static jclass    PATH;
 static jmethodID PATH__CONSTRUCTOR;
 static jmethodID PATH__CLOSE;
@@ -53,8 +56,7 @@ static jmethodID PATH__QUAD_TO;
 
 static jmethodID RECT__SET;
 
-static jclass    NAME_TABLE_RECORD;
-static jmethodID NAME_TABLE_RECORD__CONSTRUCTOR;
+static jclass    STRING;
 
 static jfieldID  TYPEFACE__NATIVE_TYPEFACE;
 
@@ -93,6 +95,10 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("java/io/InputStream");
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
 
+    clazz = env->FindClass("com/mta/tehreer/opentype/NameTable$Record");
+    NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
+    NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
+
     clazz = env->FindClass("android/graphics/Path");
     PATH = (jclass)env->NewGlobalRef(clazz);
     PATH__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "()V");
@@ -105,9 +111,8 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("android/graphics/Rect");
     RECT__SET = env->GetMethodID(clazz, "set", "(IIII)V");
 
-    clazz = env->FindClass("com/mta/tehreer/opentype/NameTable$Record");
-    NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
-    NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
+    clazz = env->FindClass("java/lang/String");
+    STRING = (jclass)env->NewGlobalRef(clazz);
 
     clazz = env->FindClass("com/mta/tehreer/graphics/Typeface");
     TYPEFACE__NATIVE_TYPEFACE = env->GetFieldID(clazz, "nativeTypeface", "J");
@@ -199,6 +204,11 @@ jint JavaBridge::InputStream_read(jobject inputStream, jbyteArray buffer, jint o
     return m_env->CallIntMethod(inputStream, INPUT_STREAM__READ, buffer, offset, length);
 }
 
+jobject JavaBridge::NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
+{
+    return m_env->NewObject(NAME_TABLE_RECORD, NAME_TABLE_RECORD__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
+}
+
 jobject JavaBridge::Path_construct() const
 {
     return m_env->NewObject(PATH, PATH__CONSTRUCTOR);
@@ -234,9 +244,9 @@ void JavaBridge::Rect_set(jobject rect, jint left, jint top, jint right, jint bo
     m_env->CallVoidMethod(rect, RECT__SET, left, top, right, bottom);
 }
 
-jobject JavaBridge::NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
+jclass JavaBridge::String_class() const
 {
-    return m_env->NewObject(NAME_TABLE_RECORD, NAME_TABLE_RECORD__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
+    return STRING;
 }
 
 jlong JavaBridge::Typeface_getNativeTypeface(jobject typeface) const

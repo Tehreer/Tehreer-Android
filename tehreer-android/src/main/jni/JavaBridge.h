@@ -51,6 +51,8 @@ public:
 
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;
 
+    jobject NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
+
     jobject Path_construct() const;
     void Path_close(jobject path) const;
     void Path_cubicTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jfloat y2, jfloat x3, jfloat y3) const;
@@ -60,7 +62,7 @@ public:
 
     void Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const;
 
-    jobject NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
+    jclass String_class() const;
 
     jlong Typeface_getNativeTypeface(jobject typeface) const;
 
