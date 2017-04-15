@@ -16,12 +16,21 @@
 
 package com.mta.tehreer.util;
 
+import com.mta.tehreer.internal.collection.SafeByteList;
 import com.mta.tehreer.internal.util.Description;
 
 /**
  * Represents a primitive list of bytes.
  */
 public abstract class ByteList implements Primitive {
+
+    public static ByteList of(byte[] array) {
+        if (array == null) {
+            throw new NullPointerException("Array is null");
+        }
+
+        return new SafeByteList(array, 0, array.length / 2);
+    }
 
     /**
      * Returns the number of bytes in this list.
