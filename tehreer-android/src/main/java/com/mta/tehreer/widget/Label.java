@@ -28,7 +28,7 @@ import android.view.View;
 import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.graphics.TypefaceCollection;
 import com.mta.tehreer.text.TextLine;
 import com.mta.tehreer.text.TextTruncation;
 import com.mta.tehreer.text.TextTypesetter;
@@ -108,7 +108,9 @@ public class Label extends View {
             setTextColor(values.getInteger(R.styleable.Label_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.Label_textSize, 16));
             setText(values.getString(R.styleable.Label_text));
-            setTypeface(values.getString(R.styleable.Label_typeface));
+            if (values.hasValue(R.styleable.Label_typeface)) {
+                setTypeface(values.getResourceId(R.styleable.Label_typeface, 0));
+            }
         } finally {
             values.recycle();
         }
@@ -411,13 +413,8 @@ public class Label extends View {
         updateTypesetter();
     }
 
-    /**
-     * Sets the typeface in which the text should be displayed.
-     *
-     * @param tag The tag of the typeface registered in <code>TypefaceManager</code>.
-     */
     private void setTypeface(Object tag) {
-        setTypeface(TypefaceManager.getTypeface(tag));
+        setTypeface(TypefaceCollection.shared().get(tag));
     }
 
     /**
