@@ -28,14 +28,9 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Locale;
 
 /**
- * Represents a collection of entries in SFNT 'name' table.
+ * Represents a collection of records in SFNT 'name' table.
  */
 public class NameTable {
-
-    private static final int TAG_ID_LANGUAGE = 1;
-    private static final int TAG_ID_REGION = 2;
-    private static final int TAG_ID_SCRIPT = 3;
-    private static final int TAG_ID_VARIANT = 4;
 
     private final Typeface typeface;
 
@@ -65,7 +60,7 @@ public class NameTable {
      * @return The number of name entries in SFNT 'name' table.
      */
     public int recordCount() {
-        return nativeGetRecordCount(typeface);
+        return OpenType.getNameCount(typeface);
     }
 
     /**
@@ -82,14 +77,8 @@ public class NameTable {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
 
-        return nativeGetRecordAt(typeface, index);
+        return OpenType.getNameRecord(typeface, index);
     }
-
-    private static native String nativeGetLocaleTag(int tagId, int platformId, int languageId);
-    private static native String nativeGetCharsetName(int platformId, int encodingId);
-
-    private static native int nativeGetRecordCount(Typeface typeface);
-    private static native Record nativeGetRecordAt(Typeface typeface, int index);
 
     /**
      * Represents a single entry of SFNT 'name' table.
@@ -136,10 +125,11 @@ public class NameTable {
          * @return The relevant locale for this entry.
          */
         public Locale locale() {
-            String language = nativeGetLocaleTag(TAG_ID_LANGUAGE, platformId, languageId);
-            String region = nativeGetLocaleTag(TAG_ID_REGION, platformId, languageId);
-            String script = nativeGetLocaleTag(TAG_ID_SCRIPT, platformId, languageId);
-            String variant = nativeGetLocaleTag(TAG_ID_VARIANT, platformId, languageId);
+            String[] values = OpenType.getNameLocale(platformId, languageId);
+            String language = values[0];
+            String region = values[1];
+            String script = values[2];
+            String variant = values[3];
 
             if (Build.VERSION.SDK_INT >= 21) {
                 Locale.Builder builder = new Locale.Builder();
@@ -176,7 +166,7 @@ public class NameTable {
             Charset charset = null;
 
             try {
-                String charsetName = nativeGetCharsetName(platformId, encodingId);
+                String charsetName = OpenType.getNameCharset(platformId, encodingId);
                 if (charsetName != null) {
                     charset = Charset.forName(charsetName);
                 }
