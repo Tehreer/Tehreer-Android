@@ -24,7 +24,7 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class PointList implements PrimitiveList {
 
-    public static PointList forArray(float[] array) {
+    public static PointList of(float[] array) {
         return new SafePointList(array, 0, array.length / 2);
     }
 

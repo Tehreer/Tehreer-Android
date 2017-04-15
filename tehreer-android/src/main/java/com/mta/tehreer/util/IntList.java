@@ -24,7 +24,7 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class IntList implements PrimitiveList {
 
-    public static IntList forArray(int[] array) {
+    public static IntList of(int[] array) {
         return new SafeIntList(array, 0, array.length);
     }
 

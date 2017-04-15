@@ -24,7 +24,7 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class FloatList implements PrimitiveList {
 
-    public static FloatList forArray(float[] array) {
+    public static FloatList of(float[] array) {
         return new SafeFloatList(array, 0, array.length);
     }
 
