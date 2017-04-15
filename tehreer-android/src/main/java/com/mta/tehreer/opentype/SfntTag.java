@@ -64,6 +64,17 @@ public class SfntTag {
 					        (byte) tagStr.charAt(2), (byte) tagStr.charAt(3));
 	}
 
+    public static String toString(int tag) {
+        char[] chars = {
+                (char) (tag >> 24),
+                (char) ((tag >> 16) & 0xFF),
+                (char) ((tag >> 8) & 0xFF),
+                (char) (tag & 0xFF)
+        };
+
+        return new String(chars);
+    }
+
     private SfntTag() {
     }
 }
