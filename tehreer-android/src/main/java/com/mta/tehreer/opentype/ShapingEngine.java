@@ -90,7 +90,7 @@ public class ShapingEngine implements Disposable {
      * @return The default writing direction of the script identified by <code>scriptTag</code>.
      */
     public static WritingDirection getScriptDefaultDirection(int scriptTag) {
-        return Convert.toJavaTextDirection(nativeGetScriptDefaultDirection(scriptTag));
+        return WritingDirection.valueOf(nativeGetScriptDefaultDirection(scriptTag));
     }
 
     private static class Base {
@@ -205,7 +205,7 @@ public class ShapingEngine implements Disposable {
      * @return The current writing direction.
      */
     public WritingDirection getWritingDirection() {
-        return Convert.toJavaTextDirection(nativeGetWritingDirection(nativeEngine));
+        return WritingDirection.valueOf(nativeGetWritingDirection(nativeEngine));
     }
 
     /**
@@ -230,7 +230,7 @@ public class ShapingEngine implements Disposable {
      * @return The current shaping order.
      */
     public ShapingOrder getShapingOrder() {
-        return Convert.toJavaTextMode(nativeGetShapingOrder(nativeEngine));
+        return ShapingOrder.valueOf(nativeGetShapingOrder(nativeEngine));
     }
 
     /**
