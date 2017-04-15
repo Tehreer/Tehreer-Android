@@ -29,7 +29,7 @@ public abstract class ByteList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new SafeByteList(array, 0, array.length / 2);
+        return new SafeByteList(array, 0, array.length);
     }
 
     /**
