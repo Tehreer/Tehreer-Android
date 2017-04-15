@@ -38,7 +38,7 @@ import java.util.ArrayList;
 /**
  * Displays read-only text to the user.
  */
-public class Label extends View {
+public class TLabel extends View {
 
     private static final String TRUNCATION_STRING = "...";
 
@@ -71,16 +71,16 @@ public class Label extends View {
         return textLine.getAscent() + textLine.getDescent();
     }
 
-    public Label(Context context) {
+    public TLabel(Context context) {
         super(context);
         setup(context, null, 0);
     }
 
-    public Label(Context context, AttributeSet attrs) {
+    public TLabel(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public Label(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TLabel(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setup(context, attrs, defStyleAttr);
     }
@@ -94,22 +94,22 @@ public class Label extends View {
     }
 
     private void setupAttributes(Context context, AttributeSet attrs, int defStyleAttr) {
-        TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.Label, defStyleAttr, 0);
+        TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
-            setGravity(values.getInt(R.styleable.Label_gravity, Gravity.TOP | Gravity.LEFT));
-            setMaxLines(values.getInteger(R.styleable.Label_maxLines, 0));
-            setShadowRadius(values.getDimension(R.styleable.Label_shadowRadius, 0.0f));
-            setShadowDx(values.getDimension(R.styleable.Label_shadowDx, 0.0f));
-            setShadowDy(values.getDimension(R.styleable.Label_shadowDy, 0.0f));
-            setShadowColor(values.getInteger(R.styleable.Label_shadowColor, Color.TRANSPARENT));
-            setTruncationMode(values.getInteger(R.styleable.Label_truncationMode, TRUNCATION_MODE_NONE));
-            setTruncationPlace(values.getInteger(R.styleable.Label_truncationPlace, TRUNCATION_PLACE_END));
-            setTextColor(values.getInteger(R.styleable.Label_textColor, Color.BLACK));
-            setTextSize(values.getDimensionPixelSize(R.styleable.Label_textSize, 16));
-            setText(values.getString(R.styleable.Label_text));
-            if (values.hasValue(R.styleable.Label_typeface)) {
-                setTypeface(values.getResourceId(R.styleable.Label_typeface, 0));
+            setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.LEFT));
+            setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
+            setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
+            setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
+            setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
+            setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
+            setTruncationMode(values.getInteger(R.styleable.TLabel_truncationMode, TRUNCATION_MODE_NONE));
+            setTruncationPlace(values.getInteger(R.styleable.TLabel_truncationPlace, TRUNCATION_PLACE_END));
+            setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
+            setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
+            setText(values.getString(R.styleable.TLabel_text));
+            if (values.hasValue(R.styleable.TLabel_typeface)) {
+                setTypeface(values.getResourceId(R.styleable.TLabel_typeface, 0));
             }
         } finally {
             values.recycle();

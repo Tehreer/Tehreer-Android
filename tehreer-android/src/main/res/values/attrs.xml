@@ -15,7 +15,7 @@
     limitations under the License.
 -->
 <resources>
-    <declare-styleable name="Label">
+    <declare-styleable name="TLabel">
         <attr name="gravity" format="enum">
             <enum name="top" value="0x30"/>
             <enum name="bottom" value="0x50"/>
