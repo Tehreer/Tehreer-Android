@@ -18,6 +18,7 @@
 extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_TRUETYPE_TABLES_H
 #include FT_SFNT_NAMES_H
 }
 
@@ -29,7 +30,7 @@ extern "C" {
 
 #include "JavaBridge.h"
 #include "Typeface.h"
-#include "NameTable.h"
+#include "OpenType.h"
 
 using namespace std;
 using namespace Tehreer;
@@ -557,45 +558,34 @@ static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
     return bytes;
 }
 
-jstring getLocaleTag(JNIEnv *env, jobject obj, jint tagId, jint platformId, jint languageId)
+jobjectArray getNameLocale(JNIEnv *env, jobject obj, jint platformId, jint languageId)
 {
+    JavaBridge bridge(env);
     Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
-    jstring tag = nullptr;
 
-    switch(tagId) {
-    case 1:
-        tag = env->NewStringUTF(locale.language());
-        break;
+    jobjectArray values = env->NewObjectArray(4, bridge.String_class(), nullptr);
+    jstring language = env->NewStringUTF(locale.language());
+    jstring region = env->NewStringUTF(locale.region());
+    jstring script = env->NewStringUTF(locale.script());
+    jstring variant = env->NewStringUTF(locale.variant());
 
-    case 2:
-        tag = env->NewStringUTF(locale.region());
-        break;
+    env->SetObjectArrayElement(values, 0, language);
+    env->SetObjectArrayElement(values, 1, region);
+    env->SetObjectArrayElement(values, 2, script);
+    env->SetObjectArrayElement(values, 3, variant);
 
-    case 3:
-        tag = env->NewStringUTF(locale.script());
-        break;
-
-    case 4:
-        tag = env->NewStringUTF(locale.variant());
-        break;
-
-    default:
-        // Unknown tag id.
-        break;
-    }
-
-    return tag;
+    return values;
 }
 
-jstring getCharsetName(JNIEnv *env, jobject obj, jint platformId, jint encodingId)
+jstring getNameCharset(JNIEnv *env, jobject obj, jint platformId, jint encodingId)
 {
     Encoding encoding(static_cast<uint16_t>(platformId), static_cast<uint16_t>(encodingId));
-    jstring name = env->NewStringUTF(encoding.name());
+    jstring charset = env->NewStringUTF(encoding.name());
 
-    return name;
+    return charset;
 }
 
-jint getRecordCount(JNIEnv *env, jobject obj, jobject jtypeface)
+jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -605,7 +595,7 @@ jint getRecordCount(JNIEnv *env, jobject obj, jobject jtypeface)
     return static_cast<jint>(nameCount);
 }
 
-jobject getRecordAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
+jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -626,14 +616,26 @@ jobject getRecordAt(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
                                                      bytes);
 }
 
+jlong getTablePointer(JNIEnv *env, jobject obj, jobject jtypeface, jint table)
+{
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Sfnt_Tag tableTag = static_cast<FT_Sfnt_Tag>(table);
+    void *tableStruct = FT_Get_Sfnt_Table(baseFace, tableTag);
+
+    return reinterpret_cast<jlong>(tableStruct);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeGetLocaleTag", "(III)Ljava/lang/String;", (void *)getLocaleTag },
-    { "nativeGetCharsetName", "(II)Ljava/lang/String;", (void *)getCharsetName },
-    { "nativeGetRecordCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getRecordCount },
-    { "nativeGetRecordAt", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameTable$Record;", (void *)getRecordAt },
+    { "getNameLocale", "(II)[Ljava/lang/String;", (void *)getNameLocale },
+    { "getNameCharset", "(II)Ljava/lang/String;", (void *)getNameCharset },
+    { "getNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
+    { "getNameRecord", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameTable$Record;", (void *)getNameRecord },
+    { "getTablePointer", "(Lcom/mta/tehreer/graphics/Typeface;I)J", (void *)getTablePointer },
 };
 
-jint register_com_mta_tehreer_opentype_NameTable(JNIEnv *env)
+jint register_com_mta_tehreer_opentype_OpenType(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/NameTable", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/OpenType", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

@@ -26,7 +26,7 @@
 #include "Glyph.h"
 #include "GlyphRasterizer.h"
 #include "Miscellaneous.h"
-#include "NameTable.h"
+#include "OpenType.h"
 #include "Raw.h"
 #include "ShapingEngine.h"
 #include "ShapingResult.h"
