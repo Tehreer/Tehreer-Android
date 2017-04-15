@@ -36,4 +36,14 @@ public enum ShapingOrder {
     ShapingOrder(int value) {
         this.value = value;
     }
+
+    static ShapingOrder valueOf(int value) {
+        for (ShapingOrder order : ShapingOrder.values()) {
+            if (order.value == value) {
+                return order;
+            }
+        }
+
+        return null;
+    }
 }
