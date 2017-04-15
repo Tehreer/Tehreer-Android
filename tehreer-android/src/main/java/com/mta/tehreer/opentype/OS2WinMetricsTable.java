@@ -18,7 +18,7 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
-public class Os2WinMetricsTable {
+public class OS2WinMetricsTable {
 
     private static final int VERSION = 0;
     private static final int X_AVG_CHAR_WIDTH = 2;
@@ -63,16 +63,16 @@ public class Os2WinMetricsTable {
 
     private final SfntTable table;
 
-    public static Os2WinMetricsTable forTypeface(Typeface typeface) {
+    public static OS2WinMetricsTable forTypeface(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_OS_2);
         if (pointer != 0) {
-            return new Os2WinMetricsTable(new StructTable(typeface, pointer));
+            return new OS2WinMetricsTable(new StructTable(typeface, pointer));
         }
 
         return null;
     }
 
-    private Os2WinMetricsTable(SfntTable table) {
+    private OS2WinMetricsTable(SfntTable table) {
         this.table = table;
     }
 
