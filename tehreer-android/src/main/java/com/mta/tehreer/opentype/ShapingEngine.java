@@ -18,7 +18,6 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.internal.util.Convert;
 import com.mta.tehreer.util.Disposable;
 
 /**
@@ -301,8 +300,8 @@ public class ShapingEngine implements Disposable {
     public String toString() {
         return "ShapingEngine{typeface=" + getTypeface().toString()
                 + ", typeSize=" + String.valueOf(getTypeSize())
-                + ", scriptTag=" + Convert.toStringTag(getScriptTag())
-                + ", languageTag=" + Convert.toStringTag(getLanguageTag())
+                + ", scriptTag=" + SfntTag.toString(getScriptTag())
+                + ", languageTag=" + SfntTag.toString(getLanguageTag())
                 + ", writingDirection=" + getWritingDirection().toString()
                 + ", shapingOrder=" + getShapingOrder().toString()
                 + "}";
