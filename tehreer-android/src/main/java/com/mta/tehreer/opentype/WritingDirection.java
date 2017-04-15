@@ -34,4 +34,14 @@ public enum WritingDirection {
     WritingDirection(int value) {
         this.value = value;
     }
+
+    static WritingDirection valueOf(int value) {
+        for (WritingDirection direction : WritingDirection.values()) {
+            if (direction.value == value) {
+                return direction;
+            }
+        }
+
+        return null;
+    }
 }
