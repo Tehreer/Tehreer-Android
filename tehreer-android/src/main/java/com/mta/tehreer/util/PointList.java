@@ -25,6 +25,10 @@ import com.mta.tehreer.internal.util.Description;
 public abstract class PointList implements Primitive {
 
     public static PointList of(float[] array) {
+        if (array == null) {
+            throw new NullPointerException("Array is null");
+        }
+
         return new SafePointList(array, 0, array.length / 2);
     }
 

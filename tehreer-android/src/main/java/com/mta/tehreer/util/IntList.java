@@ -25,6 +25,10 @@ import com.mta.tehreer.internal.util.Description;
 public abstract class IntList implements Primitive {
 
     public static IntList of(int[] array) {
+        if (array == null) {
+            throw new NullPointerException("Array is null");
+        }
+
         return new SafeIntList(array, 0, array.length);
     }
 
