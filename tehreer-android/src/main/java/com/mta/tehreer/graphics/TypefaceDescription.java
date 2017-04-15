@@ -18,7 +18,7 @@ package com.mta.tehreer.graphics;
 
 import com.mta.tehreer.opentype.FontHeaderTable;
 import com.mta.tehreer.opentype.NameTable;
-import com.mta.tehreer.opentype.Os2WinMetricsTable;
+import com.mta.tehreer.opentype.OS2WinMetricsTable;
 
 import java.util.Locale;
 
@@ -78,7 +78,7 @@ class TypefaceDescription {
         return null;
     }
 
-    private static String getFamilyName(NameTable nameTable, Os2WinMetricsTable os2Table) {
+    private static String getFamilyName(NameTable nameTable, OS2WinMetricsTable os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
@@ -96,7 +96,7 @@ class TypefaceDescription {
         return familyName;
     }
 
-    private static String getFaceName(NameTable nameTable, Os2WinMetricsTable os2Table) {
+    private static String getFaceName(NameTable nameTable, OS2WinMetricsTable os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
@@ -116,7 +116,7 @@ class TypefaceDescription {
 
     TypefaceDescription(Typeface typeface) {
         FontHeaderTable headTable = FontHeaderTable.forTypeface(typeface);
-        Os2WinMetricsTable os2Table = Os2WinMetricsTable.forTypeface(typeface);
+        OS2WinMetricsTable os2Table = OS2WinMetricsTable.forTypeface(typeface);
         NameTable nameTable = NameTable.forTypeface(typeface);
 
         mFamilyName = getFamilyName(nameTable, os2Table);
