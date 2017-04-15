@@ -22,7 +22,7 @@ import com.mta.tehreer.internal.util.Description;
 /**
  * Represents a primitive list of points.
  */
-public abstract class PointList implements PrimitiveList {
+public abstract class PointList implements Primitive {
 
     public static PointList of(float[] array) {
         return new SafePointList(array, 0, array.length / 2);

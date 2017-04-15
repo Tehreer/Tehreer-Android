@@ -22,7 +22,7 @@ import com.mta.tehreer.internal.util.Description;
 /**
  * Represents a primitive list of integers.
  */
-public abstract class IntList implements PrimitiveList {
+public abstract class IntList implements Primitive {
 
     public static IntList of(int[] array) {
         return new SafeIntList(array, 0, array.length);

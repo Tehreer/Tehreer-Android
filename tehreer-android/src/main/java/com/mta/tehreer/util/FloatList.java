@@ -22,7 +22,7 @@ import com.mta.tehreer.internal.util.Description;
 /**
  * Represents a primitive list of floats.
  */
-public abstract class FloatList implements PrimitiveList {
+public abstract class FloatList implements Primitive {
 
     public static FloatList of(float[] array) {
         return new SafeFloatList(array, 0, array.length);

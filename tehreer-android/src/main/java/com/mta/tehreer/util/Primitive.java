@@ -17,7 +17,7 @@
 package com.mta.tehreer.util;
 
 /**
- * Base interface for primitive lists.
+ * Marker interface that indicates the use of primitive data types.
  */
-public interface PrimitiveList {
+public interface Primitive {
 }

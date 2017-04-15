@@ -21,7 +21,7 @@ import com.mta.tehreer.internal.util.Description;
 /**
  * Represents a primitive list of bytes.
  */
-public abstract class ByteList implements PrimitiveList {
+public abstract class ByteList implements Primitive {
 
     /**
      * Returns the number of bytes in this list.
