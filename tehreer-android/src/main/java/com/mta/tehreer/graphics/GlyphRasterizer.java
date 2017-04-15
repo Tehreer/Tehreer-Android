@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,30 +31,27 @@ class GlyphRasterizer implements Disposable {
     public static final int LINEJOIN_MITER = LINEJOIN_MITER_VARIABLE;
 
 	long nativeRasterizer;
-	private Typeface mTypeface;
 
-	public GlyphRasterizer(GlyphStrike strike) {
-	    // Make sure that typeface is not collected by GC till it is being used by the rasterizer.
-	    mTypeface = strike.typeface;
-	    nativeRasterizer = nativeCreate(mTypeface.nativeTypeface,
+	GlyphRasterizer(GlyphStrike strike) {
+	    nativeRasterizer = nativeCreate(strike.typeface.nativeTypeface,
                                         strike.pixelWidth, strike.pixelHeight,
                                         0x10000, -strike.skewX, 0, 0x10000);
 	}
 
-	public void loadBitmap(Glyph glyph) {
+	void loadBitmap(Glyph glyph) {
 	    nativeLoadBitmap(nativeRasterizer, glyph);
 	}
 
-    public void loadOutline(Glyph glyph) {
+    void loadOutline(Glyph glyph) {
         nativeLoadOutline(nativeRasterizer, glyph);
     }
 
-    public void loadPath(Glyph glyph) {
+    void loadPath(Glyph glyph) {
         nativeLoadPath(nativeRasterizer, glyph);
     }
 
-    public Glyph strokeGlyph(Glyph glyph, int lineRadius,
-                             int lineCap, int lineJoin, int miterLimit) {
+    Glyph strokeGlyph(Glyph glyph, int lineRadius,
+                      int lineCap, int lineJoin, int miterLimit) {
         return nativeStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
     }
 
