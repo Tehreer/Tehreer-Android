@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.util;
 
+import com.mta.tehreer.internal.collection.SafePointList;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.SafePointList;
 
 /**
  * Represents a primitive list of points.

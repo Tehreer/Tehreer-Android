@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.internal.collection.SafeByteList;
 import com.mta.tehreer.util.ByteList;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;

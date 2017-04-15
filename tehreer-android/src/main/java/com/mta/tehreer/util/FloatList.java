@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.util;
 
+import com.mta.tehreer.internal.collection.SafeFloatList;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.SafeFloatList;
 
 /**
  * Represents a primitive list of floats.

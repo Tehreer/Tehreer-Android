@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.util;
 
+import com.mta.tehreer.internal.collection.SafeIntList;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.internal.util.SafeIntList;
 
 /**
  * Represents a primitive list of integers.

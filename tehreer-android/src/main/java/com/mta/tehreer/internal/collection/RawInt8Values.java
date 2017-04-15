@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
+import com.mta.tehreer.internal.Raw;
+import com.mta.tehreer.internal.util.Exceptions;
 import com.mta.tehreer.util.ByteList;
 
-public class SafeByteList extends ByteList {
+public class RawInt8Values extends ByteList {
 
-    private final byte[] array;
-    private final int offset;
+    private final long pointer;
     private final int size;
 
-    public SafeByteList(byte[] array, int offset, int size) {
-        this.array = array;
-        this.offset = offset;
+    public RawInt8Values(long pointer, int size) {
+        this.pointer = pointer;
         this.size = size;
     }
 
     @Override
     public int size() {
-        return array.length;
+        return size;
     }
 
     @Override
@@ -41,12 +41,20 @@ public class SafeByteList extends ByteList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[index + offset];
+        return Raw.getInt8FromArray(pointer, index);
     }
 
     @Override
     public void copyTo(byte[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copyInt8Array(pointer, array, atIndex, size);
     }
 
     @Override
@@ -55,6 +63,6 @@ public class SafeByteList extends ByteList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeByteList(array, offset + fromIndex, toIndex - fromIndex);
+        return new RawInt8Values(pointer + fromIndex, toIndex - fromIndex);
     }
 }

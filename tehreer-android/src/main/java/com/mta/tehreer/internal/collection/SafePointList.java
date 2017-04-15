@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
-public class SafeIntList extends IntList {
+public class SafePointList extends PointList {
 
-    private final int[] array;
+    private final float[] array;
     private final int offset;
     private final int size;
 
-    public SafeIntList(int[] array, int offset, int size) {
+    public SafePointList(float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -36,25 +36,34 @@ public class SafeIntList extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
+            throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        return array[index + offset];
+        return array[(index + offset) * 2 + 0];
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
+
+        return array[(index + offset) * 2 + 1];
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size * 2);
+    }
+
+    @Override
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
+        return new SafePointList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

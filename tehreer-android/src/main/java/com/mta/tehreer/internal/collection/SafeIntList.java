@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
-import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.internal.util.Exceptions;
+import com.mta.tehreer.util.IntList;
 
-public class RawInt32Floats extends FloatList {
+public class SafeIntList extends IntList {
 
-    private final long pointer;
+    private final int[] array;
+    private final int offset;
     private final int size;
-    private final float scale;
 
-    public RawInt32Floats(long pointer, int size, float scale) {
-        this.pointer = pointer;
+    public SafeIntList(int[] array, int offset, int size) {
+        this.array = array;
+        this.offset = offset;
         this.size = size;
-        this.scale = scale;
     }
 
     @Override
@@ -37,33 +37,25 @@ public class RawInt32Floats extends FloatList {
     }
 
     @Override
-    public float get(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32FromArray(pointer, index) * scale;
+        return array[index + offset];
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
+    public void copyTo(int[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32Floats(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
+        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.util.ByteList;
+import com.mta.tehreer.internal.util.Exceptions;
+import com.mta.tehreer.util.FloatList;
 
-public class RawInt8Values extends ByteList {
+public class RawInt32Floats extends FloatList {
 
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawInt8Values(long pointer, int size) {
+    public RawInt32Floats(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
@@ -35,16 +38,16 @@ public class RawInt8Values extends ByteList {
     }
 
     @Override
-    public byte get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt8FromArray(pointer, index);
+        return Raw.getInt32FromArray(pointer, index) * scale;
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -53,15 +56,15 @@ public class RawInt8Values extends ByteList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt8Array(pointer, array, atIndex, size);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt8Values(pointer + fromIndex, toIndex - fromIndex);
+        return new RawInt32Floats(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
     }
 }

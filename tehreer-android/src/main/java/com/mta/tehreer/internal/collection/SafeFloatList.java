@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
+import com.mta.tehreer.internal.util.Exceptions;
 import com.mta.tehreer.util.FloatList;
 
 public class SafeFloatList extends FloatList {

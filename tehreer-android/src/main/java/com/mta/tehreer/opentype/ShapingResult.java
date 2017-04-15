@@ -17,10 +17,10 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.internal.util.RawInt32Floats;
-import com.mta.tehreer.internal.util.RawInt32Points;
-import com.mta.tehreer.internal.util.RawSizeValues;
-import com.mta.tehreer.internal.util.RawUInt16Values;
+import com.mta.tehreer.internal.collection.RawInt32Floats;
+import com.mta.tehreer.internal.collection.RawInt32Points;
+import com.mta.tehreer.internal.collection.RawSizeValues;
+import com.mta.tehreer.internal.collection.RawUInt16Values;
 import com.mta.tehreer.util.Disposable;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;

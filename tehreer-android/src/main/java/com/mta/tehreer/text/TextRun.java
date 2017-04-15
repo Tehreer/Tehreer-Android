@@ -21,10 +21,10 @@ import android.graphics.RectF;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.collection.SafeFloatList;
+import com.mta.tehreer.internal.collection.SafeIntList;
+import com.mta.tehreer.internal.collection.SafePointList;
 import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.internal.util.SafeFloatList;
-import com.mta.tehreer.internal.util.SafeIntList;
-import com.mta.tehreer.internal.util.SafePointList;
 import com.mta.tehreer.opentype.WritingDirection;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;

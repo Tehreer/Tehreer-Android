@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.collection;
 
 import com.mta.tehreer.internal.Raw;
+import com.mta.tehreer.internal.util.Exceptions;
 import com.mta.tehreer.util.IntList;
 
 public class RawUInt16Values extends IntList {
