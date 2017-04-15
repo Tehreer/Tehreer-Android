@@ -19,8 +19,8 @@ package com.mta.tehreer.text;
 import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.util.Description;
-import com.mta.tehreer.text.internal.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
