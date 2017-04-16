@@ -24,6 +24,14 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class FloatList implements Primitive {
 
+    /**
+     * Returns a float list whose elements are the specified array.
+     *
+     * @param array The elements of the float list.
+     * @return A new float list.
+     *
+     * @throws NullPointerException if <code>array</code> is <code>null</code>.
+     */
     public static FloatList of(float[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");

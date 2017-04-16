@@ -24,6 +24,14 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class IntList implements Primitive {
 
+    /**
+     * Returns an integers list whose elements are the specified array.
+     *
+     * @param array The elements of the integer list.
+     * @return A new integer list.
+     *
+     * @throws NullPointerException if <code>array</code> is <code>null</code>.
+     */
     public static IntList of(int[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");

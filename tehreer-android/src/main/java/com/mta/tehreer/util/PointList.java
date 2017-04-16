@@ -24,6 +24,15 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class PointList implements Primitive {
 
+    /**
+     * Returns a point list whose elements are the specified array. Even numbered array entries will
+     * become the x- coordinates while odd numbered array entries will become the y- coordinates.
+     *
+     * @param array The elements of the point list.
+     * @return A new point list.
+     *
+     * @throws NullPointerException if <code>array</code> is <code>null</code>.
+     */
     public static PointList of(float[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");

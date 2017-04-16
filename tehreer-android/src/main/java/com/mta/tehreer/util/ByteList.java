@@ -24,6 +24,14 @@ import com.mta.tehreer.internal.util.Description;
  */
 public abstract class ByteList implements Primitive {
 
+    /**
+     * Returns a byte list whose elements are the specified array.
+     *
+     * @param array The elements of the byte list.
+     * @return A new byte list.
+     *
+     * @throws NullPointerException if <code>array</code> is <code>null</code>.
+     */
     public static ByteList of(byte[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");
