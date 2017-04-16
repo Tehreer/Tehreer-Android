@@ -38,7 +38,7 @@ public class MaximumProfileTable {
 
     private final SfntTable table;
 
-    private static MaximumProfileTable forTypeface(Typeface typeface) {
+    private static MaximumProfileTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_MAXP);
         if (pointer != 0) {
             return new MaximumProfileTable(new StructTable(typeface, pointer));

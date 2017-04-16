@@ -63,7 +63,7 @@ public class OS2WinMetricsTable {
 
     private final SfntTable table;
 
-    public static OS2WinMetricsTable forTypeface(Typeface typeface) {
+    public static OS2WinMetricsTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_OS_2);
         if (pointer != 0) {
             return new OS2WinMetricsTable(new StructTable(typeface, pointer));

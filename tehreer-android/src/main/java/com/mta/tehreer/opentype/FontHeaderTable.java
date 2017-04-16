@@ -40,7 +40,7 @@ public class FontHeaderTable {
 
     private final SfntTable table;
 
-    public static FontHeaderTable forTypeface(Typeface typeface) {
+    public static FontHeaderTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HEAD);
         if (pointer != 0) {
             return new FontHeaderTable(new StructTable(typeface, pointer));

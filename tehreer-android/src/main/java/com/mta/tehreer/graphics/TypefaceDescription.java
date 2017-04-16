@@ -115,9 +115,9 @@ class TypefaceDescription {
     }
 
     TypefaceDescription(Typeface typeface) {
-        FontHeaderTable headTable = FontHeaderTable.forTypeface(typeface);
-        OS2WinMetricsTable os2Table = OS2WinMetricsTable.forTypeface(typeface);
-        NameTable nameTable = NameTable.forTypeface(typeface);
+        FontHeaderTable headTable = FontHeaderTable.from(typeface);
+        OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
+        NameTable nameTable = NameTable.from(typeface);
 
         mFamilyName = getFamilyName(nameTable, os2Table);
         mFaceName = getFaceName(nameTable, os2Table);

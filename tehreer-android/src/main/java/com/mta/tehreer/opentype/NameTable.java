@@ -42,7 +42,7 @@ public class NameTable {
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      */
-    public static NameTable forTypeface(Typeface typeface) {
+    public static NameTable from(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

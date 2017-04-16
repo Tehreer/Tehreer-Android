@@ -36,7 +36,7 @@ public class HorizontalHeaderTable {
 
     private final SfntTable table;
 
-    private static HorizontalHeaderTable forTypeface(Typeface typeface) {
+    private static HorizontalHeaderTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HHEA);
         if (pointer != 0) {
             return new HorizontalHeaderTable(new StructTable(typeface, pointer));
