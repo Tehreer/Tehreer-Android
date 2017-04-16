@@ -18,6 +18,9 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * Represents OpenType `hhea' table.
+ */
 public class HorizontalHeaderTable {
 
     private static final int VERSION = 0;
@@ -36,7 +39,17 @@ public class HorizontalHeaderTable {
 
     private final SfntTable table;
 
-    private static HorizontalHeaderTable from(Typeface typeface) {
+    /**
+     * Creates a <code>HorizontalHeaderTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>HorizontalHeaderTable</code> object is
+     *        created.
+     * @return A new <code>HorizontalHeaderTable</code> object, or null if <code>typeface</code>
+     *         does not contain `hhea' table.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
+    public static HorizontalHeaderTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HHEA);
         if (pointer != 0) {
             return new HorizontalHeaderTable(new StructTable(typeface, pointer));

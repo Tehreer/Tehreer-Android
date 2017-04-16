@@ -18,6 +18,9 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * Represents OpenType `OS/2' table.
+ */
 public class OS2WinMetricsTable {
 
     private static final int VERSION = 0;
@@ -63,6 +66,16 @@ public class OS2WinMetricsTable {
 
     private final SfntTable table;
 
+    /**
+     * Creates an <code>OS2WinMetricsTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>OS2WinMetricsTable</code> object is
+     *        created.
+     * @return A new <code>OS2WinMetricsTable</code> object, or null if <code>typeface</code>
+     *         does not contain `maxp' table.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
     public static OS2WinMetricsTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_OS_2);
         if (pointer != 0) {

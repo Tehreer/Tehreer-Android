@@ -18,6 +18,9 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * Represents OpenType `maxp' table.
+ */
 public class MaximumProfileTable {
 
     private static final int VERSION = 0;
@@ -38,7 +41,17 @@ public class MaximumProfileTable {
 
     private final SfntTable table;
 
-    private static MaximumProfileTable from(Typeface typeface) {
+    /**
+     * Creates a <code>MaximumProfileTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>MaximumProfileTable</code> object is
+     *        created.
+     * @return A new <code>MaximumProfileTable</code> object, or null if <code>typeface</code>
+     *         does not contain `maxp' table.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
+    public static MaximumProfileTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_MAXP);
         if (pointer != 0) {
             return new MaximumProfileTable(new StructTable(typeface, pointer));

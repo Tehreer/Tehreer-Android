@@ -18,6 +18,9 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * Represents OpenType `head' table.
+ */
 public class FontHeaderTable {
 
     private static final int VERSION = 0;
@@ -40,6 +43,15 @@ public class FontHeaderTable {
 
     private final SfntTable table;
 
+    /**
+     * Creates a <code>FontHeaderTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>FontHeaderTable</code> object is created.
+     * @return A new <code>FontHeaderTable</code> object, or null if <code>typeface</code> does not
+     *         contain `head' table.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
     public static FontHeaderTable from(Typeface typeface) {
         long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HEAD);
         if (pointer != 0) {
