@@ -21,19 +21,8 @@ package com.mta.tehreer.opentype;
  */
 public class SfntTag {
 
-	private static boolean isValidByte(byte val) {
-		return (val >= 'a' && val <= 'z')
-				|| (val >= 'A' && val <= 'Z')
-                || (val >= '0' && val <= '9')
-				|| (val == ' ');
-	}
-
-	private static boolean isValidChar(char val) {
-		return (val <= Byte.MAX_VALUE) && isValidByte((byte) val);
-	}
-
 	private static void verifyChar(char val, String message) {
-		if (!isValidChar(val)) {
+		if (!(val >= ' ' && val <= '~')) {
 			throw new IllegalArgumentException(message);
 		}
 	}
@@ -43,13 +32,13 @@ public class SfntTag {
     }
 
     /**
-     * Makes a four-byte integer, representing the tag passed-in as a string.
+     * Makes a four-byte integer, representing the passed-in tag as a string.
      *
      * @param tagStr The tag string to represent as an integer.
      * @return Integer representation of the tag.
      *
      * @throws IllegalArgumentException if <code>tagStr</code> is not four characters long, or any
-     *         character is not an English alphabet, a numeric or a space.
+     *         character is not a printing character represented by ASCII values 32-126.
      */
 	public static int make(String tagStr) {
 		if (tagStr.length() != 4) {
@@ -64,12 +53,18 @@ public class SfntTag {
 					        (byte) tagStr.charAt(2), (byte) tagStr.charAt(3));
 	}
 
+    /**
+     * Returns the string representation of a tag.
+     *
+     * @param tag The tag.
+     * @return The string representation of specified tag.
+     */
     public static String toString(int tag) {
         char[] chars = {
-                (char) (tag >> 24),
-                (char) ((tag >> 16) & 0xFF),
-                (char) ((tag >> 8) & 0xFF),
-                (char) (tag & 0xFF)
+            (char) (tag >> 24),
+            (char) ((tag >> 16) & 0xFF),
+            (char) ((tag >> 8) & 0xFF),
+            (char) (tag & 0xFF)
         };
 
         return new String(chars);
