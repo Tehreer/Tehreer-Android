@@ -33,9 +33,9 @@ public enum TypeWeight {
      */
     LIGHT(300),
     /**
-     * The "Normal" weight having a value equal to 400.
+     * The "Regular" weight having a value equal to 400.
      */
-    NORMAL(400),
+    REGULAR(400),
     /**
      * The "Medium" weight having a value equal to 500.
      */

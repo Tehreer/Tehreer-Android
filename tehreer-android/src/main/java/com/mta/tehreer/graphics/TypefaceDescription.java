@@ -163,7 +163,7 @@ class TypefaceDescription {
     TypefaceDescription(String familyName, String styleName, TypeWeight weight, TypeWidth width, TypeSlope slope) {
         this.familyName = familyName;
         this.styleName = styleName;
-        this.weight = (weight != null ? weight : TypeWeight.NORMAL);
+        this.weight = (weight != null ? weight : TypeWeight.REGULAR);
         this.width = (width != null ? width : TypeWidth.NORMAL);
         this.slope = (slope != null ? slope : TypeSlope.PLAIN);
     }
