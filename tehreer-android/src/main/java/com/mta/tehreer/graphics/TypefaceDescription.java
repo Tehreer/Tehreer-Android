@@ -22,7 +22,7 @@ import com.mta.tehreer.opentype.OS2WinMetricsTable;
 
 import java.util.Locale;
 
-class TypeDescription {
+class TypefaceDescription {
 
     private static final int PLATFORM_MACINTOSH = 1;
     private static final int PLATFORM_WINDOWS = 3;
@@ -44,7 +44,7 @@ class TypeDescription {
     private static final int FS_SELECTION_OBLIQUE = 1 << 9;
 
     private String mFamilyName;
-    private String mFaceName;
+    private String mStyleName;
     private TypeWeight mWeight;
     private TypeWidth mWidth;
     private TypeSlope mSlope;
@@ -96,7 +96,7 @@ class TypeDescription {
         return familyName;
     }
 
-    private static String getFaceName(NameTable nameTable, OS2WinMetricsTable os2Table) {
+    private static String getStyleName(NameTable nameTable, OS2WinMetricsTable os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
@@ -114,13 +114,13 @@ class TypeDescription {
         return familyName;
     }
 
-    TypeDescription(Typeface typeface) {
+    TypefaceDescription(Typeface typeface) {
         FontHeaderTable headTable = FontHeaderTable.from(typeface);
         OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
         NameTable nameTable = NameTable.from(typeface);
 
         mFamilyName = getFamilyName(nameTable, os2Table);
-        mFaceName = getFaceName(nameTable, os2Table);
+        mStyleName = getStyleName(nameTable, os2Table);
 
         if (os2Table != null) {
             int version = os2Table.version();
@@ -169,8 +169,8 @@ class TypeDescription {
         return mFamilyName;
     }
 
-    String getFaceName() {
-        return mFaceName;
+    String getStyleName() {
+        return mStyleName;
     }
 
     TypeWeight getWeight() {

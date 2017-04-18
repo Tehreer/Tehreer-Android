@@ -34,7 +34,7 @@ public class TypefaceCollection {
         public int compare(Typeface obj1, Typeface obj2) {
             int result = obj1.getFamilyName().compareToIgnoreCase(obj2.getFamilyName());
             if (result == 0) {
-                return obj1.getFaceName().compareToIgnoreCase(obj2.getFaceName());
+                return obj1.getStyleName().compareToIgnoreCase(obj2.getStyleName());
             }
 
             return result;

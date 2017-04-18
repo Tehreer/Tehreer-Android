@@ -50,7 +50,7 @@ public class Typeface {
     long nativeTypeface;
     @Sustain
     private final Finalizable finalizable = new Finalizable();
-    private TypeDescription description;
+    private TypefaceDescription description;
 
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
@@ -125,7 +125,7 @@ public class Typeface {
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-        this.description = new TypeDescription(this);
+        this.description = new TypefaceDescription(this);
 	}
 
     /**
@@ -138,12 +138,12 @@ public class Typeface {
     }
 
     /**
-     * Returns the face name of this typeface.
+     * Returns the style name of this typeface.
      *
-     * @return The face name of this typeface.
+     * @return The style name of this typeface.
      */
-    public String getFaceName() {
-        return description.getFaceName();
+    public String getStyleName() {
+        return description.getStyleName();
     }
 
     /**
