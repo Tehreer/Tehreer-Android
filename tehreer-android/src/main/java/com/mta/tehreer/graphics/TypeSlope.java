@@ -16,8 +16,20 @@
 
 package com.mta.tehreer.graphics;
 
-public enum TypeStyle {
-    NORMAL,
+/**
+ * Specifies the slope of a typeface.
+ */
+public enum TypeSlope {
+    /**
+     * The plain slope indicating upright characters.
+     */
+    PLAIN,
+    /**
+     * The italic slope indicating truly slanted characters which appear as they were designed.
+     */
     ITALIC,
-    OBLIQUE
+    /**
+     * The oblique slope indicating artificially slanted characters.
+     */
+    OBLIQUE,
 }

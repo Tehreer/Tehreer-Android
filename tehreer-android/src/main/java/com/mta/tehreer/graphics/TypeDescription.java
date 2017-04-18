@@ -22,7 +22,7 @@ import com.mta.tehreer.opentype.OS2WinMetricsTable;
 
 import java.util.Locale;
 
-class TypefaceDescription {
+class TypeDescription {
 
     private static final int PLATFORM_MACINTOSH = 1;
     private static final int PLATFORM_WINDOWS = 3;
@@ -46,8 +46,8 @@ class TypefaceDescription {
     private String mFamilyName;
     private String mFaceName;
     private TypeWeight mWeight;
-    private TypeStretch mStretch;
-    private TypeStyle mStyle;
+    private TypeWidth mWidth;
+    private TypeSlope mSlope;
 
     private static String getEnglishName(NameTable nameTable, int nameId) {
         int recordCount = nameTable.recordCount();
@@ -114,7 +114,7 @@ class TypefaceDescription {
         return familyName;
     }
 
-    TypefaceDescription(Typeface typeface) {
+    TypeDescription(Typeface typeface) {
         FontHeaderTable headTable = FontHeaderTable.from(typeface);
         OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
         NameTable nameTable = NameTable.from(typeface);
@@ -128,21 +128,21 @@ class TypefaceDescription {
             int usWeightClass = os2Table.usWeightClass();
             int usWidthClass = os2Table.usWidthClass();
 
-            mStretch = TypeStretch.valueOf(usWidthClass);
+            mWidth = TypeWidth.valueOf(usWidthClass);
             mWeight = TypeWeight.valueOf(usWeightClass);
 
             if (version >= 4 && (fsSelection & FS_SELECTION_OBLIQUE) != 0) {
-                mStyle = TypeStyle.OBLIQUE;
+                mSlope = TypeSlope.OBLIQUE;
             } else if ((fsSelection & FS_SELECTION_ITALIC) != 0) {
-                mStyle = TypeStyle.ITALIC;
+                mSlope = TypeSlope.ITALIC;
             }
         } else if (headTable != null) {
             int macStyle = headTable.macStyle();
 
             if ((macStyle & MAC_STYLE_CONDENSED) != 0) {
-                mStretch = TypeStretch.CONDENSED;
+                mWidth = TypeWidth.CONDENSED;
             } else if ((macStyle & MAC_STYLE_EXTENDED) != 0) {
-                mStretch = TypeStretch.EXPANDED;
+                mWidth = TypeWidth.EXPANDED;
             }
 
             if ((macStyle & MAC_STYLE_BOLD) != 0) {
@@ -150,18 +150,18 @@ class TypefaceDescription {
             }
 
             if ((macStyle & MAC_STYLE_ITALIC) != 0) {
-                mStyle = TypeStyle.ITALIC;
+                mSlope = TypeSlope.ITALIC;
             }
         }
 
         if (mWeight == null) {
             mWeight = TypeWeight.NORMAL;
         }
-        if (mStretch == null) {
-            mStretch = TypeStretch.NORMAL;
+        if (mWidth == null) {
+            mWidth = TypeWidth.NORMAL;
         }
-        if (mStyle == null) {
-            mStyle = TypeStyle.NORMAL;
+        if (mSlope == null) {
+            mSlope = TypeSlope.PLAIN;
         }
     }
 
@@ -177,11 +177,11 @@ class TypefaceDescription {
         return mWeight;
     }
 
-    TypeStretch getStretch() {
-        return mStretch;
+    TypeWidth getWidth() {
+        return mWidth;
     }
 
-    TypeStyle getStyle() {
-        return mStyle;
+    TypeSlope getSlope() {
+        return mSlope;
     }
 }

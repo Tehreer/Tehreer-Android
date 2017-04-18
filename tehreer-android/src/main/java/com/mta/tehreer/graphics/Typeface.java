@@ -50,12 +50,12 @@ public class Typeface {
     long nativeTypeface;
     @Sustain
     private final Finalizable finalizable = new Finalizable();
-    private TypefaceDescription description;
+    private TypeDescription description;
 
     /**
-     * Constructs a typeface object from the specified asset. The data of the asset is not copied
-     * into the memory. Rather, it is directly read from the stream when needed. So the performance
-     * of resulting typeface might be slower and should be used with caution.
+     * Constructs a typeface from the specified asset. The data of the asset is not copied into the
+     * memory. Rather, it is directly read from the stream when needed. So the performance of
+     * resulting typeface might be slower and should be used with caution.
      *
      * @param assetManager The application's asset manager.
      * @param filePath The path of the font file in the assets directory.
@@ -80,8 +80,8 @@ public class Typeface {
     }
 
     /**
-     * Constructs a typeface object from the specified file. The data for the font is directly read
-     * from the file when needed.
+     * Constructs a typeface from the specified file. The data for the font is directly read from
+     * the file when needed.
      *
      * @param file The font file.
      *
@@ -102,8 +102,8 @@ public class Typeface {
     }
 
     /**
-     * Create a new typeface from the input stream by copying its data into a native memory buffer.
-     * So it may take time to create the typeface if the stream holds larger data.
+     * Constructs a new typeface from the input stream by copying its data into a native memory
+     * buffer. It may take time to create the typeface if the stream holds larger data.
      *
      * @param stream The input stream that contains the data of the font.
      *
@@ -125,27 +125,55 @@ public class Typeface {
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-        this.description = new TypefaceDescription(this);
+        this.description = new TypeDescription(this);
 	}
 
+    /**
+     * Returns the family name of this typeface.
+     *
+     * @return The family name of this typeface.
+     */
     public String getFamilyName() {
         return description.getFamilyName();
     }
 
+    /**
+     * Returns the face name of this typeface.
+     *
+     * @return The face name of this typeface.
+     */
     public String getFaceName() {
         return description.getFaceName();
     }
 
-    public TypeStyle getStyle() {
-        return description.getStyle();
-    }
-
+    /**
+     * Returns the typographic weight of this typeface. The weight value determines the thickness
+     * associated with a given character in a typeface.
+     *
+     * @return The typographic weight of this typeface.
+     */
     public TypeWeight getWeight() {
         return description.getWeight();
     }
 
-    public TypeStretch getStretch() {
-        return description.getStretch();
+    /**
+     * Returns the typographic width of this typeface. The width value determines whether a typeface
+     * is expanded or condensed when it is displayed.
+     *
+     * @return The typographic width of this typeface.
+     */
+    public TypeWidth getWidth() {
+        return description.getWidth();
+    }
+
+    /**
+     * Returns the slope of this typeface. The slope value determines whether a typeface is plain
+     * or slanted when it is displayed.
+     *
+     * @return The slope of this typeface.
+     */
+    public TypeSlope getSlope() {
+        return description.getSlope();
     }
 
     /**
