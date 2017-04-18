@@ -125,7 +125,7 @@ public class Typeface {
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-        this.description = new TypefaceDescription(this);
+        this.description = TypefaceDescription.deduce(this);
 	}
 
     /**
@@ -134,7 +134,7 @@ public class Typeface {
      * @return The family name of this typeface.
      */
     public String getFamilyName() {
-        return description.getFamilyName();
+        return description.familyName;
     }
 
     /**
@@ -143,7 +143,7 @@ public class Typeface {
      * @return The style name of this typeface.
      */
     public String getStyleName() {
-        return description.getStyleName();
+        return description.styleName;
     }
 
     /**
@@ -153,7 +153,7 @@ public class Typeface {
      * @return The typographic weight of this typeface.
      */
     public TypeWeight getWeight() {
-        return description.getWeight();
+        return description.weight;
     }
 
     /**
@@ -163,7 +163,7 @@ public class Typeface {
      * @return The typographic width of this typeface.
      */
     public TypeWidth getWidth() {
-        return description.getWidth();
+        return description.width;
     }
 
     /**
@@ -173,7 +173,7 @@ public class Typeface {
      * @return The slope of this typeface.
      */
     public TypeSlope getSlope() {
-        return description.getSlope();
+        return description.slope;
     }
 
     /**

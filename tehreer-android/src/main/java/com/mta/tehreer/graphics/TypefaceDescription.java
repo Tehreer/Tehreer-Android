@@ -43,11 +43,11 @@ class TypefaceDescription {
     private static final int FS_SELECTION_WWS = 1 << 8;
     private static final int FS_SELECTION_OBLIQUE = 1 << 9;
 
-    private String mFamilyName;
-    private String mStyleName;
-    private TypeWeight mWeight;
-    private TypeWidth mWidth;
-    private TypeSlope mSlope;
+    final String familyName;
+    final String styleName;
+    final TypeWeight weight;
+    final TypeWidth width;
+    final TypeSlope slope;
 
     private static String getEnglishName(NameTable nameTable, int nameId) {
         int recordCount = nameTable.recordCount();
@@ -114,13 +114,16 @@ class TypefaceDescription {
         return familyName;
     }
 
-    TypefaceDescription(Typeface typeface) {
+    static TypefaceDescription deduce(Typeface typeface) {
         FontHeaderTable headTable = FontHeaderTable.from(typeface);
         OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
         NameTable nameTable = NameTable.from(typeface);
 
-        mFamilyName = getFamilyName(nameTable, os2Table);
-        mStyleName = getStyleName(nameTable, os2Table);
+        String familyName = getFamilyName(nameTable, os2Table);
+        String styleName = getStyleName(nameTable, os2Table);
+        TypeWeight weight = null;
+        TypeWidth width = null;
+        TypeSlope slope = null;
 
         if (os2Table != null) {
             int version = os2Table.version();
@@ -128,60 +131,40 @@ class TypefaceDescription {
             int usWeightClass = os2Table.usWeightClass();
             int usWidthClass = os2Table.usWidthClass();
 
-            mWidth = TypeWidth.valueOf(usWidthClass);
-            mWeight = TypeWeight.valueOf(usWeightClass);
+            weight = TypeWeight.valueOf(usWeightClass);
+            width = TypeWidth.valueOf(usWidthClass);
 
             if (version >= 4 && (fsSelection & FS_SELECTION_OBLIQUE) != 0) {
-                mSlope = TypeSlope.OBLIQUE;
+                slope = TypeSlope.OBLIQUE;
             } else if ((fsSelection & FS_SELECTION_ITALIC) != 0) {
-                mSlope = TypeSlope.ITALIC;
+                slope = TypeSlope.ITALIC;
             }
         } else if (headTable != null) {
             int macStyle = headTable.macStyle();
 
-            if ((macStyle & MAC_STYLE_CONDENSED) != 0) {
-                mWidth = TypeWidth.CONDENSED;
-            } else if ((macStyle & MAC_STYLE_EXTENDED) != 0) {
-                mWidth = TypeWidth.EXPANDED;
+            if ((macStyle & MAC_STYLE_BOLD) != 0) {
+                weight = TypeWeight.BOLD;
             }
 
-            if ((macStyle & MAC_STYLE_BOLD) != 0) {
-                mWeight = TypeWeight.BOLD;
+            if ((macStyle & MAC_STYLE_CONDENSED) != 0) {
+                width = TypeWidth.CONDENSED;
+            } else if ((macStyle & MAC_STYLE_EXTENDED) != 0) {
+                width = TypeWidth.EXPANDED;
             }
 
             if ((macStyle & MAC_STYLE_ITALIC) != 0) {
-                mSlope = TypeSlope.ITALIC;
+                slope = TypeSlope.ITALIC;
             }
         }
 
-        if (mWeight == null) {
-            mWeight = TypeWeight.NORMAL;
-        }
-        if (mWidth == null) {
-            mWidth = TypeWidth.NORMAL;
-        }
-        if (mSlope == null) {
-            mSlope = TypeSlope.PLAIN;
-        }
+        return new TypefaceDescription(familyName, styleName, weight, width, slope);
     }
 
-    String getFamilyName() {
-        return mFamilyName;
-    }
-
-    String getStyleName() {
-        return mStyleName;
-    }
-
-    TypeWeight getWeight() {
-        return mWeight;
-    }
-
-    TypeWidth getWidth() {
-        return mWidth;
-    }
-
-    TypeSlope getSlope() {
-        return mSlope;
+    TypefaceDescription(String familyName, String styleName, TypeWeight weight, TypeWidth width, TypeSlope slope) {
+        this.familyName = familyName;
+        this.styleName = styleName;
+        this.weight = (weight != null ? weight : TypeWeight.NORMAL);
+        this.width = (width != null ? width : TypeWidth.NORMAL);
+        this.slope = (slope != null ? slope : TypeSlope.PLAIN);
     }
 }
