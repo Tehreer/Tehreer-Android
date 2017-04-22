@@ -28,7 +28,7 @@ import android.view.View;
 import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.graphics.TypefaceCollection;
+import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.text.TextLine;
 import com.mta.tehreer.text.TextTruncation;
 import com.mta.tehreer.text.TextTypesetter;
@@ -414,7 +414,7 @@ public class TLabel extends View {
     }
 
     private void setTypeface(Object tag) {
-        setTypeface(TypefaceCollection.shared().get(tag));
+        setTypeface(TypefaceManager.getDefaultManager().getTypeface(tag));
     }
 
     /**
