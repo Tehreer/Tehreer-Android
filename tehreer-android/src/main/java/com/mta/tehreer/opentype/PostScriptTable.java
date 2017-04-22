@@ -79,6 +79,10 @@ public class PostScriptTable {
     }
 
     public String glyphNameAt(int index) {
+        if (index < 0 || index >= numberOfGlyphs()) {
+            throw new IndexOutOfBoundsException("Index: " + index);
+        }
+
         return OpenType.getGlyphName(typeface, index);
     }
 }
