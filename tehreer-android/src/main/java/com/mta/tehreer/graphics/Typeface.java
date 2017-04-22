@@ -147,6 +147,15 @@ public class Typeface {
     }
 
     /**
+     * Returns the full name of this typeface.
+     *
+     * @return The full name of this typeface.
+     */
+    public String getFullName() {
+        return description.fullName;
+    }
+
+    /**
      * Returns the typographic weight of this typeface. The weight value determines the thickness
      * associated with a given character in a typeface.
      *

@@ -29,6 +29,7 @@ class TypefaceDescription {
 
     private static final int NAME_FONT_FAMILY = 1;
     private static final int NAME_FONT_SUBFAMILY = 2;
+    private static final int NAME_FULL = 4;
     private static final int NAME_TYPOGRAPHIC_FAMILY = 16;
     private static final int NAME_TYPOGRAPHIC_SUBFAMILY = 17;
     private static final int NAME_WWS_FAMILY = 21;
@@ -45,6 +46,7 @@ class TypefaceDescription {
 
     final String familyName;
     final String styleName;
+    final String fullName;
     final TypeWeight weight;
     final TypeWidth width;
     final TypeSlope slope;
@@ -114,6 +116,10 @@ class TypefaceDescription {
         return familyName;
     }
 
+    private static String getFullName(NameTable nameTable) {
+        return getEnglishName(nameTable, NAME_FULL);
+    }
+
     static TypefaceDescription deduce(Typeface typeface) {
         FontHeaderTable headTable = FontHeaderTable.from(typeface);
         OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
@@ -121,6 +127,7 @@ class TypefaceDescription {
 
         String familyName = getFamilyName(nameTable, os2Table);
         String styleName = getStyleName(nameTable, os2Table);
+        String fullName = getFullName(nameTable);
         TypeWeight weight = null;
         TypeWidth width = null;
         TypeSlope slope = null;
@@ -157,12 +164,15 @@ class TypefaceDescription {
             }
         }
 
-        return new TypefaceDescription(familyName, styleName, weight, width, slope);
+        return new TypefaceDescription(familyName, styleName, fullName,
+                                       weight, width, slope);
     }
 
-    TypefaceDescription(String familyName, String styleName, TypeWeight weight, TypeWidth width, TypeSlope slope) {
+    TypefaceDescription(String familyName, String styleName, String fullName,
+                        TypeWeight weight, TypeWidth width, TypeSlope slope) {
         this.familyName = familyName;
         this.styleName = styleName;
+        this.fullName = fullName;
         this.weight = (weight != null ? weight : TypeWeight.REGULAR);
         this.width = (width != null ? width : TypeWidth.NORMAL);
         this.slope = (slope != null ? slope : TypeSlope.PLAIN);
