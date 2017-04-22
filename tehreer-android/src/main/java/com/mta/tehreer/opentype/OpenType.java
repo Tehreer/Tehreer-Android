@@ -20,16 +20,19 @@ import com.mta.tehreer.graphics.Typeface;
 
 class OpenType {
 
-    static final int TABLE_HEAD = 1;
-    static final int TABLE_MAXP = 2;
-    static final int TABLE_OS_2 = 3;
-    static final int TABLE_HHEA = 4;
+    static final int TABLE_HEAD = 0;
+    static final int TABLE_MAXP = 1;
+    static final int TABLE_OS_2 = 2;
+    static final int TABLE_HHEA = 3;
+    static final int TABLE_POST = 5;
 
     static native String[] getNameLocale(int platformId, int languageId);
     static native String getNameCharset(int platformId, int encodingId);
 
     static native int getNameCount(Typeface typeface);
     static native NameTable.Record getNameRecord(Typeface typeface, int index);
+
+    static native String getGlyphName(Typeface typeface, int index);
 
     static native long getTablePointer(Typeface typeface, int table);
 }
