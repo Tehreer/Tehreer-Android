@@ -32,7 +32,7 @@ public class StructTable implements SfntTable {
      */
     private final long pointer;
 
-    StructTable(Object source, long pointer) {
+    public StructTable(Object source, long pointer) {
         this.source = source;
         this.pointer = pointer;
     }

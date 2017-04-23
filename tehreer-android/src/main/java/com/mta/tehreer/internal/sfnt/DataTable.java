@@ -20,7 +20,7 @@ public class DataTable implements SfntTable {
 
     private final byte[] data;
 
-    DataTable(byte[] data) {
+    public DataTable(byte[] data) {
         this.data = data;
     }
 
