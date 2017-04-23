@@ -18,6 +18,9 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 
+/**
+ * Represents an OpenType `post' table.
+ */
 public class PostScriptTable {
 
     private static final int VERSION = 0;
@@ -33,9 +36,26 @@ public class PostScriptTable {
     private final Typeface typeface;
     private final SfntTable table;
 
-    private PostScriptTable(Typeface typeface) {
+    /**
+     * Constructs a <code>PostScriptTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>PostScriptTable</code> object is
+     *                 constructed.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `post' table.
+     */
+    public PostScriptTable(Typeface typeface) {
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        if (pointer == 0) {
+            throw new RuntimeException("The typeface does not contain `post' table");
+        }
+
         this.typeface = typeface;
-        this.table = new StructTable(typeface, OpenType.getTablePointer(typeface, OpenType.TABLE_POST));
+        this.table = new StructTable(typeface, pointer);
     }
 
     public long version() {
