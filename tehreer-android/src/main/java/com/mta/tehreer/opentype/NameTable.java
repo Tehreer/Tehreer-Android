@@ -28,29 +28,26 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Locale;
 
 /**
- * Represents OpenType `name' table.
+ * Represents an OpenType `name' table.
  */
 public class NameTable {
 
     private final Typeface typeface;
 
     /**
-     * Creates a <code>NameTable</code> object from the specified typeface.
+     * Constructs an <code>NameTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>NameTable</code> object is created.
-     * @return A new <code>NameTable</code> object.
+     * @param typeface The typeface from which the <code>NameTable</code> object is
+     *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `name' table.
      */
-    public static NameTable from(Typeface typeface) {
+    public NameTable(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
 
-        return new NameTable(typeface);
-    }
-
-    private NameTable(Typeface typeface) {
         this.typeface = typeface;
     }
 
