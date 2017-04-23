@@ -52,7 +52,7 @@ public class HorizontalHeaderTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HHEA);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `hhea' table");
         }
