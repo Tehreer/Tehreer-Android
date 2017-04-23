@@ -616,6 +616,18 @@ jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
                                                      bytes);
 }
 
+jstring getGlyphName(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
+{
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+
+    char buffer[96];
+    FT_Get_Glyph_Name(baseFace, index, buffer, sizeof(buffer));
+
+    return env->NewStringUTF(buffer);
+}
+
 jlong getTablePointer(JNIEnv *env, jobject obj, jobject jtypeface, jint table)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
@@ -632,6 +644,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "getNameCharset", "(II)Ljava/lang/String;", (void *)getNameCharset },
     { "getNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
     { "getNameRecord", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameTable$Record;", (void *)getNameRecord },
+    { "getGlyphName", "(Lcom/mta/tehreer/graphics/Typeface;I)Ljava/lang/String;", (void *)getGlyphName },
     { "getTablePointer", "(Lcom/mta/tehreer/graphics/Typeface;I)J", (void *)getTablePointer },
 };
 
