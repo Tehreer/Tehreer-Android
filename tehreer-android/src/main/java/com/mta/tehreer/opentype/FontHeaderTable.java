@@ -19,7 +19,7 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.graphics.Typeface;
 
 /**
- * Represents OpenType `head' table.
+ * Represents an OpenType `head' table.
  */
 public class FontHeaderTable {
 
@@ -44,25 +44,24 @@ public class FontHeaderTable {
     private final SfntTable table;
 
     /**
-     * Creates a <code>FontHeaderTable</code> object from the specified typeface.
+     * Constructs a <code>FontHeaderTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>FontHeaderTable</code> object is created.
-     * @return A new <code>FontHeaderTable</code> object, or null if <code>typeface</code> does not
-     *         contain `head' table.
+     * @param typeface The typeface from which the <code>FontHeaderTable</code> object is
+     *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `head' table.
      */
-    public static FontHeaderTable from(Typeface typeface) {
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HEAD);
-        if (pointer != 0) {
-            return new FontHeaderTable(new StructTable(typeface, pointer));
+    public FontHeaderTable(Typeface typeface) {
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        if (pointer == 0) {
+            throw new RuntimeException("The typeface does not contain `head' table");
         }
 
-        return null;
-    }
-
-    private FontHeaderTable(SfntTable table) {
-        this.table = table;
+        this.table = new StructTable(typeface, pointer);
     }
 
     public long version() {
