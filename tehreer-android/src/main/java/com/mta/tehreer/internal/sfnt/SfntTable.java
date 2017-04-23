@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.opentype;
+package com.mta.tehreer.internal.sfnt;
 
-interface SfntTable {
+public interface SfntTable {
     byte[] readBytes(int offset, int count);
 
     short readInt16(int offset);

@@ -17,6 +17,8 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.sfnt.SfntTable;
+import com.mta.tehreer.internal.sfnt.StructTable;
 
 /**
  * Represents an OpenType `hhea' table.

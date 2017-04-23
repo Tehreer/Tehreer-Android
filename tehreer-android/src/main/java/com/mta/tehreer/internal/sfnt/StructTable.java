@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.opentype;
+package com.mta.tehreer.internal.sfnt;
 
 import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.internal.Sustain;
 
-class StructTable implements SfntTable {
+public class StructTable implements SfntTable {
 
     /**
      * Represents the source from which the struct pointer was obtained. Keep the source in memory

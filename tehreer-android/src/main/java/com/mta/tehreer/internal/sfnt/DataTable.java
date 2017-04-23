@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.opentype;
+package com.mta.tehreer.internal.sfnt;
 
-class DataTable implements SfntTable {
+public class DataTable implements SfntTable {
 
     private final byte[] data;
 
