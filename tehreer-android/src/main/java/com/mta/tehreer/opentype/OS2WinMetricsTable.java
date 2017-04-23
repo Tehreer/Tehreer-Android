@@ -19,7 +19,7 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.graphics.Typeface;
 
 /**
- * Represents OpenType `OS/2' table.
+ * Represents an OpenType `OS/2' table.
  */
 public class OS2WinMetricsTable {
 
@@ -67,26 +67,24 @@ public class OS2WinMetricsTable {
     private final SfntTable table;
 
     /**
-     * Creates an <code>OS2WinMetricsTable</code> object from the specified typeface.
+     * Constructs an <code>OS2WinMetricsTable</code> object from the specified typeface.
      *
      * @param typeface The typeface from which the <code>OS2WinMetricsTable</code> object is
-     *        created.
-     * @return A new <code>OS2WinMetricsTable</code> object, or null if <code>typeface</code>
-     *         does not contain `maxp' table.
+     *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `OS/2' table.
      */
-    public static OS2WinMetricsTable from(Typeface typeface) {
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_OS_2);
-        if (pointer != 0) {
-            return new OS2WinMetricsTable(new StructTable(typeface, pointer));
+    public OS2WinMetricsTable(Typeface typeface) {
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        if (pointer == 0) {
+            throw new RuntimeException("The typeface does not contain `OS/2' table");
         }
 
-        return null;
-    }
-
-    private OS2WinMetricsTable(SfntTable table) {
-        this.table = table;
+        this.table = new StructTable(typeface, pointer);
     }
 
     public int version() {
