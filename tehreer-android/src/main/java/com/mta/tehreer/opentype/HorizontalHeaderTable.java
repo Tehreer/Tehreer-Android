@@ -19,7 +19,7 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.graphics.Typeface;
 
 /**
- * Represents OpenType `hhea' table.
+ * Represents an OpenType `hhea' table.
  */
 public class HorizontalHeaderTable {
 
@@ -40,26 +40,24 @@ public class HorizontalHeaderTable {
     private final SfntTable table;
 
     /**
-     * Creates a <code>HorizontalHeaderTable</code> object from the specified typeface.
+     * Constructs a <code>HorizontalHeaderTable</code> object from the specified typeface.
      *
      * @param typeface The typeface from which the <code>HorizontalHeaderTable</code> object is
-     *        created.
-     * @return A new <code>HorizontalHeaderTable</code> object, or null if <code>typeface</code>
-     *         does not contain `hhea' table.
+     *        constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `hhea' table.
      */
-    public static HorizontalHeaderTable from(Typeface typeface) {
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HHEA);
-        if (pointer != 0) {
-            return new HorizontalHeaderTable(new StructTable(typeface, pointer));
+    public HorizontalHeaderTable(Typeface typeface) {
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        if (pointer == 0) {
+            throw new RuntimeException("The typeface does not contain `hhea' table");
         }
 
-        return null;
-    }
-
-    private HorizontalHeaderTable(SfntTable table) {
-        this.table = table;
+        this.table = new StructTable(typeface, pointer);
     }
 
     public long version() {
