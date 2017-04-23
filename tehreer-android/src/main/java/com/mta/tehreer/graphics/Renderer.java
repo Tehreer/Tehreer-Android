@@ -112,23 +112,21 @@ public class Renderer {
     }
 
     /**
-     * Returns this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
+     * Returns this renderer's fill color for glyphs. The default value is <code>Color.BLACK</code>.
      *
-     * @return The text color of this renderer expressed as ARGB integer.
+     * @return The fill color of this renderer expressed as ARGB integer.
      */
     public int getFillColor() {
         return mFillColor;
     }
 
     /**
-     * Sets this renderer's text color, used for filling glyphs. The default value is
-     * <code>Color.BLACK</code>.
+     * Sets this renderer's fill color for glyphs. The default value is <code>Color.BLACK</code>.
      *
-     * @param textColor The 32-bit value of color expressed as ARGB.
+     * @param fillColor The 32-bit value of color expressed as ARGB.
      */
-    public void setFillColor(int textColor) {
-        mFillColor = textColor;
+    public void setFillColor(int fillColor) {
+        mFillColor = fillColor;
     }
 
     /**
@@ -201,46 +199,46 @@ public class Renderer {
     }
 
     /**
-     * Returns this renderer's text size, applied on glyphs while drawing.
+     * Returns this renderer's type size, applied on glyphs while drawing.
      *
-     * @return The text size of this renderer in pixels.
+     * @return The type size of this renderer in pixels.
      */
     public float getTypeSize() {
         return mTypeSize;
     }
 
     /**
-     * Sets this renderer's text size, applied on glyphs while drawing.
+     * Sets this renderer's type size, applied on glyphs while drawing.
      *
-     * @param textSize The new text size in pixels.
+     * @param typeSize The new type size in pixels.
      *
-     * @throws IllegalArgumentException if <code>textSize</code> is negative.
+     * @throws IllegalArgumentException if <code>typeSize</code> is negative.
      */
-    public void setTypeSize(float textSize) {
-        if (textSize < 0.0) {
-            throw new IllegalArgumentException("The value of text size is negative");
+    public void setTypeSize(float typeSize) {
+        if (typeSize < 0.0) {
+            throw new IllegalArgumentException("The value of type size is negative");
         }
 
-        mTypeSize = textSize;
+        mTypeSize = typeSize;
         updatePixelSizes();
     }
 
     /**
-     * Returns this renderer's horizontal skew factor for glyphs. The default value is 0.
+     * Returns this renderer's slant angle for glyphs. The default value is 0.
      *
-     * @return The horizontal skew factor of this renderer for drawing glyphs.
+     * @return The slant angle of this renderer for drawing glyphs.
      */
     public float getSlantAngle() {
         return mSlantAngle;
     }
 
     /**
-     * Sets this renderer's horizontal skew factor for glyphs. The default value is 0.
+     * Sets this renderer's slant angle for glyphs. The default value is 0.
      *
-     * @param textSkewX The horizontal skew factor for drawing glyphs.
+     * @param slantAngle The slant angle for drawing glyphs.
      */
-    public void setSlantAngle(float textSkewX) {
-        mSlantAngle = textSkewX;
+    public void setSlantAngle(float slantAngle) {
+        mSlantAngle = slantAngle;
         updateTransform();
     }
 
@@ -258,14 +256,14 @@ public class Renderer {
      * greater than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
      * narrower.
      *
-     * @param textScaleX The horizontal scale factor for drawing/measuring glyphs.
+     * @param scaleX The horizontal scale factor for drawing/measuring glyphs.
      */
-    public void setScaleX(float textScaleX) {
-        if (textScaleX < 0.0f) {
+    public void setScaleX(float scaleX) {
+        if (scaleX < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
         }
 
-        mScaleX = textScaleX;
+        mScaleX = scaleX;
         updatePixelSizes();
     }
 
@@ -283,14 +281,14 @@ public class Renderer {
      * greater than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
      * narrower.
      *
-     * @param textScaleY The vertical scale factor for drawing/measuring glyphs.
+     * @param scaleY The vertical scale factor for drawing/measuring glyphs.
      */
-    public void setScaleY(float textScaleY) {
-        if (textScaleY < 0.0f) {
+    public void setScaleY(float scaleY) {
+        if (scaleY < 0.0f) {
             throw new IllegalArgumentException("Scale value is negative");
         }
 
-        mScaleY = textScaleY;
+        mScaleY = scaleY;
         updatePixelSizes();
     }
 
@@ -323,7 +321,7 @@ public class Renderer {
     }
 
     /**
-     * Sets the width for stroking glyphs.
+     * Sets this renderer's width for stroking glyphs.
      *
      * @param strokeWidth The stroke width in pixels.
      */
@@ -516,12 +514,12 @@ public class Renderer {
     }
 
     /**
-     * Generates a cumulative path of the glyphs in specified range.
+     * Generates a cumulative path of specified glyphs.
      *
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
-     * @return The cumulative path of the glyphs in specified range.
+     * @return The cumulative path of specified glyphs.
      */
     public Path generatePath(IntList glyphIds, PointList offsets, FloatList advances) {
         Path cumulativePath = new Path();
@@ -564,12 +562,12 @@ public class Renderer {
     }
 
     /**
-     * Calculates the bounding box of the glyphs in specified range.
+     * Calculates the bounding box of specified glyphs.
      *
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
-     * @return A rectangle that tightly encloses the paths of glyphs in the specified range.
+     * @return A rectangle that tightly encloses the paths of specified glyphs.
      */
     public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances) {
         RectF glyphBBox = new RectF();
@@ -628,8 +626,8 @@ public class Renderer {
     }
 
     /**
-     * Draws the glyphs in specified range onto the given canvas. The shadow will not be drawn if
-     * the canvas is hardware accelerated.
+     * Draws specified glyphs onto the given canvas. The shadow will not be drawn if the canvas is
+     * hardware accelerated.
      *
      * @param canvas The canvas onto which to draw the glyphs.
      * @param glyphIds The list containing the glyph IDs.
