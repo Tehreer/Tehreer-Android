@@ -19,7 +19,7 @@ package com.mta.tehreer.opentype;
 import com.mta.tehreer.graphics.Typeface;
 
 /**
- * Represents OpenType `maxp' table.
+ * Represents an OpenType `maxp' table.
  */
 public class MaximumProfileTable {
 
@@ -42,26 +42,24 @@ public class MaximumProfileTable {
     private final SfntTable table;
 
     /**
-     * Creates a <code>MaximumProfileTable</code> object from the specified typeface.
+     * Constructs a <code>MaximumProfileTable</code> object from the specified typeface.
      *
      * @param typeface The typeface from which the <code>MaximumProfileTable</code> object is
-     *        created.
-     * @return A new <code>MaximumProfileTable</code> object, or null if <code>typeface</code>
-     *         does not contain `maxp' table.
+     *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     * @throws RuntimeException if <code>typeface</code> does not contain `maxp' table.
      */
-    public static MaximumProfileTable from(Typeface typeface) {
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_MAXP);
-        if (pointer != 0) {
-            return new MaximumProfileTable(new StructTable(typeface, pointer));
+    public MaximumProfileTable(Typeface typeface) {
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        if (pointer == 0) {
+            throw new RuntimeException("The typeface does not contain `maxp' table");
         }
 
-        return null;
-    }
-
-    private MaximumProfileTable(SfntTable table) {
-        this.table = table;
+        this.table = new StructTable(typeface, pointer);
     }
 
     public long version() {
