@@ -177,10 +177,10 @@ public class Typeface {
     }
 
     /**
-     * Returns the slope of this typeface. The slope value determines whether a typeface is plain
-     * or slanted when it is displayed.
+     * Returns the typographic slope of this typeface. The slope value determines whether a typeface
+     * is plain or slanted when it is displayed.
      *
-     * @return The slope of this typeface.
+     * @return The typographic slope of this typeface.
      */
     public TypeSlope getSlope() {
         return description.slope;
@@ -321,7 +321,13 @@ public class Typeface {
 
     @Override
     public String toString() {
-        return "Typeface{unitsPerEm=" + getUnitsPerEm()
+        return "Typeface{familyName=" + getFamilyName()
+                + ", styleName=" + getStyleName()
+                + ", fullName=" + getFullName()
+                + ", weight=" + getWeight()
+                + ", width=" + getWidth()
+                + ", slope=" + getSlope()
+                + ", unitsPerEm=" + getUnitsPerEm()
                 + ", ascent=" + getAscent()
                 + ", descent=" + getDescent()
                 + ", leading=" + getLeading()
