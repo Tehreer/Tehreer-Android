@@ -121,9 +121,9 @@ class TypefaceDescription {
     }
 
     static TypefaceDescription deduce(Typeface typeface) {
-        FontHeaderTable headTable = FontHeaderTable.from(typeface);
-        OS2WinMetricsTable os2Table = OS2WinMetricsTable.from(typeface);
-        NameTable nameTable = NameTable.from(typeface);
+        FontHeaderTable headTable = new FontHeaderTable(typeface);
+        OS2WinMetricsTable os2Table = new OS2WinMetricsTable(typeface);
+        NameTable nameTable = new NameTable(typeface);
 
         String familyName = getFamilyName(nameTable, os2Table);
         String styleName = getStyleName(nameTable, os2Table);
