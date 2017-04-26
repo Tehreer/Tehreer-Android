@@ -64,8 +64,8 @@ public class MaximumProfileTable {
         this.table = new StructTable(typeface, pointer);
     }
 
-    public long version() {
-        return table.readUInt32(VERSION);
+    public int version() {
+        return table.readInt32(VERSION);
     }
 
     public int numGlyphs() {
