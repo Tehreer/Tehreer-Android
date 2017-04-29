@@ -14,89 +14,73 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:padding="8dp">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="4dp">
 
         <TextView
+            style="@style/FormHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:text="Typeface:"/>
+            android:text="Typeface"/>
 
         <Spinner
             android:id="@+id/spinner_typeface"
+            style="@style/FormSpinner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_column="2"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            android:layout_height="wrap_content"/>
 
         <TextView
+            style="@style/FormHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:text="Script Tag:"/>
+            android:text="Script Tag"/>
 
         <EditText
             android:id="@+id/field_script_tag"
+            style="@style/FormField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_column="2"
             android:inputType="text"
+            android:maxLines="1"
             android:text="arab"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
 
         <TextView
+            style="@style/FormHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:text="Language Tag:"/>
+            android:text="Language Tag"/>
 
         <EditText
             android:id="@+id/field_language_tag"
+            style="@style/FormField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_column="2"
             android:inputType="text"
+            android:maxLines="1"
             android:text="dflt"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
 
         <TextView
+            style="@style/FormHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_column="1"
-            android:text="Text:"/>
+            android:text="Input Text"/>
 
         <EditText
             android:id="@+id/field_text"
+            style="@style/FormField"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_column="2"
+            android:layout_height="wrap_content"
             android:gravity="top|start"
             android:inputType="textMultiLine"
+            android:minLines="3"
             android:scrollbars="vertical"
             android:text="زبان کو مختلف علامتوں اور رموز کے ذریعے لکھنے کو تحریر کہتے ہیں۔"/>
     </LinearLayout>
-</LinearLayout>
+</ScrollView>
