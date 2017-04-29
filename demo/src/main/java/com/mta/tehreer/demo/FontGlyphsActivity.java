@@ -43,11 +43,14 @@ import android.widget.TextView;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 public class FontGlyphsActivity extends AppCompatActivity {
 
     private GridView mGlyphsGridView;
-    private String mTypefaceTag;
+    private int mTypefaceTag;
 
     private static class GlyphHolder {
         ImageView glyphImageView;
@@ -105,34 +108,37 @@ public class FontGlyphsActivity extends AppCompatActivity {
 
     private static class GlyphDrawable extends Drawable {
 
-        static final float[] DIMENSION = { 0.0f };
+        static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
+        static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
 
         final Renderer renderer;
-        final int[] glyphId;
+        final IntList glyphId;
         final RectF glyphBounds;
-        final float glyphAscent;
-        final float glyphHeight;
+        final float fontAscent;
+        final float fontDescent;
 
         GlyphDrawable(Renderer renderer, int glyphId) {
             Typeface typeface = renderer.getTypeface();
-            float sizeByEm = renderer.getTextSize() / typeface.getUnitsPerEm();
+            float sizeByEm = renderer.getTypeSize() / typeface.getUnitsPerEm();
 
             this.renderer = renderer;
-            this.glyphId = new int[] { glyphId };
+            this.glyphId = IntList.of(new int[] { glyphId });
             this.glyphBounds = renderer.computeBoundingBox(glyphId);
-            this.glyphAscent = typeface.getAscent() * sizeByEm;
-            this.glyphHeight = glyphAscent + (typeface.getDescent() * sizeByEm);
+            this.fontAscent = typeface.getAscent() * sizeByEm;
+            this.fontDescent = typeface.getDescent() * sizeByEm;
         }
 
         @Override
         public void draw(Canvas canvas) {
             Rect drawableBounds = getBounds();
 
+            float fontHeight = fontAscent + fontDescent;
+
             int left = (int) (drawableBounds.left + (drawableBounds.width() - glyphBounds.width()) / 2.0f - glyphBounds.left + 0.5f);
-            int top = (int) (drawableBounds.top + (drawableBounds.height() - glyphHeight) / 2.0f + glyphAscent + 0.5f);
+            int top = (int) (drawableBounds.top + (drawableBounds.height() - fontHeight) / 2.0f + fontAscent + 0.5f);
 
             canvas.translate(left, top);
-            renderer.drawGlyphs(canvas, glyphId, DIMENSION, DIMENSION, DIMENSION, 0, 1);
+            renderer.drawGlyphs(canvas, glyphId, OFFSET, ADVANCE);
             canvas.translate(-left, -top);
         }
 
@@ -197,17 +203,17 @@ public class FontGlyphsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void loadTypeface(String tag) {
-        if (!tag.equals(mTypefaceTag)) {
+    private void loadTypeface(int tag) {
+        if (tag != mTypefaceTag) {
             mTypefaceTag = tag;
 
             Resources resources = getResources();
-            Typeface typeface = TypefaceManager.getTypeface(tag);
+            Typeface typeface = TypefaceManager.getDefaultManager().getTypeface(tag);
             float fontSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, resources.getDisplayMetrics());
 
             Renderer renderer = new Renderer();
             renderer.setTypeface(typeface);
-            renderer.setTextSize(fontSize);
+            renderer.setTypeSize(fontSize);
 
             mGlyphsGridView.setAdapter(new GlyphAdapter(this, renderer));
         }
