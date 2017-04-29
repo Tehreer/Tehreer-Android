@@ -30,14 +30,14 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.mta.tehreer.opentype.OpenTypeTag;
+import com.mta.tehreer.opentype.SfntTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
 
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
     private EditText mTextField;
-    private String mTypefaceTag;
+    private int mTypefaceTag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +101,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
     private void shape() {
         CharSequence scriptTag = mScriptTagField.getText();
         try {
-            OpenTypeTag.make(scriptTag.toString());
+            SfntTag.make(scriptTag.toString());
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(this, "Write a valid script tag!", Toast.LENGTH_LONG).show();
             return;
@@ -109,7 +109,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
 
         CharSequence languageTag = mLanguageTagField.getText();
         try {
-            OpenTypeTag.make(languageTag.toString());
+            SfntTag.make(languageTag.toString());
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(this, "Write a valid language tag!", Toast.LENGTH_LONG).show();
             return;
@@ -117,8 +117,8 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, OpenTypeInfoActivity.class);
         intent.putExtra(OpenTypeInfoActivity.TYPEFACE_TAG, mTypefaceTag);
-        intent.putExtra(OpenTypeInfoActivity.SCRIPT_TAG, OpenTypeTag.make(scriptTag.toString()));
-        intent.putExtra(OpenTypeInfoActivity.LANGUAGE_TAG, OpenTypeTag.make(languageTag.toString()));
+        intent.putExtra(OpenTypeInfoActivity.SCRIPT_TAG, SfntTag.make(scriptTag.toString()));
+        intent.putExtra(OpenTypeInfoActivity.LANGUAGE_TAG, SfntTag.make(languageTag.toString()));
         intent.putExtra(OpenTypeInfoActivity.SOURCE_TEXT, mTextField.getText());
 
         startActivity(intent);
