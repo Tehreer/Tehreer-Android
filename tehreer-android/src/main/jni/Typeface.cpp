@@ -51,9 +51,9 @@ static inline FT_Fixed toF16Dot16(float value)
     return static_cast<FT_Fixed>((value * 0x10000) + 0.5);
 }
 
-static inline float f26Dot6FixedtoFloat(FT_Fixed value)
+static inline float f16Dot16toFloat(FT_Fixed value)
 {
-    return static_cast<float>(value / 64.0);
+    return value / static_cast<float>(0x10000);
 }
 
 static inline float f26Dot6PosToFloat(FT_Pos value)
@@ -376,6 +376,7 @@ FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool ve
 
     FT_Activate_Size(m_ftSize);
     FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
+    FT_Set_Transform(m_ftFace, nullptr, nullptr);
 
     FT_Fixed advance;
     FT_Get_Advance(m_ftFace, glyphID, loadFlags, &advance);
@@ -561,7 +562,7 @@ static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
     FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
     FT_Fixed advance = typeface->getGlyphAdvance(glyphIndex, fixedSize, vertical);
 
-    return f26Dot6FixedtoFloat(advance);
+    return f16Dot16toFloat(advance);
 }
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
