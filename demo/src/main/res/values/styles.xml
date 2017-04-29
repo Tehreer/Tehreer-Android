@@ -18,10 +18,69 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+        <item name="actionBarStyle">@style/Widget.AppTheme.ActionBar</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="editTextStyle">@style/Widget.AppTheme.EditText</item>
+        <item name="android:spinnerItemStyle">@style/Widget.AppTheme.TextView.SpinnerItem</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Widget.AppTheme.DropDownItem.Spinner
+        </item>
     </style>
 
+    <style name="Widget.AppTheme.ActionBar" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="elevation">4dp</item>
+    </style>
+
+    <style name="Widget.AppTheme.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Widget.AppTheme.TextView.SpinnerItem" parent="Widget.AppCompat.TextView.SpinnerItem">
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Widget.AppTheme.DropDownItem.Spinner" parent="Widget.AppCompat.DropDownItem.Spinner">
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="FormHeading">
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="FormField">
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+
+    <style name="FormSpinner" parent="Widget.AppCompat.Spinner.Underlined">
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+
+    <style name="NameKey">
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold|italic</item>
+    </style>
+
+    <style name="NameValue">
+        <item name="android:autoLink">web</item>
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="NameSample">
+        <item name="textColor">@android:color/black</item>
+        <item name="textSize">20sp</item>
+    </style>
 </resources>
