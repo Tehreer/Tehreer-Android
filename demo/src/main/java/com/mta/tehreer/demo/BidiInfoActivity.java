@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.AbsoluteSizeSpan;
-import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.SparseIntArray;
@@ -38,10 +36,8 @@ import com.mta.tehreer.bidi.BaseDirection;
 import com.mta.tehreer.bidi.BidiAlgorithm;
 import com.mta.tehreer.bidi.BidiLine;
 import com.mta.tehreer.bidi.BidiPair;
-import com.mta.tehreer.bidi.BidiPairConsumer;
 import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
-import com.mta.tehreer.bidi.BidiRunConsumer;
 
 public class BidiInfoActivity extends AppCompatActivity {
 
@@ -51,28 +47,8 @@ public class BidiInfoActivity extends AppCompatActivity {
     private static final char RLI = '\u2067';
     private static final char PDI = '\u2069';
 
-    private static Object[] spansFirstHeading() {
-        return new Object[] {
-                new RelativeSizeSpan(1.32f),
-                new StyleSpan(Typeface.BOLD)
-        };
-    }
-
-    private static Object[] spansSecondHeading() {
-        return new Object[] {
-                new RelativeSizeSpan(1.16f),
-                new StyleSpan(Typeface.BOLD)
-        };
-    }
-
-    private static Object[] spansInlineHeading() {
-        return new Object[] {
-                new BackgroundColorSpan(0xFFE0E0E0),
-                new UnderlineSpan()
-        };
-    };
-
     private String mBidiText;
+    private float mDensity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +57,7 @@ public class BidiInfoActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         mBidiText = String.valueOf(intent.getCharSequenceExtra(BIDI_TEXT));
+        mDensity = getResources().getDisplayMetrics().scaledDensity;
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -95,11 +72,32 @@ public class BidiInfoActivity extends AppCompatActivity {
         bidiTextView.setText(builder);
     }
 
-    private BidiInfoActivity appendText(final SpannableStringBuilder builder, CharSequence text) {
+    private Object[] spansFirstHeading() {
+        return new Object[] {
+            new AbsoluteSizeSpan((int) (20.0f * mDensity + 0.5f)),
+            new StyleSpan(Typeface.BOLD)
+        };
+    }
+
+    private Object[] spansSecondHeading() {
+        return new Object[] {
+            new AbsoluteSizeSpan((int) (16.0f * mDensity + 0.5f)),
+            new StyleSpan(Typeface.BOLD)
+        };
+    }
+
+    private Object[] spansInlineHeading() {
+        return new Object[] {
+            new StyleSpan(Typeface.ITALIC),
+            new UnderlineSpan()
+        };
+    }
+
+    private BidiInfoActivity appendText(SpannableStringBuilder builder, CharSequence text) {
         return appendText(builder, text, null);
     }
 
-    private BidiInfoActivity appendText(final SpannableStringBuilder builder, CharSequence text, Object[] spans) {
+    private BidiInfoActivity appendText(SpannableStringBuilder builder, CharSequence text, Object[] spans) {
         int start = builder.length();
         int end = start + text.length();
 
@@ -114,31 +112,45 @@ public class BidiInfoActivity extends AppCompatActivity {
         return this;
     }
 
-    private void writeBidiText(final SpannableStringBuilder builder) {
-        builder.setSpan(new AbsoluteSizeSpan(16, true), 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+    private void writeBidiText(SpannableStringBuilder builder) {
+        builder.setSpan(new AbsoluteSizeSpan((int) (16.0f * mDensity + 0.5f)), 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         builder.setSpan(new ForegroundColorSpan(Color.BLACK), 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-        BidiAlgorithm algorithm = new BidiAlgorithm(mBidiText);
-        writeAlgorithmText(builder, algorithm);
-        algorithm.dispose();
+        BidiAlgorithm algorithm = null;
+
+        try {
+            algorithm = new BidiAlgorithm(mBidiText);
+            writeAlgorithmText(builder, algorithm);
+        } finally {
+            if (algorithm != null) {
+                algorithm.dispose();
+            }
+        }
     }
 
-    private void writeAlgorithmText(final SpannableStringBuilder builder, BidiAlgorithm algorithm) {
+    private void writeAlgorithmText(SpannableStringBuilder builder, BidiAlgorithm algorithm) {
         int paragraphIndex = 1;
         int paragraphStart = 0;
         int suggestedEnd = mBidiText.length();
 
         while (paragraphStart != suggestedEnd) {
-            BidiParagraph paragraph = algorithm.createParagraph(paragraphStart, suggestedEnd, BaseDirection.DEFAULT_LEFT_TO_RIGHT);
-            writeParagraphText(builder, paragraph, paragraphIndex);
+            BidiParagraph paragraph = null;
 
-            paragraphIndex++;
-            paragraphStart = paragraph.getCharEnd();
-            paragraph.dispose();
+            try {
+                paragraph = algorithm.createParagraph(paragraphStart, suggestedEnd, BaseDirection.DEFAULT_LEFT_TO_RIGHT);
+                writeParagraphText(builder, paragraph, paragraphIndex);
+
+                paragraphIndex++;
+                paragraphStart = paragraph.getCharEnd();
+            } finally {
+                if (paragraph != null) {
+                    paragraph.dispose();
+                }
+            }
         }
     }
 
-    private void writeParagraphText(final SpannableStringBuilder builder, BidiParagraph paragraph, int index) {
+    private void writeParagraphText(SpannableStringBuilder builder, BidiParagraph paragraph, int index) {
         int paragraphStart = paragraph.getCharStart();
         int paragraphEnd = paragraph.getCharEnd();
         int paragraphLength = paragraphEnd - paragraphStart;
@@ -153,27 +165,30 @@ public class BidiInfoActivity extends AppCompatActivity {
         appendText(builder, "Base Level:", spansInlineHeading());
         appendText(builder, " " + paragraph.getBaseLevel() + "\n\n");
 
-        final int[] counter = { 1 };
+        int counter = 1;
+        for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
+            writeRunText(builder, bidiRun, counter);
+            counter++;
+        }
 
-        paragraph.iterateRuns(new BidiRunConsumer() {
-            @Override
-            public void accept(BidiRun bidiRun) {
-                writeRunText(builder, bidiRun, counter[0]);
-                counter[0]++;
+        BidiLine line = null;
+
+        try {
+            line = paragraph.createLine(paragraphStart, paragraphEnd);
+            writeLineText(builder, line);
+            writeMirrorsText(builder, line);
+        } finally {
+            if (line != null) {
+                line.dispose();
             }
-        });
-
-        BidiLine line = paragraph.createLine(paragraphStart, paragraphEnd);
-        writeLineText(builder, line);
-        writeMirrorsText(builder, line);
-        line.dispose();
+        }
 
         appendText(builder, "\n");
     }
 
-    private void writeRunText(final SpannableStringBuilder builder, BidiRun run, int index) {
-        int runStart = run.getCharStart();
-        int runEnd = run.getCharEnd();
+    private void writeRunText(SpannableStringBuilder builder, BidiRun run, int index) {
+        int runStart = run.charStart;
+        int runEnd = run.charEnd;
         int runLength = runEnd - runStart;
         String runText = (run.isRightToLeft() ? RLI : LRI)
                        + mBidiText.substring(runStart, runEnd) + PDI;
@@ -184,20 +199,17 @@ public class BidiInfoActivity extends AppCompatActivity {
         appendText(builder, "Run Range:", spansInlineHeading());
         appendText(builder, " Start=" + runStart + " Length=" + runLength + "\n");
         appendText(builder, "Embedding Level:", spansInlineHeading());
-        appendText(builder, " " + run.getEmbeddingLevel() + "\n\n");
+        appendText(builder, " " + run.embeddingLevel + "\n\n");
     }
 
-    private void writeLineText(final SpannableStringBuilder builder, BidiLine line) {
-        final SparseIntArray visualMap = new SparseIntArray();
-        final int[] counter = { 1 };
+    private void writeLineText(SpannableStringBuilder builder, BidiLine line) {
+        SparseIntArray visualMap = new SparseIntArray();
 
-        line.iterateVisualRuns(new BidiRunConsumer() {
-            @Override
-            public void accept(BidiRun bidiRun) {
-                visualMap.put(bidiRun.getCharStart(), counter[0]);
-                counter[0]++;
-            }
-        });
+        int counter = 1;
+        for (BidiRun bidiRun : line.getVisualRuns()) {
+            visualMap.put(bidiRun.charStart, counter);
+            counter++;
+        }
 
         int runCount = visualMap.size();
         if (runCount > 0) {
@@ -213,28 +225,22 @@ public class BidiInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void writeMirrorsText(final SpannableStringBuilder builder, BidiLine line) {
-        final boolean[] wroteHeading = { false };
+    private void writeMirrorsText(SpannableStringBuilder builder, BidiLine line) {
+        boolean wroteHeading = false;
 
-        line.iterateMirrors(new BidiPairConsumer() {
-            @Override
-            public void accept(BidiPair bidiPair) {
-                if (!wroteHeading[0]) {
-                    wroteHeading[0] = true;
-                    appendText(builder, "Mirrors\n", spansSecondHeading());
-                }
-
-                int actualCodePoint = mBidiText.codePointAt(bidiPair.getCharIndex());
-                int pairingCodePoint = bidiPair.getPairingCodePoint();
-
-                appendText(builder, "*", spansInlineHeading());
-                appendText(builder, " Index=" + bidiPair.getCharIndex());
-                appendText(builder, " Character=‘" + String.valueOf(Character.toChars(actualCodePoint)) + "’");
-                appendText(builder, " Mirror=‘" + String.valueOf(Character.toChars(pairingCodePoint)) + "’\n");
+        for (BidiPair bidiPair : line.getMirroringPairs()) {
+            if (!wroteHeading) {
+                wroteHeading = true;
+                appendText(builder, "Mirrors\n", spansSecondHeading());
             }
-        });
 
-        if (wroteHeading[0]) {
+            appendText(builder, "*", spansInlineHeading());
+            appendText(builder, " Index=" + bidiPair.charIndex);
+            appendText(builder, " Character=‘" + String.valueOf(Character.toChars(bidiPair.actualCodePoint)) + "’");
+            appendText(builder, " Mirror=‘" + String.valueOf(Character.toChars(bidiPair.pairingCodePoint)) + "’\n");
+        }
+
+        if (wroteHeading) {
             appendText(builder, "\n");
         }
     }
