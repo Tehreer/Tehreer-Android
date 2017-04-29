@@ -17,13 +17,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:padding="8dp">
+              android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
         android:background="#000000"
         android:orientation="horizontal"
         android:padding="1dp"
@@ -103,6 +104,12 @@
         android:id="@+id/list_view_info"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:divider="@android:color/transparent"
-        android:dividerHeight="2dp"/>
+        android:dividerHeight="2dp"
+        android:paddingBottom="8dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="2dp"
+        android:scrollbarStyle="outsideOverlay"/>
 </LinearLayout>
