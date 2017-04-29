@@ -17,7 +17,6 @@
 package com.mta.tehreer.demo;
 
 import android.app.Application;
-import android.content.res.Resources;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
@@ -34,14 +33,10 @@ import java.util.List;
 
 public class DemoApplication extends Application {
 
-    private static final String ASSET_TAJ_NASTALEEQ = "TajNastaleeq.ttf";
-    private static final String ASSET_NAFEES_NASTALEEQ = "NafeesNastaleeq.ttf";
-    private static final String ASSET_NAFEES_WEB = "NafeesWeb.ttf";
-
-    private int[] mTypefaceResIds = {
-            R.string.typeface_taj_nastaleeq,
-            R.string.typeface_nafees_nastaleeq,
-            R.string.typeface_nafees_web
+    private int[] mTypefaceTags = {
+            R.id.typeface_taj_nastaleeq,
+            R.id.typeface_nafees_nastaleeq,
+            R.id.typeface_nafees_web
     };
     private String[] mTypefaceNames = {
             "AlQalam Taj Nastaleeq",
@@ -55,32 +50,31 @@ public class DemoApplication extends Application {
 
         System.loadLibrary("tehreer");
 
-        Resources resources = getResources();
-        registerTypeface(ASSET_TAJ_NASTALEEQ, resources.getString(R.string.typeface_taj_nastaleeq));
-        registerTypeface(ASSET_NAFEES_NASTALEEQ, resources.getString(R.string.typeface_nafees_nastaleeq));
-        registerTypeface(ASSET_NAFEES_WEB, resources.getString(R.string.typeface_nafees_web));
+        registerTypeface("TajNastaleeq.ttf", R.id.typeface_taj_nastaleeq);
+        registerTypeface("NafeesNastaleeq.ttf", R.id.typeface_nafees_nastaleeq);
+        registerTypeface("NafeesWeb.ttf", R.id.typeface_nafees_web);
     }
 
     public List<String> getTypefaceNames() {
         return Collections.unmodifiableList(Arrays.asList(mTypefaceNames));
     }
 
-    public String getTypefaceTag(int index) {
-        return getResources().getString(mTypefaceResIds[index]);
+    public int getTypefaceTag(int index) {
+        return mTypefaceTags[index];
     }
 
-    private void registerTypeface(String fileName, String tag) {
+    private void registerTypeface(String fileName, int tag) {
         // it is better to copy the typeface into sdcard for performance reasons.
         try {
-            String path = copyAsset(fileName);
-            Typeface typeface = Typeface.finalizable(Typeface.createWithFile(path));
-            TypefaceManager.registerTypeface(tag, typeface);
-        } catch (IOException e) {
+            File file = copyAsset(fileName);
+            Typeface typeface = new Typeface(file);
+            TypefaceManager.getDefaultManager().registerTypeface(typeface, tag);
+        } catch (Exception e) {
             throw new RuntimeException("Unable to register typeface \"" + fileName + "\"");
         }
     }
 
-    private String copyAsset(String fileName) throws IOException {
+    private File copyAsset(String fileName) throws IOException {
         String path = getFilesDir().getAbsolutePath() + File.separator + fileName;
         File file = new File(path);
 
@@ -104,7 +98,7 @@ public class DemoApplication extends Application {
             }
         }
 
-        return path;
+        return new File(path);
     }
 
     private void closeSilently(Closeable closeable) {
