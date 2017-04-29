@@ -16,12 +16,10 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="8dp"
-              tools:context="com.mta.tehreer.demo.MainActivity">
+              android:padding="8dp">
 
     <TextView
         android:id="@+id/text_view_title"
@@ -41,7 +39,7 @@
         android:layout_marginTop="3dp"
         android:layout_weight="1">
 
-        <com.mta.tehreer.widget.Label
+        <com.mta.tehreer.widget.TLabel
             android:id="@+id/label_article"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -50,7 +48,7 @@
             app:text="@string/article_detail"
             app:textColor="@android:color/black"
             app:textSize="18sp"
-            app:typeface="@string/typeface_taj_nastaleeq"/>
+            app:typeface="@id/typeface_taj_nastaleeq"/>
     </ScrollView>
 
     <TextView
