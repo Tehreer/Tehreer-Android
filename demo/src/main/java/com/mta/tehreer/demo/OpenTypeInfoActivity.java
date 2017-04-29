@@ -29,8 +29,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.opentype.OpenTypeAlbum;
-import com.mta.tehreer.opentype.OpenTypeArtist;
+import com.mta.tehreer.opentype.ShapingResult;
+import com.mta.tehreer.opentype.ShapingEngine;
+import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.util.PointList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,12 +80,15 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         final Context context;
         final String source;
-        final OpenTypeAlbum album;
+        final ShapingResult album;
         final int[] initials;
         final int[] relations;
         final int[] totals;
+        final IntList glyphIds;
+        final PointList glyphOffsets;
+        final FloatList glyphAdvances;
 
-        CharDetailAdapter(Context context, String source, OpenTypeAlbum album,
+        CharDetailAdapter(Context context, String source, ShapingResult album,
                                  int[] initials, int[] relations, int[] totals) {
             this.context = context;
             this.source = source;
@@ -90,6 +96,9 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             this.initials = initials;
             this.relations = relations;
             this.totals = totals;
+            this.glyphIds = album.getGlyphIds();
+            this.glyphOffsets = album.getGlyphOffsets();
+            this.glyphAdvances = album.getGlyphAdvances();
         }
 
         @Override
@@ -137,13 +146,17 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                         glyphDetailList.add(new GlyphDetailHolder(layout));
                     }
 
-                    int glyphIndex = initials[i] + j;
+                    int index = initials[i] + j;
+                    int glyphId = glyphIds.get(index);
+                    int xOffset = Math.round(glyphOffsets.getX(index));
+                    int yOffset = Math.round(glyphOffsets.getY(index));
+                    int advance = Math.round(glyphAdvances.get(index));
 
                     GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
                     glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                    glyphDetailHolder.glyphIdTextView.setText(String.format("%06X", album.getGlyphId(glyphIndex)));
-                    glyphDetailHolder.offsetTextView.setText("(" + album.getGlyphXOffset(glyphIndex) + ", " + album.getGlyphYOffset(glyphIndex) + ")");
-                    glyphDetailHolder.advanceTextView.setText(String.valueOf(album.getGlyphAdvance(glyphIndex)));
+                    glyphDetailHolder.glyphIdTextView.setText(String.format("%06X", glyphId));
+                    glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
+                    glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
                 }
             } else {
                 charDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
@@ -175,27 +188,26 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        CharSequence typefaceTag = intent.getCharSequenceExtra(TYPEFACE_TAG);
+        int typefaceTag = intent.getIntExtra(TYPEFACE_TAG, 0);
         int scriptTag = intent.getIntExtra(SCRIPT_TAG, 0);
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
-        CharSequence sourceText = intent.getCharSequenceExtra(SOURCE_TEXT);
+        String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
 
-        OpenTypeArtist artist = OpenTypeArtist.finalizable(new OpenTypeArtist());
-        artist.setTypeface(TypefaceManager.getTypeface(typefaceTag));
-        artist.setScriptTag(scriptTag);
-        artist.setLanguageTag(languageTag);
-        artist.setText(sourceText.toString());
+        ShapingEngine shapingEngine = ShapingEngine.finalizable(new ShapingEngine());
+        shapingEngine.setTypeface(TypefaceManager.getDefaultManager().getTypeface(typefaceTag));
+        shapingEngine.setTypeSize(1024);
+        shapingEngine.setScriptTag(scriptTag);
+        shapingEngine.setLanguageTag(languageTag);
 
         int charCount = sourceText.length();
         int[] initials = new int[charCount + 1];
         int[] relations = new int[initials.length];
         int[] totals = new int[initials.length];
 
-        OpenTypeAlbum album = OpenTypeAlbum.finalizable(new OpenTypeAlbum());
-        artist.fillAlbum(album);
-        album.copyCharGlyphIndexes(0, charCount, initials);
+        ShapingResult shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length()));
+        shapingResult.getCharToGlyphMap().copyTo(initials, 0);
 
-        initials[charCount] = album.getGlyphCount();
+        initials[charCount] = shapingResult.getGlyphCount();
         Arrays.fill(relations, -1);
 
         for (int i = 0; i < initials.length; i++) {
@@ -220,7 +232,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             }
         }
 
-        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, artist.getText(), album, initials, relations, totals);
+        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, sourceText, shapingResult, initials, relations, totals);
         ListView infoListView = (ListView) findViewById(R.id.list_view_info);
         infoListView.setAdapter(charDetailAdapter);
     }
