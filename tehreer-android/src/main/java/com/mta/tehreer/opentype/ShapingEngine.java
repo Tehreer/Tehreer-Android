@@ -258,13 +258,13 @@ public class ShapingEngine implements Disposable {
      * @param text The text to shape into glyphs.
      * @param fromIndex The index of the first character (inclusive) to be shaped.
      * @param toIndex The index of the last character (exclusive) to be shaped.
+     * @return A non-finalizable instance of a <code>ShapingResult</code> object.
      *
      * @throws IllegalStateException if current typeface is <code>null</code>.
      * @throws NullPointerException if <code>text</code> is <code>null</code>.
      * @throws IllegalArgumentException if <code>fromIndex</code> is negative, or
      *         <code>toIndex</code> is greater than <code>text.length()</code>, or
      *         <code>fromIndex</code> is greater than <code>toIndex</code>
-
      */
     public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
         if (base.typeface == null) {
