@@ -29,16 +29,44 @@ import android.widget.TextView;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.opentype.SfntNames;
+import com.mta.tehreer.opentype.NameTable;
+import com.mta.tehreer.widget.TLabel;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FontInfoActivity extends AppCompatActivity {
 
-    private String mTypefaceTag;
+    private static final int WINDOWS_PLATFORM = 3;
+
+    private static final int COPYRIGHT = 0;
+    private static final int FONT_FAMILY = 1;
+    private static final int FONT_SUBFAMILY = 2;
+    private static final int UNIQUE_ID = 3;
+    private static final int FULL_NAME = 4;
+    private static final int VERSION = 5;
+    private static final int POST_SCRIPT_NAME = 6;
+    private static final int TRADEMARK = 7;
+    private static final int MANUFACTURER = 8;
+    private static final int DESIGNER = 9;
+    private static final int DESCRIPTION = 10;
+    private static final int VENDOR_URL = 11;
+    private static final int DESIGNER_URL = 12;
+    private static final int LICENSE = 13;
+    private static final int LICENSE_URL = 14;
+    private static final int TYPOGRAPHIC_FAMILY = 16;
+    private static final int TYPOGRAPHIC_SUBFAMILY = 17;
+    private static final int MAC_FULL_NAME = 18;
+    private static final int SAMPLE_TEXT = 19;
+    private static final int POST_SCRIPT_CID_FIND_FONT_NAME = 20;
+    private static final int WWS_FAMILY = 21;
+    private static final int WWS_SUBFAMILY = 22;
+    private static final int LIGHT_BACKGROUND_PALETTE = 23;
+    private static final int DARK_BACKGROUND_PALETTE = 24;
+    private static final int VARIATIONS_POST_SCRIPT_NAME_PREFIX = 25;
+
+    private int mTypefaceTag;
+    private Typeface mTypeface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,21 +104,44 @@ public class FontInfoActivity extends AppCompatActivity {
         return true;
     }
 
-    private void configureName(int layoutResId, Map<Locale, String> nameMap) {
-        LinearLayout nameLayout = (LinearLayout) findViewById(layoutResId);
-        Collection<String> platforms = Collections.singleton(SfntNames.WINDOWS_PLATFORM);
-        Map<Locale, String> filteredMap = SfntNames.filterPlatforms(nameMap, platforms);
+    private List<String> getNames(NameTable nameTable, int nameId, int platformId) {
+        List<String> nameList = new ArrayList<>();
+        int recordCount = nameTable.recordCount();
 
-        if (filteredMap.size() > 0) {
+        for (int i = 0; i < recordCount; i++) {
+            NameTable.Record record = nameTable.recordAt(i);
+            if (record.nameId == nameId && record.platformId == platformId) {
+                String nameString = record.string();
+                if (nameString != null) {
+                    nameList.add(nameString);
+                }
+            }
+        }
+
+        return nameList;
+    }
+
+    private void configureName(int layoutResId, NameTable nameTable, int nameId) {
+        LinearLayout nameLayout = (LinearLayout) findViewById(layoutResId);
+        List<String> nameList = getNames(nameTable, nameId, WINDOWS_PLATFORM);
+
+        if (nameList.size() > 0) {
             StringBuilder nameBuilder = new StringBuilder();
-            for (Map.Entry<Locale, String> entry : filteredMap.entrySet()) {
-                nameBuilder.append(entry.getValue());
+            for (String name : nameList) {
+                nameBuilder.append(name);
                 nameBuilder.append('\n');
             }
             nameBuilder.deleteCharAt(nameBuilder.length() - 1);
 
-            TextView nameTextView = (TextView) nameLayout.getChildAt(1);
-            nameTextView.setText(nameBuilder.toString());
+            View nameView = nameLayout.getChildAt(1);
+            if (nameView instanceof TextView) {
+                TextView textView = (TextView) nameView;
+                textView.setText(nameBuilder.toString());
+            } else {
+                TLabel label = (TLabel) nameView;
+                label.setText(nameBuilder.toString());
+                label.setTypeface(mTypeface);
+            }
 
             nameLayout.setVisibility(View.VISIBLE);
         } else {
@@ -98,40 +149,40 @@ public class FontInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void loadTypeface(String tag) {
-        if (!tag.equals(mTypefaceTag)) {
+    private void loadTypeface(int tag) {
+        if (tag != mTypefaceTag) {
             mTypefaceTag = tag;
+            mTypeface = TypefaceManager.getDefaultManager().getTypeface(tag);
 
-            Typeface typeface = TypefaceManager.getTypeface(tag);
-            SfntNames sfntNames = SfntNames.forTypeface(typeface);
-
-            configureName(R.id.layout_copyright, sfntNames.getCopyright());
-            configureName(R.id.layout_font_family, sfntNames.getFontFamily());
-            configureName(R.id.layout_font_subfamily, sfntNames.getFontSubfamily());
-            configureName(R.id.layout_unique_id, sfntNames.getUniqueId());
-            configureName(R.id.layout_full_name, sfntNames.getFullName());
-            configureName(R.id.layout_version, sfntNames.getVersion());
-            configureName(R.id.layout_postscript_name, sfntNames.getPostScriptName());
-            configureName(R.id.layout_trademark, sfntNames.getTrademark());
-            configureName(R.id.layout_manufacturer, sfntNames.getManufacturer());
-            configureName(R.id.layout_designer, sfntNames.getDesigner());
-            configureName(R.id.layout_description, sfntNames.getDescription());
-            configureName(R.id.layout_vendor_url, sfntNames.getVendorUrl());
-            configureName(R.id.layout_designer_url, sfntNames.getDesignerUrl());
-            configureName(R.id.layout_license, sfntNames.getLicense());
-            configureName(R.id.layout_license_url, sfntNames.getLicenseUrl());
-            configureName(R.id.layout_typographic_family, sfntNames.getTypographicFamily());
-            configureName(R.id.layout_typographic_subfamily, sfntNames.getTypographicSubfamily());
-            configureName(R.id.layout_mac_full_name, sfntNames.getMacFullName());
-            configureName(R.id.layout_sample_text, sfntNames.getSampleText());
-            configureName(R.id.layout_postscript_cid_findfont_name, sfntNames.getPostScriptCIDFindFontName());
-            configureName(R.id.layout_wws_family, sfntNames.getWwsFamily());
-            configureName(R.id.layout_wws_subfamily, sfntNames.getWwsSubfamily());
-            configureName(R.id.layout_light_background_palette, sfntNames.getLightBackgroundPalette());
-            configureName(R.id.layout_dark_background_palette, sfntNames.getDarkBackgroundPalette());
-            configureName(R.id.layout_variations_postscript_name_prefix, sfntNames.getVariationsPostScriptNamePrefix());
+            NameTable nameTable = new NameTable(mTypeface);
+            configureName(R.id.layout_copyright, nameTable, COPYRIGHT);
+            configureName(R.id.layout_font_family, nameTable, FONT_FAMILY);
+            configureName(R.id.layout_font_subfamily, nameTable, FONT_SUBFAMILY);
+            configureName(R.id.layout_unique_id, nameTable, UNIQUE_ID);
+            configureName(R.id.layout_full_name, nameTable, FULL_NAME);
+            configureName(R.id.layout_version, nameTable, VERSION);
+            configureName(R.id.layout_postscript_name, nameTable, POST_SCRIPT_NAME);
+            configureName(R.id.layout_trademark, nameTable, TRADEMARK);
+            configureName(R.id.layout_manufacturer, nameTable, MANUFACTURER);
+            configureName(R.id.layout_designer, nameTable, DESIGNER);
+            configureName(R.id.layout_description, nameTable, DESCRIPTION);
+            configureName(R.id.layout_vendor_url, nameTable, VENDOR_URL);
+            configureName(R.id.layout_designer_url, nameTable, DESIGNER_URL);
+            configureName(R.id.layout_license, nameTable, LICENSE);
+            configureName(R.id.layout_license_url, nameTable, LICENSE_URL);
+            configureName(R.id.layout_typographic_family, nameTable, TYPOGRAPHIC_FAMILY);
+            configureName(R.id.layout_typographic_subfamily, nameTable, TYPOGRAPHIC_SUBFAMILY);
+            configureName(R.id.layout_mac_full_name, nameTable, MAC_FULL_NAME);
+            configureName(R.id.layout_sample_text, nameTable, SAMPLE_TEXT);
+            configureName(R.id.layout_postscript_cid_findfont_name, nameTable, POST_SCRIPT_CID_FIND_FONT_NAME);
+            configureName(R.id.layout_wws_family, nameTable, WWS_FAMILY);
+            configureName(R.id.layout_wws_subfamily, nameTable, WWS_SUBFAMILY);
+            configureName(R.id.layout_light_background_palette, nameTable, LIGHT_BACKGROUND_PALETTE);
+            configureName(R.id.layout_dark_background_palette, nameTable, DARK_BACKGROUND_PALETTE);
+            configureName(R.id.layout_variations_postscript_name_prefix, nameTable, VARIATIONS_POST_SCRIPT_NAME_PREFIX);
 
             ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view_font_info);
+            scrollView.invalidate();
             scrollView.scrollTo(0, 0);
         }
     }
