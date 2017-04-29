@@ -17,23 +17,30 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:padding="8dp">
+              android:orientation="vertical">
 
     <Spinner
         android:id="@+id/spinner_font"
+        style="@style/FormSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="4dp"/>
 
     <GridView
         android:id="@+id/grid_view_glyphs"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:columnWidth="64dp"
         android:fastScrollEnabled="true"
         android:horizontalSpacing="6dp"
         android:numColumns="auto_fit"
+        android:paddingBottom="8dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:scrollbarStyle="outsideOverlay"
         android:stretchMode="columnWidth"
         android:verticalSpacing="6dp"/>
 </LinearLayout>
