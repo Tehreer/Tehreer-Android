@@ -17,14 +17,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:padding="8dp"
               android:orientation="vertical">
 
     <Spinner
         android:id="@+id/spinner_font"
+        style="@style/FormSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="4dp"/>
 
     <ScrollView
         android:id="@+id/scroll_view_font_info"
@@ -34,6 +36,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
             android:orientation="vertical">
 
             <LinearLayout
@@ -44,19 +48,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Copyright Notice:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Copyright Notice:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -67,19 +67,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Font Family Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Font Family Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -90,19 +86,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Font Subfamily Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Font Subfamily Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
 
@@ -114,19 +106,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Unique Font Identifier:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Unique Font Identifier:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
 
@@ -138,19 +126,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Full Font Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Full Font Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -161,19 +145,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Version String:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Version String:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -184,19 +164,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PostScript Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="PostScript Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -207,19 +183,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Trademark:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Trademark:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -230,19 +202,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Manufacturer Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Manufacturer Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -253,19 +221,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Designer Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Designer Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -276,19 +240,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Typeface Description:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Typeface Description:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -299,19 +259,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Vendor URL:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Vendor URL:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -322,19 +278,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Designer URL:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Designer URL:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -345,19 +297,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="License Description:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="License Description:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -368,19 +316,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="License Info URL:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="License Info URL:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -391,19 +335,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Typographic Family Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Typographic Family Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -414,19 +354,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Typographic Subfamily Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Typographic Subfamily Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -437,19 +373,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Compatible Full (Macintosh Only):"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Compatible Full (Macintosh Only):"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -460,19 +392,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sample Text:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Sample Text:"/>
 
-                <TextView
+                <com.mta.tehreer.widget.TLabel
+                    style="@style/NameSample"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -483,19 +411,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PostScript CID “findfont” Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="PostScript CID “findfont” Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -506,19 +430,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="WWS Family Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="WWS Family Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -529,19 +449,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="WWS Subfamily Name:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="WWS Subfamily Name:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -552,19 +468,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Light Background Palette:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Light Background Palette:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -575,19 +487,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dark Background Palette:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Dark Background Palette:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
             <LinearLayout
@@ -598,19 +506,15 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/NameKey"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Variations PostScript Name Prefix:"
-                    android:textColor="#111111"
-                    android:textSize="20sp"
-                    android:textStyle="bold|italic"/>
+                    android:text="Variations PostScript Name Prefix:"/>
 
                 <TextView
+                    style="@style/NameValue"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:autoLink="web"
-                    android:textColor="#222222"
-                    android:textSize="16sp"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
