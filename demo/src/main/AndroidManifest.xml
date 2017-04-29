@@ -57,7 +57,7 @@
         </activity>
         <activity
             android:name=".OpenTypeInfoActivity"
-            android:label="OpenType Info">
+            android:label="OpenType Shaping">
         </activity>
         <activity
             android:name=".LabelWidgetActivity"
