@@ -25,44 +25,26 @@ import android.widget.TextView;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 
-import java.util.List;
-
-public class TypefaceAdapter extends ArrayAdapter {
-
-    private final List<Typeface> typefaces;
+public class TypefaceAdapter extends ArrayAdapter<Typeface> {
 
     public TypefaceAdapter(Context context) {
-        super(context, android.R.layout.simple_spinner_item);
+        super(context, android.R.layout.simple_spinner_item,
+              TypefaceManager.getDefaultManager().getAvailableTypefaces());
         setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        TypefaceManager typefaceManager = TypefaceManager.getDefaultManager();
-        typefaces = typefaceManager.getAvailableTypefaces();
-    }
-
-    @Override
-    public int getCount() {
-        return typefaces.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return typefaces.get(position);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Typeface typeface = typefaces.get(position);
         TextView textView = (TextView) super.getView(position, convertView, parent);
-        textView.setText(typeface.getFamilyName());
+        textView.setText(getItem(position).getFamilyName());
 
         return textView;
     }
 
     @Override
     public View getDropDownView(int position, View convertView, ViewGroup parent) {
-        Typeface typeface = typefaces.get(position);
         TextView textView = (TextView) super.getDropDownView(position, convertView, parent);
-        textView.setText(typeface.getFamilyName());
+        textView.setText(getItem(position).getFamilyName());
 
         return textView;
     }
