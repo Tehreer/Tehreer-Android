@@ -26,6 +26,9 @@ local.properties
 # Android Studio Navigation editor temp files
 .navigation/
 
+# Android Studio native build files
+.externalNativeBuild/
+
 # Android Studio captures folder
 captures/
 
