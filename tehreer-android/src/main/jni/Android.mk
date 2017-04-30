@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 Muhammad Tayyab Akram
+# Copyright (C) 2017 Muhammad Tayyab Akram
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,10 @@
 LOCAL_PATH := $(call my-dir)
 ROOT_PATH := $(LOCAL_PATH)/../../../..
 
+ifneq ($(APP_OPTIM), release)
+    APP_DEBUG := YES
+endif
+
 #########################FREETYPE##########################
 include $(CLEAR_VARS)
 
@@ -26,43 +30,44 @@ FT_ROOT_PATH := $(ROOT_PATH)/freetype
 FT_HEADERS_PATH := $(FT_ROOT_PATH)/include
 FT_SOURCE_PATH := $(FT_ROOT_PATH)/src
 
-FILE_LIST := $(FT_SOURCE_PATH)/autofit/autofit.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftbase.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftapi.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftbbox.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftbitmap.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftdebug.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftgasp.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftglyph.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftinit.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftlcdfil.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftmm.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftpatent.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftsynth.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftstroke.c
-FILE_LIST += $(FT_SOURCE_PATH)/base/ftsystem.c
-FILE_LIST += $(FT_SOURCE_PATH)/bdf/bdf.c
-FILE_LIST += $(FT_SOURCE_PATH)/cff/cff.c
-FILE_LIST += $(FT_SOURCE_PATH)/cid/type1cid.c
-FILE_LIST += $(FT_SOURCE_PATH)/gzip/ftgzip.c
-FILE_LIST += $(FT_SOURCE_PATH)/lzw/ftlzw.c
-FILE_LIST += $(FT_SOURCE_PATH)/pcf/pcf.c
-FILE_LIST += $(FT_SOURCE_PATH)/pfr/pfr.c
-FILE_LIST += $(FT_SOURCE_PATH)/psaux/psaux.c
-FILE_LIST += $(FT_SOURCE_PATH)/pshinter/pshinter.c
-FILE_LIST += $(FT_SOURCE_PATH)/psnames/psnames.c
-FILE_LIST += $(FT_SOURCE_PATH)/raster/raster.c
-FILE_LIST += $(FT_SOURCE_PATH)/sfnt/sfnt.c
-FILE_LIST += $(FT_SOURCE_PATH)/smooth/smooth.c
-FILE_LIST += $(FT_SOURCE_PATH)/truetype/truetype.c
-FILE_LIST += $(FT_SOURCE_PATH)/type1/type1.c
-FILE_LIST += $(FT_SOURCE_PATH)/type42/type42.c
-FILE_LIST += $(FT_SOURCE_PATH)/winfonts/winfnt.c
-LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FT_FILE_LIST := \
+    autofit/autofit.c \
+    base/ftbase.c \
+    base/ftapi.c \
+    base/ftbbox.c \
+    base/ftbitmap.c \
+    base/ftdebug.c \
+    base/ftgasp.c \
+    base/ftglyph.c \
+    base/ftinit.c \
+    base/ftlcdfil.c \
+    base/ftmm.c \
+    base/ftpatent.c \
+    base/ftsynth.c \
+    base/ftstroke.c \
+    base/ftsystem.c \
+    bdf/bdf.c \
+    cff/cff.c \
+    cid/type1cid.c \
+    gzip/ftgzip.c \
+    lzw/ftlzw.c \
+    pcf/pcf.c \
+    pfr/pfr.c \
+    psaux/psaux.c \
+    pshinter/pshinter.c \
+    psnames/psnames.c \
+    raster/raster.c \
+    sfnt/sfnt.c \
+    smooth/smooth.c \
+    truetype/truetype.c \
+    type1/type1.c \
+    type42/type42.c \
+    winfonts/winfnt.c
 
-LOCAL_CFLAGS := -DFT2_BUILD_LIBRARY -std=c99
+LOCAL_CFLAGS := -DFT2_BUILD_LIBRARY
 LOCAL_C_INCLUDES := $(FT_HEADERS_PATH)
 LOCAL_EXPORT_C_INCLUDES := $(FT_HEADERS_PATH)
+LOCAL_SRC_FILES := $(FT_FILE_LIST:%=$(FT_SOURCE_PATH)/%)
 
 include $(BUILD_STATIC_LIBRARY)
 #########################FREETYPE##########################
@@ -76,11 +81,32 @@ SB_ROOT_PATH := $(ROOT_PATH)/sheenbidi
 SB_HEADERS_PATH := $(SB_ROOT_PATH)/Headers
 SB_SOURCE_PATH := $(SB_ROOT_PATH)/Source
 
-FILE_LIST := $(wildcard $(SB_SOURCE_PATH)/*.c)
-LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
+ifdef APP_DEBUG
+    SB_FILE_LIST := \
+        SBAlgorithm.c \
+        SBBase.c \
+        SBBidiChain.c \
+        SBBidiLink.c \
+        SBBracketQueue.c \
+        SBCharTypeLookup.c \
+        SBCodepointSequence.c \
+        SBIsolatingRun.c \
+        SBLevelRun.c \
+        SBLine.c \
+        SBLog.c \
+        SBMirrorLocator.c \
+        SBPairingLookup.c \
+        SBParagraph.c \
+        SBStatusStack.c \
+else
+    SB_FILE_LIST := SheenBidi.c
+    SB_MACROS := -DSB_CONFIG_UNITY
+endif
 
+LOCAL_CFLAGS := $(SB_MACROS)
 LOCAL_C_INCLUDES := $(SB_HEADERS_PATH)
 LOCAL_EXPORT_C_INCLUDES := $(SB_HEADERS_PATH)
+LOCAL_SRC_FILES := $(SB_FILE_LIST:%=$(SB_SOURCE_PATH)/%)
 
 include $(BUILD_STATIC_LIBRARY)
 ###########################################################
@@ -94,12 +120,40 @@ SF_ROOT_PATH := $(ROOT_PATH)/sheenfigure
 SF_HEADERS_PATH := $(SF_ROOT_PATH)/Headers
 SF_SOURCE_PATH := $(SF_ROOT_PATH)/Source
 
-FILE_LIST := $(wildcard $(SF_SOURCE_PATH)/*.c)
-LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
+ifdef APP_DEBUG
+    SF_FILE_LIST := \
+        SFAlbum.c \
+        SFArtist.c \
+        SFBase.c \
+        SFCodepoints.c \
+        SFFont.c \
+        SFList.c \
+        SFLocator.c \
+        SFPattern.c \
+        SFPatternBuilder.c \
+        SFScheme.c \
+        SFOpenType.c \
+        SFArabicEngine.c \
+        SFShapingEngine.c \
+        SFShapingKnowledge.c \
+        SFStandardEngine.c \
+        SFUnifiedEngine.c \
+        SFGlyphDiscovery.c \
+        SFGlyphManipulation.c \
+        SFGlyphPositioning.c \
+        SFGlyphSubstitution.c \
+        SFTextProcessor.c \
+        SFGeneralCategoryLookup.c \
+        SFJoiningTypeLookup.c \
+else
+    SF_FILE_LIST := SheenFigure.c
+    SF_MACROS := -DSF_CONFIG_UNITY
+endif
 
-LOCAL_C_INCLUDES := $(SF_HEADERS_PATH)
-LOCAL_C_INCLUDES += $(SB_HEADERS_PATH)
+LOCAL_CFLAGS := $(SF_MACROS)
+LOCAL_C_INCLUDES := $(SF_HEADERS_PATH) $(SB_HEADERS_PATH)
 LOCAL_EXPORT_C_INCLUDES := $(SF_HEADERS_PATH)
+LOCAL_SRC_FILES := $(SF_FILE_LIST:%=$(SF_SOURCE_PATH)/%)
 
 include $(BUILD_STATIC_LIBRARY)
 ###########################################################
@@ -107,18 +161,30 @@ include $(BUILD_STATIC_LIBRARY)
 ##########################TEHREER##########################
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := tehreer
+LOCAL_MODULE := tehreerjni
 
-FILE_LIST := $(wildcard $(LOCAL_PATH)/*.cpp)
-LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
+FILE_LIST := \
+    BidiAlgorithm.cpp \
+    BidiBuffer.cpp \
+    BidiLine.cpp \
+    BidiMirrorLocator.cpp \
+    BidiParagraph.cpp \
+    FreeType.cpp \
+    Glyph.cpp \
+    GlyphRasterizer.cpp \
+    JavaBridge.cpp \
+    OpenType.cpp \
+    PatternCache.cpp \
+    Raw.cpp \
+    ShapingEngine.cpp \
+    ShapingResult.cpp \
+    StreamUtils.cpp \
+    Tehreer.cpp \
+    Typeface.cpp
 
-LOCAL_LDLIBS := -landroid
-LOCAL_LDLIBS += -ljnigraphics
-LOCAL_LDLIBS += -llog
-
-LOCAL_STATIC_LIBRARIES := freetype
-LOCAL_STATIC_LIBRARIES += sheenbidi
-LOCAL_STATIC_LIBRARIES += sheenfigure
+LOCAL_LDLIBS := -landroid -ljnigraphics -llog
+LOCAL_STATIC_LIBRARIES := freetype sheenbidi sheenfigure
+LOCAL_SRC_FILES := $(FILE_LIST:%=$(LOCAL_PATH)/%)
 
 include $(BUILD_SHARED_LIBRARY)
 ###########################################################
