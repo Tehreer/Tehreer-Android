@@ -20,7 +20,7 @@
               android:orientation="vertical">
 
     <Spinner
-        android:id="@+id/spinner_font"
+        android:id="@+id/spinner_typeface"
         style="@style/FormSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -38,20 +38,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button fontInfoButton = (Button) findViewById(R.id.button_font_info);
-        fontInfoButton.setOnClickListener(new View.OnClickListener() {
+        Button typefaceInfoButton = (Button) findViewById(R.id.button_typeface_info);
+        typefaceInfoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, FontInfoActivity.class);
+                Intent intent = new Intent(MainActivity.this, TypefaceInfoActivity.class);
                 startActivity(intent);
             }
         });
 
-        Button fontGlyphsButton = (Button) findViewById(R.id.button_font_glyphs);
-        fontGlyphsButton.setOnClickListener(new View.OnClickListener() {
+        Button typefaceGlyphsButton = (Button) findViewById(R.id.button_typeface_glyphs);
+        typefaceGlyphsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, FontGlyphsActivity.class);
+                Intent intent = new Intent(MainActivity.this, TypefaceGlyphsActivity.class);
                 startActivity(intent);
             }
         });

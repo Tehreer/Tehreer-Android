@@ -35,7 +35,7 @@ import com.mta.tehreer.widget.TLabel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FontInfoActivity extends AppCompatActivity {
+public class TypefaceInfoActivity extends AppCompatActivity {
 
     private static final int WINDOWS_PLATFORM = 3;
 
@@ -71,7 +71,7 @@ public class FontInfoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_font_info);
+        setContentView(R.layout.activity_typeface_info);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -82,7 +82,7 @@ public class FontInfoActivity extends AppCompatActivity {
         ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
         typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_font);
+        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override

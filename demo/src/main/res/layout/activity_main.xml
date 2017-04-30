@@ -39,16 +39,16 @@
                 android:text="Bidirectional Algorithm"/>
 
             <Button
-                android:id="@+id/button_font_info"
+                android:id="@+id/button_typeface_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Font Information"/>
+                android:text="Typeface Information"/>
 
             <Button
-                android:id="@+id/button_font_glyphs"
+                android:id="@+id/button_typeface_glyphs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Font Glyphs"/>
+                android:text="Typeface Glyphs"/>
 
             <Button
                 android:id="@+id/button_opentype_shaping"

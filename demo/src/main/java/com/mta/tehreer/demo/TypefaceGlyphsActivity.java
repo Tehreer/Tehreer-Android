@@ -47,7 +47,7 @@ import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 
-public class FontGlyphsActivity extends AppCompatActivity {
+public class TypefaceGlyphsActivity extends AppCompatActivity {
 
     private GridView mGlyphsGridView;
     private int mTypefaceTag;
@@ -88,7 +88,7 @@ public class FontGlyphsActivity extends AppCompatActivity {
 
             if (convertView == null) {
                 LayoutInflater inflater = LayoutInflater.from(context);
-                convertView = inflater.inflate(R.layout.item_font_glyph, parent, false);
+                convertView = inflater.inflate(R.layout.item_typeface_glyph, parent, false);
 
                 holder = new GlyphHolder();
                 holder.glyphImageView = (ImageView) convertView.findViewById(R.id.image_view_glyph);
@@ -161,7 +161,7 @@ public class FontGlyphsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_font_glyphs);
+        setContentView(R.layout.activity_typeface_glyphs);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -181,7 +181,7 @@ public class FontGlyphsActivity extends AppCompatActivity {
         ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
         typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_font);
+        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
