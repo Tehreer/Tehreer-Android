@@ -17,6 +17,7 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.collection.RawInt32Floats;
 import com.mta.tehreer.internal.collection.RawInt32Points;
 import com.mta.tehreer.internal.collection.RawSizeValues;
@@ -32,6 +33,10 @@ import com.mta.tehreer.util.PointList;
  * characters, their glyphs, offsets, and advances.
  */
 public class ShapingResult implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     private static class Finalizable extends ShapingResult {
 

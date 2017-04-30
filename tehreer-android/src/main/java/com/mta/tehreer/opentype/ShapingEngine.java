@@ -18,12 +18,17 @@ package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.util.Disposable;
 
 /**
  * The <code>ShapingEngine</code> class represents the OpenType text shaping engine.
  */
 public class ShapingEngine implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     private static class Finalizable extends ShapingEngine {
 

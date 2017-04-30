@@ -18,6 +18,10 @@ package com.mta.tehreer.internal;
 
 public class Raw {
 
+    static {
+        JNILoader.load();
+    }
+
     public static final int BYTES_IN_SIZE_TYPE = bytesInSizeType();
 
     private static native int bytesInSizeType();

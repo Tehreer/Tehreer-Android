@@ -21,6 +21,7 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.opentype.SfntTag;
 
@@ -33,6 +34,10 @@ import java.io.InputStream;
  * how text appears when drawn (and measured).
  */
 public class Typeface {
+
+    static {
+        JNILoader.load();
+    }
 
     private class Finalizable {
 

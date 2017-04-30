@@ -17,8 +17,13 @@
 package com.mta.tehreer.opentype;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.JNILoader;
 
 class OpenType {
+
+    static {
+        JNILoader.load();
+    }
 
     static final int TABLE_HEAD = 0;
     static final int TABLE_MAXP = 1;

@@ -16,9 +16,14 @@
 
 package com.mta.tehreer.graphics;
 
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.util.Disposable;
 
 class GlyphRasterizer implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     public static final int LINECAP_BUTT = 0;
     public static final int LINECAP_ROUND = 1;

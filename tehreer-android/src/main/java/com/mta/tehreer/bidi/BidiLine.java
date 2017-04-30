@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.util.Disposable;
@@ -32,6 +33,10 @@ import java.util.NoSuchElementException;
  * manually, if required.
  */
 public class BidiLine implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     private static class Finalizable extends BidiLine {
 

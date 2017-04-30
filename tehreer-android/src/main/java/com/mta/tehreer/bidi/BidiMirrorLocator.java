@@ -16,9 +16,14 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.util.Disposable;
 
 class BidiMirrorLocator implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     long nativeMirrorLocator;
     long nativeBuffer;

@@ -17,6 +17,7 @@
 package com.mta.tehreer.bidi;
 
 import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.collection.RawInt8Values;
 import com.mta.tehreer.internal.util.Description;
 import com.mta.tehreer.util.ByteList;
@@ -31,6 +32,10 @@ import java.util.NoSuchElementException;
  * characters of a paragraph and provides the facility to query them or iterate over their runs.
  */
 public class BidiParagraph implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     private static class Finalizable extends BidiParagraph {
 

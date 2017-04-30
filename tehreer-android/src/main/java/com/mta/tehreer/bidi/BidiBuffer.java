@@ -16,7 +16,13 @@
 
 package com.mta.tehreer.bidi;
 
+import com.mta.tehreer.internal.JNILoader;
+
 class BidiBuffer {
+
+    static {
+        JNILoader.load();
+    }
 
     public static native long create(String string);
     public static native long retain(long nativeBuffer);

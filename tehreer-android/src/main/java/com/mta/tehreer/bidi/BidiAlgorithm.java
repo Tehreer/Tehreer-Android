@@ -17,6 +17,7 @@
 package com.mta.tehreer.bidi;
 
 import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.util.Disposable;
 
 /**
@@ -29,6 +30,10 @@ import com.mta.tehreer.util.Disposable;
  * created, embedding levels of characters can be queried from it.
  */
 public class BidiAlgorithm implements Disposable {
+
+    static {
+        JNILoader.load();
+    }
 
     /**
      * Maximum explicit embedding level.

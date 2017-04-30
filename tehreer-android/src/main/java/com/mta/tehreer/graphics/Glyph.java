@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,14 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.Sustain;
 
 class Glyph {
+
+    static {
+        JNILoader.load();
+    }
 
     @Sustain
     private final int glyphId;
@@ -69,7 +74,6 @@ class Glyph {
     }
 
     @Sustain
-    @SuppressWarnings("unused")
     private void ownBitmap(Bitmap bitmap, int left, int top) {
         if (mBitmap != null && !mBitmap.isRecycled()) {
             mBitmap.recycle();
@@ -81,13 +85,11 @@ class Glyph {
     }
 
     @Sustain
-    @SuppressWarnings("unused")
     private void ownPath(Path path) {
         mPath = path;
     }
 
     @Sustain
-    @SuppressWarnings("unused")
     private void ownOutline(long nativeOutline) {
         if (this.nativeOutline != 0) {
             nativeDisposeOutline(this.nativeOutline);
