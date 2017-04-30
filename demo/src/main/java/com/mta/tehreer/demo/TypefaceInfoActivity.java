@@ -21,7 +21,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -75,10 +74,6 @@ public class TypefaceInfoActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-
-        final DemoApplication demoApplication = (DemoApplication) getApplication();
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
-        typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
