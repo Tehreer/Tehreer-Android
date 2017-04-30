@@ -185,7 +185,7 @@ public class ShapingResult implements Disposable {
 
     /**
      * Returns a list of indexes, mapping each shaped character in source string to corresponding
-     * glyph.
+     * glyph. The list will be empty if no glyph is produced.
      * <p>
      * The map is produced according to following rules.
      * <ul>
@@ -206,8 +206,9 @@ public class ShapingResult implements Disposable {
      *         glyph.
      */
     public IntList getCharToGlyphMap() {
-        return new RawSizeValues(nativeGetCharToGlyphMapPtr(nativeResult),
-                                 nativeGetCharCount(nativeResult));
+        long pointer = nativeGetCharToGlyphMapPtr(nativeResult);
+        int size = (pointer != 0 ? nativeGetCharCount(nativeResult) : 0);
+        return new RawSizeValues(pointer, size);
     }
 
 	@Override
