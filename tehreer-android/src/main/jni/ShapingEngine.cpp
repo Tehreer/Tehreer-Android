@@ -120,10 +120,13 @@ static void dispose(JNIEnv *env, jobject obj, jlong engineHandle)
 
 static void setTypeface(JNIEnv *env, jobject obj, jlong engineHandle, jobject jtypeface)
 {
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    Typeface *typeface = nullptr;
+
+    if (jtypeface) {
+        jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+        typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    }
 
     shapingEngine->setTypeface(typeface);
 }
