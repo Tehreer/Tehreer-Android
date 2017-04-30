@@ -34,6 +34,7 @@ import com.mta.tehreer.opentype.SfntTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
 
+    private EditText mTypeSizeField;
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
     private EditText mTextField;
@@ -68,6 +69,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
         typefaceSpinner.setAdapter(typefaceAdapter);
         typefaceSpinner.setSelection(0);
 
+        mTypeSizeField = (EditText) findViewById(R.id.field_type_size);
         mScriptTagField = (EditText) findViewById(R.id.field_script_tag);
         mLanguageTagField = (EditText) findViewById(R.id.field_language_tag);
         mTextField = (EditText) findViewById(R.id.field_text);
@@ -117,6 +119,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, OpenTypeInfoActivity.class);
         intent.putExtra(OpenTypeInfoActivity.TYPEFACE_TAG, mTypefaceTag);
+        intent.putExtra(OpenTypeInfoActivity.TYPE_SIZE, Integer.parseInt(mTypeSizeField.getText().toString()));
         intent.putExtra(OpenTypeInfoActivity.SCRIPT_TAG, SfntTag.make(scriptTag.toString()));
         intent.putExtra(OpenTypeInfoActivity.LANGUAGE_TAG, SfntTag.make(languageTag.toString()));
         intent.putExtra(OpenTypeInfoActivity.SOURCE_TEXT, mTextField.getText());
