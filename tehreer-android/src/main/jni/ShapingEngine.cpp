@@ -82,13 +82,15 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
         SFPatternRelease(pattern);
     }
 
-    jchar *stringOffset = const_cast<jchar *>(charArray + charStart);
-    void *stringBuffer = reinterpret_cast<void *>(stringOffset);
-    SFUInteger stringLength = static_cast<SFUInteger>(charEnd - charStart);
+    if (pattern) {
+        jchar *stringOffset = const_cast<jchar *>(charArray + charStart);
+        void *stringBuffer = reinterpret_cast<void *>(stringOffset);
+        SFUInteger stringLength = static_cast<SFUInteger>(charEnd - charStart);
 
-    SFArtistSetPattern(m_sfArtist, pattern);
-    SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
-    SFArtistFillAlbum(m_sfArtist, shapingResult.sfAlbum());
+        SFArtistSetPattern(m_sfArtist, pattern);
+        SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
+        SFArtistFillAlbum(m_sfArtist, shapingResult.sfAlbum());
+    }
 
     jfloat sizeByEm = m_typeSize / m_typeface->ftFace()->units_per_EM;
     bool isBackward = m_textMode == SFTextModeBackward;
