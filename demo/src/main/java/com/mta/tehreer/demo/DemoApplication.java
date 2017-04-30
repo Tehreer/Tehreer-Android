@@ -27,44 +27,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class DemoApplication extends Application {
-
-    private int[] mTypefaceTags = {
-            R.id.typeface_taj_nastaleeq,
-            R.id.typeface_mehr_nastaliq,
-            R.id.typeface_nafees_web
-    };
-    private String[] mTypefaceNames = {
-            "AlQalam Taj Nastaleeq",
-            "Mehr Nastaliq Web",
-            "Nafees Web Naskh"
-    };
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        System.loadLibrary("tehreer");
 
         registerTypeface("TajNastaleeq.ttf", R.id.typeface_taj_nastaleeq);
         registerTypeface("MehrNastaliq.ttf", R.id.typeface_mehr_nastaliq);
         registerTypeface("NafeesWeb.ttf", R.id.typeface_nafees_web);
     }
 
-    public List<String> getTypefaceNames() {
-        return Collections.unmodifiableList(Arrays.asList(mTypefaceNames));
-    }
-
-    public int getTypefaceTag(int index) {
-        return mTypefaceTags[index];
-    }
-
     private void registerTypeface(String fileName, int tag) {
-        // it is better to copy the typeface into sdcard for performance reasons.
+        // It is better to copy the typeface into sdcard for performance reasons.
         try {
             File file = copyAsset(fileName);
             Typeface typeface = new Typeface(file);
