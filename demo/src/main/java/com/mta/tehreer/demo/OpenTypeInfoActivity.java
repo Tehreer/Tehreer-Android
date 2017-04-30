@@ -29,8 +29,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.opentype.ShapingResult;
 import com.mta.tehreer.opentype.ShapingEngine;
+import com.mta.tehreer.opentype.ShapingResult;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
@@ -42,6 +42,7 @@ import java.util.List;
 public class OpenTypeInfoActivity extends AppCompatActivity {
 
     public static final String TYPEFACE_TAG = "typeface_tag";
+    public static final String TYPE_SIZE = "type_size";
     public static final String SCRIPT_TAG = "script_tag";
     public static final String LANGUAGE_TAG = "language_tag";
     public static final String SOURCE_TEXT = "source_text";
@@ -148,9 +149,9 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
                     int index = initials[i] + j;
                     int glyphId = glyphIds.get(index);
-                    int xOffset = Math.round(glyphOffsets.getX(index));
-                    int yOffset = Math.round(glyphOffsets.getY(index));
-                    int advance = Math.round(glyphAdvances.get(index));
+                    int xOffset = (int) (glyphOffsets.getX(index) + 0.5f);
+                    int yOffset = (int) (glyphOffsets.getY(index) + 0.5f);
+                    int advance = (int) (glyphAdvances.get(index) + 0.5f);
 
                     GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
                     glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
@@ -162,8 +163,8 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 charDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
 
                 int relation = relations[i];
-                if (relation > -1) {
-                    charDetailHolder.feedbackTextView.setText("Related to Character #" + (relation + 1));
+                if (relation > 0) {
+                    charDetailHolder.feedbackTextView.setText("Related to Character #" + relation);
                 } else {
                     charDetailHolder.feedbackTextView.setText("No Glyph");
                 }
@@ -189,44 +190,58 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         int typefaceTag = intent.getIntExtra(TYPEFACE_TAG, 0);
+        int typeSize = intent.getIntExtra(TYPE_SIZE, 0);
         int scriptTag = intent.getIntExtra(SCRIPT_TAG, 0);
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
         String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
 
         ShapingEngine shapingEngine = ShapingEngine.finalizable(new ShapingEngine());
         shapingEngine.setTypeface(TypefaceManager.getDefaultManager().getTypeface(typefaceTag));
-        shapingEngine.setTypeSize(1024);
+        shapingEngine.setTypeSize(typeSize);
         shapingEngine.setScriptTag(scriptTag);
         shapingEngine.setLanguageTag(languageTag);
+
+        ShapingResult shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length()));
 
         int charCount = sourceText.length();
         int[] initials = new int[charCount + 1];
         int[] relations = new int[initials.length];
         int[] totals = new int[initials.length];
 
-        ShapingResult shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length()));
+        int glyphCount = shapingResult.getGlyphCount();
+        int[] traces = new int[glyphCount + 1];
+
+        Arrays.fill(initials, -1);
         shapingResult.getCharToGlyphMap().copyTo(initials, 0);
+        initials[charCount] = glyphCount;
 
-        initials[charCount] = shapingResult.getGlyphCount();
-        Arrays.fill(relations, -1);
-
+        // Setup relations for each character.
         for (int i = 0; i < initials.length; i++) {
-            // Skip, if this character has no glyph or related to some other character.
-            if (initials[i] == -1 || relations[i] > -1) {
+            // Skip, if this character has no glyph.
+            int initial = initials[i];
+            if (initial == -1) {
                 continue;
             }
 
-            // Setup relations for this character.
-            for (int j = i + 1; j < initials.length; j++) {
-                if (initials[j] == initials[i]) {
-                    relations[j] = i;
-                }
+            if (traces[initial] == 0) {
+                traces[initial] = i + 1;
+            } else {
+                relations[i] = traces[initial];
+            }
+        }
+
+        // Setup totals for each character.
+        for (int i = 0; i < totals.length; i++) {
+            // Skip, if this character has no glyph or related to some other character.
+            int initial = initials[i];
+            int relation = relations[i];
+            if (initial == -1 || relation > 0) {
+                continue;
             }
 
-            // Setup totals for this character.
-            for (int j = i + 1; j < initials.length; j++) {
-                if (initials[j] > initials[i]) {
-                    totals[i] = initials[j] - initials[i];
+            for (int j = initial + 1; j < traces.length; j++) {
+                if (traces[j] > 0) {
+                    totals[i] = j - initial;
                     break;
                 }
             }
