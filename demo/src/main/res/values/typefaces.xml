@@ -16,6 +16,6 @@
 -->
 <resources>
     <item type="id" name="typeface_taj_nastaleeq" />
-    <item type="id" name="typeface_nafees_nastaleeq" />
+    <item type="id" name="typeface_mehr_nastaliq" />
     <item type="id" name="typeface_nafees_web" />
 </resources>

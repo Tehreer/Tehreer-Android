@@ -35,12 +35,12 @@ public class DemoApplication extends Application {
 
     private int[] mTypefaceTags = {
             R.id.typeface_taj_nastaleeq,
-            R.id.typeface_nafees_nastaleeq,
+            R.id.typeface_mehr_nastaliq,
             R.id.typeface_nafees_web
     };
     private String[] mTypefaceNames = {
             "AlQalam Taj Nastaleeq",
-            "Nafees Nastaleeq",
+            "Mehr Nastaliq Web",
             "Nafees Web Naskh"
     };
 
@@ -51,7 +51,7 @@ public class DemoApplication extends Application {
         System.loadLibrary("tehreer");
 
         registerTypeface("TajNastaleeq.ttf", R.id.typeface_taj_nastaleeq);
-        registerTypeface("NafeesNastaleeq.ttf", R.id.typeface_nafees_nastaleeq);
+        registerTypeface("MehrNastaliq.ttf", R.id.typeface_mehr_nastaliq);
         registerTypeface("NafeesWeb.ttf", R.id.typeface_nafees_web);
     }
 
