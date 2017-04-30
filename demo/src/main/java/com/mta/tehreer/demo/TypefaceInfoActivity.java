@@ -28,7 +28,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.opentype.NameTable;
 import com.mta.tehreer.widget.TLabel;
 
@@ -65,7 +64,6 @@ public class TypefaceInfoActivity extends AppCompatActivity {
     private static final int DARK_BACKGROUND_PALETTE = 24;
     private static final int VARIATIONS_POST_SCRIPT_NAME_PREFIX = 25;
 
-    private int mTypefaceTag;
     private Typeface mTypeface;
 
     @Override
@@ -87,14 +85,14 @@ public class TypefaceInfoActivity extends AppCompatActivity {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                loadTypeface(demoApplication.getTypefaceTag(i));
+                loadTypeface((Typeface) adapterView.getAdapter().getItem(i));
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        typefaceSpinner.setAdapter(typefaceAdapter);
+        typefaceSpinner.setAdapter(new TypefaceAdapter(this));
         typefaceSpinner.setSelection(0);
     }
 
@@ -149,10 +147,9 @@ public class TypefaceInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void loadTypeface(int tag) {
-        if (tag != mTypefaceTag) {
-            mTypefaceTag = tag;
-            mTypeface = TypefaceManager.getDefaultManager().getTypeface(tag);
+    private void loadTypeface(Typeface typeface) {
+        if (typeface != mTypeface) {
+            mTypeface = typeface;
 
             NameTable nameTable = new NameTable(mTypeface);
             configureName(R.id.layout_copyright, nameTable, COPYRIGHT);

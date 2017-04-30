@@ -25,11 +25,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.opentype.SfntTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
@@ -38,7 +38,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
     private EditText mTextField;
-    private int mTypefaceTag;
+    private Typeface mTypeface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,23 +50,19 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        final DemoApplication demoApplication = (DemoApplication) getApplication();
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
-        typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
         Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mTypefaceTag = demoApplication.getTypefaceTag(i);
+                mTypeface = (Typeface) adapterView.getAdapter().getItem(i);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        typefaceSpinner.setAdapter(typefaceAdapter);
+        typefaceSpinner.setAdapter(new TypefaceAdapter(this));
         typefaceSpinner.setSelection(0);
 
         mTypeSizeField = (EditText) findViewById(R.id.field_type_size);
@@ -118,7 +114,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(this, OpenTypeInfoActivity.class);
-        intent.putExtra(OpenTypeInfoActivity.TYPEFACE_TAG, mTypefaceTag);
+        intent.putExtra(OpenTypeInfoActivity.TYPEFACE_NAME, mTypeface.getFullName());
         intent.putExtra(OpenTypeInfoActivity.TYPE_SIZE, Integer.parseInt(mTypeSizeField.getText().toString()));
         intent.putExtra(OpenTypeInfoActivity.SCRIPT_TAG, SfntTag.make(scriptTag.toString()));
         intent.putExtra(OpenTypeInfoActivity.LANGUAGE_TAG, SfntTag.make(languageTag.toString()));

@@ -38,7 +38,7 @@ import com.mta.tehreer.graphics.TypefaceManager;
 
 public class GlyphInfoActivity extends AppCompatActivity {
 
-    public static final String TYPEFACE_TAG = "typeface_tag";
+    public static final String TYPEFACE_NAME = "typeface";
     public static final String GLYPH_ID = "glyph_id";
 
     private Typeface mTypeface;
@@ -171,7 +171,7 @@ public class GlyphInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        mTypeface = TypefaceManager.getDefaultManager().getTypeface(intent.getIntExtra(TYPEFACE_TAG, 0));
+        mTypeface = TypefaceManager.getDefaultManager().getTypefaceByName(intent.getStringExtra(TYPEFACE_NAME));
         mGlyphId = intent.getIntExtra(GLYPH_ID, 0);
 
         mGlyphImageView = (ImageView) findViewById(R.id.image_view_glyph);

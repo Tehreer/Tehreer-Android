@@ -18,7 +18,6 @@ package com.mta.tehreer.demo;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.PixelFormat;
@@ -28,12 +27,10 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -42,7 +39,6 @@ import android.widget.TextView;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
@@ -50,7 +46,7 @@ import com.mta.tehreer.util.PointList;
 public class TypefaceGlyphsActivity extends AppCompatActivity {
 
     private GridView mGlyphsGridView;
-    private int mTypefaceTag;
+    private Typeface mTypeface;
 
     private static class GlyphHolder {
         ImageView glyphImageView;
@@ -177,23 +173,19 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
             }
         });
 
-        final DemoApplication demoApplication = (DemoApplication) getApplication();
-        ArrayAdapter<String> typefaceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, demoApplication.getTypefaceNames());
-        typefaceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
         Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                loadTypeface(demoApplication.getTypefaceTag(i));
+                loadTypeface((Typeface) adapterView.getAdapter().getItem(i));
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
-        typefaceSpinner.setAdapter(typefaceAdapter);
+        typefaceSpinner.setAdapter(new TypefaceAdapter(this));
         typefaceSpinner.setSelection(0);
     }
 
@@ -203,17 +195,16 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void loadTypeface(int tag) {
-        if (tag != mTypefaceTag) {
-            mTypefaceTag = tag;
+    private void loadTypeface(Typeface typeface) {
+        if (typeface != mTypeface) {
+            mTypeface = typeface;
 
-            Resources resources = getResources();
-            Typeface typeface = TypefaceManager.getDefaultManager().getTypeface(tag);
-            float fontSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 28, resources.getDisplayMetrics());
+            float density = getResources().getDisplayMetrics().density;
+            float typeSize = 28.0f * density;
 
             Renderer renderer = new Renderer();
             renderer.setTypeface(typeface);
-            renderer.setTypeSize(fontSize);
+            renderer.setTypeSize(typeSize);
 
             mGlyphsGridView.setAdapter(new GlyphAdapter(this, renderer));
         }
@@ -221,7 +212,7 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
 
     private void displayGlyph(int glyphId) {
         Intent intent = new Intent(this, GlyphInfoActivity.class);
-        intent.putExtra(GlyphInfoActivity.TYPEFACE_TAG, mTypefaceTag);
+        intent.putExtra(GlyphInfoActivity.TYPEFACE_NAME, mTypeface.getFullName());
         intent.putExtra(GlyphInfoActivity.GLYPH_ID, glyphId);
 
         startActivity(intent);

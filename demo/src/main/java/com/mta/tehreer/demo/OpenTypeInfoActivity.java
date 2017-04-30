@@ -41,7 +41,7 @@ import java.util.List;
 
 public class OpenTypeInfoActivity extends AppCompatActivity {
 
-    public static final String TYPEFACE_TAG = "typeface_tag";
+    public static final String TYPEFACE_NAME = "typeface_name";
     public static final String TYPE_SIZE = "type_size";
     public static final String SCRIPT_TAG = "script_tag";
     public static final String LANGUAGE_TAG = "language_tag";
@@ -189,14 +189,14 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        int typefaceTag = intent.getIntExtra(TYPEFACE_TAG, 0);
+        String typefaceName = intent.getStringExtra(TYPEFACE_NAME);
         int typeSize = intent.getIntExtra(TYPE_SIZE, 0);
         int scriptTag = intent.getIntExtra(SCRIPT_TAG, 0);
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
         String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
 
         ShapingEngine shapingEngine = ShapingEngine.finalizable(new ShapingEngine());
-        shapingEngine.setTypeface(TypefaceManager.getDefaultManager().getTypeface(typefaceTag));
+        shapingEngine.setTypeface(TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName));
         shapingEngine.setTypeSize(typeSize);
         shapingEngine.setScriptTag(scriptTag);
         shapingEngine.setLanguageTag(languageTag);
