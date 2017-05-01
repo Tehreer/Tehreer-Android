@@ -60,4 +60,11 @@ public class TypeFamily {
 
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "TypeFamily{familyName=" + familyName
+                + ", typefaces=" + typefaces
+                + "}";
+    }
 }
