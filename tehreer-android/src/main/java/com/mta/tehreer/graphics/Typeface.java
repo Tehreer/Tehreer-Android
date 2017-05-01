@@ -29,9 +29,9 @@ import java.io.File;
 import java.io.InputStream;
 
 /**
- * The Typeface class specifies the typeface and intrinsic style of a font. This is used in the
- * renderer, along with optionally Renderer settings like typeSize, slantAngle, scaleX, to specify
- * how text appears when drawn (and measured).
+ * The <code>Typeface</code> class specifies the typeface and intrinsic style of a font. This is
+ * used in the renderer, along with optionally Renderer settings like typeSize, slantAngle, scaleX,
+ * to specify how text appears when drawn (and measured).
  */
 public class Typeface {
 
