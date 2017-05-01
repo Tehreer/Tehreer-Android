@@ -41,11 +41,11 @@
         </activity>
         <activity
             android:name=".TypefaceInfoActivity"
-            android:label="Font Information">
+            android:label="Typeface Information">
         </activity>
         <activity
             android:name=".TypefaceGlyphsActivity"
-            android:label="Font Glyphs">
+            android:label="Typeface Glyphs">
         </activity>
         <activity
             android:name=".GlyphInfoActivity"
