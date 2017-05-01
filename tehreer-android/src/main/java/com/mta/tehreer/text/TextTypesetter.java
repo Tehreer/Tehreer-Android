@@ -26,7 +26,6 @@ import com.mta.tehreer.bidi.BidiLine;
 import com.mta.tehreer.bidi.BidiParagraph;
 import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
 import com.mta.tehreer.opentype.SfntTag;
@@ -71,7 +70,6 @@ public class TextTypesetter {
         return (byte) (forward ? breakType : breakType << 1);
     }
 
-    @Sustain
     private final Finalizable finalizable = new Finalizable();
     private String mText;
     private Spanned mSpanned;

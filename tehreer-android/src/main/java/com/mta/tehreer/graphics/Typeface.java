@@ -53,7 +53,6 @@ public class Typeface {
 
     @Sustain
     long nativeTypeface;
-    @Sustain
     private final Finalizable finalizable = new Finalizable();
     private TypefaceDescription description;
     Object tag;

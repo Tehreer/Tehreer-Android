@@ -17,7 +17,6 @@
 package com.mta.tehreer.internal.sfnt;
 
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.Sustain;
 
 public class StructTable implements SfntTable {
 
@@ -25,7 +24,6 @@ public class StructTable implements SfntTable {
      * Represents the source from which the struct pointer was obtained. Keep the source in memory
      * so that it does not accidentally get disposed by the GC when in use.
      */
-    @Sustain
     private final Object source;
     /**
      * Represents the pointer to a native struct modeling an open type table.
