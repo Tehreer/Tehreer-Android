@@ -25,6 +25,7 @@ import com.mta.tehreer.internal.util.Description;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
@@ -198,6 +199,38 @@ public class NameTable {
             }
 
             return null;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this != obj) {
+                if (obj == null || getClass() != obj.getClass()) {
+                    return false;
+                }
+
+                Record other = (Record) obj;
+                if (nameId != other.nameId
+                        || platformId != other.platformId
+                        || languageId != other.platformId
+                        || languageId != other.languageId
+                        || encodingId != other.encodingId
+                        || !Arrays.equals(bytes, other.bytes)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = nameId;
+            result = 31 * result + platformId;
+            result = 31 * result + languageId;
+            result = 31 * result + encodingId;
+            result = 31 * result + Arrays.hashCode(bytes);
+
+            return result;
         }
 
         @Override
