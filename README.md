@@ -21,6 +21,19 @@ If you are building with Gradle, simply add the following line to the `dependenc
 compile 'com.github.mta452:tehreer-android:1.0'
 ```
 
+## Proguard
+```
+-keepclassmembers, includedescriptorclasses class * {
+    native <methods>;
+}
+
+-keep @interface com.mta.tehreer.internal.Sustain
+
+-keepclassmembers class * {
+    @com.mta.tehreer.internal.Sustain *;
+}
+```
+
 ## API Reference
 The [Javadocs](https://mta452.github.io/Tehreer-Android/apidocs/) are available for online browsing. The Javadocs are also bundled as source Jars with each distribution for consumption in the IDE.
 
