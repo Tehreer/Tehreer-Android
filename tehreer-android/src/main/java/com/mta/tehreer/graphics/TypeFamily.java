@@ -16,23 +16,43 @@
 
 package com.mta.tehreer.graphics;
 
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * A <code>TypeFamily</code> object represents a collection of typefaces that relate to each other.
+ */
 public class TypeFamily {
 
     private final String familyName;
     private final List<Typeface> typefaces;
 
+    /**
+     * Constructs a type family object.
+     *
+     * @param familyName The name of family.
+     * @param typefaces The list of typefaces belonging to family.
+     */
     public TypeFamily(String familyName, List<Typeface> typefaces) {
         this.familyName = familyName;
-        this.typefaces = typefaces;
+        this.typefaces = (typefaces != null ? typefaces : Collections.<Typeface>emptyList());
     }
 
-    public String familyName() {
+    /**
+     * Returns the name of this type family.
+     *
+     * @return The name of this type family.
+     */
+    public String getFamilyName() {
         return familyName;
     }
 
-    public List<Typeface> typefaces() {
+    /**
+     * Returns the list of typefaces belonging to this type family.
+     *
+     * @return The list of typefaces belonging to this type family.
+     */
+    public List<Typeface> getTypefaces() {
         return typefaces;
     }
 
