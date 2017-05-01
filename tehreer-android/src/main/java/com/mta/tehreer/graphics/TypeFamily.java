@@ -35,4 +35,29 @@ public class TypeFamily {
     public List<Typeface> typefaces() {
         return typefaces;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this != obj) {
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+
+            TypeFamily other = (TypeFamily) obj;
+            if (!familyName.equals(other.familyName)
+                    || !typefaces.equals(other.typefaces)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = familyName.hashCode();
+        result = 31 * result + typefaces.hashCode();
+
+        return result;
+    }
 }
