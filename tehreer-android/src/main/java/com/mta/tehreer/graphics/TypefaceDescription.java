@@ -52,15 +52,17 @@ class TypefaceDescription {
     final TypeSlope slope;
 
     private static String getEnglishName(NameTable nameTable, int nameId) {
-        int recordCount = nameTable.recordCount();
-        NameTable.Record candidate = null;
+        if (nameTable != null) {
+            int recordCount = nameTable.recordCount();
+            NameTable.Record candidate = null;
 
-        for (int i = 0; i < recordCount; i++) {
-            NameTable.Record record = nameTable.recordAt(i);
+            for (int i = 0; i < recordCount; i++) {
+                NameTable.Record record = nameTable.recordAt(i);
+                if (record.nameId != nameId) {
+                    continue;
+                }
 
-            if (record.nameId == nameId) {
                 Locale locale = record.locale();
-
                 if (locale.getLanguage().equals("en")) {
                     if (record.platformId == PLATFORM_WINDOWS && locale.getCountry().equals("US")) {
                         return record.string();
@@ -71,10 +73,10 @@ class TypefaceDescription {
                     }
                 }
             }
-        }
 
-        if (candidate != null) {
-            return candidate.string();
+            if (candidate != null) {
+                return candidate.string();
+            }
         }
 
         return null;
@@ -121,9 +123,22 @@ class TypefaceDescription {
     }
 
     static TypefaceDescription deduce(Typeface typeface) {
-        FontHeaderTable headTable = new FontHeaderTable(typeface);
-        OS2WinMetricsTable os2Table = new OS2WinMetricsTable(typeface);
-        NameTable nameTable = new NameTable(typeface);
+        FontHeaderTable headTable = null;
+        OS2WinMetricsTable os2Table = null;
+        NameTable nameTable = null;
+
+        try {
+            headTable = new FontHeaderTable(typeface);
+        } catch (RuntimeException ignored) {
+        }
+        try {
+            os2Table = new OS2WinMetricsTable(typeface);
+        } catch (RuntimeException ignored) {
+        }
+        try {
+            nameTable = new NameTable(typeface);
+        } catch (RuntimeException ignored) {
+        }
 
         String familyName = getFamilyName(nameTable, os2Table);
         String styleName = getStyleName(nameTable, os2Table);
@@ -168,7 +183,7 @@ class TypefaceDescription {
                                        weight, width, slope);
     }
 
-    TypefaceDescription(String familyName, String styleName, String fullName,
+    private TypefaceDescription(String familyName, String styleName, String fullName,
                         TypeWeight weight, TypeWidth width, TypeSlope slope) {
         this.familyName = familyName;
         this.styleName = styleName;
