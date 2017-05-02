@@ -66,6 +66,25 @@ public class OS2WinMetricsTable {
     private static final int US_LOWER_OPTICAL_POINT_SIZE = 96;
     private static final int US_UPPER_OPTICAL_POINT_SIZE = 98;
 
+    private static class OS2StructTable extends StructTable {
+
+        OS2StructTable(Object source, long pointer) {
+            super(source, pointer);
+        }
+
+        @Override
+        protected long pointerOf(int offset) {
+            long pointer = super.pointerOf(offset);
+
+            // Inject internal padding of C struct, if needed.
+            if (offset >= (PANOSE + PANOSE_LENGTH)) {
+                pointer += 2;
+            }
+
+            return pointer;
+        }
+    }
+
     private final SfntTable table;
 
     /**
@@ -86,7 +105,7 @@ public class OS2WinMetricsTable {
             throw new RuntimeException("The typeface does not contain `OS/2' table");
         }
 
-        this.table = new StructTable(typeface, pointer);
+        this.table = new OS2StructTable(typeface, pointer);
     }
 
     public int version() {
