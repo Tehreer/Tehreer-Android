@@ -83,14 +83,17 @@ public class TypefaceManager {
             if (mTypefaces.contains(typeface)) {
                 throw new IllegalArgumentException("This typeface is already registered");
             }
-            if (mTags.containsKey(tag)) {
-                throw new IllegalArgumentException("This tag is already taken");
+            if (tag != null) {
+                if (mTags.containsKey(tag)) {
+                    throw new IllegalArgumentException("This tag is already taken");
+                }
+
+                mTags.put(tag, typeface);
+                typeface.tag = tag;
             }
 
             mSorted = false;
             mTypefaces.add(typeface);
-            mTags.put(tag, typeface);
-            typeface.tag = tag;
         }
     }
 
