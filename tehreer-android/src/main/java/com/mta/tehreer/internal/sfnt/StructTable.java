@@ -28,44 +28,48 @@ public class StructTable implements SfntTable {
     /**
      * Represents the pointer to a native struct modeling an open type table.
      */
-    private final long pointer;
+    protected final long pointer;
 
     public StructTable(Object source, long pointer) {
         this.source = source;
         this.pointer = pointer;
     }
 
+    protected long pointerOf(int offset) {
+        return pointer + offset;
+    }
+
     @Override
     public byte[] readBytes(int offset, int count) {
         byte[] array = new byte[count];
-        Raw.copyInt8Array(pointer + offset, array, 0, count);
+        Raw.copyInt8Array(pointerOf(offset), array, 0, count);
 
         return array;
     }
 
     @Override
     public short readInt16(int offset) {
-        return (short) Raw.getUInt16FromArray(pointer + offset, 0);
+        return (short) Raw.getUInt16FromArray(pointerOf(offset), 0);
     }
 
     @Override
     public int readUInt16(int offset) {
-        return Raw.getUInt16FromArray(pointer + offset, 0);
+        return Raw.getUInt16FromArray(pointerOf(offset), 0);
     }
 
     @Override
     public int readInt32(int offset) {
-        return Raw.getInt32FromArray(pointer + offset, 0);
+        return Raw.getInt32FromArray(pointerOf(offset), 0);
     }
 
     @Override
     public long readUInt32(int offset) {
-        return Raw.getInt32FromArray(pointer + offset, 0) & 0xFFFFFFFFL;
+        return Raw.getInt32FromArray(pointerOf(offset), 0) & 0xFFFFFFFFL;
     }
 
     @Override
     public long readInt64(int offset) {
-        return ((Raw.getInt32FromArray(pointer + offset, 0) & 0xFFFFFFFFL) << 32)
-             | ((Raw.getInt32FromArray(pointer + offset, 1) & 0xFFFFFFFFL) << 0);
+        return ((Raw.getInt32FromArray(pointerOf(offset), 0) & 0xFFFFFFFFL) << 32)
+             | ((Raw.getInt32FromArray(pointerOf(offset), 1) & 0xFFFFFFFFL) << 0);
     }
 }
