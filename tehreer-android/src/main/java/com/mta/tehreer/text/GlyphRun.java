@@ -50,7 +50,7 @@ class GlyphRun {
         this.glyphIds = shapingResult.getGlyphIds().toArray();
         this.glyphOffsets = shapingResult.getGlyphOffsets().toArray();
         this.glyphAdvances = shapingResult.getGlyphAdvances().toArray();
-        this.charToGlyphMap = shapingResult.getCharToGlyphMap().toArray();
+        this.charToGlyphMap = shapingResult.getClusterMap().toArray();
     }
 
     WritingDirection writingDirection() {

@@ -210,8 +210,8 @@ public class ShapingResult implements Disposable {
      * @return A list of indexes, mapping each shaped character in source string to corresponding
      *         glyph.
      */
-    public IntList getCharToGlyphMap() {
-        long pointer = nativeGetCharToGlyphMapPtr(nativeResult);
+    public IntList getClusterMap() {
+        long pointer = nativeGetClusterMapPtr(nativeResult);
         int size = (pointer != 0 ? nativeGetCharCount(nativeResult) : 0);
         return new RawSizeValues(pointer, size);
     }
@@ -230,7 +230,7 @@ public class ShapingResult implements Disposable {
                 + ", glyphIds=" + getGlyphIds().toString()
                 + ", glyphOffsets=" + getGlyphOffsets().toString()
                 + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", charToGlyphMap=" + getCharToGlyphMap().toString()
+                + ", clusterMap=" + getClusterMap().toString()
                 + "}";
     }
 
@@ -247,5 +247,5 @@ public class ShapingResult implements Disposable {
     private static native long nativeGetGlyphIdsPtr(long nativeResult);
     private static native long nativeGetGlyphOffsetsPtr(long nativeResult);
     private static native long nativeGetGlyphAdvancesPtr(long nativeResult);
-    private static native long nativeGetCharToGlyphMapPtr(long nativeResult);
+    private static native long nativeGetClusterMapPtr(long nativeResult);
 }
