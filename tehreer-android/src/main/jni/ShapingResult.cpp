@@ -189,7 +189,7 @@ static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong resultHandle)
     return reinterpret_cast<jlong>(glyphAdvancesPtr);
 }
 
-static jlong getCharToGlyphMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
+static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
@@ -210,7 +210,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
     { "nativeGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
     { "nativeGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
-    { "nativeGetCharToGlyphMapPtr", "(J)J", (void *)getCharToGlyphMapPtr },
+    { "nativeGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
 };
 
 jint register_com_mta_tehreer_opentype_ShapingResult(JNIEnv *env)
