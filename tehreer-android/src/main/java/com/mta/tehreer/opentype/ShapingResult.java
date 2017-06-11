@@ -190,17 +190,17 @@ public class ShapingResult implements Disposable {
 
     /**
      * Returns a list of indexes, mapping each shaped character in source string to corresponding
-     * glyph. The list will be empty if no glyph is produced.
+     * glyph. The list might be empty if no glyph is produced.
      * <p>
      * The map is produced according to following rules.
      * <ul>
      *      <li>If a single character translates into multiple glyphs, then it maps to the first
      *          glyph in the sequence.</li>
-     *      <li>If multiple characters combine to make a single code point which in turn translates
+     *      <li>If multiple characters form a group, such as a grapheme, which in turn translates
      *          into multiple glyphs, then each character maps to the first glyph in the
      *          sequence.</li>
-     *      <li>If multiple characters translate to a single glyph or ligature, then each
-     *          participating character, whether consecutive or not, maps to this glyph or
+     *      <li>If nonconsecutive characters translate to a single glyph or ligature, then each
+     *          participating character, and all in-between characters, map to this glyph or
      *          ligature.</li>
      * </ul>
      * <p>
