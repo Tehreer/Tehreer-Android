@@ -107,7 +107,7 @@ public class TextTypesetter {
      */
     public TextTypesetter(Spanned spanned) {
         if (spanned == null || spanned.length() == 0) {
-            throw new IllegalArgumentException("Spanned mText is null or empty");
+            throw new IllegalArgumentException("Spanned text is null or empty");
         }
 
         init(StringUtils.copyString(spanned), spanned);
