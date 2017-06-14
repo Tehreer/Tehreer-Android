@@ -19,17 +19,14 @@ package com.mta.tehreer.demo;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.PixelFormat;
+import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.style.DynamicDrawableSpan;
-import android.text.style.ImageSpan;
+import android.text.style.ReplacementSpan;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,44 +59,36 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     private static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
     private static final int PADDING = 4;
 
-    private static class GlyphDrawable extends Drawable {
+    private static class GlyphSpan extends ReplacementSpan {
 
         final Renderer renderer;
         final IntList glyphId;
-        final int glyphX;
+        final float glyphX;
+        final int spanWidth;
 
-        GlyphDrawable(Renderer renderer, int glyphId) {
+        GlyphSpan(Renderer renderer, int glyphId) {
             RectF bbox = renderer.computeBoundingBox(glyphId);
-            int left = (int) (-bbox.left + 0.5f);
-            int width = (int) (bbox.width() + 0.5f);
-
-            setBounds(0, 0, width + PADDING, 0);
 
             this.renderer = renderer;
             this.glyphId = IntList.of(new int[] { glyphId });
-            this.glyphX = left + (PADDING / 2);
+            this.glyphX = -bbox.left + (PADDING / 2);
+            this.spanWidth = (int) (bbox.width() + 0.5f) + PADDING;
         }
 
         @Override
-        public void draw(Canvas canvas) {
-            canvas.translate(glyphX, 0);
+        public int getSize(Paint paint, CharSequence text, int start, int end, Paint.FontMetricsInt fontMetrics) {
+            return spanWidth;
+        }
+
+        @Override
+        public void draw(Canvas canvas, CharSequence text, int start, int end,
+                         float x, int top, int y, int bottom, Paint paint) {
+            int transX = (int) (x + glyphX + 0.5f);
+            int transY = bottom - paint.getFontMetricsInt().descent;
+
+            canvas.translate(transX, transY);
             renderer.drawGlyphs(canvas, glyphId, OFFSET, ADVANCE);
-            canvas.translate(-glyphX, 0);
-        }
-
-        @Override
-        public void setAlpha(int i) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void setColorFilter(ColorFilter colorFilter) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int getOpacity() {
-            return PixelFormat.TRANSLUCENT;
+            canvas.translate(-transX, -transY);
         }
     }
 
@@ -244,8 +233,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 int advance = (int) (glyphAdvances.get(index) + 0.5f);
 
                 String glyphString = String.format("%04X (_)", glyphId);
-                Drawable glyphDrawable = new GlyphDrawable(renderer, glyphId);
-                ImageSpan glyphSpan = new ImageSpan(glyphDrawable, DynamicDrawableSpan.ALIGN_BASELINE);
+                GlyphSpan glyphSpan = new GlyphSpan(renderer, glyphId);
                 SpannableString glyphSpannable = new SpannableString(glyphString);
                 glyphSpannable.setSpan(glyphSpan, 6, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
