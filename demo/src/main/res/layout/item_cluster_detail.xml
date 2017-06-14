@@ -19,46 +19,48 @@
               android:layout_height="wrap_content"
               android:background="#000000"
               android:orientation="horizontal"
-              android:paddingBottom="1px">
+              android:padding="1dp"
+              android:weightSum="1">
 
-    <TextView
-        android:id="@+id/text_view_glyph_id"
+    <LinearLayout
+        android:id="@+id/layout_char_detail"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginRight="1dp"
-        android:layout_weight="0.32"
+        android:layout_weight="0.24"
         android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
-        android:padding="4dp"
-        android:text="FFFF"
-        android:textColor="#000000"/>
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/text_view_offset"
+        <include
+            layout="@layout/item_char_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_glyph_detail"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginRight="1dp"
-        android:layout_weight="0.40"
+        android:layout_weight="0.76"
         android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
-        android:padding="4dp"
-        android:text="(0, 0)"
-        android:textColor="#000000"/>
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/text_view_advance"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="0.28"
-        android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
-        android:padding="4dp"
-        android:text="0"
-        android:textColor="#000000"/>
+        <TextView
+            android:id="@+id/text_view_feedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFFFF"
+            android:ellipsize="middle"
+            android:gravity="center"
+            android:lines="1"
+            android:padding="4dp"
+            android:textColor="#000000"
+            android:visibility="gone"/>
+
+        <include
+            layout="@layout/item_glyph_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </LinearLayout>
+

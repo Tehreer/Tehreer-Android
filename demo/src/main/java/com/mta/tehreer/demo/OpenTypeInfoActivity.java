@@ -18,9 +18,18 @@ package com.mta.tehreer.demo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.ColorFilter;
+import android.graphics.PixelFormat;
+import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +37,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.opentype.ShapingEngine;
 import com.mta.tehreer.opentype.ShapingResult;
@@ -36,7 +47,6 @@ import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class OpenTypeInfoActivity extends AppCompatActivity {
@@ -46,6 +56,61 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     public static final String SCRIPT_TAG = "script_tag";
     public static final String LANGUAGE_TAG = "language_tag";
     public static final String SOURCE_TEXT = "source_text";
+
+    private static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
+    private static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
+    private static final int PADDING = 4;
+
+    private static class GlyphDrawable extends Drawable {
+
+        final Renderer renderer;
+        final IntList glyphId;
+        final int glyphX;
+
+        GlyphDrawable(Renderer renderer, int glyphId) {
+            RectF bbox = renderer.computeBoundingBox(glyphId);
+            int left = (int) (-bbox.left + 0.5f);
+            int width = (int) (bbox.width() + 0.5f);
+
+            setBounds(0, 0, width + PADDING, 0);
+
+            this.renderer = renderer;
+            this.glyphId = IntList.of(new int[] { glyphId });
+            this.glyphX = left + (PADDING / 2);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            canvas.translate(glyphX, 0);
+            renderer.drawGlyphs(canvas, glyphId, OFFSET, ADVANCE);
+            canvas.translate(-glyphX, 0);
+        }
+
+        @Override
+        public void setAlpha(int i) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setColorFilter(ColorFilter colorFilter) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
+        }
+    }
+
+    private static class CharDetailHolder {
+        final View rootLayout;
+        final TextView characterTextView;
+
+        CharDetailHolder(View layout) {
+            rootLayout = layout;
+            characterTextView = (TextView) layout.findViewById(R.id.text_view_character);
+        }
+    }
 
     private static class GlyphDetailHolder {
         final View rootLayout;
@@ -61,18 +126,18 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
     }
 
-    private static class CharDetailHolder {
-        final TextView indexTextView;
-        final TextView characterTextView;
+    private static class ClusterDetailHolder {
+        final ViewGroup charInfoLayout;
         final ViewGroup glyphInfoLayout;
         final TextView feedbackTextView;
+        final List<CharDetailHolder> charDetailList = new ArrayList<>();
         final List<GlyphDetailHolder> glyphDetailList = new ArrayList<>();
 
-        CharDetailHolder(View layout) {
-            indexTextView = (TextView) layout.findViewById(R.id.text_view_index);
-            characterTextView = (TextView) layout.findViewById(R.id.text_view_character);
+        ClusterDetailHolder(View layout) {
+            charInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_char_detail);
             glyphInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
             feedbackTextView = (TextView) layout.findViewById(R.id.text_view_feedback);
+            charDetailList.add(new CharDetailHolder(charInfoLayout.getChildAt(0)));
             glyphDetailList.add(new GlyphDetailHolder(glyphInfoLayout.getChildAt(1)));
         }
     }
@@ -80,31 +145,33 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     private static class CharDetailAdapter extends BaseAdapter {
 
         final Context context;
+        final Renderer renderer;
         final String source;
-        final ShapingResult album;
+        final ShapingResult result;
         final int[] initials;
-        final int[] relations;
-        final int[] totals;
+        final int clusters;
         final IntList glyphIds;
         final PointList glyphOffsets;
         final FloatList glyphAdvances;
+        final IntList clusterMap;
 
-        CharDetailAdapter(Context context, String source, ShapingResult album,
-                                 int[] initials, int[] relations, int[] totals) {
+        CharDetailAdapter(Context context, Renderer renderer, String source, ShapingResult result,
+                          int[] initials, int clusters) {
             this.context = context;
+            this.renderer = renderer;
             this.source = source;
-            this.album = album;
+            this.result = result;
             this.initials = initials;
-            this.relations = relations;
-            this.totals = totals;
-            this.glyphIds = album.getGlyphIds();
-            this.glyphOffsets = album.getGlyphOffsets();
-            this.glyphAdvances = album.getGlyphAdvances();
+            this.clusters = clusters;
+            this.glyphIds = result.getGlyphIds();
+            this.glyphOffsets = result.getGlyphOffsets();
+            this.glyphAdvances = result.getGlyphAdvances();
+            this.clusterMap = result.getClusterMap();
         }
 
         @Override
         public int getCount() {
-            return source.length();
+            return clusters;
         }
 
         @Override
@@ -119,58 +186,86 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         @Override
         public View getView(int i, View convertView, ViewGroup parent) {
-            final CharDetailHolder charDetailHolder;
+            final ClusterDetailHolder clusterDetailHolder;
             if (convertView == null) {
                 LayoutInflater inflater = LayoutInflater.from(context);
-                convertView = inflater.inflate(R.layout.item_char_detail, parent, false);
-                charDetailHolder = new CharDetailHolder(convertView);
+                convertView = inflater.inflate(R.layout.item_cluster_detail, parent, false);
+                clusterDetailHolder = new ClusterDetailHolder(convertView);
 
-                convertView.setTag(charDetailHolder);
+                convertView.setTag(clusterDetailHolder);
             } else {
-                charDetailHolder = (CharDetailHolder) convertView.getTag();
+                clusterDetailHolder = (ClusterDetailHolder) convertView.getTag();
             }
-            charDetailHolder.indexTextView.setText(String.valueOf(i + 1));
-            charDetailHolder.characterTextView.setText(String.format("%04X (%c)", (int) source.charAt(i), source.charAt(i)));
 
-            final List<GlyphDetailHolder> glyphDetailList = charDetailHolder.glyphDetailList;
+            int initial = initials[i];
+            int next = initials[i + 1];
+            int chars = next - initial;
 
-            if (totals[i] > 0) {
-                charDetailHolder.feedbackTextView.setVisibility(View.GONE);
+            final List<CharDetailHolder> charDetailList = clusterDetailHolder.charDetailList;
 
-                for (int j = 0; j < totals[i]; j++) {
+            for (int j = 0; j < chars; j++) {
+                if (charDetailList.size() <= j) {
+                    LayoutInflater inflater = LayoutInflater.from(context);
+                    View layout = inflater.inflate(R.layout.item_char_detail, clusterDetailHolder.charInfoLayout, false);
+
+                    clusterDetailHolder.charInfoLayout.addView(layout);
+                    charDetailList.add(new CharDetailHolder(layout));
+                }
+
+                int index = initial + j;
+                char character = source.charAt(index);
+
+                CharDetailHolder charDetailHolder = charDetailList.get(j);
+                charDetailHolder.rootLayout.setVisibility(View.VISIBLE);
+                charDetailHolder.characterTextView.setText(String.format("%04X (%c)", (int) character, character));
+            }
+
+            int start = clusterMap.get(initial);
+            int end = (next < clusterMap.size() ? clusterMap.get(next) : glyphIds.size());
+            int glyphs = end - start;
+
+            final List<GlyphDetailHolder> glyphDetailList = clusterDetailHolder.glyphDetailList;
+
+            if (glyphs > 0) {
+                clusterDetailHolder.feedbackTextView.setVisibility(View.GONE);
+
+                for (int j = 0; j < glyphs; j++) {
                     if (glyphDetailList.size() <= j) {
                         LayoutInflater inflater = LayoutInflater.from(context);
-                        View layout = inflater.inflate(R.layout.item_glyph_detail, charDetailHolder.glyphInfoLayout, false);
-                        layout.setPadding(0, 1, 0, 0);
+                        View layout = inflater.inflate(R.layout.item_glyph_detail, clusterDetailHolder.glyphInfoLayout, false);
 
-                        charDetailHolder.glyphInfoLayout.addView(layout);
+                        clusterDetailHolder.glyphInfoLayout.addView(layout);
                         glyphDetailList.add(new GlyphDetailHolder(layout));
                     }
 
-                    int index = initials[i] + j;
+                    int index = start + j;
                     int glyphId = glyphIds.get(index);
                     int xOffset = (int) (glyphOffsets.getX(index) + 0.5f);
                     int yOffset = (int) (glyphOffsets.getY(index) + 0.5f);
                     int advance = (int) (glyphAdvances.get(index) + 0.5f);
 
+                    String glyphString = String.format("%04X ( )", glyphId);
+                    Drawable glyphDrawable = new GlyphDrawable(renderer, glyphId);
+                    ImageSpan glyphSpan = new ImageSpan(glyphDrawable);
+                    SpannableString glyphSpannable = new SpannableString(glyphString);
+                    glyphSpannable.setSpan(glyphSpan, 6, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                     GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
                     glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                    glyphDetailHolder.glyphIdTextView.setText(String.format("%06X", glyphId));
+                    glyphDetailHolder.glyphIdTextView.setText(glyphSpannable);
                     glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
                     glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
                 }
             } else {
-                charDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
-
-                int relation = relations[i];
-                if (relation > 0) {
-                    charDetailHolder.feedbackTextView.setText("Related to Character #" + relation);
-                } else {
-                    charDetailHolder.feedbackTextView.setText("No Glyph");
-                }
+                clusterDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
+                clusterDetailHolder.feedbackTextView.setText("No Glyph");
             }
 
-            for (int j = totals[i]; j < glyphDetailList.size(); j++) {
+            for (int j = chars; j < charDetailList.size(); j++) {
+                charDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            }
+
+            for (int j = glyphs; j < glyphDetailList.size(); j++) {
                 glyphDetailList.get(j).rootLayout.setVisibility(View.GONE);
             }
 
@@ -195,59 +290,43 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
         String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
 
+        Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName);
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        float displaySize = (18.0f * displayMetrics.density) + 0.5f;
+        float sizeScale = displaySize / typeSize;
+
+        Renderer renderer = new Renderer();
+        renderer.setTypeface(typeface);
+        renderer.setTypeSize(typeSize);
+        renderer.setScaleX(sizeScale);
+        renderer.setScaleY(sizeScale);
+
         ShapingEngine shapingEngine = ShapingEngine.finalizable(new ShapingEngine());
-        shapingEngine.setTypeface(TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName));
+        shapingEngine.setTypeface(typeface);
         shapingEngine.setTypeSize(typeSize);
         shapingEngine.setScriptTag(scriptTag);
         shapingEngine.setLanguageTag(languageTag);
 
         ShapingResult shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length()));
+        IntList clusterMap = shapingResult.getClusterMap();
+        int length = clusterMap.size();
 
-        int charCount = sourceText.length();
-        int[] initials = new int[charCount + 1];
-        int[] relations = new int[initials.length];
-        int[] totals = new int[initials.length];
+        int[] initials = new int[length + 1];
+        int cluster = -1;
+        int previous = -1;
 
-        int glyphCount = shapingResult.getGlyphCount();
-        int[] traces = new int[glyphCount + 1];
-
-        Arrays.fill(initials, -1);
-        shapingResult.getCharToGlyphMap().copyTo(initials, 0);
-        initials[charCount] = glyphCount;
-
-        // Setup relations for each character.
-        for (int i = 0; i < initials.length; i++) {
-            // Skip, if this character has no glyph.
-            int initial = initials[i];
-            if (initial == -1) {
-                continue;
+        for (int i = 0; i < length; i++) {
+            int value = clusterMap.get(i);
+            if (value != previous) {
+                initials[++cluster] = i;
             }
 
-            if (traces[initial] == 0) {
-                traces[initial] = i + 1;
-            } else {
-                relations[i] = traces[initial];
-            }
+            previous = value;
         }
 
-        // Setup totals for each character.
-        for (int i = 0; i < totals.length; i++) {
-            // Skip, if this character has no glyph or related to some other character.
-            int initial = initials[i];
-            int relation = relations[i];
-            if (initial == -1 || relation > 0) {
-                continue;
-            }
+        initials[++cluster] = length;
 
-            for (int j = initial + 1; j < traces.length; j++) {
-                if (traces[j] > 0) {
-                    totals[i] = j - initial;
-                    break;
-                }
-            }
-        }
-
-        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, sourceText, shapingResult, initials, relations, totals);
+        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, renderer, sourceText, shapingResult, initials, cluster);
         ListView infoListView = (ListView) findViewById(R.id.list_view_info);
         infoListView.setAdapter(charDetailAdapter);
     }
