@@ -28,6 +28,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.style.DynamicDrawableSpan;
 import android.text.style.ImageSpan;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -129,16 +130,14 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     private static class ClusterDetailHolder {
         final ViewGroup charInfoLayout;
         final ViewGroup glyphInfoLayout;
-        final TextView feedbackTextView;
         final List<CharDetailHolder> charDetailList = new ArrayList<>();
         final List<GlyphDetailHolder> glyphDetailList = new ArrayList<>();
 
         ClusterDetailHolder(View layout) {
             charInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_char_detail);
             glyphInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
-            feedbackTextView = (TextView) layout.findViewById(R.id.text_view_feedback);
             charDetailList.add(new CharDetailHolder(charInfoLayout.getChildAt(0)));
-            glyphDetailList.add(new GlyphDetailHolder(glyphInfoLayout.getChildAt(1)));
+            glyphDetailList.add(new GlyphDetailHolder(glyphInfoLayout.getChildAt(0)));
         }
     }
 
@@ -197,76 +196,81 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 clusterDetailHolder = (ClusterDetailHolder) convertView.getTag();
             }
 
-            int initial = initials[i];
-            int next = initials[i + 1];
-            int chars = next - initial;
+            int charStart = initials[i];
+            int charEnd = initials[i + 1];
+            int charCount = charEnd - charStart;
 
             final List<CharDetailHolder> charDetailList = clusterDetailHolder.charDetailList;
 
-            for (int j = 0; j < chars; j++) {
+            // Add layouts for all characters in this cluster.
+            for (int j = 0; j < charCount; j++) {
                 if (charDetailList.size() <= j) {
                     LayoutInflater inflater = LayoutInflater.from(context);
                     View layout = inflater.inflate(R.layout.item_char_detail, clusterDetailHolder.charInfoLayout, false);
 
-                    clusterDetailHolder.charInfoLayout.addView(layout);
+                    clusterDetailHolder.charInfoLayout.addView(layout, j);
                     charDetailList.add(new CharDetailHolder(layout));
                 }
 
-                int index = initial + j;
+                int index = charStart + j;
                 char character = source.charAt(index);
 
                 CharDetailHolder charDetailHolder = charDetailList.get(j);
                 charDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                charDetailHolder.characterTextView.setText(String.format("%04X (%c)", (int) character, character));
+                charDetailHolder.rootLayout.setPadding(0, 0, 0, 1);
+                charDetailHolder.characterTextView.setText(String.format("\u2066%04X (%c)", (int) character, character));
             }
 
-            int start = clusterMap.get(initial);
-            int end = (next < clusterMap.size() ? clusterMap.get(next) : glyphIds.size());
-            int glyphs = end - start;
+            int glyphStart = clusterMap.get(charStart);
+            int glyphEnd = (charEnd < clusterMap.size() ? clusterMap.get(charEnd) : glyphIds.size());
+            int glyphCount = glyphEnd - glyphStart;
 
             final List<GlyphDetailHolder> glyphDetailList = clusterDetailHolder.glyphDetailList;
 
-            if (glyphs > 0) {
-                clusterDetailHolder.feedbackTextView.setVisibility(View.GONE);
+            // Add layouts for all glyphs in this cluster.
+            for (int j = 0; j < glyphCount; j++) {
+                if (glyphDetailList.size() <= j) {
+                    LayoutInflater inflater = LayoutInflater.from(context);
+                    View layout = inflater.inflate(R.layout.item_glyph_detail, clusterDetailHolder.glyphInfoLayout, false);
 
-                for (int j = 0; j < glyphs; j++) {
-                    if (glyphDetailList.size() <= j) {
-                        LayoutInflater inflater = LayoutInflater.from(context);
-                        View layout = inflater.inflate(R.layout.item_glyph_detail, clusterDetailHolder.glyphInfoLayout, false);
-
-                        clusterDetailHolder.glyphInfoLayout.addView(layout);
-                        glyphDetailList.add(new GlyphDetailHolder(layout));
-                    }
-
-                    int index = start + j;
-                    int glyphId = glyphIds.get(index);
-                    int xOffset = (int) (glyphOffsets.getX(index) + 0.5f);
-                    int yOffset = (int) (glyphOffsets.getY(index) + 0.5f);
-                    int advance = (int) (glyphAdvances.get(index) + 0.5f);
-
-                    String glyphString = String.format("%04X ( )", glyphId);
-                    Drawable glyphDrawable = new GlyphDrawable(renderer, glyphId);
-                    ImageSpan glyphSpan = new ImageSpan(glyphDrawable);
-                    SpannableString glyphSpannable = new SpannableString(glyphString);
-                    glyphSpannable.setSpan(glyphSpan, 6, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                    GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
-                    glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                    glyphDetailHolder.glyphIdTextView.setText(glyphSpannable);
-                    glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
-                    glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
+                    clusterDetailHolder.glyphInfoLayout.addView(layout, j);
+                    glyphDetailList.add(new GlyphDetailHolder(layout));
                 }
-            } else {
-                clusterDetailHolder.feedbackTextView.setVisibility(View.VISIBLE);
-                clusterDetailHolder.feedbackTextView.setText("No Glyph");
+
+                int index = glyphStart + j;
+                int glyphId = glyphIds.get(index);
+                int xOffset = (int) (glyphOffsets.getX(index) + 0.5f);
+                int yOffset = (int) (glyphOffsets.getY(index) + 0.5f);
+                int advance = (int) (glyphAdvances.get(index) + 0.5f);
+
+                String glyphString = String.format("%04X (_)", glyphId);
+                Drawable glyphDrawable = new GlyphDrawable(renderer, glyphId);
+                ImageSpan glyphSpan = new ImageSpan(glyphDrawable, DynamicDrawableSpan.ALIGN_BASELINE);
+                SpannableString glyphSpannable = new SpannableString(glyphString);
+                glyphSpannable.setSpan(glyphSpan, 6, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
+                glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
+                glyphDetailHolder.rootLayout.setPadding(0, 0, 0, 1);
+                glyphDetailHolder.glyphIdTextView.setText(glyphSpannable);
+                glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
+                glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
             }
 
-            for (int j = chars; j < charDetailList.size(); j++) {
+            for (int j = charCount; j < charDetailList.size(); j++) {
                 charDetailList.get(j).rootLayout.setVisibility(View.GONE);
             }
 
-            for (int j = glyphs; j < glyphDetailList.size(); j++) {
+            for (int j = glyphCount; j < glyphDetailList.size(); j++) {
                 glyphDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            }
+
+            if (charCount >= glyphCount) {
+                charDetailList.get(charCount - 1).rootLayout.setPadding(0, 0, 0, 0);
+            }
+
+            if (glyphCount >= charCount) {
+                glyphDetailList.get(glyphCount - 1).rootLayout.setPadding(0, 0, 0, 0);
             }
 
             return convertView;
@@ -292,7 +296,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        float displaySize = (18.0f * displayMetrics.density) + 0.5f;
+        float displaySize = 14.0f * displayMetrics.scaledDensity;
         float sizeScale = displaySize / typeSize;
 
         Renderer renderer = new Renderer();

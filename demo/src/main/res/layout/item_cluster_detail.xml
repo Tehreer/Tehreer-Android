@@ -17,9 +17,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:background="#000000"
+              android:background="@android:color/black"
               android:orientation="horizontal"
-              android:padding="1dp"
+              android:paddingBottom="1.5dp"
+              android:paddingLeft="1dp"
+              android:paddingRight="1dp"
+              android:paddingTop="1dp"
               android:weightSum="1">
 
     <LinearLayout
@@ -28,7 +31,7 @@
         android:layout_height="match_parent"
         android:layout_marginRight="1dp"
         android:layout_weight="0.24"
-        android:background="#FFFFFF"
+        android:background="@android:color/white"
         android:orientation="vertical">
 
         <include
@@ -42,20 +45,8 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.76"
-        android:background="#FFFFFF"
+        android:background="@android:color/white"
         android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/text_view_feedback"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:ellipsize="middle"
-            android:gravity="center"
-            android:lines="1"
-            android:padding="4dp"
-            android:textColor="#000000"
-            android:visibility="gone"/>
 
         <include
             layout="@layout/item_glyph_detail"
@@ -63,4 +54,3 @@
             android:layout_height="wrap_content"/>
     </LinearLayout>
 </LinearLayout>
-

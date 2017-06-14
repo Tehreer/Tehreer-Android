@@ -17,48 +17,33 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:background="#000000"
-              android:orientation="horizontal"
-              android:paddingBottom="1px">
+              android:background="@android:color/black"
+              android:orientation="horizontal">
 
     <TextView
         android:id="@+id/text_view_glyph_id"
+        style="@style/ShapingInfo"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginRight="1dp"
         android:layout_weight="0.32"
-        android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
-        android:padding="4dp"
-        android:text="FFFF"
-        android:textColor="#000000"/>
+        android:text="FFFF"/>
 
     <TextView
         android:id="@+id/text_view_offset"
+        style="@style/ShapingInfo"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginRight="1dp"
         android:layout_weight="0.40"
-        android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
         android:padding="4dp"
-        android:text="(0, 0)"
-        android:textColor="#000000"/>
+        android:text="(0, 0)"/>
 
     <TextView
         android:id="@+id/text_view_advance"
+        style="@style/ShapingInfo"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.28"
-        android:background="#FFFFFF"
-        android:ellipsize="middle"
-        android:gravity="left|center_vertical"
-        android:lines="1"
-        android:padding="4dp"
-        android:text="0"
-        android:textColor="#000000"/>
+        android:text="0"/>
 </LinearLayout>
