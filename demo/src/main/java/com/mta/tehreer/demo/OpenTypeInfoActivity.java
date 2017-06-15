@@ -185,13 +185,19 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 clusterDetailHolder = (ClusterDetailHolder) convertView.getTag();
             }
 
+            // Find out character range of this cluster.
             int charStart = initials[i];
             int charEnd = initials[i + 1];
             int charCount = charEnd - charStart;
 
+            // Find out glyph range of this cluster.
+            int glyphStart = clusterMap.get(charStart);
+            int glyphEnd = (charEnd < clusterMap.size() ? clusterMap.get(charEnd) : glyphIds.size());
+            int glyphCount = glyphEnd - glyphStart;
+
             final List<CharDetailHolder> charDetailList = clusterDetailHolder.charDetailList;
 
-            // Add layouts for all characters in this cluster.
+            // Setup layouts for all characters in this cluster.
             for (int j = 0; j < charCount; j++) {
                 if (charDetailList.size() <= j) {
                     LayoutInflater inflater = LayoutInflater.from(context);
@@ -209,14 +215,18 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 charDetailHolder.rootLayout.setPadding(0, 0, 0, 1);
                 charDetailHolder.characterTextView.setText(String.format("\u2066%04X (%c)", (int) character, character));
             }
-
-            int glyphStart = clusterMap.get(charStart);
-            int glyphEnd = (charEnd < clusterMap.size() ? clusterMap.get(charEnd) : glyphIds.size());
-            int glyphCount = glyphEnd - glyphStart;
+            // Hide additional layouts.
+            for (int j = charCount; j < charDetailList.size(); j++) {
+                charDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            }
+            // Hide last separator, if needed.
+            if (charCount >= glyphCount) {
+                charDetailList.get(charCount - 1).rootLayout.setPadding(0, 0, 0, 0);
+            }
 
             final List<GlyphDetailHolder> glyphDetailList = clusterDetailHolder.glyphDetailList;
 
-            // Add layouts for all glyphs in this cluster.
+            // Setup layouts for all glyphs in this cluster.
             for (int j = 0; j < glyphCount; j++) {
                 if (glyphDetailList.size() <= j) {
                     LayoutInflater inflater = LayoutInflater.from(context);
@@ -244,19 +254,11 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
                 glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
             }
-
-            for (int j = charCount; j < charDetailList.size(); j++) {
-                charDetailList.get(j).rootLayout.setVisibility(View.GONE);
-            }
-
+            // Hide additional layouts.
             for (int j = glyphCount; j < glyphDetailList.size(); j++) {
                 glyphDetailList.get(j).rootLayout.setVisibility(View.GONE);
             }
-
-            if (charCount >= glyphCount) {
-                charDetailList.get(charCount - 1).rootLayout.setPadding(0, 0, 0, 0);
-            }
-
+            // Hide last separator, if needed.
             if (glyphCount >= charCount) {
                 glyphDetailList.get(glyphCount - 1).rootLayout.setPadding(0, 0, 0, 0);
             }
@@ -315,7 +317,6 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
             previous = value;
         }
-
         initials[++cluster] = length;
 
         CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, renderer, sourceText, shapingResult, initials, cluster);
