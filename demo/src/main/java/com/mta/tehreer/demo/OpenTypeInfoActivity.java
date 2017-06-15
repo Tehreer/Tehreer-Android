@@ -44,9 +44,6 @@ import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class OpenTypeInfoActivity extends AppCompatActivity {
 
     public static final String TYPEFACE_NAME = "typeface_name";
@@ -55,11 +52,44 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     public static final String LANGUAGE_TAG = "language_tag";
     public static final String SOURCE_TEXT = "source_text";
 
-    private static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
-    private static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
-    private static final int PADDING = 4;
+    private static class ClusterHolder {
+
+        final ViewGroup charDetail;
+        final ViewGroup glyphDetail;
+
+        ClusterHolder(View layout) {
+            charDetail = (ViewGroup) layout.findViewById(R.id.layout_char_detail);
+            glyphDetail = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
+        }
+    }
+
+    private static class CharHolder {
+
+        final TextView character;
+
+        CharHolder(View layout) {
+            character = (TextView) layout.findViewById(R.id.text_view_character);
+        }
+    }
+
+    private static class GlyphHolder {
+
+        final TextView glyphId;
+        final TextView offset;
+        final TextView advance;
+
+        GlyphHolder(View layout) {
+            glyphId = (TextView) layout.findViewById(R.id.text_view_glyph_id);
+            offset = (TextView) layout.findViewById(R.id.text_view_offset);
+            advance = (TextView) layout.findViewById(R.id.text_view_advance);
+        }
+    }
 
     private static class GlyphSpan extends ReplacementSpan {
+
+        static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
+        static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
+        static final int PADDING = 4;
 
         final Renderer renderer;
         final IntList glyphId;
@@ -92,49 +122,11 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
     }
 
-    private static class CharDetailHolder {
-        final View rootLayout;
-        final TextView characterTextView;
-
-        CharDetailHolder(View layout) {
-            rootLayout = layout;
-            characterTextView = (TextView) layout.findViewById(R.id.text_view_character);
-        }
-    }
-
-    private static class GlyphDetailHolder {
-        final View rootLayout;
-        final TextView glyphIdTextView;
-        final TextView offsetTextView;
-        final TextView advanceTextView;
-
-        GlyphDetailHolder(View layout) {
-            rootLayout = layout;
-            glyphIdTextView = (TextView) layout.findViewById(R.id.text_view_glyph_id);
-            offsetTextView = (TextView) layout.findViewById(R.id.text_view_offset);
-            advanceTextView = (TextView) layout.findViewById(R.id.text_view_advance);
-        }
-    }
-
-    private static class ClusterDetailHolder {
-        final ViewGroup charInfoLayout;
-        final ViewGroup glyphInfoLayout;
-        final List<CharDetailHolder> charDetailList = new ArrayList<>();
-        final List<GlyphDetailHolder> glyphDetailList = new ArrayList<>();
-
-        ClusterDetailHolder(View layout) {
-            charInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_char_detail);
-            glyphInfoLayout = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
-            charDetailList.add(new CharDetailHolder(charInfoLayout.getChildAt(0)));
-            glyphDetailList.add(new GlyphDetailHolder(glyphInfoLayout.getChildAt(0)));
-        }
-    }
-
-    private static class CharDetailAdapter extends BaseAdapter {
+    private static class ClusterAdapter extends BaseAdapter {
 
         final Context context;
         final Renderer renderer;
-        final String source;
+        final String text;
         final ShapingResult result;
         final int[] initials;
         final int clusters;
@@ -142,12 +134,13 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         final PointList glyphOffsets;
         final FloatList glyphAdvances;
         final IntList clusterMap;
+        final int dp;
 
-        CharDetailAdapter(Context context, Renderer renderer, String source, ShapingResult result,
-                          int[] initials, int clusters) {
+        ClusterAdapter(Context context, Renderer renderer, String text, ShapingResult result,
+                       int[] initials, int clusters) {
             this.context = context;
             this.renderer = renderer;
-            this.source = source;
+            this.text = text;
             this.result = result;
             this.initials = initials;
             this.clusters = clusters;
@@ -155,6 +148,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             this.glyphOffsets = result.getGlyphOffsets();
             this.glyphAdvances = result.getGlyphAdvances();
             this.clusterMap = result.getClusterMap();
+            this.dp = (int) (context.getResources().getDisplayMetrics().density + 0.5f);
         }
 
         @Override
@@ -174,15 +168,22 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         @Override
         public View getView(int i, View convertView, ViewGroup parent) {
-            final ClusterDetailHolder clusterDetailHolder;
+            final ClusterHolder clusterHolder;
+
             if (convertView == null) {
                 LayoutInflater inflater = LayoutInflater.from(context);
                 convertView = inflater.inflate(R.layout.item_cluster_detail, parent, false);
-                clusterDetailHolder = new ClusterDetailHolder(convertView);
 
-                convertView.setTag(clusterDetailHolder);
+                clusterHolder = new ClusterHolder(convertView);
+                convertView.setTag(clusterHolder);
+
+                View firstChar = clusterHolder.charDetail.getChildAt(0);
+                firstChar.setTag(new CharHolder(firstChar));
+
+                View firstGlyph = clusterHolder.glyphDetail.getChildAt(0);
+                firstGlyph.setTag(new GlyphHolder(firstGlyph));
             } else {
-                clusterDetailHolder = (ClusterDetailHolder) convertView.getTag();
+                clusterHolder = (ClusterHolder) convertView.getTag();
             }
 
             // Find out character range of this cluster.
@@ -195,45 +196,50 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             int glyphEnd = (charEnd < clusterMap.size() ? clusterMap.get(charEnd) : glyphIds.size());
             int glyphCount = glyphEnd - glyphStart;
 
-            final List<CharDetailHolder> charDetailList = clusterDetailHolder.charDetailList;
-
             // Setup layouts for all characters in this cluster.
             for (int j = 0; j < charCount; j++) {
-                if (charDetailList.size() <= j) {
-                    LayoutInflater inflater = LayoutInflater.from(context);
-                    View layout = inflater.inflate(R.layout.item_char_detail, clusterDetailHolder.charInfoLayout, false);
+                final View layout;
 
-                    clusterDetailHolder.charInfoLayout.addView(layout, j);
-                    charDetailList.add(new CharDetailHolder(layout));
+                if (clusterHolder.charDetail.getChildCount() <= j) {
+                    LayoutInflater inflater = LayoutInflater.from(context);
+                    layout = inflater.inflate(R.layout.item_char_detail, clusterHolder.charDetail, false);
+                    layout.setTag(new CharHolder(layout));
+
+                    clusterHolder.charDetail.addView(layout);
+                } else {
+                    layout = clusterHolder.charDetail.getChildAt(j);
                 }
 
                 int index = charStart + j;
-                char character = source.charAt(index);
+                char character = text.charAt(index);
 
-                CharDetailHolder charDetailHolder = charDetailList.get(j);
-                charDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                charDetailHolder.rootLayout.setPadding(0, 0, 0, 1);
-                charDetailHolder.characterTextView.setText(String.format("\u2066%04X (%c)", (int) character, character));
+                CharHolder charHolder = (CharHolder) layout.getTag();
+                charHolder.character.setText(String.format("\u2066%04X (%c)", (int) character, character));
+
+                layout.setPadding(0, 0, 0, dp);
+                layout.setVisibility(View.VISIBLE);
             }
             // Hide additional layouts.
-            for (int j = charCount; j < charDetailList.size(); j++) {
-                charDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            for (int j = charCount; j < clusterHolder.charDetail.getChildCount(); j++) {
+                clusterHolder.charDetail.getChildAt(j).setVisibility(View.GONE);
             }
             // Hide last separator, if needed.
             if (charCount >= glyphCount) {
-                charDetailList.get(charCount - 1).rootLayout.setPadding(0, 0, 0, 0);
+                clusterHolder.charDetail.getChildAt(charCount - 1).setPadding(0, 0, 0, 0);
             }
-
-            final List<GlyphDetailHolder> glyphDetailList = clusterDetailHolder.glyphDetailList;
 
             // Setup layouts for all glyphs in this cluster.
             for (int j = 0; j < glyphCount; j++) {
-                if (glyphDetailList.size() <= j) {
-                    LayoutInflater inflater = LayoutInflater.from(context);
-                    View layout = inflater.inflate(R.layout.item_glyph_detail, clusterDetailHolder.glyphInfoLayout, false);
+                final View layout;
 
-                    clusterDetailHolder.glyphInfoLayout.addView(layout, j);
-                    glyphDetailList.add(new GlyphDetailHolder(layout));
+                if (clusterHolder.glyphDetail.getChildCount() <= j) {
+                    LayoutInflater inflater = LayoutInflater.from(context);
+                    layout = inflater.inflate(R.layout.item_glyph_detail, clusterHolder.glyphDetail, false);
+                    layout.setTag(new GlyphHolder(layout));
+
+                    clusterHolder.glyphDetail.addView(layout);
+                } else {
+                    layout = clusterHolder.glyphDetail.getChildAt(j);
                 }
 
                 int index = glyphStart + j;
@@ -247,20 +253,21 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 SpannableString glyphSpannable = new SpannableString(glyphString);
                 glyphSpannable.setSpan(glyphSpan, 6, 7, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                GlyphDetailHolder glyphDetailHolder = glyphDetailList.get(j);
-                glyphDetailHolder.rootLayout.setVisibility(View.VISIBLE);
-                glyphDetailHolder.rootLayout.setPadding(0, 0, 0, 1);
-                glyphDetailHolder.glyphIdTextView.setText(glyphSpannable);
-                glyphDetailHolder.offsetTextView.setText("(" + xOffset + ", " + yOffset + ")");
-                glyphDetailHolder.advanceTextView.setText(String.valueOf(advance));
+                GlyphHolder glyphHolder = (GlyphHolder) layout.getTag();
+                glyphHolder.glyphId.setText(glyphSpannable);
+                glyphHolder.offset.setText("(" + xOffset + ", " + yOffset + ")");
+                glyphHolder.advance.setText(String.valueOf(advance));
+
+                layout.setPadding(0, 0, 0, dp);
+                layout.setVisibility(View.VISIBLE);
             }
             // Hide additional layouts.
-            for (int j = glyphCount; j < glyphDetailList.size(); j++) {
-                glyphDetailList.get(j).rootLayout.setVisibility(View.GONE);
+            for (int j = glyphCount; j < clusterHolder.glyphDetail.getChildCount(); j++) {
+                clusterHolder.glyphDetail.getChildAt(j).setVisibility(View.GONE);
             }
             // Hide last separator, if needed.
             if (glyphCount >= charCount) {
-                glyphDetailList.get(glyphCount - 1).rootLayout.setPadding(0, 0, 0, 0);
+                clusterHolder.glyphDetail.getChildAt(glyphCount - 1).setPadding(0, 0, 0, 0);
             }
 
             return convertView;
@@ -319,9 +326,9 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
         initials[++cluster] = length;
 
-        CharDetailAdapter charDetailAdapter = new CharDetailAdapter(this, renderer, sourceText, shapingResult, initials, cluster);
+        ClusterAdapter clusterAdapter = new ClusterAdapter(this, renderer, sourceText, shapingResult, initials, cluster);
         ListView infoListView = (ListView) findViewById(R.id.list_view_info);
-        infoListView.setAdapter(charDetailAdapter);
+        infoListView.setAdapter(clusterAdapter);
     }
 
     @Override
