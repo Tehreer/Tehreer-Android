@@ -25,78 +25,53 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginTop="8dp"
-        android:background="#000000"
+        android:background="@android:color/black"
         android:orientation="horizontal"
-        android:padding="1dp"
+        android:paddingBottom="1.5dp"
+        android:paddingLeft="1dp"
+        android:paddingRight="1dp"
+        android:paddingTop="1dp"
         android:weightSum="1">
 
         <TextView
+            style="@style/ShapingHeader"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginRight="1dp"
-            android:layout_weight="0.09"
-            android:background="#FFFFFF"
-            android:gravity="center"
-            android:padding="4dp"
-            android:text="#"
-            android:textColor="#000000"
-            android:textStyle="bold"/>
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginRight="1dp"
-            android:layout_weight="0.23"
-            android:background="#FFFFFF"
-            android:gravity="center"
-            android:padding="4dp"
-            android:text="Character"
-            android:textColor="#000000"
-            android:textStyle="bold"/>
+            android:layout_weight="0.24"
+            android:text="Character"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.68"
+            android:layout_weight="0.76"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/text_view_glyph_id"
+                style="@style/ShapingHeader"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginRight="1dp"
-                android:layout_weight="0.30"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:padding="4dp"
-                android:text="Glyph ID"
-                android:textColor="#000000"
-                android:textStyle="bold"/>
+                android:layout_weight="0.32"
+                android:text="Glyph ID"/>
 
             <TextView
                 android:id="@+id/text_view_offset"
+                style="@style/ShapingHeader"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginRight="1dp"
                 android:layout_weight="0.40"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:padding="4dp"
-                android:text="Glyph Offset"
-                android:textColor="#000000"
-                android:textStyle="bold"/>
+                android:text="Glyph Offset"/>
 
             <TextView
                 android:id="@+id/text_view_advance"
+                style="@style/ShapingHeader"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="0.30"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:padding="4dp"
-                android:text="Glyph Advance"
-                android:textColor="#000000"
-                android:textStyle="bold"/>
+                android:layout_weight="0.28"
+                android:text="Glyph Advance"/>
         </LinearLayout>
     </LinearLayout>
 
