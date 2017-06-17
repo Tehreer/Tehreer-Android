@@ -126,34 +126,32 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         final Context context;
         final Renderer renderer;
-        final String text;
-        final ShapingResult result;
-        final int[] initials;
-        final int clusters;
+        final String sourceText;
+        final ShapingResult shapingResult;
         final IntList glyphIds;
         final PointList glyphOffsets;
         final FloatList glyphAdvances;
         final IntList clusterMap;
+        final IntList clusterInitials;
         final int dp;
 
-        ClusterAdapter(Context context, Renderer renderer, String text, ShapingResult result,
-                       int[] initials, int clusters) {
+        ClusterAdapter(Context context, Renderer renderer, String sourceText,
+                       ShapingResult shapingResult, IntList clusterInitials) {
             this.context = context;
             this.renderer = renderer;
-            this.text = text;
-            this.result = result;
-            this.initials = initials;
-            this.clusters = clusters;
-            this.glyphIds = result.getGlyphIds();
-            this.glyphOffsets = result.getGlyphOffsets();
-            this.glyphAdvances = result.getGlyphAdvances();
-            this.clusterMap = result.getClusterMap();
+            this.sourceText = sourceText;
+            this.shapingResult = shapingResult;
+            this.glyphIds = shapingResult.getGlyphIds();
+            this.glyphOffsets = shapingResult.getGlyphOffsets();
+            this.glyphAdvances = shapingResult.getGlyphAdvances();
+            this.clusterMap = shapingResult.getClusterMap();
+            this.clusterInitials = clusterInitials;
             this.dp = (int) (context.getResources().getDisplayMetrics().density + 0.5f);
         }
 
         @Override
         public int getCount() {
-            return clusters;
+            return clusterInitials.size() - 1;
         }
 
         @Override
@@ -187,8 +185,8 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             }
 
             // Find out character range of this cluster.
-            int charStart = initials[i];
-            int charEnd = initials[i + 1];
+            int charStart = clusterInitials.get(i);
+            int charEnd = clusterInitials.get(i + 1);
             int charCount = charEnd - charStart;
 
             // Find out glyph range of this cluster.
@@ -211,7 +209,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
                 }
 
                 int index = charStart + j;
-                char character = text.charAt(index);
+                char character = sourceText.charAt(index);
 
                 CharHolder charHolder = (CharHolder) layout.getTag();
                 charHolder.character.setText(String.format("\u2066%04X (%c)", (int) character, character));
@@ -293,7 +291,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
 
         Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        float displaySize = 14.0f * displayMetrics.scaledDensity;
+        float displaySize = 18.0f * displayMetrics.scaledDensity;
         float sizeScale = displaySize / typeSize;
 
         Renderer renderer = new Renderer();
@@ -326,9 +324,9 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
         initials[++cluster] = length;
 
-        ClusterAdapter clusterAdapter = new ClusterAdapter(this, renderer, sourceText, shapingResult, initials, cluster);
         ListView infoListView = (ListView) findViewById(R.id.list_view_info);
-        infoListView.setAdapter(clusterAdapter);
+        infoListView.setAdapter(new ClusterAdapter(this, renderer, sourceText, shapingResult,
+                                                   IntList.of(initials).subList(0, cluster + 1)));
     }
 
     @Override
