@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.demo;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -41,59 +42,54 @@ public class GlyphInfoActivity extends AppCompatActivity {
     public static final String TYPEFACE_NAME = "typeface";
     public static final String GLYPH_ID = "glyph_id";
 
-    private Typeface mTypeface;
-    private int mGlyphId;
+    private static class GlyphDrawable extends Drawable {
 
-    private ImageView mGlyphImageView;
-
-    private class GlyphDrawable extends Drawable {
-
-        final float density;
+        final float dp;
         final int minWidth;
         final int minHeight;
-        final float fontAscent;
-        final float fontDescent;
-        final float glyphAdvance;
+        final float ascent;
+        final float descent;
+        final float advance;
         final Path glyphPath;
         final RectF glyphBounds;
         final Paint paint;
 
-        GlyphDrawable(int minWidth, int minHeight) {
-            this.density = getResources().getDisplayMetrics().density;
+        GlyphDrawable(Context context, Typeface typeface, int glyphId, int minWidth, int minHeight) {
+            this.dp = context.getResources().getDisplayMetrics().density;
             this.minWidth = minWidth;
             this.minHeight = minHeight;
 
-            float typeSize = mTypeface.getUnitsPerEm();
+            float typeSize = typeface.getUnitsPerEm();
             float displaySize = minHeight / 3.0f;
             float sizeScale = displaySize / typeSize;
 
-            fontAscent = mTypeface.getAscent() * sizeScale;
-            fontDescent = mTypeface.getDescent() * sizeScale;
-            glyphAdvance = mTypeface.getGlyphAdvance(mGlyphId, typeSize, false) * sizeScale;
+            ascent = typeface.getAscent() * sizeScale;
+            descent = typeface.getDescent() * sizeScale;
+            advance = typeface.getGlyphAdvance(glyphId, typeSize, false) * sizeScale;
 
             Matrix glyphMatrix = new Matrix();
             glyphMatrix.setScale(sizeScale, sizeScale);
-            glyphPath = mTypeface.getGlyphPath(mGlyphId, typeSize, glyphMatrix);
+            glyphPath = typeface.getGlyphPath(glyphId, typeSize, glyphMatrix);
 
             glyphBounds = new RectF();
             glyphPath.computeBounds(glyphBounds, true);
 
             paint = new Paint();
             paint.setAntiAlias(true);
-            paint.setTextSize(12.0f * density);
+            paint.setTextSize(12.0f * dp);
         }
 
         @Override
         public void draw(Canvas canvas) {
             Rect drawableBounds = getBounds();
 
-            float fontHeight = fontAscent + fontDescent;
+            float height = ascent + descent;
 
             int lsbX = (int) (drawableBounds.left + (drawableBounds.width() - glyphBounds.width()) / 2.0f - glyphBounds.left + 0.5);
-            int rsbX = (int) (lsbX + glyphAdvance + 0.5);
-            int baseY = (int) (drawableBounds.top + (drawableBounds.height() - fontHeight) / 2.0f + fontAscent + 0.5);
-            int ascentY = (int) (baseY - fontAscent + 0.5);
-            int descentY = (int) (baseY + fontDescent + 0.5);
+            int rsbX = (int) (lsbX + advance + 0.5);
+            int baseY = (int) (drawableBounds.top + (drawableBounds.height() - height) / 2.0f + ascent + 0.5);
+            int ascentY = (int) (baseY - ascent + 0.5);
+            int descentY = (int) (baseY + descent + 0.5);
 
             paint.setColor(Color.DKGRAY);
             paint.setStrokeWidth(1.0f);
@@ -107,17 +103,17 @@ public class GlyphInfoActivity extends AppCompatActivity {
             canvas.drawLine(drawableBounds.left, ascentY, drawableBounds.right, ascentY, paint);
             canvas.drawLine(drawableBounds.left, descentY, drawableBounds.right, descentY, paint);
             // Draw Origin Circle.
-            canvas.drawCircle(lsbX, baseY, 4.0f * density, paint);
+            canvas.drawCircle(lsbX, baseY, 4.0f * dp, paint);
 
             paint.setColor(Color.BLACK);
             paint.setStyle(Paint.Style.FILL);
 
             // Draw Headings.
-            canvas.drawText("Ascent", drawableBounds.left, ascentY - 2.0f * density, paint);
-            canvas.drawText("Baseline", drawableBounds.left, baseY - 2.0f * density, paint);
-            canvas.drawText("Descent", drawableBounds.left, descentY - 2.0f * density, paint);
+            canvas.drawText("Ascent", drawableBounds.left, ascentY - 2.0f * dp, paint);
+            canvas.drawText("Baseline", drawableBounds.left, baseY - 2.0f * dp, paint);
+            canvas.drawText("Descent", drawableBounds.left, descentY - 2.0f * dp, paint);
 
-            paint.setStrokeWidth(1.0f * density);
+            paint.setStrokeWidth(1.0f * dp);
             paint.setStyle(Paint.Style.STROKE);
 
             // Draw Glyph Path.
@@ -142,9 +138,9 @@ public class GlyphInfoActivity extends AppCompatActivity {
 
         @Override
         public int getIntrinsicWidth() {
-            float padding = 144.0f * density;
+            float padding = 144.0f * dp;
             float negativeLSB = Math.min(glyphBounds.left, 0.0f);
-            float advanceWidth = glyphAdvance - negativeLSB;
+            float advanceWidth = advance - negativeLSB;
             float pathWidth = glyphBounds.right - negativeLSB;
             int boundaryWidth = (int) (Math.max(advanceWidth, pathWidth) + padding + 0.5f);
 
@@ -153,8 +149,8 @@ public class GlyphInfoActivity extends AppCompatActivity {
 
         @Override
         public int getIntrinsicHeight() {
-            float padding = 32.0f * density;
-            int boundaryHeight = (int) (fontAscent + fontDescent + padding + 0.5f);
+            float padding = 32.0f * dp;
+            int boundaryHeight = (int) (ascent + descent + padding + 0.5f);
 
             return Math.max(minHeight, boundaryHeight);
         }
@@ -171,18 +167,18 @@ public class GlyphInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        mTypeface = TypefaceManager.getDefaultManager().getTypefaceByName(intent.getStringExtra(TYPEFACE_NAME));
-        mGlyphId = intent.getIntExtra(GLYPH_ID, 0);
+        final Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(intent.getStringExtra(TYPEFACE_NAME));
+        final int glyphId = intent.getIntExtra(GLYPH_ID, 0);
+        final ImageView glyphInfo = (ImageView) findViewById(R.id.image_view_glyph_info);
 
-        mGlyphImageView = (ImageView) findViewById(R.id.image_view_glyph);
-        mGlyphImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        glyphInfo.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 int width = findViewById(android.R.id.content).getWidth();
-                int height = mGlyphImageView.getHeight();
-                Drawable drawable = new GlyphDrawable(width, height);
+                int height = glyphInfo.getHeight();
+                Drawable drawable = new GlyphDrawable(GlyphInfoActivity.this, typeface, glyphId, width, height);
 
-                mGlyphImageView.setImageDrawable(drawable);
+                glyphInfo.setImageDrawable(drawable);
             }
         });
     }
