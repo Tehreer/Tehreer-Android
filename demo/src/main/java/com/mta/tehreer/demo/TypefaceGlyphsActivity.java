@@ -49,8 +49,14 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
     private Typeface mTypeface;
 
     private static class GlyphHolder {
-        ImageView glyphImageView;
-        TextView glyphIdTextView;
+
+        final ImageView glyphShape;
+        final TextView glyphId;
+
+        GlyphHolder(View layout) {
+            glyphShape = (ImageView) layout.findViewById(R.id.image_view_glyph_shape);
+            glyphId = (TextView) layout.findViewById(R.id.text_view_glyph_id);
+        }
     }
 
     private static class GlyphAdapter extends BaseAdapter {
@@ -86,17 +92,14 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
                 LayoutInflater inflater = LayoutInflater.from(context);
                 convertView = inflater.inflate(R.layout.item_typeface_glyph, parent, false);
 
-                holder = new GlyphHolder();
-                holder.glyphImageView = (ImageView) convertView.findViewById(R.id.image_view_glyph);
-                holder.glyphIdTextView = (TextView) convertView.findViewById(R.id.text_view_glyph_id);
-
+                holder = new GlyphHolder(convertView);
                 convertView.setTag(holder);
             } else {
                 holder = (GlyphHolder) convertView.getTag();
             }
 
-            holder.glyphIdTextView.setText(String.format("%06X", i));
-            holder.glyphImageView.setImageDrawable(new GlyphDrawable(renderer, i));
+            holder.glyphId.setText(String.format("%04X", i));
+            holder.glyphShape.setImageDrawable(new GlyphDrawable(renderer, i));
 
             return convertView;
         }

@@ -17,7 +17,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="84dp"
-              android:background="#000000"
+              android:background="@android:color/black"
               android:orientation="vertical"
               android:padding="1dp">
 
@@ -27,15 +27,15 @@
         android:layout_height="wrap_content"
         android:background="#DDDDDD"
         android:gravity="center"
-        android:text="0x0001"
-        android:maxLines="1"
-        android:textColor="#000000"
+        android:lines="1"
+        android:text="0001"
+        android:textColor="@android:color/black"
         android:textSize="14sp"/>
 
     <ImageView
-        android:id="@+id/image_view_glyph"
+        android:id="@+id/image_view_glyph_shape"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="1dp"
-        android:background="#FFFFFF"/>
+        android:background="@android:color/white"/>
 </LinearLayout>
