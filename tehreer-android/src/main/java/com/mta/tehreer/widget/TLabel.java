@@ -31,7 +31,7 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.text.TextLine;
 import com.mta.tehreer.text.TextTruncation;
-import com.mta.tehreer.text.TextTypesetter;
+import com.mta.tehreer.text.Typesetter;
 
 import java.util.ArrayList;
 
@@ -57,7 +57,7 @@ public class TLabel extends View {
     private int mMaxLines;
 
     private Renderer mRenderer;
-    private TextTypesetter mTypesetter;
+    private Typesetter mTypesetter;
     private TextTruncation mTextTruncation;
     private TextLine mTruncationToken;
 
@@ -244,7 +244,7 @@ public class TLabel extends View {
 
     private void ensureTruncationToken() {
         if (mTruncationToken == null) {
-            TextTypesetter tokenTypesetter = new TextTypesetter(TRUNCATION_STRING, getTypeface(), getTextSize());
+            Typesetter tokenTypesetter = new Typesetter(TRUNCATION_STRING, getTypeface(), getTextSize());
             mTruncationToken = tokenTypesetter.createLine(0, TRUNCATION_STRING.length());
         }
     }
@@ -316,7 +316,7 @@ public class TLabel extends View {
 
             Typeface typeface = mRenderer.getTypeface();
             if (typeface != null && mText.length() > 0) {
-                mTypesetter = new TextTypesetter(mText, typeface, mRenderer.getTypeSize());
+                mTypesetter = new Typesetter(mText, typeface, mRenderer.getTypeSize());
             }
 
             requestLayout();
@@ -389,11 +389,11 @@ public class TLabel extends View {
         invalidate();
     }
 
-    public TextTypesetter getTypesetter() {
+    public Typesetter getTypesetter() {
         return mTypesetter;
     }
 
-    public void setTypesetter(TextTypesetter typesetter) {
+    public void setTypesetter(Typesetter typesetter) {
         mText = null;
         mTruncationToken = null;
         mTypesetter = typesetter;

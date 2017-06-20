@@ -45,7 +45,7 @@ import java.util.List;
  * Represents a typesetter which performs text layout. It can be used to create lines, perform line
  * breaking, and do other contextual analysis based on the characters in the string.
  */
-public class TextTypesetter {
+public class Typesetter {
 
     private static final float DEFAULT_FONT_SIZE = 16.0f;
 
@@ -86,7 +86,7 @@ public class TextTypesetter {
      *
      * @throws IllegalArgumentException if <code>text</code> is null or empty, or typeface is null
      */
-	public TextTypesetter(String text, Typeface typeface, float typeSize) {
+	public Typesetter(String text, Typeface typeface, float typeSize) {
         if (text == null || text.length() == 0) {
             throw new IllegalArgumentException("Text is null or empty");
         }
@@ -105,7 +105,7 @@ public class TextTypesetter {
      *
      * @throws IllegalArgumentException if <code>spanned</code> is null or empty
      */
-    public TextTypesetter(Spanned spanned) {
+    public Typesetter(Spanned spanned) {
         if (spanned == null || spanned.length() == 0) {
             throw new IllegalArgumentException("Spanned text is null or empty");
         }
