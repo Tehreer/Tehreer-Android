@@ -460,8 +460,7 @@ public class TLabel extends View {
      */
     public void setTextSize(float textSize) {
         mRenderer.setTypeSize(Math.max(0.0f, textSize));
-        requestLayout();
-        invalidate();
+        updateTypesetter();
     }
 
     /**
