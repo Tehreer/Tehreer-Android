@@ -124,6 +124,10 @@ public class TextTypesetter {
         resolveBidi();
     }
 
+    public String getText() {
+        return mText;
+    }
+
     private void resolveBreaks() {
         resolveBreaks(BreakIterator.getLineInstance(), BREAK_TYPE_LINE);
         resolveBreaks(BreakIterator.getCharacterInstance(), BREAK_TYPE_CHARACTER);
