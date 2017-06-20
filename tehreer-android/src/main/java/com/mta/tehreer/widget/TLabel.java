@@ -61,7 +61,6 @@ public class TLabel extends View {
     private TextTruncation mTextTruncation;
     private TextLine mTruncationToken;
 
-    private boolean mAttached;
     private int mTextWidth;
     private int mTextHeight;
 
@@ -269,7 +268,7 @@ public class TLabel extends View {
             float textHeight = getLineHeight(textLine);
 
             lineStart = lineEnd;
-            int textLength = mText.length();
+            int textLength = mTypesetter.getText().length();
 
             int maxLines = (mMaxLines == 0 ? Integer.MAX_VALUE : mMaxLines);
 
@@ -294,7 +293,7 @@ public class TLabel extends View {
                         if (layoutWidth > mTruncationToken.getWidth()) {
                             // Replace the last line with truncated one.
                             TextLine lastLine = mTextLines.remove(mTextLines.size() - 1);
-                            TextLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), mText.length(), layoutWidth, mTextTruncation, mTruncationToken);
+                            TextLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTextTruncation, mTruncationToken);
                             mTextLines.add(truncatedLine);
                         }
                     }
@@ -310,17 +309,13 @@ public class TLabel extends View {
         }
     }
 
-    private void revokeTypesetter() {
-        mTypesetter = null;
-        mTruncationToken = null;
-    }
-
     private void updateTypesetter() {
-        revokeTypesetter();
+        if (mText != null) {
+            mTypesetter = null;
+            mTruncationToken = null;
 
-        if (mAttached) {
             Typeface typeface = mRenderer.getTypeface();
-            if (typeface != null && mText != null && mText.length() != 0) {
+            if (typeface != null && mText.length() > 0) {
                 mTypesetter = new TextTypesetter(mText, typeface, mRenderer.getTypeSize());
             }
 
@@ -394,6 +389,19 @@ public class TLabel extends View {
         invalidate();
     }
 
+    public TextTypesetter getTypesetter() {
+        return mTypesetter;
+    }
+
+    public void setTypesetter(TextTypesetter typesetter) {
+        mText = null;
+        mTruncationToken = null;
+        mTypesetter = typesetter;
+
+        requestLayout();
+        invalidate();
+    }
+
     /**
      * Returns the current typeface in which the text is being displayed.
      *
@@ -432,7 +440,7 @@ public class TLabel extends View {
      * @param text The text to display.
      */
     public void setText(String text) {
-        mText = text;
+        mText = (text == null ? "" : text);
         updateTypesetter();
     }
 
@@ -551,7 +559,8 @@ public class TLabel extends View {
      */
     public void setMaxLines(int maxLines) {
         mMaxLines = maxLines;
-        updateTypesetter();
+        requestLayout();
+        invalidate();
     }
 
     /**
@@ -631,19 +640,5 @@ public class TLabel extends View {
     public void setShadowColor(int shadowColor) {
         mRenderer.setShadowColor(shadowColor);
         invalidate();
-    }
-
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        mAttached = true;
-        updateTypesetter();
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mAttached = false;
-        revokeTypesetter();
     }
 }
