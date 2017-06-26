@@ -24,7 +24,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.Log;
 
-import com.mta.tehreer.opentype.WritingDirection;
+import com.mta.tehreer.sfnt.WritingDirection;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;

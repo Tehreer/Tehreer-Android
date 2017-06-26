@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.opentype;
+package com.mta.tehreer.sfnt;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;

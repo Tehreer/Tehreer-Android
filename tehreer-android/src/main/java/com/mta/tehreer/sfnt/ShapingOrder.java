@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.opentype;
+package com.mta.tehreer.sfnt;
 
 /**
- * Specifies the writing direction of text.
+ * Specifies the order in which the text is shaped.
  */
-public enum WritingDirection {
+public enum ShapingOrder {
     /**
-     * Text is written from left-to-right.
+     * Text is shaped in forward order starting from first index (inclusive) to last index
+     * (exclusive).
      */
-	LEFT_TO_RIGHT(0),
+    FORWARD(0),
     /**
-     * Text is written from right-to-left.
+     * Text is shaped in backward order starting from last index (exclusive) to first index
+     * (inclusive).
      */
-	RIGHT_TO_LEFT(1);
+    BACKWARD(1);
 
     final int value;
 
-    WritingDirection(int value) {
+    ShapingOrder(int value) {
         this.value = value;
     }
 
-    static WritingDirection valueOf(int value) {
-        for (WritingDirection direction : WritingDirection.values()) {
-            if (direction.value == value) {
-                return direction;
+    static ShapingOrder valueOf(int value) {
+        for (ShapingOrder order : ShapingOrder.values()) {
+            if (order.value == value) {
+                return order;
             }
         }
 

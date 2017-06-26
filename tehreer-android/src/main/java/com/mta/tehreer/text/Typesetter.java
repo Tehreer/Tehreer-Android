@@ -28,10 +28,10 @@ import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
-import com.mta.tehreer.opentype.SfntTag;
-import com.mta.tehreer.opentype.ShapingEngine;
-import com.mta.tehreer.opentype.ShapingResult;
-import com.mta.tehreer.opentype.WritingDirection;
+import com.mta.tehreer.sfnt.SfntTag;
+import com.mta.tehreer.sfnt.ShapingEngine;
+import com.mta.tehreer.sfnt.ShapingResult;
+import com.mta.tehreer.sfnt.WritingDirection;
 import com.mta.tehreer.text.style.TypeSizeSpan;
 import com.mta.tehreer.text.style.TypefaceSpan;
 

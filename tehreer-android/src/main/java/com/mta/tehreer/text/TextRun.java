@@ -25,7 +25,7 @@ import com.mta.tehreer.internal.collection.SafeFloatList;
 import com.mta.tehreer.internal.collection.SafeIntList;
 import com.mta.tehreer.internal.collection.SafePointList;
 import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.opentype.WritingDirection;
+import com.mta.tehreer.sfnt.WritingDirection;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;

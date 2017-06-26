@@ -23,7 +23,7 @@ import android.graphics.Rect;
 
 import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.internal.Sustain;
-import com.mta.tehreer.opentype.SfntTag;
+import com.mta.tehreer.sfnt.SfntTag;
 
 import java.io.File;
 import java.io.InputStream;

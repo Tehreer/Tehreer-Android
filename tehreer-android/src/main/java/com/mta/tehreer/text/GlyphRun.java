@@ -17,8 +17,8 @@
 package com.mta.tehreer.text;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.opentype.WritingDirection;
-import com.mta.tehreer.opentype.ShapingResult;
+import com.mta.tehreer.sfnt.WritingDirection;
+import com.mta.tehreer.sfnt.ShapingResult;
 
 class GlyphRun {
 

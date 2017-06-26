@@ -16,9 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
-import com.mta.tehreer.opentype.FontHeaderTable;
-import com.mta.tehreer.opentype.NameTable;
-import com.mta.tehreer.opentype.OS2WinMetricsTable;
+import com.mta.tehreer.sfnt.FontHeaderTable;
+import com.mta.tehreer.sfnt.NameTable;
+import com.mta.tehreer.sfnt.OS2WinMetricsTable;
 
 import java.util.Locale;
 
