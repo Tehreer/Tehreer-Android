@@ -58,7 +58,7 @@ public class FontHeaderTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HEAD);
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_HEAD);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `head' table");
         }

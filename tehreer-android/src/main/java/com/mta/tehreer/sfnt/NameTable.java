@@ -58,7 +58,7 @@ public class NameTable {
      * @return The number of name records in this table.
      */
     public int recordCount() {
-        return OpenType.getNameCount(typeface);
+        return SfntTables.getNameCount(typeface);
     }
 
     /**
@@ -75,7 +75,7 @@ public class NameTable {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
 
-        return OpenType.getNameRecord(typeface, index);
+        return SfntTables.getNameRecord(typeface, index);
     }
 
     /**
@@ -135,7 +135,7 @@ public class NameTable {
          * @return The relevant locale for this record.
          */
         public Locale locale() {
-            String[] values = OpenType.getNameLocale(platformId, languageId);
+            String[] values = SfntTables.getNameLocale(platformId, languageId);
             String language = values[0];
             String region = values[1];
             String script = values[2];
@@ -176,7 +176,7 @@ public class NameTable {
             Charset charset = null;
 
             try {
-                String charsetName = OpenType.getNameCharset(platformId, encodingId);
+                String charsetName = SfntTables.getNameCharset(platformId, encodingId);
                 if (charsetName != null) {
                     charset = Charset.forName(charsetName);
                 }

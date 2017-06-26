@@ -54,7 +54,7 @@ public class HorizontalHeaderTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_HHEA);
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_HHEA);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `hhea' table");
         }

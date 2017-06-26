@@ -51,7 +51,7 @@ public class PostScriptTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_POST);
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_POST);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `post' table");
         }
@@ -105,6 +105,6 @@ public class PostScriptTable {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
 
-        return OpenType.getGlyphName(typeface, index);
+        return SfntTables.getGlyphName(typeface, index);
     }
 }

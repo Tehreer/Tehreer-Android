@@ -56,7 +56,7 @@ public class MaximumProfileTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_MAXP);
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_MAXP);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `maxp' table");
         }

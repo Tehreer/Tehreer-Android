@@ -100,7 +100,7 @@ public class OS2WinMetricsTable {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
-        long pointer = OpenType.getTablePointer(typeface, OpenType.TABLE_OS_2);
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_OS_2);
         if (pointer == 0) {
             throw new RuntimeException("The typeface does not contain `OS/2' table");
         }

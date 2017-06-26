@@ -19,7 +19,7 @@ package com.mta.tehreer.sfnt;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.JNILoader;
 
-class OpenType {
+class SfntTables {
 
     static {
         JNILoader.load();
