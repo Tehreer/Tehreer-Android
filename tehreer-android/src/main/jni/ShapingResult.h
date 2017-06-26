@@ -51,6 +51,6 @@ private:
 
 }
 
-jint register_com_mta_tehreer_opentype_ShapingResult(JNIEnv *env);
+jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env);
 
 #endif

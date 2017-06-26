@@ -213,7 +213,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
 };
 
-jint register_com_mta_tehreer_opentype_ShapingResult(JNIEnv *env)
+jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/ShapingResult", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/sfnt/ShapingResult", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

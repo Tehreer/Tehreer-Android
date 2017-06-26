@@ -30,7 +30,7 @@ extern "C" {
 
 #include "JavaBridge.h"
 #include "Typeface.h"
-#include "OpenType.h"
+#include "SfntTables.h"
 
 using namespace std;
 using namespace Tehreer;
@@ -643,12 +643,12 @@ static JNINativeMethod JNI_METHODS[] = {
     { "getNameLocale", "(II)[Ljava/lang/String;", (void *)getNameLocale },
     { "getNameCharset", "(II)Ljava/lang/String;", (void *)getNameCharset },
     { "getNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
-    { "getNameRecord", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/opentype/NameTable$Record;", (void *)getNameRecord },
+    { "getNameRecord", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/sfnt/NameTable$Record;", (void *)getNameRecord },
     { "getGlyphName", "(Lcom/mta/tehreer/graphics/Typeface;I)Ljava/lang/String;", (void *)getGlyphName },
     { "getTablePointer", "(Lcom/mta/tehreer/graphics/Typeface;I)J", (void *)getTablePointer },
 };
 
-jint register_com_mta_tehreer_opentype_OpenType(JNIEnv *env)
+jint register_com_mta_tehreer_sfnt_SfntTables(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/OpenType", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/sfnt/SfntTables", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

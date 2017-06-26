@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__OPEN_TYPE_H
-#define _TEHREER__OPEN_TYPE_H
+#ifndef _TEHREER__SFNT_TABLES_H
+#define _TEHREER__SFNT_TABLES_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_opentype_OpenType(JNIEnv *env);
+jint register_com_mta_tehreer_sfnt_SfntTables(JNIEnv *env);
 
 #endif

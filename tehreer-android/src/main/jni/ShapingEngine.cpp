@@ -212,11 +212,11 @@ static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint s
 static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong albumHandle, jstring text, jint fromIndex, jint toIndex)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    ShapingResult *opentypeAlbum = reinterpret_cast<ShapingResult *>(albumHandle);
+    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(albumHandle);
 
     const jchar *charArray = env->GetStringChars(text, nullptr);
 
-    shapingEngine->shapeText(*opentypeAlbum, charArray, fromIndex, toIndex);
+    shapingEngine->shapeText(*shapingResult, charArray, fromIndex, toIndex);
 
     env->ReleaseStringChars(text, charArray);
 }
@@ -239,7 +239,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeShapeText", "(JJLjava/lang/String;II)V", (void *)shapeText },
 };
 
-jint register_com_mta_tehreer_opentype_ShapingEngine(JNIEnv *env)
+jint register_com_mta_tehreer_sfnt_ShapingEngine(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/opentype/ShapingEngine", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/sfnt/ShapingEngine", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

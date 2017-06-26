@@ -76,6 +76,6 @@ private:
 
 }
 
-jint register_com_mta_tehreer_opentype_ShapingEngine(JNIEnv *env);
+jint register_com_mta_tehreer_sfnt_ShapingEngine(JNIEnv *env);
 
 #endif
