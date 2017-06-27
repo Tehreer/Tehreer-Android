@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Represents a line of text consisting of an array of <code>TextRun</code> objects in visual order.
  */
-public class TextLine {
+public class ComposedLine {
 
 	private int mCharStart;
 	private int mCharEnd;
@@ -42,7 +42,7 @@ public class TextLine {
     private float mTrailingWhitespaceExtent;
 	private List<TextRun> mRunList;
 
-	TextLine(String text, int charStart, int charEnd, List<TextRun> runList, byte paragraphLevel) {
+	ComposedLine(String text, int charStart, int charEnd, List<TextRun> runList, byte paragraphLevel) {
 		mCharStart = charStart;
 		mCharEnd = charEnd;
         mParagraphLevel = paragraphLevel;
@@ -123,7 +123,7 @@ public class TextLine {
 
     /**
      * Returns the ascent of this line which is the maximum ascent from the baseline of all runs in
-     * the <code>TextLine</code>.
+     * the <code>ComposedLine</code>.
      *
      * @return The ascent of this line.
      */
@@ -133,7 +133,7 @@ public class TextLine {
 
     /**
      * Returns the descent of this line which is the maximum descent from the baseline of all runs
-     * in the <code>TextLine</code>.
+     * in the <code>ComposedLine</code>.
      *
      * @return The descent of this line.
      */
@@ -143,7 +143,7 @@ public class TextLine {
 
     /**
      * Returns the leading of this line which is the maximum leading of all runs in the
-     * <code>TextLine</code>.
+     * <code>ComposedLine</code>.
      *
      * @return The leading of this line.
      */
@@ -229,7 +229,7 @@ public class TextLine {
 
     @Override
     public String toString() {
-        return "TextLine{charStart=" + getCharStart()
+        return "ComposedLine{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", originX=" + getOriginX()
                 + ", originY=" + getOriginY()

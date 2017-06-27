@@ -29,9 +29,9 @@ import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.text.TextBreak;
-import com.mta.tehreer.text.TextLine;
-import com.mta.tehreer.text.TextTruncation;
+import com.mta.tehreer.text.ComposedLine;
+import com.mta.tehreer.text.WrapMode;
+import com.mta.tehreer.text.TruncationType;
 import com.mta.tehreer.text.Typesetter;
 
 import java.util.ArrayList;
@@ -49,17 +49,17 @@ public class TLabel extends View {
 
     private Renderer mRenderer;
     private Typesetter mTypesetter;
-    private TextTruncation mTextTruncation;
-    private TextBreak mTextBreak;
-    private TextLine mTruncationToken;
+    private TruncationType mTruncationType;
+    private WrapMode mWrapMode;
+    private ComposedLine mTruncationToken;
 
     private int mTextWidth;
     private int mTextHeight;
 
-    private ArrayList<TextLine> mTextLines = new ArrayList<>();
+    private ArrayList<ComposedLine> mComposedLines = new ArrayList<>();
 
-    private static float getLineHeight(TextLine textLine) {
-        return textLine.getAscent() + textLine.getDescent();
+    private static float getLineHeight(ComposedLine composedLine) {
+        return composedLine.getAscent() + composedLine.getDescent();
     }
 
     public TLabel(Context context) {
@@ -88,29 +88,29 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
-            TextTruncation textTruncation = null;
+            TruncationType truncationType = null;
             switch (values.getInt(R.styleable.TLabel_textTruncation, 0)) {
             case 1:
-                textTruncation = TextTruncation.START;
+                truncationType = TruncationType.START;
                 break;
 
             case 2:
-                textTruncation = TextTruncation.MIDDLE;
+                truncationType = TruncationType.MIDDLE;
                 break;
 
             case 3:
-                textTruncation = TextTruncation.END;
+                truncationType = TruncationType.END;
                 break;
             }
 
-            TextBreak textBreak = null;
+            WrapMode wrapMode = null;
             switch (values.getInt(R.styleable.TLabel_textBreak, 0)) {
             case 0:
-                textBreak = TextBreak.WORD;
+                wrapMode = WrapMode.WORD;
                 break;
 
             case 1:
-                textBreak = TextBreak.CHARACTER;
+                wrapMode = WrapMode.CHARACTER;
                 break;
             }
 
@@ -120,8 +120,8 @@ public class TLabel extends View {
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
             setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
-            setTextTruncation(textTruncation);
-            setTextBreak(textBreak);
+            setTextTruncation(truncationType);
+            setTextBreak(wrapMode);
             setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
             setText(values.getString(R.styleable.TLabel_text));
@@ -222,30 +222,30 @@ public class TLabel extends View {
 
         canvas.save();
 
-        for (TextLine textLine : mTextLines) {
-            float lineHeight = getLineHeight(textLine);
+        for (ComposedLine composedLine : mComposedLines) {
+            float lineHeight = getLineHeight(composedLine);
             float penBottom = penTop + lineHeight;
 
             if (penTop < visibleBottom) {
                 if (penBottom > paddingTop) {
                     float translateX = penLeft;
-                    float translateY = penTop + textLine.getAscent();
+                    float translateY = penTop + composedLine.getAscent();
 
                     switch (mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
                     case Gravity.LEFT:
-                        translateX += textLine.getFlushPenOffset(0.0f, mTextWidth);
+                        translateX += composedLine.getFlushPenOffset(0.0f, mTextWidth);
                         break;
 
                     case Gravity.RIGHT:
-                        translateX += textLine.getFlushPenOffset(1.0f, mTextWidth);
+                        translateX += composedLine.getFlushPenOffset(1.0f, mTextWidth);
                         break;
 
                     default:
-                        translateX += textLine.getFlushPenOffset(0.5f, mTextWidth);
+                        translateX += composedLine.getFlushPenOffset(0.5f, mTextWidth);
                         break;
                     }
 
-                    textLine.draw(mRenderer, canvas, translateX, translateY);
+                    composedLine.draw(mRenderer, canvas, translateX, translateY);
                 }
             } else {
                 break;
@@ -268,7 +268,7 @@ public class TLabel extends View {
     }
 
     private void updateLines(int layoutWidth, int layoutHeight) {
-        mTextLines.clear();
+        mComposedLines.clear();
 
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
@@ -278,12 +278,12 @@ public class TLabel extends View {
             int lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
 
             // Add first line even if layout height is smaller than its height.
-            TextLine textLine = mTypesetter.createLine(lineStart, lineEnd);
-            mTextLines.add(textLine);
+            ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
+            mComposedLines.add(composedLine);
 
             // Setup text width and height based on first line.
-            float textWidth = textLine.getWidth();
-            float textHeight = getLineHeight(textLine);
+            float textWidth = composedLine.getWidth();
+            float textHeight = getLineHeight(composedLine);
 
             lineStart = lineEnd;
             int textLength = mTypesetter.getText().length();
@@ -293,26 +293,26 @@ public class TLabel extends View {
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
                 lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
-                textLine = mTypesetter.createLine(lineStart, lineEnd);
+                composedLine = mTypesetter.createLine(lineStart, lineEnd);
 
-                float lineWidth = textLine.getWidth();
-                float lineHeight = getLineHeight(textLine);
+                float lineWidth = composedLine.getWidth();
+                float lineHeight = getLineHeight(composedLine);
 
-                if ((textHeight + lineHeight) <= layoutHeight && mTextLines.size() < maxLines) {
+                if ((textHeight + lineHeight) <= layoutHeight && mComposedLines.size() < maxLines) {
                     textWidth = Math.max(textWidth, lineWidth);
                     textHeight += lineHeight;
-                    mTextLines.add(textLine);
+                    mComposedLines.add(composedLine);
 
                     lineStart = lineEnd;
                 } else {
-                    if (mTextTruncation != null) {
+                    if (mTruncationType != null) {
                         ensureTruncationToken();
 
                         if (layoutWidth > mTruncationToken.getWidth()) {
                             // Replace the last line with truncated one.
-                            TextLine lastLine = mTextLines.remove(mTextLines.size() - 1);
-                            TextLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTextTruncation, mTextBreak, mTruncationToken);
-                            mTextLines.add(truncatedLine);
+                            ComposedLine lastLine = mComposedLines.remove(mComposedLines.size() - 1);
+                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTruncationType, mWrapMode, mTruncationToken);
+                            mComposedLines.add(truncatedLine);
                         }
                     }
                     break;
@@ -460,18 +460,18 @@ public class TLabel extends View {
      *
      * @return The current truncation type.
      */
-    public TextTruncation getTextTruncation() {
-        return mTextTruncation;
+    public TruncationType getTextTruncation() {
+        return mTruncationType;
     }
 
     /**
      * Sets the truncation type that should be applied on the last line of the text if it overflows
      * the available area.
      *
-     * @param textTruncation A value of {@link TextTruncation}.
+     * @param truncationType A value of {@link TruncationType}.
      */
-    public void setTextTruncation(TextTruncation textTruncation) {
-        mTextTruncation = textTruncation;
+    public void setTextTruncation(TruncationType truncationType) {
+        mTruncationType = truncationType;
         mTruncationToken = null;
         requestLayout();
         invalidate();
@@ -482,17 +482,17 @@ public class TLabel extends View {
      *
      * @return The current truncation place.
      */
-    public TextBreak getTextBreak() {
-        return mTextBreak;
+    public WrapMode getTextBreak() {
+        return mWrapMode;
     }
 
     /**
      * Sets the place at which text should be truncated if it overflows the available area.
      *
-     * @param textBreak A value of {@link TextBreak}.
+     * @param wrapMode A value of {@link WrapMode}.
      */
-    public void setTextBreak(TextBreak textBreak) {
-        mTextBreak = textBreak;
+    public void setTextBreak(WrapMode wrapMode) {
+        mWrapMode = wrapMode;
         mTruncationToken = null;
         requestLayout();
         invalidate();

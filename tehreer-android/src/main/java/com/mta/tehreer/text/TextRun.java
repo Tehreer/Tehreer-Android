@@ -36,7 +36,7 @@ import com.mta.tehreer.util.PointList;
  */
 public class TextRun {
 
-    private GlyphRun mGlyphRun;
+    private IntrinsicRun mIntrinsicRun;
 	private int mCharStart;
 	private int mCharEnd;
     private int mGlyphOffset;
@@ -45,16 +45,16 @@ public class TextRun {
     private float mOriginY;
     private float mWidth = Float.NEGATIVE_INFINITY;
 
-	TextRun(GlyphRun glyphRun, int charStart, int charEnd) {
-        mGlyphRun = glyphRun;
+	TextRun(IntrinsicRun intrinsicRun, int charStart, int charEnd) {
+        mIntrinsicRun = intrinsicRun;
         mCharStart = charStart;
         mCharEnd = charEnd;
-        mGlyphOffset = glyphRun.charGlyphStart(charStart);
-        mGlyphCount = glyphRun.charGlyphEnd(charEnd - 1) - mGlyphOffset;
+        mGlyphOffset = intrinsicRun.charGlyphStart(charStart);
+        mGlyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - mGlyphOffset;
 	}
 
     TextRun(TextRun otherRun) {
-        mGlyphRun = otherRun.mGlyphRun;
+        mIntrinsicRun = otherRun.mIntrinsicRun;
         mGlyphOffset = otherRun.mGlyphOffset;
         mGlyphCount = otherRun.mGlyphCount;
     }
@@ -73,8 +73,8 @@ public class TextRun {
         }
     }
 
-    GlyphRun getGlyphRun() {
-        return mGlyphRun;
+    IntrinsicRun getGlyphRun() {
+        return mIntrinsicRun;
     }
 
     /**
@@ -101,7 +101,7 @@ public class TextRun {
      * @return The bidirectional level of this run.
      */
     public byte getBidiLevel() {
-        return mGlyphRun.bidiLevel;
+        return mIntrinsicRun.bidiLevel;
     }
 
     /**
@@ -110,7 +110,7 @@ public class TextRun {
      * @return The typeface of this run.
      */
     public Typeface getTypeface() {
-        return mGlyphRun.typeface;
+        return mIntrinsicRun.typeface;
     }
 
     /**
@@ -119,7 +119,7 @@ public class TextRun {
      * @return The type size of this run.
      */
     public float getTypeSize() {
-        return mGlyphRun.typeSize;
+        return mIntrinsicRun.typeSize;
     }
 
     /**
@@ -128,7 +128,7 @@ public class TextRun {
      * @return The writing direction of this run.
      */
     public WritingDirection getWritingDirection() {
-        return mGlyphRun.writingDirection();
+        return mIntrinsicRun.writingDirection();
     }
 
     /**
@@ -146,7 +146,7 @@ public class TextRun {
      * @return A list of glyph IDs in this run.
      */
     public IntList getGlyphIds() {
-        return new SafeIntList(mGlyphRun.glyphIds, mGlyphOffset, mGlyphCount);
+        return new SafeIntList(mIntrinsicRun.glyphIds, mGlyphOffset, mGlyphCount);
     }
 
     /**
@@ -155,7 +155,7 @@ public class TextRun {
      * @return A list of glyph offsets in this run.
      */
     public PointList getGlyphOffsets() {
-        return new SafePointList(mGlyphRun.glyphOffsets, mGlyphOffset, mGlyphCount);
+        return new SafePointList(mIntrinsicRun.glyphOffsets, mGlyphOffset, mGlyphCount);
     }
 
     /**
@@ -164,7 +164,7 @@ public class TextRun {
      * @return A list of glyph advances in this run.
      */
     public FloatList getGlyphAdvances() {
-        return new SafeFloatList(mGlyphRun.glyphAdvances, mGlyphOffset, mGlyphCount);
+        return new SafeFloatList(mIntrinsicRun.glyphAdvances, mGlyphOffset, mGlyphCount);
     }
 
     /**
@@ -173,8 +173,8 @@ public class TextRun {
      * @return A list of indexes, mapping each character in this run to corresponding glyph.
      */
     public IntList getCharToGlyphMap() {
-        return new IndexList(mGlyphRun.charToGlyphMap,
-                             mCharStart - mGlyphRun.charStart,
+        return new IndexList(mIntrinsicRun.charToGlyphMap,
+                             mCharStart - mIntrinsicRun.charStart,
                              mCharEnd - mCharStart,
                              mGlyphOffset);
     }
@@ -230,11 +230,11 @@ public class TextRun {
     }
 
     int getCharGlyphStart(int charIndex) {
-        return (mGlyphRun.charGlyphStart(charIndex) - mGlyphOffset);
+        return (mIntrinsicRun.charGlyphStart(charIndex) - mGlyphOffset);
     }
 
     int getCharGlyphEnd(int charIndex) {
-        return (mGlyphRun.charGlyphEnd(charIndex) - mGlyphOffset);
+        return (mIntrinsicRun.charGlyphEnd(charIndex) - mGlyphOffset);
     }
 
     /**
@@ -270,7 +270,7 @@ public class TextRun {
      * @return The ascent of this run.
      */
     public float getAscent() {
-        return mGlyphRun.ascent();
+        return mIntrinsicRun.ascent();
     }
 
     /**
@@ -280,7 +280,7 @@ public class TextRun {
      * @return The descent of this run.
      */
     public float getDescent() {
-        return mGlyphRun.descent();
+        return mIntrinsicRun.descent();
     }
 
     /**
@@ -290,7 +290,7 @@ public class TextRun {
      * @return The leading of this run.
      */
     public float getLeading() {
-        return mGlyphRun.leading();
+        return mIntrinsicRun.leading();
     }
 
     /**
@@ -313,7 +313,7 @@ public class TextRun {
      * @return The typographic height of this run.
      */
     public float getHeight() {
-        return (mGlyphRun.ascent() + mGlyphRun.descent() + mGlyphRun.leading());
+        return (mIntrinsicRun.ascent() + mIntrinsicRun.descent() + mIntrinsicRun.leading());
     }
 
     /**
@@ -330,7 +330,7 @@ public class TextRun {
         glyphStart += mGlyphOffset;
         glyphEnd += mGlyphOffset;
 
-        return mGlyphRun.measureGlyphs(glyphStart, glyphEnd);
+        return mIntrinsicRun.measureGlyphs(glyphStart, glyphEnd);
     }
 
     /**
@@ -352,9 +352,9 @@ public class TextRun {
 	public RectF computeBoundingBox(Renderer renderer, int glyphStart, int glyphEnd) {
 	    verifyGlyphRange(glyphStart, glyphEnd);
 
-	    renderer.setTypeface(mGlyphRun.typeface);
-	    renderer.setTypeSize(mGlyphRun.typeSize);
-        renderer.setWritingDirection(mGlyphRun.writingDirection());
+	    renderer.setTypeface(mIntrinsicRun.typeface);
+	    renderer.setTypeSize(mIntrinsicRun.typeSize);
+        renderer.setWritingDirection(mIntrinsicRun.writingDirection());
 
         return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
                                            getGlyphOffsets().subList(glyphStart, glyphEnd),
@@ -388,9 +388,9 @@ public class TextRun {
 	public void draw(Renderer renderer, Canvas canvas, int glyphStart, int glyphEnd) {
         verifyGlyphRange(glyphStart, glyphEnd);
 
-	    renderer.setTypeface(mGlyphRun.typeface);
-        renderer.setTypeSize(mGlyphRun.typeSize);
-        renderer.setWritingDirection(mGlyphRun.writingDirection());
+	    renderer.setTypeface(mIntrinsicRun.typeface);
+        renderer.setTypeSize(mIntrinsicRun.typeSize);
+        renderer.setWritingDirection(mIntrinsicRun.writingDirection());
 
 	    renderer.drawGlyphs(canvas,
                             getGlyphIds().subList(glyphStart, glyphEnd),

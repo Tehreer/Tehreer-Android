@@ -16,7 +16,20 @@
 
 package com.mta.tehreer.text;
 
-public enum TextBreak {
-    CHARACTER,
-    WORD;
+/**
+ * Specifies the truncation type of text.
+ */
+public enum TruncationType {
+    /**
+     * Text is truncated at the start of the line.
+     */
+    START,
+    /**
+     * Text is truncated at the middle of the line.
+     */
+    MIDDLE,
+    /**
+     * Text is truncated at the end of the line.
+     */
+    END
 }

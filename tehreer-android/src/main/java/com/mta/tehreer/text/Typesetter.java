@@ -75,7 +75,7 @@ public class Typesetter {
     private Spanned mSpanned;
     private byte[] mBreakRecord;
     private ArrayList<BidiParagraph> mBidiParagraphs;
-    private ArrayList<GlyphRun> mGlyphRuns;
+    private ArrayList<IntrinsicRun> mIntrinsicRuns;
 
     /**
      * Constructs the typesetter object using given text, typeface and type size.
@@ -118,7 +118,7 @@ public class Typesetter {
         mSpanned = spanned;
         mBreakRecord = new byte[text.length()];
         mBidiParagraphs = new ArrayList<>();
-        mGlyphRuns = new ArrayList<>();
+        mIntrinsicRuns = new ArrayList<>();
 
         resolveBreaks();
         resolveBidi();
@@ -239,29 +239,29 @@ public class Typesetter {
                 }
             }
 
-            GlyphRun glyphRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
-            mGlyphRuns.add(glyphRun);
+            IntrinsicRun intrinsicRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
+            mIntrinsicRuns.add(intrinsicRun);
         }
     }
 
-    private GlyphRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
-                                   ShapingEngine shapingEngine, Typeface typeface, float typeSize) {
+    private IntrinsicRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
+                                       ShapingEngine shapingEngine, Typeface typeface, float typeSize) {
         shapingEngine.setTypeface(typeface);
         shapingEngine.setTypeSize(typeSize);
 
         ShapingResult shapingResult = null;
-        GlyphRun glyphRun = null;
+        IntrinsicRun intrinsicRun = null;
 
         try {
             shapingResult = shapingEngine.shapeText(mText, charStart, charEnd);
-            glyphRun = new GlyphRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
+            intrinsicRun = new IntrinsicRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
         } finally {
             if (shapingResult != null) {
                 shapingResult.dispose();
             }
         }
 
-        return glyphRun;
+        return intrinsicRun;
     }
 
     private void verifyTextRange(int charStart, int charEnd) {
@@ -295,9 +295,9 @@ public class Typesetter {
     }
 
     private int indexOfGlyphRun(final int charIndex) {
-        return Collections.binarySearch(mGlyphRuns, null, new Comparator<GlyphRun>() {
+        return Collections.binarySearch(mIntrinsicRuns, null, new Comparator<IntrinsicRun>() {
             @Override
-            public int compare(GlyphRun obj1, GlyphRun obj2) {
+            public int compare(IntrinsicRun obj1, IntrinsicRun obj2) {
                 if (charIndex < obj1.charStart) {
                     return 1;
                 }
@@ -324,14 +324,14 @@ public class Typesetter {
             int runIndex = indexOfGlyphRun(charStart);
 
             do {
-                GlyphRun glyphRun = mGlyphRuns.get(runIndex);
-                int glyphStart = glyphRun.charGlyphStart(charStart);
+                IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
+                int glyphStart = intrinsicRun.charGlyphStart(charStart);
                 int glyphEnd;
 
-                int segmentEnd = Math.min(charEnd, glyphRun.charEnd);
-                glyphEnd = glyphRun.charGlyphEnd(segmentEnd - 1);
+                int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
+                glyphEnd = intrinsicRun.charGlyphEnd(segmentEnd - 1);
 
-                measuredWidth += glyphRun.measureGlyphs(glyphStart, glyphEnd);
+                measuredWidth += intrinsicRun.measureGlyphs(glyphStart, glyphEnd);
 
                 charStart = segmentEnd;
                 runIndex++;
@@ -495,8 +495,8 @@ public class Typesetter {
         return backwardBreak;
     }
 
-    private int suggestForwardTruncationBreak(int charStart, int charEnd, float maxWidth, TextBreak textBreak) {
-        switch (textBreak) {
+    private int suggestForwardTruncationBreak(int charStart, int charEnd, float maxWidth, WrapMode wrapMode) {
+        switch (wrapMode) {
         case WORD:
             return suggestForwardLineBreak(charStart, charEnd, maxWidth);
 
@@ -507,8 +507,8 @@ public class Typesetter {
         return -1;
     }
 
-    private int suggestBackwardTruncationBreak(int charStart, int charEnd, float maxWidth, TextBreak textBreak) {
-        switch (textBreak) {
+    private int suggestBackwardTruncationBreak(int charStart, int charEnd, float maxWidth, WrapMode wrapMode) {
+        switch (wrapMode) {
         case WORD:
             return suggestBackwardLineBreak(charStart, charEnd, maxWidth);
 
@@ -587,13 +587,13 @@ public class Typesetter {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-	public TextLine createLine(int charStart, int charEnd) {
+	public ComposedLine createLine(int charStart, int charEnd) {
         verifyTextRange(charStart, charEnd);
 
         ArrayList<TextRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
 
-		return new TextLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
+		return new ComposedLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
 	}
 
     /**
@@ -622,9 +622,9 @@ public class Typesetter {
      *                 <code>truncationToken</code></li>
      *         </ul>
      */
-    public TextLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                        TextTruncation truncationType, TextBreak truncationBreak,
-                                        TextLine truncationToken) {
+    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                            TruncationType truncationType, WrapMode truncationBreak,
+                                            ComposedLine truncationToken) {
         verifyTextRange(charStart, charEnd);
         if (truncationType == null) {
             throw new NullPointerException("Truncation type is null");
@@ -694,11 +694,11 @@ public class Typesetter {
 
             int tokenInsertIndex = firstRunIndex;
             TextRun firstTextRun = runList.get(firstRunIndex);
-            GlyphRun firstGlyphRun = firstTextRun.getGlyphRun();
+            IntrinsicRun firstIntrinsicRun = firstTextRun.getGlyphRun();
 
-            if (firstGlyphRun.charStart < charStart) {
+            if (firstIntrinsicRun.charStart < charStart) {
                 // If previous character belongs to the same glyph run, follow its direction.
-                if ((firstGlyphRun.bidiLevel & 1) == 1) {
+                if ((firstIntrinsicRun.bidiLevel & 1) == 1) {
                     tokenInsertIndex += 1;
                 }
             } else {
@@ -716,8 +716,8 @@ public class Typesetter {
         }
     }
 
-    private TextLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                              TextBreak truncationBreak, TextLine truncationToken) {
+    private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
+                                                  WrapMode truncationBreak, ComposedLine truncationToken) {
         int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedStart > charStart) {
             ArrayList<TextRun> runList = new ArrayList<>();
@@ -729,14 +729,14 @@ public class Typesetter {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new TextLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
+            return new ComposedLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
         }
 
         return createLine(truncatedStart, charEnd);
     }
 
-    private TextLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                               TextBreak truncationBreak, TextLine truncationToken) {
+    private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
+                                                   WrapMode truncationBreak, ComposedLine truncationToken) {
         float halfWidth = tokenlessWidth / 2.0f;
         int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
         int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
@@ -756,7 +756,7 @@ public class Typesetter {
                 addContinuousLineRuns(secondMidStart, charEnd, runList);
             }
 
-            return new TextLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
+            return new ComposedLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
         }
 
         return createLine(charStart, charEnd);
@@ -793,11 +793,11 @@ public class Typesetter {
 
             int tokenInsertIndex = lastRunIndex;
             TextRun lastTextRun = runList.get(lastRunIndex);
-            GlyphRun lastGlyphRun = lastTextRun.getGlyphRun();
+            IntrinsicRun lastIntrinsicRun = lastTextRun.getGlyphRun();
 
-            if (lastGlyphRun.charEnd > charEnd) {
+            if (lastIntrinsicRun.charEnd > charEnd) {
                 // If next character belongs to the same glyph run, follow its direction.
-                if ((lastGlyphRun.bidiLevel & 1) == 0) {
+                if ((lastIntrinsicRun.bidiLevel & 1) == 0) {
                     tokenInsertIndex += 1;
                 }
             } else {
@@ -815,8 +815,8 @@ public class Typesetter {
         }
     }
 
-    private TextLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                            TextBreak truncationBreak, TextLine truncationToken) {
+    private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
+                                                WrapMode truncationBreak, ComposedLine truncationToken) {
         int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedEnd < charEnd) {
             ArrayList<TextRun> runList = new ArrayList<>();
@@ -831,13 +831,13 @@ public class Typesetter {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new TextLine(mText, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
+            return new ComposedLine(mText, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
         }
 
         return createLine(charStart, truncatedEnd);
     }
 
-    private void addTruncationTokenRuns(TextLine truncationToken, ArrayList<TextRun> runList, int insertIndex) {
+    private void addTruncationTokenRuns(ComposedLine truncationToken, ArrayList<TextRun> runList, int insertIndex) {
         for (TextRun truncationRun : truncationToken.getRuns()) {
             TextRun modifiedRun = new TextRun(truncationRun);
             runList.add(insertIndex, modifiedRun);
@@ -885,25 +885,25 @@ public class Typesetter {
         //      - Consecutive glyphs runs may have same bidi level.
 
         int insertIndex = runList.size();
-        GlyphRun previousRun = null;
+        IntrinsicRun previousRun = null;
 
         do {
             int runIndex = indexOfGlyphRun(visualStart);
 
-            GlyphRun glyphRun = mGlyphRuns.get(runIndex);
-            int feasibleStart = Math.max(glyphRun.charStart, visualStart);
-            int feasibleEnd = Math.min(glyphRun.charEnd, visualEnd);
+            IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
+            int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
+            int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
 
-            TextRun textRun = new TextRun(glyphRun, feasibleStart, feasibleEnd);
+            TextRun textRun = new TextRun(intrinsicRun, feasibleStart, feasibleEnd);
             if (previousRun != null) {
-                byte bidiLevel = glyphRun.bidiLevel;
+                byte bidiLevel = intrinsicRun.bidiLevel;
                 if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
                     insertIndex = runList.size();
                 }
             }
             runList.add(insertIndex, textRun);
 
-            previousRun = glyphRun;
+            previousRun = intrinsicRun;
             visualStart = feasibleEnd;
         } while (visualStart != visualEnd);
     }
@@ -919,7 +919,7 @@ public class Typesetter {
      * @param textAlignment The horizontal text alignment of the lines in frame.
      * @return The new frame object.
      */
-    public TextFrame createFrame(int charStart, int charEnd, RectF frameRect, TextAlignment textAlignment) {
+    public ComposedFrame createFrame(int charStart, int charEnd, RectF frameRect, TextAlignment textAlignment) {
         verifyTextRange(charStart, charEnd);
         if (frameRect.isEmpty()) {
             throw new IllegalArgumentException("Frame rect is empty");
@@ -946,32 +946,32 @@ public class Typesetter {
         float frameWidth = frameRect.width();
         float frameHeight = frameRect.height();
 
-        ArrayList<TextLine> frameLines = new ArrayList<>();
+        ArrayList<ComposedLine> frameLines = new ArrayList<>();
         int lineStart = charStart;
         float lineY = frameRect.top;
 
         while (lineStart != charEnd) {
             int lineEnd = suggestLineBoundary(lineStart, frameWidth);
-            TextLine textLine = createLine(lineStart, lineEnd);
+            ComposedLine composedLine = createLine(lineStart, lineEnd);
 
-            float lineX = textLine.getFlushPenOffset(flushFactor, frameWidth);
-            float lineAscent = textLine.getAscent();
-            float lineHeight = lineAscent + textLine.getDescent();
+            float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
+            float lineAscent = composedLine.getAscent();
+            float lineHeight = lineAscent + composedLine.getDescent();
 
             if ((lineY + lineHeight) > frameHeight) {
                 break;
             }
 
-            textLine.setOriginX(frameRect.left + lineX);
-            textLine.setOriginY(lineY + lineAscent);
+            composedLine.setOriginX(frameRect.left + lineX);
+            composedLine.setOriginY(lineY + lineAscent);
 
-            frameLines.add(textLine);
+            frameLines.add(composedLine);
 
             lineStart = lineEnd;
             lineY += lineHeight;
         }
 
-        return new TextFrame(charStart, lineStart, frameLines);
+        return new ComposedFrame(charStart, lineStart, frameLines);
     }
 
     void dispose() {

@@ -27,13 +27,13 @@ import java.util.List;
  * Represents a frame containing multiple lines of text. The frame object is the output resulting
  * from the text-framing process performed by a typesetter object.
  */
-public class TextFrame {
+public class ComposedFrame {
 
     private int mCharStart;
     private int mCharEnd;
-    private List<TextLine> mLineList;
+    private List<ComposedLine> mLineList;
 
-    TextFrame(int charStart, int charEnd, List<TextLine> lineList) {
+    ComposedFrame(int charStart, int charEnd, List<ComposedLine> lineList) {
         mCharStart = charStart;
         mCharEnd = charEnd;
         mLineList = Collections.unmodifiableList(lineList);
@@ -62,7 +62,7 @@ public class TextFrame {
      *
      * @return An unmodifiable list that contains all the lines of this frame.
      */
-    public List<TextLine> getLines() {
+    public List<ComposedLine> getLines() {
         return mLineList;
     }
 
@@ -75,9 +75,9 @@ public class TextFrame {
      * @param y The y- position at which to draw this frame.
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
-        for (TextLine textLine : mLineList) {
+        for (ComposedLine composedLine : mLineList) {
             canvas.translate(x, y);
-            textLine.draw(renderer, canvas, textLine.getOriginX(), textLine.getOriginY());
+            composedLine.draw(renderer, canvas, composedLine.getOriginX(), composedLine.getOriginY());
             canvas.translate(-x, -y);
         }
     }
@@ -97,7 +97,7 @@ public class TextFrame {
 
         linesBuilder.append("]");
 
-        return "TextFrame{charStart=" + mCharStart
+        return "ComposedFrame{charStart=" + mCharStart
                 + ", charEnd=" + mCharEnd
                 + ", lines=" + linesBuilder.toString()
                 + "}";

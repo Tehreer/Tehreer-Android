@@ -20,7 +20,7 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 import com.mta.tehreer.sfnt.ShapingResult;
 
-class GlyphRun {
+class IntrinsicRun {
 
     final Typeface typeface;
     final float typeSize;
@@ -35,8 +35,8 @@ class GlyphRun {
     final float[] glyphAdvances;
     final int[] charToGlyphMap;
 
-    GlyphRun(ShapingResult shapingResult, Typeface typeface, float typeSize,
-             byte bidiLevel, WritingDirection writingDirection) {
+    IntrinsicRun(ShapingResult shapingResult, Typeface typeface, float typeSize,
+                 byte bidiLevel, WritingDirection writingDirection) {
         float sizeByEm = typeSize / typeface.getUnitsPerEm();
 
         this.typeface = typeface;
