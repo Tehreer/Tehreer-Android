@@ -43,18 +43,8 @@ public class TLabel extends View {
 
     private static final String TRUNCATION_STRING = "...";
 
-    public static final int TRUNCATION_MODE_NONE = 0;
-    public static final int TRUNCATION_MODE_WORD_ELLIPSIS = 1;
-    public static final int TRUNCATION_MODE_CHARACTER_ELLIPSIS = 2;
-
-    public static final int TRUNCATION_PLACE_END = 0;
-    public static final int TRUNCATION_PLACE_START = 1;
-    public static final int TRUNCATION_PLACE_MIDDLE = 2;
-
     private int mGravity;
     private String mText;
-    private int mTruncationMode;
-    private int mTruncationPlace;
     private int mMaxLines;
 
     private Renderer mRenderer;
@@ -98,14 +88,40 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
+            TextTruncation textTruncation = null;
+            switch (values.getInt(R.styleable.TLabel_textTruncation, 0)) {
+            case 1:
+                textTruncation = TextTruncation.START;
+                break;
+
+            case 2:
+                textTruncation = TextTruncation.MIDDLE;
+                break;
+
+            case 3:
+                textTruncation = TextTruncation.END;
+                break;
+            }
+
+            TextBreak textBreak = null;
+            switch (values.getInt(R.styleable.TLabel_textBreak, 0)) {
+            case 0:
+                textBreak = TextBreak.WORD;
+                break;
+
+            case 1:
+                textBreak = TextBreak.CHARACTER;
+                break;
+            }
+
             setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.LEFT));
             setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
             setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
             setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
-            setTruncationMode(values.getInteger(R.styleable.TLabel_truncationMode, TRUNCATION_MODE_NONE));
-            setTruncationPlace(values.getInteger(R.styleable.TLabel_truncationPlace, TRUNCATION_PLACE_END));
+            setTextTruncation(textTruncation);
+            setTextBreak(textBreak);
             setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
             setText(values.getString(R.styleable.TLabel_text));
@@ -326,43 +342,6 @@ public class TLabel extends View {
         }
     }
 
-    private void updateTruncation() {
-        TextTruncation textTruncation = null;
-        TextBreak textBreak = null;
-
-        switch (mTruncationPlace) {
-        case TRUNCATION_PLACE_END:
-            textTruncation = TextTruncation.END;
-            break;
-
-        case TRUNCATION_PLACE_START:
-            textTruncation = TextTruncation.START;
-            break;
-
-        case TRUNCATION_PLACE_MIDDLE:
-            textTruncation = TextTruncation.MIDDLE;
-            break;
-        }
-
-        switch (mTruncationMode) {
-        case TRUNCATION_MODE_WORD_ELLIPSIS:
-            textBreak = TextBreak.WORD;
-            break;
-
-        case TRUNCATION_MODE_CHARACTER_ELLIPSIS:
-            textBreak = TextBreak.CHARACTER;
-            break;
-        }
-
-        if (textTruncation != mTextTruncation) {
-            mTextTruncation = textTruncation;
-            mTextBreak = textBreak;
-            mTruncationToken = null;
-            requestLayout();
-            invalidate();
-        }
-    }
-
     /**
      * Returns the horizontal and vertical alignment of this Label.
      *
@@ -477,34 +456,25 @@ public class TLabel extends View {
     }
 
     /**
-     * Returns the truncation mode that should be applied on the last line of the text.
+     * Returns the truncation type that should be applied on the last line of the text.
      *
-     * @return The current truncation mode.
+     * @return The current truncation type.
      */
-    public int getTruncationMode() {
-        return mTruncationMode;
+    public TextTruncation getTextTruncation() {
+        return mTextTruncation;
     }
 
     /**
-     * Sets the truncation mode that should be applied on the last line of the text if it overflows
+     * Sets the truncation type that should be applied on the last line of the text if it overflows
      * the available area.
      *
-     * @param truncationMode A value of <code>TRUNCATION_MODE</code>.
+     * @param textTruncation A value of {@link TextTruncation}.
      */
-    public void setTruncationMode(int truncationMode) {
-        switch (truncationMode) {
-        case TRUNCATION_MODE_NONE:
-        case TRUNCATION_MODE_WORD_ELLIPSIS:
-        case TRUNCATION_MODE_CHARACTER_ELLIPSIS:
-            mTruncationMode = truncationMode;
-            break;
-
-        default:
-            mTruncationMode = TRUNCATION_MODE_NONE;
-            break;
-        }
-
-        updateTruncation();
+    public void setTextTruncation(TextTruncation textTruncation) {
+        mTextTruncation = textTruncation;
+        mTruncationToken = null;
+        requestLayout();
+        invalidate();
     }
 
     /**
@@ -512,28 +482,20 @@ public class TLabel extends View {
      *
      * @return The current truncation place.
      */
-    public int getTruncationPlace() {
-        return mTruncationPlace;
+    public TextBreak getTextBreak() {
+        return mTextBreak;
     }
 
     /**
      * Sets the place at which text should be truncated if it overflows the available area.
      *
-     * @param truncationPlace A value of <code>TRUNCATION_PLACE</code>.
+     * @param textBreak A value of {@link TextBreak}.
      */
-    public void setTruncationPlace(int truncationPlace) {
-        switch (truncationPlace) {
-        case TRUNCATION_PLACE_END:
-        case TRUNCATION_PLACE_START:
-        case TRUNCATION_PLACE_MIDDLE:
-            mTruncationPlace = truncationPlace;
-            break;
-
-        default:
-            mTruncationPlace = TRUNCATION_PLACE_END;
-        }
-
-        updateTruncation();
+    public void setTextBreak(TextBreak textBreak) {
+        mTextBreak = textBreak;
+        mTruncationToken = null;
+        requestLayout();
+        invalidate();
     }
 
     /**
