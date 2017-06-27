@@ -495,24 +495,24 @@ public class Typesetter {
         return backwardBreak;
     }
 
-    private int suggestForwardTruncationBreak(int charStart, int charEnd, float maxWidth, int truncationMode) {
-        switch (truncationMode) {
-        case TextTruncation.MODE_WORD:
+    private int suggestForwardTruncationBreak(int charStart, int charEnd, float maxWidth, TextBreak textBreak) {
+        switch (textBreak) {
+        case WORD:
             return suggestForwardLineBreak(charStart, charEnd, maxWidth);
 
-        case TextTruncation.MODE_CHARACTER:
+        case CHARACTER:
             return suggestForwardCharBreak(charStart, charEnd, maxWidth);
         }
 
         return -1;
     }
 
-    private int suggestBackwardTruncationBreak(int charStart, int charEnd, float maxWidth, int truncationMode) {
-        switch (truncationMode) {
-        case TextTruncation.MODE_WORD:
+    private int suggestBackwardTruncationBreak(int charStart, int charEnd, float maxWidth, TextBreak textBreak) {
+        switch (textBreak) {
+        case WORD:
             return suggestBackwardLineBreak(charStart, charEnd, maxWidth);
 
-        case TextTruncation.MODE_CHARACTER:
+        case CHARACTER:
             return suggestBackwardCharBreak(charStart, charEnd, maxWidth);
         }
 
@@ -622,10 +622,15 @@ public class Typesetter {
      *                 <code>truncationToken</code></li>
      *         </ul>
      */
-    public TextLine createTruncatedLine(int charStart, int charEnd, float maxWidth, TextTruncation truncationType, TextLine truncationToken) {
+    public TextLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                        TextTruncation truncationType, TextBreak truncationBreak,
+                                        TextLine truncationToken) {
         verifyTextRange(charStart, charEnd);
         if (truncationType == null) {
             throw new NullPointerException("Truncation type is null");
+        }
+        if (truncationBreak == null) {
+            throw new NullPointerException("Truncation break is null");
         }
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
@@ -636,21 +641,19 @@ public class Typesetter {
         }
 
         float tokenlessWidth = maxWidth - tokenWidth;
-        int truncationPlace = truncationType.getPlace();
-        int truncationMode = truncationType.getMode();
 
-        switch (truncationPlace) {
-        case TextTruncation.PLACE_START:
+        switch (truncationType) {
+        case START:
             return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                            truncationMode, truncationToken);
+                                            truncationBreak, truncationToken);
 
-        case TextTruncation.PLACE_MIDDLE:
+        case MIDDLE:
             return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                             truncationMode, truncationToken);
+                                             truncationBreak, truncationToken);
 
-        case TextTruncation.PLACE_END:
+        case END:
             return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                          truncationMode, truncationToken);
+                                          truncationBreak, truncationToken);
         }
 
         return null;
@@ -714,8 +717,8 @@ public class Typesetter {
     }
 
     private TextLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                              int truncationMode, TextLine truncationToken) {
-        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationMode);
+                                              TextBreak truncationBreak, TextLine truncationToken) {
+        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedStart > charStart) {
             ArrayList<TextRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
@@ -733,10 +736,10 @@ public class Typesetter {
     }
 
     private TextLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                               int truncationMode, TextLine truncationToken) {
+                                               TextBreak truncationBreak, TextLine truncationToken) {
         float halfWidth = tokenlessWidth / 2.0f;
-        int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, truncationMode);
-        int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationMode);
+        int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
+        int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
 
         if (firstMidEnd < secondMidStart) {
             ArrayList<TextRun> runList = new ArrayList<>();
@@ -813,8 +816,8 @@ public class Typesetter {
     }
 
     private TextLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                            int truncationMode, TextLine truncationToken) {
-        int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationMode);
+                                            TextBreak truncationBreak, TextLine truncationToken) {
+        int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedEnd < charEnd) {
             ArrayList<TextRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;

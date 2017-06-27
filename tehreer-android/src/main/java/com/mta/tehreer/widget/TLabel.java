@@ -29,6 +29,7 @@ import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.text.TextBreak;
 import com.mta.tehreer.text.TextLine;
 import com.mta.tehreer.text.TextTruncation;
 import com.mta.tehreer.text.Typesetter;
@@ -59,6 +60,7 @@ public class TLabel extends View {
     private Renderer mRenderer;
     private Typesetter mTypesetter;
     private TextTruncation mTextTruncation;
+    private TextBreak mTextBreak;
     private TextLine mTruncationToken;
 
     private int mTextWidth;
@@ -293,7 +295,7 @@ public class TLabel extends View {
                         if (layoutWidth > mTruncationToken.getWidth()) {
                             // Replace the last line with truncated one.
                             TextLine lastLine = mTextLines.remove(mTextLines.size() - 1);
-                            TextLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTextTruncation, mTruncationToken);
+                            TextLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTextTruncation, mTextBreak, mTruncationToken);
                             mTextLines.add(truncatedLine);
                         }
                     }
@@ -326,43 +328,35 @@ public class TLabel extends View {
 
     private void updateTruncation() {
         TextTruncation textTruncation = null;
+        TextBreak textBreak = null;
+
+        switch (mTruncationPlace) {
+        case TRUNCATION_PLACE_END:
+            textTruncation = TextTruncation.END;
+            break;
+
+        case TRUNCATION_PLACE_START:
+            textTruncation = TextTruncation.START;
+            break;
+
+        case TRUNCATION_PLACE_MIDDLE:
+            textTruncation = TextTruncation.MIDDLE;
+            break;
+        }
 
         switch (mTruncationMode) {
         case TRUNCATION_MODE_WORD_ELLIPSIS:
-            switch (mTruncationPlace) {
-            case TRUNCATION_PLACE_END:
-                textTruncation = TextTruncation.WORD_END;
-                break;
-
-            case TRUNCATION_PLACE_START:
-                textTruncation = TextTruncation.WORD_START;
-                break;
-
-            case TRUNCATION_PLACE_MIDDLE:
-                textTruncation = TextTruncation.WORD_MIDDLE;
-                break;
-            }
+            textBreak = TextBreak.WORD;
             break;
 
         case TRUNCATION_MODE_CHARACTER_ELLIPSIS:
-            switch (mTruncationPlace) {
-            case TRUNCATION_PLACE_START:
-                textTruncation = TextTruncation.CHARACTER_START;
-                break;
-
-            case TRUNCATION_PLACE_MIDDLE:
-                textTruncation = TextTruncation.CHARACTER_MIDDLE;
-                break;
-
-            default:
-                textTruncation = TextTruncation.CHARACTER_END;
-                break;
-            }
+            textBreak = TextBreak.CHARACTER;
             break;
         }
 
         if (textTruncation != mTextTruncation) {
             mTextTruncation = textTruncation;
+            mTextBreak = textBreak;
             mTruncationToken = null;
             requestLayout();
             invalidate();
