@@ -19,6 +19,7 @@ package com.mta.tehreer.layout;
 import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.internal.util.Description;
 
 import java.util.Collections;
 import java.util.List;
@@ -84,22 +85,9 @@ public class ComposedFrame {
 
     @Override
     public String toString() {
-        StringBuilder linesBuilder = new StringBuilder();
-        linesBuilder.append("[");
-
-        int runCount = mLineList.size();
-        for (int i = 0; i < runCount; i++) {
-            linesBuilder.append(mLineList.get(i).toString());
-            if (i < runCount - 1) {
-                linesBuilder.append(", ");
-            }
-        }
-
-        linesBuilder.append("]");
-
         return "ComposedFrame{charStart=" + mCharStart
                 + ", charEnd=" + mCharEnd
-                + ", lines=" + linesBuilder.toString()
+                + ", lines=" + Description.forIterable(mLineList)
                 + "}";
     }
 }
