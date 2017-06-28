@@ -311,7 +311,7 @@ public class TLabel extends View {
                         if (layoutWidth > mTruncationToken.getWidth()) {
                             // Replace the last line with truncated one.
                             ComposedLine lastLine = mComposedLines.remove(mComposedLines.size() - 1);
-                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTruncationType, mWrapMode, mTruncationToken);
+                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mWrapMode, mTruncationType, mTruncationToken);
                             mComposedLines.add(truncatedLine);
                         }
                     }

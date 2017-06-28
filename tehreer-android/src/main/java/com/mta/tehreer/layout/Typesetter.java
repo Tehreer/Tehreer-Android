@@ -28,12 +28,12 @@ import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
+import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.layout.style.TypeSizeSpan;
-import com.mta.tehreer.layout.style.TypefaceSpan;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -180,7 +180,7 @@ public class Typesetter {
                     shapingEngine.setWritingDirection(writingDirection);
 
                     resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
-                            bidiRun.embeddingLevel, shapingEngine);
+                                     bidiRun.embeddingLevel, shapingEngine);
                 }
                 mBidiParagraphs.add(paragraph);
 
@@ -623,14 +623,14 @@ public class Typesetter {
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationType truncationType, WrapMode truncationBreak,
+                                            WrapMode wrapMode, TruncationType truncationType,
                                             ComposedLine truncationToken) {
         verifyTextRange(charStart, charEnd);
+        if (wrapMode == null) {
+            throw new NullPointerException("Wrap mode is null");
+        }
         if (truncationType == null) {
             throw new NullPointerException("Truncation type is null");
-        }
-        if (truncationBreak == null) {
-            throw new NullPointerException("Truncation break is null");
         }
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
@@ -645,15 +645,15 @@ public class Typesetter {
         switch (truncationType) {
         case START:
             return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                            truncationBreak, truncationToken);
+                                            wrapMode, truncationToken);
 
         case MIDDLE:
             return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                             truncationBreak, truncationToken);
+                                             wrapMode, truncationToken);
 
         case END:
             return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                          truncationBreak, truncationToken);
+                                          wrapMode, truncationToken);
         }
 
         return null;
@@ -717,8 +717,8 @@ public class Typesetter {
     }
 
     private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                  WrapMode truncationBreak, ComposedLine truncationToken) {
-        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
+                                                  WrapMode wrapMode, ComposedLine truncationToken) {
+        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, wrapMode);
         if (truncatedStart > charStart) {
             ArrayList<GlyphRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
@@ -736,10 +736,10 @@ public class Typesetter {
     }
 
     private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                   WrapMode truncationBreak, ComposedLine truncationToken) {
+                                                   WrapMode wrapMode, ComposedLine truncationToken) {
         float halfWidth = tokenlessWidth / 2.0f;
-        int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
-        int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
+        int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, wrapMode);
+        int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, wrapMode);
 
         if (firstMidEnd < secondMidStart) {
             ArrayList<GlyphRun> runList = new ArrayList<>();
@@ -816,8 +816,8 @@ public class Typesetter {
     }
 
     private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                WrapMode truncationBreak, ComposedLine truncationToken) {
-        int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
+                                                WrapMode wrapMode, ComposedLine truncationToken) {
+        int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, wrapMode);
         if (truncatedEnd < charEnd) {
             ArrayList<GlyphRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
