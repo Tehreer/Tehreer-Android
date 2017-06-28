@@ -49,10 +49,11 @@ public class TLabel extends View {
 
     private Renderer mRenderer;
     private Typesetter mTypesetter;
-    private TruncationType mTruncationType;
     private WrapMode mWrapMode;
+    private TruncationType mTruncationType;
     private ComposedLine mTruncationToken;
 
+    private boolean mRtlText;
     private int mTextWidth;
     private int mTextHeight;
 
@@ -193,31 +194,33 @@ public class TLabel extends View {
 
         float penLeft = paddingLeft;
         float penTop = paddingTop;
+        float flushFactor = 0.0f;
 
-        switch (mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-        case Gravity.LEFT:
-            break;
+        int relativeGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
+        int horizontalGravity = mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+        int verticalGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;
 
-        case Gravity.RIGHT:
-            penLeft += unpaddedWidth - mTextWidth;
-            break;
-
-        default:
-            penLeft += (unpaddedWidth - mTextWidth) / 2.0f;
-            break;
+        // Resolve relative layout direction.
+        if (relativeGravity == Gravity.START) {
+            horizontalGravity = !mRtlText ? Gravity.LEFT : Gravity.RIGHT;
+        } else if (relativeGravity == Gravity.END) {
+            horizontalGravity = !mRtlText ? Gravity.RIGHT : Gravity.LEFT;
         }
 
-        switch (mGravity & Gravity.VERTICAL_GRAVITY_MASK) {
-        case Gravity.TOP:
-            break;
+        // Resolve initial pen left and flush factor.
+        if (horizontalGravity == Gravity.RIGHT) {
+            penLeft += unpaddedWidth - mTextWidth;
+            flushFactor = 1.0f;
+        } else if (horizontalGravity != Gravity.LEFT) {
+            penLeft += (unpaddedWidth - mTextWidth) / 2.0f;
+            flushFactor = 0.5f;
+        }
 
-        case Gravity.BOTTOM:
+        // Resolve initial pen top.
+        if (verticalGravity == Gravity.BOTTOM) {
             penTop += unpaddedHeight - mTextHeight;
-            break;
-
-        default:
+        } else if (verticalGravity != Gravity.TOP) {
             penTop += (unpaddedHeight - mTextHeight) / 2.0f;
-            break;
         }
 
         canvas.save();
@@ -228,24 +231,10 @@ public class TLabel extends View {
 
             if (penTop < visibleBottom) {
                 if (penBottom > paddingTop) {
-                    float translateX = penLeft;
-                    float translateY = penTop + composedLine.getAscent();
+                    float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
+                    float lineY = penTop + composedLine.getAscent();
 
-                    switch (mGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
-                    case Gravity.LEFT:
-                        translateX += composedLine.getFlushPenOffset(0.0f, mTextWidth);
-                        break;
-
-                    case Gravity.RIGHT:
-                        translateX += composedLine.getFlushPenOffset(1.0f, mTextWidth);
-                        break;
-
-                    default:
-                        translateX += composedLine.getFlushPenOffset(0.5f, mTextWidth);
-                        break;
-                    }
-
-                    composedLine.draw(mRenderer, canvas, translateX, translateY);
+                    composedLine.draw(mRenderer, canvas, lineX, lineY);
                 }
             } else {
                 break;
@@ -268,6 +257,7 @@ public class TLabel extends View {
     }
 
     private void updateLines(int layoutWidth, int layoutHeight) {
+        mRtlText = false;
         mComposedLines.clear();
 
         if (mTypesetter != null) {
@@ -279,6 +269,7 @@ public class TLabel extends View {
 
             // Add first line even if layout height is smaller than its height.
             ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
+            mRtlText = (composedLine.getParagraphLevel() & 1) == 1;
             mComposedLines.add(composedLine);
 
             // Setup text width and height based on first line.
@@ -471,7 +462,6 @@ public class TLabel extends View {
      */
     public void setWrapMode(WrapMode wrapMode) {
         mWrapMode = wrapMode;
-        mTruncationToken = null;
         requestLayout();
         invalidate();
     }
@@ -493,7 +483,6 @@ public class TLabel extends View {
      */
     public void setTruncationType(TruncationType truncationType) {
         mTruncationType = truncationType;
-        mTruncationToken = null;
         requestLayout();
         invalidate();
     }

@@ -21,6 +21,8 @@
             <enum name="bottom" value="0x50"/>
             <enum name="left" value="0x03"/>
             <enum name="right" value="0x05"/>
+            <enum name="start" value="0x00800003"/>
+            <enum name="end" value="0x00800005"/>
             <enum name="center_vertical" value="0x10"/>
             <enum name="center_horizontal" value="0x01"/>
             <enum name="center" value="0x11"/>
