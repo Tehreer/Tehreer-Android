@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout;
 
 import android.graphics.RectF;
 import android.text.SpannableString;
@@ -32,8 +32,8 @@ import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.text.style.TypeSizeSpan;
-import com.mta.tehreer.text.style.TypefaceSpan;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
+import com.mta.tehreer.layout.style.TypefaceSpan;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -590,7 +590,7 @@ public class Typesetter {
 	public ComposedLine createLine(int charStart, int charEnd) {
         verifyTextRange(charStart, charEnd);
 
-        ArrayList<TextRun> lineRuns = new ArrayList<>();
+        ArrayList<GlyphRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
 
 		return new ComposedLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
@@ -667,11 +667,11 @@ public class Typesetter {
 
         private final int charStart;
         private final int charEnd;
-        private final List<TextRun> runList;
+        private final List<GlyphRun> runList;
 
         private int firstRunIndex = -1;
 
-        public StartTruncationHandler(int charStart, int charEnd, List<TextRun> runList) {
+        public StartTruncationHandler(int charStart, int charEnd, List<GlyphRun> runList) {
             this.charStart = charStart;
             this.charEnd = charEnd;
             this.runList = runList;
@@ -693,8 +693,8 @@ public class Typesetter {
             addContinuousLineRuns(charStart, charEnd, this);
 
             int tokenInsertIndex = firstRunIndex;
-            TextRun firstTextRun = runList.get(firstRunIndex);
-            IntrinsicRun firstIntrinsicRun = firstTextRun.getGlyphRun();
+            GlyphRun firstGlyphRun = runList.get(firstRunIndex);
+            IntrinsicRun firstIntrinsicRun = firstGlyphRun.getGlyphRun();
 
             if (firstIntrinsicRun.charStart < charStart) {
                 // If previous character belongs to the same glyph run, follow its direction.
@@ -720,7 +720,7 @@ public class Typesetter {
                                                   WrapMode truncationBreak, ComposedLine truncationToken) {
         int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedStart > charStart) {
-            ArrayList<TextRun> runList = new ArrayList<>();
+            ArrayList<GlyphRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
 
             if (truncatedStart < charEnd) {
@@ -742,7 +742,7 @@ public class Typesetter {
         int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationBreak);
 
         if (firstMidEnd < secondMidStart) {
-            ArrayList<TextRun> runList = new ArrayList<>();
+            ArrayList<GlyphRun> runList = new ArrayList<>();
 
             // Exclude inner whitespaces as truncation token replaces them.
             firstMidEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, firstMidEnd);
@@ -766,11 +766,11 @@ public class Typesetter {
 
         private final int charStart;
         private final int charEnd;
-        private final List<TextRun> runList;
+        private final List<GlyphRun> runList;
 
         private int lastRunIndex = -1;
 
-        public EndTruncationHandler(int charStart, int charEnd, List<TextRun> runList) {
+        public EndTruncationHandler(int charStart, int charEnd, List<GlyphRun> runList) {
             this.charStart = charStart;
             this.charEnd = charEnd;
             this.runList = runList;
@@ -792,8 +792,8 @@ public class Typesetter {
             addContinuousLineRuns(charStart, charEnd, this);
 
             int tokenInsertIndex = lastRunIndex;
-            TextRun lastTextRun = runList.get(lastRunIndex);
-            IntrinsicRun lastIntrinsicRun = lastTextRun.getGlyphRun();
+            GlyphRun lastGlyphRun = runList.get(lastRunIndex);
+            IntrinsicRun lastIntrinsicRun = lastGlyphRun.getGlyphRun();
 
             if (lastIntrinsicRun.charEnd > charEnd) {
                 // If next character belongs to the same glyph run, follow its direction.
@@ -819,7 +819,7 @@ public class Typesetter {
                                                 WrapMode truncationBreak, ComposedLine truncationToken) {
         int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationBreak);
         if (truncatedEnd < charEnd) {
-            ArrayList<TextRun> runList = new ArrayList<>();
+            ArrayList<GlyphRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
 
             // Exclude trailing whitespaces as truncation token replaces them.
@@ -837,9 +837,9 @@ public class Typesetter {
         return createLine(charStart, truncatedEnd);
     }
 
-    private void addTruncationTokenRuns(ComposedLine truncationToken, ArrayList<TextRun> runList, int insertIndex) {
-        for (TextRun truncationRun : truncationToken.getRuns()) {
-            TextRun modifiedRun = new TextRun(truncationRun);
+    private void addTruncationTokenRuns(ComposedLine truncationToken, ArrayList<GlyphRun> runList, int insertIndex) {
+        for (GlyphRun truncationRun : truncationToken.getRuns()) {
+            GlyphRun modifiedRun = new GlyphRun(truncationRun);
             runList.add(insertIndex, modifiedRun);
 
             insertIndex++;
@@ -866,7 +866,7 @@ public class Typesetter {
         } while (feasibleEnd != charEnd);
     }
 
-    private void addContinuousLineRuns(int charStart, int charEnd, final List<TextRun> runList) {
+    private void addContinuousLineRuns(int charStart, int charEnd, final List<GlyphRun> runList) {
         addContinuousLineRuns(charStart, charEnd, new BidiRunConsumer() {
             @Override
             public void accept(BidiRun bidiRun) {
@@ -878,7 +878,7 @@ public class Typesetter {
         });
     }
 
-    private void addVisualRuns(int visualStart, int visualEnd, List<TextRun> runList) {
+    private void addVisualRuns(int visualStart, int visualEnd, List<GlyphRun> runList) {
         // ASSUMPTIONS:
         //      - The length of visual range is always greater than zero.
         //      - Visual range may fall in one or more glyph runs.
@@ -894,14 +894,14 @@ public class Typesetter {
             int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
             int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
 
-            TextRun textRun = new TextRun(intrinsicRun, feasibleStart, feasibleEnd);
+            GlyphRun glyphRun = new GlyphRun(intrinsicRun, feasibleStart, feasibleEnd);
             if (previousRun != null) {
                 byte bidiLevel = intrinsicRun.bidiLevel;
                 if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
                     insertIndex = runList.size();
                 }
             }
-            runList.add(insertIndex, textRun);
+            runList.add(insertIndex, glyphRun);
 
             previousRun = intrinsicRun;
             visualStart = feasibleEnd;

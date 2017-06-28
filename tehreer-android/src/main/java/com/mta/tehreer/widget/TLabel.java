@@ -29,10 +29,10 @@ import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.text.ComposedLine;
-import com.mta.tehreer.text.WrapMode;
-import com.mta.tehreer.text.TruncationType;
-import com.mta.tehreer.text.Typesetter;
+import com.mta.tehreer.layout.ComposedLine;
+import com.mta.tehreer.layout.WrapMode;
+import com.mta.tehreer.layout.TruncationType;
+import com.mta.tehreer.layout.Typesetter;
 
 import java.util.ArrayList;
 
@@ -89,7 +89,7 @@ public class TLabel extends View {
 
         try {
             TruncationType truncationType = null;
-            switch (values.getInt(R.styleable.TLabel_textTruncation, 0)) {
+            switch (values.getInt(R.styleable.TLabel_truncationType, 0)) {
             case 1:
                 truncationType = TruncationType.START;
                 break;
@@ -104,7 +104,7 @@ public class TLabel extends View {
             }
 
             WrapMode wrapMode = null;
-            switch (values.getInt(R.styleable.TLabel_textBreak, 0)) {
+            switch (values.getInt(R.styleable.TLabel_wrapMode, 0)) {
             case 0:
                 wrapMode = WrapMode.WORD;
                 break;

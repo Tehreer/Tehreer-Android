@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;
@@ -31,10 +31,10 @@ import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
 
 /**
- * A <code>TextRun</code> object is a collection of consecutive glyphs sharing the same attributes
+ * A <code>GlyphRun</code> object is a collection of consecutive glyphs sharing the same attributes
  * and direction.
  */
-public class TextRun {
+public class GlyphRun {
 
     private IntrinsicRun mIntrinsicRun;
 	private int mCharStart;
@@ -45,7 +45,7 @@ public class TextRun {
     private float mOriginY;
     private float mWidth = Float.NEGATIVE_INFINITY;
 
-	TextRun(IntrinsicRun intrinsicRun, int charStart, int charEnd) {
+	GlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd) {
         mIntrinsicRun = intrinsicRun;
         mCharStart = charStart;
         mCharEnd = charEnd;
@@ -53,7 +53,7 @@ public class TextRun {
         mGlyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - mGlyphOffset;
 	}
 
-    TextRun(TextRun otherRun) {
+    GlyphRun(GlyphRun otherRun) {
         mIntrinsicRun = otherRun.mIntrinsicRun;
         mGlyphOffset = otherRun.mGlyphOffset;
         mGlyphCount = otherRun.mGlyphCount;
@@ -265,7 +265,7 @@ public class TextRun {
 
     /**
      * Returns the ascent of this run. The ascent is the distance from the top of the
-     * <code>TextRun</code> to the baseline. It is always either positive or zero.
+     * <code>GlyphRun</code> to the baseline. It is always either positive or zero.
      *
      * @return The ascent of this run.
      */
@@ -275,7 +275,7 @@ public class TextRun {
 
     /**
      * Returns the descent of this run. The descent is the distance from the baseline to the bottom
-     * of the <code>TextRun</code>. It is always either positive or zero.
+     * of the <code>GlyphRun</code>. It is always either positive or zero.
      *
      * @return The descent of this run.
      */
@@ -400,7 +400,7 @@ public class TextRun {
 
     @Override
     public String toString() {
-        return "TextRun{charStart=" + getCharStart()
+        return "GlyphRun{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", bidiLevel=" + getBidiLevel()
                 + ", writingDirection=" + getWritingDirection().toString()

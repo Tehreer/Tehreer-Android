@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 

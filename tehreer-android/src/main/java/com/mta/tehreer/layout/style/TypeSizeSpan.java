@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text.style;
+package com.mta.tehreer.layout.style;
 
 /**
  * The <code>TypeSizeSpan</code> class represents a span for specifying absolute type size.

@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout.style;
 
 /**
- * Specifies the horizontal text alignment.
+ * The abstract base class for all the spans provided by Tehreer library.
  */
-public enum TextAlignment {
-    /**
-     * Aligns text to the left side of the line.
-     */
-    LEFT,
-    /**
-     * Aligns text to the right side of the line.
-     */
-    RIGHT,
-    /**
-     * Aligns text to the center of the line.
-     */
-    CENTER,
+public abstract class TehreerSpan {
 }

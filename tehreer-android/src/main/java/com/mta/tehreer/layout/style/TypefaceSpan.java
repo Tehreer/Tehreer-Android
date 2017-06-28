@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text.style;
+package com.mta.tehreer.layout.style;
 
 import com.mta.tehreer.graphics.Typeface;
 

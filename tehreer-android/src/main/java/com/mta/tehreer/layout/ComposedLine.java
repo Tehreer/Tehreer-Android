@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 
@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a line of text consisting of an array of <code>TextRun</code> objects in visual order.
+ * Represents a line of text consisting of an array of <code>GlyphRun</code> objects in visual order.
  */
 public class ComposedLine {
 
@@ -40,9 +40,9 @@ public class ComposedLine {
     private float mLeading;
     private float mWidth;
     private float mTrailingWhitespaceExtent;
-	private List<TextRun> mRunList;
+	private List<GlyphRun> mRunList;
 
-	ComposedLine(String text, int charStart, int charEnd, List<TextRun> runList, byte paragraphLevel) {
+	ComposedLine(String text, int charStart, int charEnd, List<GlyphRun> runList, byte paragraphLevel) {
 		mCharStart = charStart;
 		mCharEnd = charEnd;
         mParagraphLevel = paragraphLevel;
@@ -50,22 +50,22 @@ public class ComposedLine {
 
         int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
 
-        for (TextRun textRun : runList) {
-            textRun.setOriginX(mWidth);
+        for (GlyphRun glyphRun : runList) {
+            glyphRun.setOriginX(mWidth);
 
-            float runAscent = textRun.getAscent();
-            float runDescent = textRun.getDescent();
-            float runLeading = textRun.getLeading();
+            float runAscent = glyphRun.getAscent();
+            float runDescent = glyphRun.getDescent();
+            float runLeading = glyphRun.getLeading();
 
-            int runCharStart = textRun.getCharStart();
-            int runCharEnd = textRun.getCharEnd();
-            int runGlyphCount = textRun.getGlyphCount();
-            float runWidth = textRun.computeTypographicExtent(0, runGlyphCount);
+            int runCharStart = glyphRun.getCharStart();
+            int runCharEnd = glyphRun.getCharEnd();
+            int runGlyphCount = glyphRun.getGlyphCount();
+            float runWidth = glyphRun.computeTypographicExtent(0, runGlyphCount);
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
-                int whitespaceGlyphStart = textRun.getCharGlyphStart(trailingWhitespaceStart);
-                int whitespaceGlyphEnd = textRun.getCharGlyphEnd(runCharEnd - 1);
-                float whitespaceWidth = textRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
+                int whitespaceGlyphStart = glyphRun.getCharGlyphStart(trailingWhitespaceStart);
+                int whitespaceGlyphEnd = glyphRun.getCharGlyphEnd(runCharEnd - 1);
+                float whitespaceWidth = glyphRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
 
                 mTrailingWhitespaceExtent += whitespaceWidth;
             }
@@ -185,7 +185,7 @@ public class ComposedLine {
      *
      * @return An unmodifiable list that contains all the runs of this line.
      */
-    public List<TextRun> getRuns() {
+    public List<GlyphRun> getRuns() {
         return mRunList;
     }
 
@@ -217,12 +217,12 @@ public class ComposedLine {
      * @param y The y- position at which to draw this line.
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
-        for (TextRun textRun : mRunList) {
-            float translateX = x + (textRun.getOriginX() * renderer.getScaleX());
-            float translateY = y + (textRun.getOriginY() * renderer.getScaleY());
+        for (GlyphRun glyphRun : mRunList) {
+            float translateX = x + (glyphRun.getOriginX() * renderer.getScaleX());
+            float translateY = y + (glyphRun.getOriginY() * renderer.getScaleY());
 
             canvas.translate(translateX, translateY);
-            textRun.draw(renderer, canvas);
+            glyphRun.draw(renderer, canvas);
             canvas.translate(-translateX, -translateY);
         }
     }

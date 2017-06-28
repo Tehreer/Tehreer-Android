@@ -14,9 +14,22 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text;
+package com.mta.tehreer.layout;
 
-public enum WrapMode {
-    WORD,
-    CHARACTER
+/**
+ * Specifies the horizontal text alignment.
+ */
+public enum TextAlignment {
+    /**
+     * Aligns text to the left side of the line.
+     */
+    LEFT,
+    /**
+     * Aligns text to the right side of the line.
+     */
+    RIGHT,
+    /**
+     * Aligns text to the center of the line.
+     */
+    CENTER,
 }

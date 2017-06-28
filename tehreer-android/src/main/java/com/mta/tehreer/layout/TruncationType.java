@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.text.style;
+package com.mta.tehreer.layout;
 
 /**
- * The abstract base class for all the spans provided by Tehreer library.
+ * Specifies the truncation type of text.
  */
-public abstract class TehreerSpan {
+public enum TruncationType {
+    /**
+     * Text is truncated at the start of the line.
+     */
+    START,
+    /**
+     * Text is truncated at the middle of the line.
+     */
+    MIDDLE,
+    /**
+     * Text is truncated at the end of the line.
+     */
+    END
 }
