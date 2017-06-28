@@ -88,6 +88,17 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
+            WrapMode wrapMode = null;
+            switch (values.getInt(R.styleable.TLabel_wrapMode, 0)) {
+            case 0:
+                wrapMode = WrapMode.WORD;
+                break;
+
+            case 1:
+                wrapMode = WrapMode.CHARACTER;
+                break;
+            }
+
             TruncationType truncationType = null;
             switch (values.getInt(R.styleable.TLabel_truncationType, 0)) {
             case 1:
@@ -103,25 +114,14 @@ public class TLabel extends View {
                 break;
             }
 
-            WrapMode wrapMode = null;
-            switch (values.getInt(R.styleable.TLabel_wrapMode, 0)) {
-            case 0:
-                wrapMode = WrapMode.WORD;
-                break;
-
-            case 1:
-                wrapMode = WrapMode.CHARACTER;
-                break;
-            }
-
             setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.LEFT));
             setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
             setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
             setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
-            setTextTruncation(truncationType);
-            setTextBreak(wrapMode);
+            setWrapMode(wrapMode);
+            setTruncationType(truncationType);
             setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
             setText(values.getString(R.styleable.TLabel_text));
@@ -456,11 +456,32 @@ public class TLabel extends View {
     }
 
     /**
+     * Returns the wrap mode that should be used to break lines.
+     *
+     * @return The current wrap mode.
+     */
+    public WrapMode getWrapMode() {
+        return mWrapMode;
+    }
+
+    /**
+     * Sets the wrap mode that should be used to break lines.
+     *
+     * @param wrapMode A value of {@link WrapMode}.
+     */
+    public void setWrapMode(WrapMode wrapMode) {
+        mWrapMode = wrapMode;
+        mTruncationToken = null;
+        requestLayout();
+        invalidate();
+    }
+
+    /**
      * Returns the truncation type that should be applied on the last line of the text.
      *
      * @return The current truncation type.
      */
-    public TruncationType getTextTruncation() {
+    public TruncationType getTruncationType() {
         return mTruncationType;
     }
 
@@ -470,29 +491,8 @@ public class TLabel extends View {
      *
      * @param truncationType A value of {@link TruncationType}.
      */
-    public void setTextTruncation(TruncationType truncationType) {
+    public void setTruncationType(TruncationType truncationType) {
         mTruncationType = truncationType;
-        mTruncationToken = null;
-        requestLayout();
-        invalidate();
-    }
-
-    /**
-     * Returns the place at which text should be truncated if it overflows the available area.
-     *
-     * @return The current truncation place.
-     */
-    public WrapMode getTextBreak() {
-        return mWrapMode;
-    }
-
-    /**
-     * Sets the place at which text should be truncated if it overflows the available area.
-     *
-     * @param wrapMode A value of {@link WrapMode}.
-     */
-    public void setTextBreak(WrapMode wrapMode) {
-        mWrapMode = wrapMode;
         mTruncationToken = null;
         requestLayout();
         invalidate();
