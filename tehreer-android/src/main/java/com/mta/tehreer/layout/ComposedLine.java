@@ -96,6 +96,15 @@ public class ComposedLine {
 	}
 
     /**
+     * Returns the paragraph level of this line.
+     *
+     * @return The paragraph level of this line.
+     */
+    public byte getParagraphLevel() {
+        return mParagraphLevel;
+    }
+
+    /**
      * Returns the x- origin of this line in parent frame.
      *
      * @return The x- origin of this line in parent frame.
