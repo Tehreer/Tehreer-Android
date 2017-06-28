@@ -43,19 +43,20 @@ public class TLabel extends View {
 
     private static final String TRUNCATION_STRING = "...";
 
-    private int mGravity;
-    private String mText;
-    private int mMaxLines;
+    private int mGravity = Gravity.TOP | Gravity.START;
+    private int mMaxLines = 0;
 
-    private Renderer mRenderer;
-    private Typesetter mTypesetter;
-    private WrapMode mWrapMode;
-    private TruncationType mTruncationType;
-    private ComposedLine mTruncationToken;
+    private Renderer mRenderer = new Renderer();
+    private WrapMode mWrapMode = WrapMode.WORD;
+    private TruncationType mTruncationType = null;
+    private ComposedLine mTruncationToken = null;
 
-    private boolean mRtlText;
-    private int mTextWidth;
-    private int mTextHeight;
+    private String mText = "";
+    private Typesetter mTypesetter = null;
+
+    private boolean mRtlText = false;
+    private int mTextWidth = 0;
+    private int mTextHeight = 0;
 
     private ArrayList<ComposedLine> mComposedLines = new ArrayList<>();
 
@@ -69,7 +70,8 @@ public class TLabel extends View {
     }
 
     public TLabel(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        super(context, attrs);
+        setup(context, attrs, 0);
     }
 
     public TLabel(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -78,8 +80,6 @@ public class TLabel extends View {
     }
 
     private void setup(Context context, AttributeSet attrs, int defStyleAttr) {
-        mRenderer = new Renderer();
-
         if (attrs != null) {
             setupAttributes(context, attrs, defStyleAttr);
         }
@@ -115,7 +115,7 @@ public class TLabel extends View {
                 break;
             }
 
-            setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.LEFT));
+            setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.START));
             setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
             setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
