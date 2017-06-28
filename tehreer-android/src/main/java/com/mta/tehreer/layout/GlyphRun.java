@@ -173,7 +173,7 @@ public class GlyphRun {
      * @return A list of indexes, mapping each character in this run to corresponding glyph.
      */
     public IntList getCharToGlyphMap() {
-        return new IndexList(mIntrinsicRun.charToGlyphMap,
+        return new IndexList(mIntrinsicRun.clusterMap,
                              mCharStart - mIntrinsicRun.charStart,
                              mCharEnd - mCharStart,
                              mGlyphOffset);
@@ -408,7 +408,7 @@ public class GlyphRun {
                 + ", glyphIds=" + getGlyphIds().toString()
                 + ", glyphOffsets=" + getGlyphOffsets().toString()
                 + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", charToGlyphMap=" + getCharToGlyphMap().toString()
+                + ", clusterMap=" + getCharToGlyphMap().toString()
                 + ", originX=" + getOriginX()
                 + ", originY=" + getOriginY()
                 + ", ascent=" + getAscent()

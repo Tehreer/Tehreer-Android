@@ -33,7 +33,7 @@ class IntrinsicRun {
     final int[] glyphIds;
     final float[] glyphOffsets;
     final float[] glyphAdvances;
-    final int[] charToGlyphMap;
+    final int[] clusterMap;
 
     IntrinsicRun(ShapingResult shapingResult, Typeface typeface, float typeSize,
                  byte bidiLevel, WritingDirection writingDirection) {
@@ -50,7 +50,7 @@ class IntrinsicRun {
         this.glyphIds = shapingResult.getGlyphIds().toArray();
         this.glyphOffsets = shapingResult.getGlyphOffsets().toArray();
         this.glyphAdvances = shapingResult.getGlyphAdvances().toArray();
-        this.charToGlyphMap = shapingResult.getClusterMap().toArray();
+        this.clusterMap = shapingResult.getClusterMap().toArray();
     }
 
     WritingDirection writingDirection() {
@@ -62,7 +62,7 @@ class IntrinsicRun {
     }
 
     int charGlyphStart(int charIndex) {
-        return charToGlyphMap[charIndex - charStart];
+        return clusterMap[charIndex - charStart];
     }
 
     int charGlyphEnd(int charIndex) {
@@ -72,13 +72,13 @@ class IntrinsicRun {
             int charNext = charIndex + 1;
 
             glyphEnd = (charNext < charEnd
-                        ? charToGlyphMap[charNext - charStart]
+                        ? clusterMap[charNext - charStart]
                         : glyphCount());
         } else {
             int charPrevious = charIndex - 1;
 
             glyphEnd = (charPrevious > charStart
-                        ? charToGlyphMap[charPrevious - charStart]
+                        ? clusterMap[charPrevious - charStart]
                         : glyphCount());
         }
 
