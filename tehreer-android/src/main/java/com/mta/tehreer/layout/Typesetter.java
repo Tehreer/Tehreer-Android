@@ -618,8 +618,6 @@ public class Typesetter {
      *             <li><code>charStart</code> is negative</li>
      *             <li><code>charEnd</code> is greater than the length of source text</li>
      *             <li><code>charStart</code> is greater than of equal to <code>charEnd</code></li>
-     *             <li><code>maxWidth</code> is less than the width of line specified in
-     *                 <code>truncationToken</code></li>
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
@@ -635,11 +633,8 @@ public class Typesetter {
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
         }
-        float tokenWidth = truncationToken.getWidth();
-        if (maxWidth < tokenWidth) {
-            throw new IllegalArgumentException("Max Width: " + maxWidth + ", Token Width: " + tokenWidth);
-        }
 
+        float tokenWidth = truncationToken.getWidth();
         float tokenlessWidth = maxWidth - tokenWidth;
 
         switch (truncationType) {
@@ -663,79 +658,7 @@ public class Typesetter {
         void accept(BidiRun bidiRun);
     }
 
-    private class StartTruncationHandler implements BidiRunConsumer {
-
-        private final int charStart;
-        private final int charEnd;
-        private final List<GlyphRun> runList;
-
-        private int firstRunIndex = -1;
-
-        public StartTruncationHandler(int charStart, int charEnd, List<GlyphRun> runList) {
-            this.charStart = charStart;
-            this.charEnd = charEnd;
-            this.runList = runList;
-        }
-
-        @Override
-        public void accept(BidiRun bidiRun) {
-            int visualStart = bidiRun.charStart;
-            int visualEnd = bidiRun.charEnd;
-
-            if (charStart == visualStart) {
-                firstRunIndex = runList.size();
-            }
-
-            addVisualRuns(visualStart, visualEnd, runList);
-        }
-
-        public int addAllRuns() {
-            addContinuousLineRuns(charStart, charEnd, this);
-
-            int tokenInsertIndex = firstRunIndex;
-            GlyphRun firstGlyphRun = runList.get(firstRunIndex);
-            IntrinsicRun firstIntrinsicRun = firstGlyphRun.getGlyphRun();
-
-            if (firstIntrinsicRun.charStart < charStart) {
-                // If previous character belongs to the same glyph run, follow its direction.
-                if ((firstIntrinsicRun.bidiLevel & 1) == 1) {
-                    tokenInsertIndex += 1;
-                }
-            } else {
-                // If previous character belongs to a different glyph run, follow paragraph direction.
-                int paragraphIndex = indexOfBidiParagraph(charStart);
-                BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
-                int paragraphLevel = bidiParagraph.getBaseLevel();
-
-                if ((paragraphLevel & 1) == 1) {
-                    tokenInsertIndex += 1;
-                }
-            }
-
-            return tokenInsertIndex;
-        }
-    }
-
-    private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                  WrapMode wrapMode, ComposedLine truncationToken) {
-        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, wrapMode);
-        if (truncatedStart > charStart) {
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-            int tokenInsertIndex = 0;
-
-            if (truncatedStart < charEnd) {
-                StartTruncationHandler truncationHandler = new StartTruncationHandler(truncatedStart, charEnd, runList);
-                tokenInsertIndex = truncationHandler.addAllRuns();
-            }
-            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
-
-            return new ComposedLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
-        }
-
-        return createLine(truncatedStart, charEnd);
-    }
-
-    private class MiddleTruncationHandler implements BidiRunConsumer {
+    private class TruncationHandler implements BidiRunConsumer {
 
         final int charStart;
         final int charEnd;
@@ -743,9 +666,10 @@ public class Typesetter {
         final int skipEnd;
         final List<GlyphRun> runList;
 
-        int tokenInsertIndex = -1;
+        int leadingTokenIndex = -1;
+        int trailingTokenIndex = -1;
 
-        MiddleTruncationHandler(int charStart, int charEnd, int skipStart, int skipEnd, List<GlyphRun> runList) {
+        TruncationHandler(int charStart, int charEnd, int skipStart, int skipEnd, List<GlyphRun> runList) {
             this.charStart = charStart;
             this.charEnd = charEnd;
             this.skipStart = skipStart;
@@ -759,43 +683,82 @@ public class Typesetter {
             int visualEnd = bidiRun.charEnd;
 
             if (bidiRun.isRightToLeft()) {
-                if (visualEnd > skipEnd) {
-                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
+                // Handle second part of characters.
+                if (visualEnd >= skipEnd) {
+                    int feasibleStart = visualStart;
+                    if (feasibleStart < skipEnd) {
+                        feasibleStart = skipEnd;
+                    }
+
+                    addVisualRuns(feasibleStart, visualEnd, runList);
+
+                    if (feasibleStart == skipEnd) {
+                        trailingTokenIndex = runList.size();
+                    }
                 }
 
-                if (visualStart < skipStart) {
+                // Handle first part of characters.
+                if (visualStart <= skipStart) {
                     int feasibleEnd = visualEnd;
                     if (feasibleEnd >= skipStart) {
                         feasibleEnd = skipStart;
-                        tokenInsertIndex = runList.size();
+                        leadingTokenIndex = runList.size();
                     }
 
                     addVisualRuns(visualStart, feasibleEnd, runList);
                 }
             } else {
-                if (visualStart < skipStart) {
+                // Handle first part of characters.
+                if (visualStart <= skipStart) {
                     int feasibleEnd = visualEnd;
-                    if (feasibleEnd >= skipStart) {
+                    if (feasibleEnd > skipStart) {
                         feasibleEnd = skipStart;
                     }
 
                     addVisualRuns(visualStart, feasibleEnd, runList);
 
                     if (feasibleEnd == skipStart) {
-                        tokenInsertIndex = runList.size();
+                        leadingTokenIndex = runList.size();
                     }
                 }
 
-                if (visualEnd > skipEnd) {
-                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
+                // Handle second part of characters.
+                if (visualEnd >= skipEnd) {
+                    int feasibleStart = visualStart;
+                    if (feasibleStart <= skipEnd) {
+                        feasibleStart = skipEnd;
+                        trailingTokenIndex = runList.size();
+                    }
+
+                    addVisualRuns(feasibleStart, visualEnd, runList);
                 }
             }
         }
 
-        int addAllRuns() {
+        void addAllRuns() {
             addContinuousLineRuns(charStart, charEnd, this);
-            return tokenInsertIndex;
         }
+    }
+
+    private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
+                                                  WrapMode wrapMode, ComposedLine truncationToken) {
+        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, wrapMode);
+        if (truncatedStart > charStart) {
+            ArrayList<GlyphRun> runList = new ArrayList<>();
+            int tokenInsertIndex = 0;
+
+            if (truncatedStart < charEnd) {
+                TruncationHandler truncationHandler = new TruncationHandler(truncatedStart, charEnd, charStart, truncatedStart, runList);
+                truncationHandler.addAllRuns();
+
+                tokenInsertIndex = truncationHandler.trailingTokenIndex;
+            }
+            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
+
+            return new ComposedLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
+        }
+
+        return createLine(truncatedStart, charEnd);
     }
 
     private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
@@ -810,8 +773,14 @@ public class Typesetter {
             secondMidStart = StringUtils.getLeadingWhitespaceEnd(mText, secondMidStart, charEnd);
 
             ArrayList<GlyphRun> runList = new ArrayList<>();
-            MiddleTruncationHandler truncationHandler = new MiddleTruncationHandler(charStart, charEnd, firstMidEnd, secondMidStart, runList);
-            int tokenInsertIndex = truncationHandler.addAllRuns();
+            int tokenInsertIndex = 0;
+
+            if (charStart < firstMidEnd || secondMidStart < charEnd) {
+                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, firstMidEnd, secondMidStart, runList);
+                truncationHandler.addAllRuns();
+
+                tokenInsertIndex = truncationHandler.leadingTokenIndex;
+            }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
             return new ComposedLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
@@ -820,72 +789,21 @@ public class Typesetter {
         return createLine(charStart, charEnd);
     }
 
-    private class EndTruncationHandler implements BidiRunConsumer {
-
-        private final int charStart;
-        private final int charEnd;
-        private final List<GlyphRun> runList;
-
-        private int lastRunIndex = -1;
-
-        public EndTruncationHandler(int charStart, int charEnd, List<GlyphRun> runList) {
-            this.charStart = charStart;
-            this.charEnd = charEnd;
-            this.runList = runList;
-        }
-
-        @Override
-        public void accept(BidiRun bidiRun) {
-            int visualStart = bidiRun.charStart;
-            int visualEnd = bidiRun.charEnd;
-
-            if (visualEnd == charEnd) {
-                lastRunIndex = runList.size();
-            }
-
-            addVisualRuns(visualStart, visualEnd, runList);
-        }
-
-        public int addAllRuns() {
-            addContinuousLineRuns(charStart, charEnd, this);
-
-            int tokenInsertIndex = lastRunIndex;
-            GlyphRun lastGlyphRun = runList.get(lastRunIndex);
-            IntrinsicRun lastIntrinsicRun = lastGlyphRun.getGlyphRun();
-
-            if (lastIntrinsicRun.charEnd > charEnd) {
-                // If next character belongs to the same glyph run, follow its direction.
-                if ((lastIntrinsicRun.bidiLevel & 1) == 0) {
-                    tokenInsertIndex += 1;
-                }
-            } else {
-                // If next character belongs to a different glyph run, follow paragraph direction.
-                int paragraphIndex = indexOfBidiParagraph(charStart);
-                BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
-                int paragraphLevel = bidiParagraph.getBaseLevel();
-
-                if ((paragraphLevel & 1) == 0) {
-                    tokenInsertIndex += 1;
-                }
-            }
-
-            return tokenInsertIndex;
-        }
-    }
-
     private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
                                                 WrapMode wrapMode, ComposedLine truncationToken) {
         int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, wrapMode);
         if (truncatedEnd < charEnd) {
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-            int tokenInsertIndex = 0;
-
             // Exclude trailing whitespaces as truncation token replaces them.
             truncatedEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, truncatedEnd);
 
+            ArrayList<GlyphRun> runList = new ArrayList<>();
+            int tokenInsertIndex = 0;
+
             if (charStart < truncatedEnd) {
-                EndTruncationHandler truncationHandler = new EndTruncationHandler(charStart, truncatedEnd, runList);
-                tokenInsertIndex = truncationHandler.addAllRuns();
+                TruncationHandler truncationHandler = new TruncationHandler(charStart, truncatedEnd, truncatedEnd, charEnd, runList);
+                truncationHandler.addAllRuns();
+
+                tokenInsertIndex = truncationHandler.leadingTokenIndex;
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
