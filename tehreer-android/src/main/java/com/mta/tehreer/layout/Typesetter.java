@@ -124,8 +124,8 @@ public class Typesetter {
         resolveBidi();
     }
 
-    public String getText() {
-        return mText;
+    public Spanned getSpanned() {
+        return mSpanned;
     }
 
     private void resolveBreaks() {
@@ -735,6 +735,69 @@ public class Typesetter {
         return createLine(truncatedStart, charEnd);
     }
 
+    private class MiddleTruncationHandler implements BidiRunConsumer {
+
+        final int charStart;
+        final int charEnd;
+        final int skipStart;
+        final int skipEnd;
+        final List<GlyphRun> runList;
+
+        int tokenInsertIndex = -1;
+
+        MiddleTruncationHandler(int charStart, int charEnd, int skipStart, int skipEnd, List<GlyphRun> runList) {
+            this.charStart = charStart;
+            this.charEnd = charEnd;
+            this.skipStart = skipStart;
+            this.skipEnd = skipEnd;
+            this.runList = runList;
+        }
+
+        @Override
+        public void accept(BidiRun bidiRun) {
+            int visualStart = bidiRun.charStart;
+            int visualEnd = bidiRun.charEnd;
+
+            if (bidiRun.isRightToLeft()) {
+                if (visualEnd > skipEnd) {
+                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
+                }
+
+                if (visualStart < skipStart) {
+                    int feasibleEnd = visualEnd;
+                    if (feasibleEnd >= skipStart) {
+                        feasibleEnd = skipStart;
+                        tokenInsertIndex = runList.size();
+                    }
+
+                    addVisualRuns(visualStart, feasibleEnd, runList);
+                }
+            } else {
+                if (visualStart < skipStart) {
+                    int feasibleEnd = visualEnd;
+                    if (feasibleEnd >= skipStart) {
+                        feasibleEnd = skipStart;
+                    }
+
+                    addVisualRuns(visualStart, feasibleEnd, runList);
+
+                    if (feasibleEnd == skipStart) {
+                        tokenInsertIndex = runList.size();
+                    }
+                }
+
+                if (visualEnd > skipEnd) {
+                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
+                }
+            }
+        }
+
+        int addAllRuns() {
+            addContinuousLineRuns(charStart, charEnd, this);
+            return tokenInsertIndex;
+        }
+    }
+
     private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
                                                    WrapMode wrapMode, ComposedLine truncationToken) {
         float halfWidth = tokenlessWidth / 2.0f;
@@ -742,19 +805,14 @@ public class Typesetter {
         int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, wrapMode);
 
         if (firstMidEnd < secondMidStart) {
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-
             // Exclude inner whitespaces as truncation token replaces them.
             firstMidEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, firstMidEnd);
             secondMidStart = StringUtils.getLeadingWhitespaceEnd(mText, secondMidStart, charEnd);
 
-            if (charStart < firstMidEnd) {
-                addContinuousLineRuns(charStart, firstMidEnd, runList);
-            }
-            addTruncationTokenRuns(truncationToken, runList, runList.size());
-            if (secondMidStart < charEnd) {
-                addContinuousLineRuns(secondMidStart, charEnd, runList);
-            }
+            ArrayList<GlyphRun> runList = new ArrayList<>();
+            MiddleTruncationHandler truncationHandler = new MiddleTruncationHandler(charStart, charEnd, firstMidEnd, secondMidStart, runList);
+            int tokenInsertIndex = truncationHandler.addAllRuns();
+            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
             return new ComposedLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
         }
@@ -879,33 +937,34 @@ public class Typesetter {
     }
 
     private void addVisualRuns(int visualStart, int visualEnd, List<GlyphRun> runList) {
-        // ASSUMPTIONS:
-        //      - The length of visual range is always greater than zero.
-        //      - Visual range may fall in one or more glyph runs.
-        //      - Consecutive glyphs runs may have same bidi level.
+        if (visualStart < visualEnd) {
+            // ASSUMPTIONS:
+            //      - Visual range may fall in one or more glyph runs.
+            //      - Consecutive intrinsic runs may have same bidi level.
 
-        int insertIndex = runList.size();
-        IntrinsicRun previousRun = null;
+            int insertIndex = runList.size();
+            IntrinsicRun previousRun = null;
 
-        do {
-            int runIndex = indexOfGlyphRun(visualStart);
+            do {
+                int runIndex = indexOfGlyphRun(visualStart);
 
-            IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
-            int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
-            int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
+                IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
+                int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
+                int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
 
-            GlyphRun glyphRun = new GlyphRun(intrinsicRun, feasibleStart, feasibleEnd);
-            if (previousRun != null) {
-                byte bidiLevel = intrinsicRun.bidiLevel;
-                if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
-                    insertIndex = runList.size();
+                GlyphRun glyphRun = new GlyphRun(intrinsicRun, feasibleStart, feasibleEnd);
+                if (previousRun != null) {
+                    byte bidiLevel = intrinsicRun.bidiLevel;
+                    if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
+                        insertIndex = runList.size();
+                    }
                 }
-            }
-            runList.add(insertIndex, glyphRun);
+                runList.add(insertIndex, glyphRun);
 
-            previousRun = intrinsicRun;
-            visualStart = feasibleEnd;
-        } while (visualStart != visualEnd);
+                previousRun = intrinsicRun;
+                visualStart = feasibleEnd;
+            } while (visualStart != visualEnd);
+        }
     }
 
     /**
