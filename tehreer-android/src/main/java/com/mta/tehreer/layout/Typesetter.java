@@ -685,58 +685,44 @@ public class Typesetter {
             if (bidiRun.isRightToLeft()) {
                 // Handle second part of characters.
                 if (visualEnd >= skipEnd) {
-                    int feasibleStart = visualStart;
-                    if (feasibleStart < skipEnd) {
-                        feasibleStart = skipEnd;
-                    }
+                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
 
-                    addVisualRuns(feasibleStart, visualEnd, runList);
-
-                    if (feasibleStart == skipEnd) {
+                    if (visualStart < skipEnd) {
                         trailingTokenIndex = runList.size();
                     }
                 }
 
                 // Handle first part of characters.
                 if (visualStart <= skipStart) {
-                    int feasibleEnd = visualEnd;
-                    if (feasibleEnd >= skipStart) {
-                        feasibleEnd = skipStart;
+                    if (visualEnd > skipStart) {
                         leadingTokenIndex = runList.size();
                     }
 
-                    addVisualRuns(visualStart, feasibleEnd, runList);
+                    addVisualRuns(visualStart, Math.min(visualEnd, skipStart), runList);
                 }
             } else {
                 // Handle first part of characters.
                 if (visualStart <= skipStart) {
-                    int feasibleEnd = visualEnd;
-                    if (feasibleEnd > skipStart) {
-                        feasibleEnd = skipStart;
-                    }
+                    addVisualRuns(visualStart, Math.min(visualEnd, skipStart), runList);
 
-                    addVisualRuns(visualStart, feasibleEnd, runList);
-
-                    if (feasibleEnd == skipStart) {
+                    if (visualEnd > skipStart) {
                         leadingTokenIndex = runList.size();
                     }
                 }
 
                 // Handle second part of characters.
                 if (visualEnd >= skipEnd) {
-                    int feasibleStart = visualStart;
-                    if (feasibleStart <= skipEnd) {
-                        feasibleStart = skipEnd;
+                    if (visualStart < skipEnd) {
                         trailingTokenIndex = runList.size();
                     }
 
-                    addVisualRuns(feasibleStart, visualEnd, runList);
+                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
                 }
             }
         }
 
         void addAllRuns() {
-            addContinuousLineRuns(Math.min(charStart, skipStart), Math.max(charEnd, skipEnd), this);
+            addContinuousLineRuns(charStart, charEnd, this);
         }
     }
 
@@ -748,10 +734,10 @@ public class Typesetter {
             int tokenInsertIndex = 0;
 
             if (truncatedStart < charEnd) {
-                TruncationHandler truncationHandler = new TruncationHandler(truncatedStart, charEnd, charStart, truncatedStart, runList);
+                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, charStart, truncatedStart, runList);
                 truncationHandler.addAllRuns();
 
-                tokenInsertIndex = truncationHandler.leadingTokenIndex;
+                tokenInsertIndex = truncationHandler.trailingTokenIndex;
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
@@ -800,10 +786,10 @@ public class Typesetter {
             int tokenInsertIndex = 0;
 
             if (charStart < truncatedEnd) {
-                TruncationHandler truncationHandler = new TruncationHandler(charStart, truncatedEnd, truncatedEnd, charEnd, runList);
+                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, truncatedEnd, charEnd, runList);
                 truncationHandler.addAllRuns();
 
-                tokenInsertIndex = truncationHandler.trailingTokenIndex;
+                tokenInsertIndex = truncationHandler.leadingTokenIndex;
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
