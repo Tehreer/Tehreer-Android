@@ -736,7 +736,7 @@ public class Typesetter {
         }
 
         void addAllRuns() {
-            addContinuousLineRuns(charStart, charEnd, this);
+            addContinuousLineRuns(Math.min(charStart, skipStart), Math.max(charEnd, skipEnd), this);
         }
     }
 
@@ -751,7 +751,7 @@ public class Typesetter {
                 TruncationHandler truncationHandler = new TruncationHandler(truncatedStart, charEnd, charStart, truncatedStart, runList);
                 truncationHandler.addAllRuns();
 
-                tokenInsertIndex = truncationHandler.trailingTokenIndex;
+                tokenInsertIndex = truncationHandler.leadingTokenIndex;
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
@@ -803,7 +803,7 @@ public class Typesetter {
                 TruncationHandler truncationHandler = new TruncationHandler(charStart, truncatedEnd, truncatedEnd, charEnd, runList);
                 truncationHandler.addAllRuns();
 
-                tokenInsertIndex = truncationHandler.leadingTokenIndex;
+                tokenInsertIndex = truncationHandler.trailingTokenIndex;
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
