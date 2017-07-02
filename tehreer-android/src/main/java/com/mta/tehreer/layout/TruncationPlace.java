@@ -16,7 +16,20 @@
 
 package com.mta.tehreer.layout;
 
-public enum WrapMode {
-    WORD,
-    CHARACTER
+/**
+ * Specifies the place of text truncation.
+ */
+public enum TruncationPlace {
+    /**
+     * Text is truncated at the start of the line.
+     */
+    START,
+    /**
+     * Text is truncated at the middle of the line.
+     */
+    MIDDLE,
+    /**
+     * Text is truncated at the end of the line.
+     */
+    END
 }
