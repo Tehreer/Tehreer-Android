@@ -605,10 +605,7 @@ public class Typesetter {
      *                 width is greater than the width passed in this.
      * @param truncationPlace The place of truncation to perform if needed.
      * @param truncationToken This token will be added to the point where truncation took place to
-     *                        indicate that the line was truncated. Usually, the truncation token is
-     *                        the ellipsis character (U+2026). The line specified in
-     *                        <code>truncationToken</code> should have a width less than the width
-     *                        specified by the <code>maxWidth</code> parameter.
+     *                        indicate that the line was truncated.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
      * @throws NullPointerException if <code>truncationPlace</code> is null, or
@@ -621,20 +618,36 @@ public class Typesetter {
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationMode truncationMode, TruncationPlace truncationPlace,
+                                            TruncationPlace truncationPlace, TruncationMode truncationMode,
                                             ComposedLine truncationToken) {
         verifyTextRange(charStart, charEnd);
         if (truncationMode == null) {
             throw new NullPointerException("Truncation mode is null");
         }
         if (truncationPlace == null) {
-            throw new NullPointerException("Truncation type is null");
+            throw new NullPointerException("Truncation place is null");
         }
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
         }
 
-        return createTypeTruncatedLine(charStart, charEnd, maxWidth, truncationMode, truncationPlace, truncationToken);
+        float tokenlessWidth = maxWidth - truncationToken.getWidth();
+
+        switch (truncationPlace) {
+        case START:
+            return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
+                                            truncationMode, truncationToken);
+
+        case MIDDLE:
+            return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
+                                             truncationMode, truncationToken);
+
+        case END:
+            return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
+                                          truncationMode, truncationToken);
+        }
+
+        return null;
     }
 
     private interface BidiRunConsumer {
@@ -707,28 +720,6 @@ public class Typesetter {
         void addAllRuns() {
             addContinuousLineRuns(charStart, charEnd, this);
         }
-    }
-
-    private ComposedLine createTypeTruncatedLine(int charStart, int charEnd, float lineWidth,
-                                                 TruncationMode truncationMode, TruncationPlace truncationPlace,
-                                                 ComposedLine truncationToken) {
-        float tokenlessWidth = lineWidth - truncationToken.getWidth();
-
-        switch (truncationPlace) {
-        case START:
-            return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
-                    truncationMode, truncationToken);
-
-        case MIDDLE:
-            return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
-                    truncationMode, truncationToken);
-
-        case END:
-            return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
-                    truncationMode, truncationToken);
-        }
-
-        return null;
     }
 
     private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,

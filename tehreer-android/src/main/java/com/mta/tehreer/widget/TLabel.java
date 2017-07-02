@@ -51,8 +51,8 @@ public class TLabel extends View {
     private int mMaxLines = 0;
 
     private Renderer mRenderer = new Renderer();
-    private TruncationMode mTruncationMode = TruncationMode.WORD;
-    private TruncationPlace mTruncationPlace = null;
+    private TruncationMode mTruncationMode = null;
+    private TruncationPlace mTruncationPlace = TruncationPlace.END;
 
     private String mText = "";
     private Typesetter mTypesetter = null;
@@ -92,29 +92,29 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
-            TruncationMode truncationMode = null;
-            switch (values.getInt(R.styleable.TLabel_wrapMode, 0)) {
-            case 0:
-                truncationMode = TruncationMode.WORD;
-                break;
-
-            case 1:
-                truncationMode = TruncationMode.CHARACTER;
-                break;
-            }
-
             TruncationPlace truncationPlace = null;
-            switch (values.getInt(R.styleable.TLabel_truncationType, 0)) {
-            case 1:
-                truncationPlace = TruncationPlace.START;
+            switch (values.getInt(R.styleable.TLabel_truncationPlace, 0)) {
+            case 0:
+                truncationPlace = TruncationPlace.END;
                 break;
 
-            case 2:
+            case 1:
                 truncationPlace = TruncationPlace.MIDDLE;
                 break;
 
-            case 3:
-                truncationPlace = TruncationPlace.END;
+            case 2:
+                truncationPlace = TruncationPlace.START;
+                break;
+            }
+
+            TruncationMode truncationMode = null;
+            switch (values.getInt(R.styleable.TLabel_truncationMode, 0)) {
+            case 1:
+                truncationMode = TruncationMode.WORD;
+                break;
+
+            case 2:
+                truncationMode = TruncationMode.CHARACTER;
                 break;
             }
 
@@ -124,8 +124,8 @@ public class TLabel extends View {
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
             setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
-            setWrapMode(truncationMode);
-            setTruncationType(truncationPlace);
+            setTruncationMode(truncationMode);
+            setTruncationPlace(truncationPlace);
             setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
             setText(values.getString(R.styleable.TLabel_text));
@@ -346,7 +346,7 @@ public class TLabel extends View {
 
                         if (truncationToken != null) {
                             // Replace the last line with truncated one.
-                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTruncationMode, mTruncationPlace, truncationToken);
+                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTruncationPlace, mTruncationMode, truncationToken);
                             mComposedLines.set(mComposedLines.size() - 1, truncatedLine);
                         }
                     }
@@ -489,42 +489,43 @@ public class TLabel extends View {
     }
 
     /**
-     * Returns the wrap mode that should be used to break lines.
+     * Returns the truncation place for the last line of the text.
      *
-     * @return The current wrap mode.
+     * @return The current truncation place.
      */
-    public TruncationMode getWrapMode() {
-        return mTruncationMode;
+    public TruncationPlace getTruncationPlace() {
+        return mTruncationPlace;
     }
 
     /**
-     * Sets the wrap mode that should be used to break lines.
+     * Sets the truncation place for the last line of the text if it overflows the available area.
      *
-     * @param truncationMode A value of {@link TruncationMode}.
+     * @param truncationPlace A value of {@link TruncationPlace}.
      */
-    public void setWrapMode(TruncationMode truncationMode) {
-        mTruncationMode = truncationMode;
+    public void setTruncationPlace(TruncationPlace truncationPlace) {
+        mTruncationPlace = truncationPlace;
         requestLayout();
         invalidate();
     }
 
     /**
-     * Returns the truncation type that should be applied on the last line of the text.
+     * Returns the truncation mode that should be applied on the last line of the text in case of
+     * overflow.
      *
-     * @return The current truncation type.
+     * @return The current truncation mode.
      */
-    public TruncationPlace getTruncationType() {
-        return mTruncationPlace;
+    public TruncationMode getTruncationMode() {
+        return mTruncationMode;
     }
 
     /**
-     * Sets the truncation type that should be applied on the last line of the text if it overflows
-     * the available area.
+     * Sets the truncation mode that should be applied on the last line of the text in case of
+     * overflow.
      *
-     * @param truncationPlace A value of {@link TruncationPlace}.
+     * @param truncationMode A value of {@link TruncationMode}.
      */
-    public void setTruncationType(TruncationPlace truncationPlace) {
-        mTruncationPlace = truncationPlace;
+    public void setTruncationMode(TruncationMode truncationMode) {
+        mTruncationMode = truncationMode;
         requestLayout();
         invalidate();
     }
