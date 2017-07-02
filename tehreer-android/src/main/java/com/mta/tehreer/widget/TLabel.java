@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -30,9 +31,12 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.ComposedLine;
-import com.mta.tehreer.layout.WrapMode;
 import com.mta.tehreer.layout.TruncationType;
 import com.mta.tehreer.layout.Typesetter;
+import com.mta.tehreer.layout.WrapMode;
+import com.mta.tehreer.layout.style.TehreerSpan;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
+import com.mta.tehreer.layout.style.TypefaceSpan;
 
 import java.util.ArrayList;
 
@@ -49,7 +53,6 @@ public class TLabel extends View {
     private Renderer mRenderer = new Renderer();
     private WrapMode mWrapMode = WrapMode.WORD;
     private TruncationType mTruncationType = null;
-    private ComposedLine mTruncationToken = null;
 
     private String mText = "";
     private Typesetter mTypesetter = null;
@@ -249,11 +252,53 @@ public class TLabel extends View {
         Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) / Math.pow(10, 6)));
     }
 
-    private void ensureTruncationToken() {
-        if (mTruncationToken == null) {
-            Typesetter tokenTypesetter = new Typesetter(TRUNCATION_STRING, getTypeface(), getTextSize());
-            mTruncationToken = tokenTypesetter.createLine(0, TRUNCATION_STRING.length());
+    private ComposedLine createTruncationToken(int charStart, int charEnd) {
+        int truncationIndex = 0;
+
+        switch (mTruncationType) {
+        case START:
+            truncationIndex = charStart;
+            break;
+
+        case MIDDLE:
+            truncationIndex = (charStart + charEnd) / 2;
+            break;
+
+        case END:
+            truncationIndex = charEnd - 1;
+            break;
         }
+
+        Spanned spanned = mTypesetter.getSpanned();
+        TehreerSpan[] charSpans = spanned.getSpans(truncationIndex, truncationIndex + 1, TehreerSpan.class);
+        TypefaceSpan typefaceSpan = null;
+        TypeSizeSpan typeSizeSpan = null;
+
+        final int typefaceBit = 1;
+        final int sizeBit = 1 << 1;
+        final int requiredBits = typefaceBit | sizeBit;
+        int spanBits = 0;
+
+        for (TehreerSpan span : charSpans) {
+            if (span instanceof TypefaceSpan) {
+                if (typefaceSpan == null) {
+                    typefaceSpan = (TypefaceSpan) span;
+                    spanBits |= typefaceBit;
+                }
+            } else if (span instanceof TypeSizeSpan) {
+                if (typeSizeSpan == null) {
+                    typeSizeSpan = (TypeSizeSpan) span;
+                    spanBits |= sizeBit;
+                }
+            }
+
+            if (spanBits == requiredBits) {
+                Typesetter typesetter = new Typesetter(TRUNCATION_STRING, typefaceSpan.getTypeface(), typeSizeSpan.getSize());
+                return typesetter.createLine(0, TRUNCATION_STRING.length());
+            }
+        }
+
+        return null;
     }
 
     private void updateLines(int layoutWidth, int layoutHeight) {
@@ -265,7 +310,7 @@ public class TLabel extends View {
 
             // Get boundary of first line.
             int lineStart = 0;
-            int lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
+            int lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
 
             // Add first line even if layout height is smaller than its height.
             ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
@@ -277,13 +322,12 @@ public class TLabel extends View {
             float textHeight = getLineHeight(composedLine);
 
             lineStart = lineEnd;
-            int textLength = mTypesetter.getText().length();
-
+            int textLength = mTypesetter.getSpanned().length();
             int maxLines = (mMaxLines == 0 ? Integer.MAX_VALUE : mMaxLines);
 
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
-                lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
+                lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
                 composedLine = mTypesetter.createLine(lineStart, lineEnd);
 
                 float lineWidth = composedLine.getWidth();
@@ -297,13 +341,13 @@ public class TLabel extends View {
                     lineStart = lineEnd;
                 } else {
                     if (mTruncationType != null) {
-                        ensureTruncationToken();
+                        ComposedLine lastLine = mComposedLines.get(mComposedLines.size() - 1);
+                        ComposedLine truncationToken = createTruncationToken(lastLine.getCharStart(), textLength);
 
-                        if (layoutWidth > mTruncationToken.getWidth()) {
+                        if (truncationToken != null) {
                             // Replace the last line with truncated one.
-                            ComposedLine lastLine = mComposedLines.remove(mComposedLines.size() - 1);
-                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mWrapMode, mTruncationType, mTruncationToken);
-                            mComposedLines.add(truncatedLine);
+                            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mWrapMode, mTruncationType, truncationToken);
+                            mComposedLines.set(mComposedLines.size() - 1, truncatedLine);
                         }
                     }
                     break;
@@ -321,7 +365,6 @@ public class TLabel extends View {
     private void updateTypesetter() {
         if (mText != null) {
             mTypesetter = null;
-            mTruncationToken = null;
 
             Typeface typeface = mRenderer.getTypeface();
             if (typeface != null && mText.length() > 0) {
@@ -359,7 +402,6 @@ public class TLabel extends View {
 
     public void setTypesetter(Typesetter typesetter) {
         mText = null;
-        mTruncationToken = null;
         mTypesetter = typesetter;
 
         requestLayout();
