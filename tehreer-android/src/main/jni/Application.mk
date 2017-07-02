@@ -1,4 +1,5 @@
 APP_PLATFORM := android-15
-APP_STL := gnustl_static
+APP_STL := c++_static
+APP_CFLAGS += -std=c89
 APP_CPPFLAGS += -std=c++11
-NDK_TOOLCHAIN_VERSION := 4.9
+NDK_TOOLCHAIN_VERSION := clang

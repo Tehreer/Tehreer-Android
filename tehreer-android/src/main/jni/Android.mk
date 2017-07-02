@@ -17,10 +17,6 @@
 LOCAL_PATH := $(call my-dir)
 ROOT_PATH := $(LOCAL_PATH)/../../../..
 
-ifneq ($(APP_OPTIM), release)
-    APP_DEBUG := YES
-endif
-
 #########################FREETYPE##########################
 include $(CLEAR_VARS)
 
@@ -81,12 +77,11 @@ SB_ROOT_PATH := $(ROOT_PATH)/sheenbidi
 SB_HEADERS_PATH := $(SB_ROOT_PATH)/Headers
 SB_SOURCE_PATH := $(SB_ROOT_PATH)/Source
 
-ifdef APP_DEBUG
+ifeq ($(APP_OPTIM), debug)
     SB_FILE_LIST := \
         SBAlgorithm.c \
         SBBase.c \
         SBBidiChain.c \
-        SBBidiLink.c \
         SBBracketQueue.c \
         SBCharTypeLookup.c \
         SBCodepointSequence.c \
@@ -97,7 +92,8 @@ ifdef APP_DEBUG
         SBMirrorLocator.c \
         SBPairingLookup.c \
         SBParagraph.c \
-        SBStatusStack.c \
+        SBRunQueue.c \
+        SBStatusStack.c
 else
     SB_FILE_LIST := SheenBidi.c
     SB_MACROS := -DSB_CONFIG_UNITY
@@ -120,7 +116,7 @@ SF_ROOT_PATH := $(ROOT_PATH)/sheenfigure
 SF_HEADERS_PATH := $(SF_ROOT_PATH)/Headers
 SF_SOURCE_PATH := $(SF_ROOT_PATH)/Source
 
-ifdef APP_DEBUG
+ifeq ($(APP_OPTIM), debug)
     SF_FILE_LIST := \
         SFAlbum.c \
         SFArtist.c \
@@ -136,6 +132,7 @@ ifdef APP_DEBUG
         SFArabicEngine.c \
         SFShapingEngine.c \
         SFShapingKnowledge.c \
+        SFSimpleEngine.c \
         SFStandardEngine.c \
         SFUnifiedEngine.c \
         SFGlyphDiscovery.c \
@@ -144,7 +141,7 @@ ifdef APP_DEBUG
         SFGlyphSubstitution.c \
         SFTextProcessor.c \
         SFGeneralCategoryLookup.c \
-        SFJoiningTypeLookup.c \
+        SFJoiningTypeLookup.c
 else
     SF_FILE_LIST := SheenFigure.c
     SF_MACROS := -DSF_CONFIG_UNITY
@@ -173,9 +170,9 @@ FILE_LIST := \
     Glyph.cpp \
     GlyphRasterizer.cpp \
     JavaBridge.cpp \
-    OpenType.cpp \
     PatternCache.cpp \
     Raw.cpp \
+    SfntTables.cpp \
     ShapingEngine.cpp \
     ShapingResult.cpp \
     StreamUtils.cpp \
