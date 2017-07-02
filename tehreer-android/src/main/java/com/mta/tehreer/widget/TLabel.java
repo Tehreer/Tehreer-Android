@@ -257,7 +257,7 @@ public class TLabel extends View {
 
             // Get boundary of first line.
             int lineStart = 0;
-            int lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
+            int lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
 
             // Add first line even if layout height is smaller than its height.
             ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
@@ -274,7 +274,7 @@ public class TLabel extends View {
 
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
-                lineEnd = mTypesetter.suggestLineBoundary(lineStart, layoutWidth);
+                lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
                 composedLine = mTypesetter.createLine(lineStart, lineEnd);
 
                 float lineWidth = composedLine.getWidth();

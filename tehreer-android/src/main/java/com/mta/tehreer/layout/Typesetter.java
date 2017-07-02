@@ -85,11 +85,18 @@ public class Typesetter {
      * @param typeface The typeface to use.
      * @param typeSize The type size to apply.
      *
-     * @throws IllegalArgumentException if <code>text</code> is null or empty, or typeface is null
+     * @throws NullPointerException if <code>text</code> is null, or <code>typeface</code> is null.
+     * @throws IllegalArgumentException if <code>text</code> is empty.
      */
 	public Typesetter(String text, Typeface typeface, float typeSize) {
-        if (text == null || text.length() == 0) {
-            throw new IllegalArgumentException("Text is null or empty");
+        if (text == null) {
+            throw new NullPointerException("Text is null");
+        }
+        if (typeface == null) {
+            throw new NullPointerException("Typeface is null");
+        }
+        if (text.length() == 0) {
+            throw new IllegalArgumentException("Text is empty");
         }
 
         SpannableString spanned = new SpannableString(text);
@@ -104,11 +111,15 @@ public class Typesetter {
      *
      * @param spanned The spanned text to typeset.
      *
-     * @throws IllegalArgumentException if <code>spanned</code> is null or empty
+     * @throws NullPointerException if <code>spanned</code> is null.
+     * @throws IllegalArgumentException if <code>spanned</code> is empty.
      */
     public Typesetter(Spanned spanned) {
-        if (spanned == null || spanned.length() == 0) {
-            throw new IllegalArgumentException("Spanned text is null or empty");
+        if (spanned == null) {
+            throw new NullPointerException("Spanned text is null");
+        }
+        if (spanned.length() == 0) {
+            throw new IllegalArgumentException("Spanned text is empty");
         }
 
         init(StringUtils.copyString(spanned), spanned);
@@ -265,17 +276,18 @@ public class Typesetter {
         return intrinsicRun;
     }
 
-    private void verifyTextRange(int charStart, int charEnd) {
+    private String checkRange(int charStart, int charEnd) {
         if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
+            return ("Char Start: " + charStart);
         }
         if (charEnd > mText.length()) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Text Length: " + mText.length());
+            return ("Char End: " + charEnd + ", Text Length: " + mText.length());
         }
         if (charStart >= charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
+            return ("Bad Range: [" + charStart + ".." + charEnd + ")");
         }
+
+        return null;
     }
 
     private int indexOfBidiParagraph(final int charIndex) {
@@ -533,15 +545,15 @@ public class Typesetter {
      *             <li><code>charStart</code> is negative</li>
      *             <li><code>charStart</code> is greater than or equal to the length of source
      *                 text</li>
-     *             <li><code>maxWidth</code> is less than or equal to zero</li>
      *         </ul>
      */
-    public int suggestCharBoundary(int charStart, float maxWidth) {
-        if (charStart < 0 || charStart >= mText.length()) {
-            throw new IndexOutOfBoundsException("Char Start: " + charStart);
+    public int suggestCharBreak(int charStart, float maxWidth) {
+        if (charStart < 0) {
+            throw new IllegalArgumentException("Char Start: " + charStart);
         }
-        if (maxWidth <= 0.0f) {
-            throw new IllegalArgumentException("Max Width: " + maxWidth);
+        if (charStart > mText.length()) {
+            throw new IllegalArgumentException("Char Start: " + charStart
+                                               + ", Text Length: " + mText.length());
         }
 
         return suggestForwardCharBreak(charStart, mText.length(), maxWidth);
@@ -559,19 +571,15 @@ public class Typesetter {
      *             <li><code>charStart</code> is negative</li>
      *             <li><code>charStart</code> is greater than or equal to the length of source
      *                 text</li>
-     *             <li><code>maxWidth</code> is less than or equal to zero</li>
      *         </ul>
      */
-    public int suggestLineBoundary(int charStart, float maxWidth) {
+    public int suggestLineBreak(int charStart, float maxWidth) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
         if (charStart > mText.length()) {
             throw new IllegalArgumentException("Char Start: " + charStart
                                                + ", Text Length: " + mText.length());
-        }
-        if (maxWidth <= 0.0f) {
-            throw new IllegalArgumentException("Max Width: " + maxWidth);
         }
 
         return suggestForwardLineBreak(charStart, mText.length(), maxWidth);
@@ -589,7 +597,10 @@ public class Typesetter {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
 	public ComposedLine createLine(int charStart, int charEnd) {
-        verifyTextRange(charStart, charEnd);
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
 
         ArrayList<GlyphRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
@@ -673,7 +684,7 @@ public class Typesetter {
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
      * @throws NullPointerException if <code>truncationMode</code> is null, or
-     *         <code>truncationPlace</code> is null
+     *         <code>truncationPlace</code> is null.
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
@@ -738,7 +749,6 @@ public class Typesetter {
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
                                             TruncationMode truncationMode, TruncationPlace truncationPlace,
                                             ComposedLine truncationToken) {
-        verifyTextRange(charStart, charEnd);
         if (truncationMode == null) {
             throw new NullPointerException("Truncation mode is null");
         }
@@ -747,6 +757,10 @@ public class Typesetter {
         }
         if (truncationToken == null) {
             throw new NullPointerException("Truncation token is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
         }
 
         float tokenlessWidth = maxWidth - truncationToken.getWidth();
@@ -997,12 +1011,18 @@ public class Typesetter {
      * @return The new frame object.
      */
     public ComposedFrame createFrame(int charStart, int charEnd, RectF frameRect, TextAlignment textAlignment) {
-        verifyTextRange(charStart, charEnd);
-        if (frameRect.isEmpty()) {
-            throw new IllegalArgumentException("Frame rect is empty");
+        if (frameRect == null) {
+            throw new NullPointerException("Frame rect is null");
         }
         if (textAlignment == null) {
             throw new NullPointerException("Text alignment is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
+        if (frameRect.isEmpty()) {
+            throw new IllegalArgumentException("Frame rect is empty");
         }
 
         float flushFactor;
@@ -1028,7 +1048,7 @@ public class Typesetter {
         float lineY = frameRect.top;
 
         while (lineStart != charEnd) {
-            int lineEnd = suggestLineBoundary(lineStart, frameWidth);
+            int lineEnd = suggestLineBreak(lineStart, frameWidth);
             ComposedLine composedLine = createLine(lineStart, lineEnd);
 
             float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
