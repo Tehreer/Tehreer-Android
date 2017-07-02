@@ -28,6 +28,7 @@ import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
+import com.mta.tehreer.layout.style.TehreerSpan;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -596,29 +597,146 @@ public class Typesetter {
 		return new ComposedLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
 	}
 
+    private ComposedLine createTruncationToken(int charStart, int charEnd,
+                                               TruncationPlace truncationPlace, String tokenStr) {
+        int truncationIndex = 0;
+
+        switch (truncationPlace) {
+        case START:
+            truncationIndex = charStart;
+            break;
+
+        case MIDDLE:
+            truncationIndex = (charStart + charEnd) / 2;
+            break;
+
+        case END:
+            truncationIndex = charEnd - 1;
+            break;
+        }
+
+        TehreerSpan[] charSpans = mSpanned.getSpans(truncationIndex, truncationIndex + 1, TehreerSpan.class);
+        TypefaceSpan typefaceSpan = null;
+        TypeSizeSpan typeSizeSpan = null;
+
+        final int typefaceBit = 1;
+        final int typeSizeBit = 1 << 1;
+        final int requiredBits = typefaceBit | typeSizeBit;
+        int foundBits = 0;
+
+        for (TehreerSpan span : charSpans) {
+            if (span instanceof TypefaceSpan) {
+                if (typefaceSpan == null) {
+                    typefaceSpan = (TypefaceSpan) span;
+                    foundBits |= typefaceBit;
+                }
+            } else if (span instanceof TypeSizeSpan) {
+                if (typeSizeSpan == null) {
+                    typeSizeSpan = (TypeSizeSpan) span;
+                    foundBits |= typeSizeBit;
+                }
+            }
+
+            if (foundBits == requiredBits) {
+                Typeface tokenTypeface = typefaceSpan.getTypeface();
+                float tokenTypeSize = typeSizeSpan.getSize();
+
+                if (tokenStr == null || tokenStr.length() == 0) {
+                    // Token string is not given. Use ellipsis character if available; fallback to
+                    // three dots.
+
+                    int ellipsisGlyphId = tokenTypeface.getGlyphId(0x2026);
+                    if (ellipsisGlyphId == 0) {
+                        tokenStr = "...";
+                    } else {
+                        tokenStr = "\u2026";
+                    }
+                }
+
+                Typesetter typesetter = new Typesetter(tokenStr, tokenTypeface, tokenTypeSize);
+                return typesetter.createLine(0, tokenStr.length());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a line of specified string range, truncating it with ellipsis character (U+2026) or
+     * three dots if it overflows the max width.
+     *
+     * @param charStart The index to first character of the line in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @param maxWidth The width at which truncation will begin.
+     * @param truncationMode The truncation mode to be used on the line.
+     * @param truncationPlace The place of truncation for the line.
+     * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
+     *
+     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     *         <code>truncationPlace</code> is null
+     * @throws IllegalArgumentException if any of the following is true:
+     *         <ul>
+     *             <li><code>charStart</code> is negative</li>
+     *             <li><code>charEnd</code> is greater than the length of source text</li>
+     *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
+     *         </ul>
+     */
+    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                            TruncationMode truncationMode, TruncationPlace truncationPlace) {
+        return createTruncatedLine(charStart, charEnd, maxWidth, truncationMode, truncationPlace, (String)null);
+    }
+
     /**
      * Creates a line of specified string range, truncating it if it overflows the max width.
      *
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
-     * @param maxWidth The width at which truncation will begin. The line will be truncated if its
-     *                 width is greater than the width passed in this.
-     * @param truncationPlace The place of truncation to perform if needed.
-     * @param truncationToken This token will be added to the point where truncation took place to
-     *                        indicate that the line was truncated.
+     * @param maxWidth The width at which truncation will begin.
+     * @param truncationMode The truncation mode to be used on the line.
+     * @param truncationPlace The place of truncation for the line.
+     * @param truncationToken The token to indicate the line truncation. If it is null or empty,
+     *                        then ellipsis character (U+2026) or three dots will be used depending
+     *                        on their availability in chosen typeface.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>truncationPlace</code> is null, or
-     *         <code>truncationToken</code> is null
+     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     *         <code>truncationPlace</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
      *             <li><code>charEnd</code> is greater than the length of source text</li>
-     *             <li><code>charStart</code> is greater than of equal to <code>charEnd</code></li>
+     *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationPlace truncationPlace, TruncationMode truncationMode,
+                                            TruncationMode truncationMode, TruncationPlace truncationPlace,
+                                            String truncationToken) {
+        return createTruncatedLine(charStart, charEnd, maxWidth, truncationMode, truncationPlace,
+                                   createTruncationToken(charStart, charEnd, truncationPlace, truncationToken));
+    }
+
+    /**
+     * Creates a line of specified string range, truncating it if it overflows the max width.
+     *
+     * @param charStart The index to first character of the line in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @param maxWidth The width at which truncation will begin.
+     * @param truncationMode The truncation mode to be used on the line.
+     * @param truncationPlace The place of truncation for the line.
+     * @param truncationToken The token to indicate the line truncation.
+     * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
+     *
+     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     *         <code>truncationPlace</code> is null, or <code>truncationToken</code> is null
+     * @throws IllegalArgumentException if any of the following is true:
+     *         <ul>
+     *             <li><code>charStart</code> is negative</li>
+     *             <li><code>charEnd</code> is greater than the length of source text</li>
+     *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
+     *         </ul>
+     */
+    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                            TruncationMode truncationMode, TruncationPlace truncationPlace,
                                             ComposedLine truncationToken) {
         verifyTextRange(charStart, charEnd);
         if (truncationMode == null) {
