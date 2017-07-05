@@ -508,81 +508,76 @@ public class Typesetter {
         return backwardBreak;
     }
 
-    private int suggestForwardTruncationBreak(int charStart, int charEnd, float maxWidth, TruncationMode truncationMode) {
-        switch (truncationMode) {
-        case WORD:
-            return suggestForwardLineBreak(charStart, charEnd, maxWidth);
-
-        case CHARACTER:
-            return suggestForwardCharBreak(charStart, charEnd, maxWidth);
+    /**
+     * Suggests a forward break index based on the provided range and width. The measurement
+     * proceeds from first character to last character. If there is still room after measuring all
+     * characters, then last index is returned. Otherwise, break index is returned.
+     *
+     * @param charStart The index to the first character (inclusive) for break calculations.
+     * @param charEnd The index to the last character (exclusive) for break calculations.
+     * @param breakWidth The requested break width.
+     * @param breakMode The requested break mode.
+     * @return The index (exclusive) that would cause the break.
+     *
+     * @throws NullPointerException if <code>breakMode</code> is null.
+     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
+     *         <code>charEnd</code> is greater than the length of source text, or
+     *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
+     */
+    public int suggestForwardBreak(int charStart, int charEnd, float breakWidth, BreakMode breakMode) {
+        if (breakMode == null) {
+            throw new NullPointerException("Break mode is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
         }
 
-        return -1;
-    }
-
-    private int suggestBackwardTruncationBreak(int charStart, int charEnd, float maxWidth, TruncationMode truncationMode) {
-        switch (truncationMode) {
-        case WORD:
-            return suggestBackwardLineBreak(charStart, charEnd, maxWidth);
-
+        switch (breakMode) {
         case CHARACTER:
-            return suggestBackwardCharBreak(charStart, charEnd, maxWidth);
+            return suggestForwardCharBreak(charStart, charEnd, breakWidth);
+
+        case LINE:
+            return suggestForwardLineBreak(charStart, charEnd, breakWidth);
         }
 
         return -1;
     }
 
     /**
-     * Suggests a typographic character line break index based on the width provided. This can be
-     * used by the caller to implement a different line breaking scheme, such as hyphenation.
+     * Suggests a backward break index based on the provided range and width. The measurement
+     * proceeds from last character to first character. If there is still room after measuring all
+     * characters, then first index is returned. Otherwise, break index is returned.
      *
-     * @param charStart The starting index for the typographic character break calculations.
-     * @param maxWidth The requested typographic character break width.
-     * @return The index (exclusive) that would cause the character break.
+     * @param charStart The index to the first character (inclusive) for break calculations.
+     * @param charEnd The index to the last character (exclusive) for break calculations.
+     * @param breakWidth The requested break width.
+     * @param breakMode The requested break mode.
+     * @return The index (inclusive) that would cause the break.
      *
-     * @throws IllegalArgumentException if any of the following is true:
-     *         <ul>
-     *             <li><code>charStart</code> is negative</li>
-     *             <li><code>charStart</code> is greater than or equal to the length of source
-     *                 text</li>
-     *         </ul>
+     * @throws NullPointerException if <code>breakMode</code> is null.
+     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
+     *         <code>charEnd</code> is greater than the length of source text, or
+     *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-    public int suggestCharBreak(int charStart, float maxWidth) {
-        if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
+    public int suggestBackwardBreak(int charStart, int charEnd, float breakWidth, BreakMode breakMode) {
+        if (breakMode == null) {
+            throw new NullPointerException("Break mode is null");
         }
-        if (charStart > mText.length()) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Text Length: " + mText.length());
-        }
-
-        return suggestForwardCharBreak(charStart, mText.length(), maxWidth);
-    }
-
-    /**
-     * Suggests a contextual line break index based on the width provided.
-     *
-     * @param charStart The starting index for the line break calculations.
-     * @param maxWidth The requested line break width.
-     * @return The index (exclusive) that would cause the line break.
-     *
-     * @throws IllegalArgumentException if any of the following is true:
-     *         <ul>
-     *             <li><code>charStart</code> is negative</li>
-     *             <li><code>charStart</code> is greater than or equal to the length of source
-     *                 text</li>
-     *         </ul>
-     */
-    public int suggestLineBreak(int charStart, float maxWidth) {
-        if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
-        }
-        if (charStart > mText.length()) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Text Length: " + mText.length());
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
         }
 
-        return suggestForwardLineBreak(charStart, mText.length(), maxWidth);
+        switch (breakMode) {
+        case CHARACTER:
+            return suggestBackwardCharBreak(charStart, charEnd, breakWidth);
+
+        case LINE:
+            return suggestBackwardLineBreak(charStart, charEnd, breakWidth);
+        }
+
+        return -1;
     }
 
     /**
@@ -679,11 +674,11 @@ public class Typesetter {
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
-     * @param truncationMode The truncation mode to be used on the line.
+     * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     * @throws NullPointerException if <code>breakMode</code> is null, or
      *         <code>truncationPlace</code> is null.
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
@@ -693,8 +688,8 @@ public class Typesetter {
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationMode truncationMode, TruncationPlace truncationPlace) {
-        return createTruncatedLine(charStart, charEnd, maxWidth, truncationMode, truncationPlace, (String)null);
+                                            BreakMode breakMode, TruncationPlace truncationPlace) {
+        return createTruncatedLine(charStart, charEnd, maxWidth, breakMode, truncationPlace, (String)null);
     }
 
     /**
@@ -703,14 +698,14 @@ public class Typesetter {
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
-     * @param truncationMode The truncation mode to be used on the line.
+     * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
      * @param truncationToken The token to indicate the line truncation. If it is null or empty,
      *                        then ellipsis character (U+2026) or three dots will be used depending
      *                        on their availability in chosen typeface.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     * @throws NullPointerException if <code>breakMode</code> is null, or
      *         <code>truncationPlace</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
@@ -720,9 +715,9 @@ public class Typesetter {
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationMode truncationMode, TruncationPlace truncationPlace,
+                                            BreakMode breakMode, TruncationPlace truncationPlace,
                                             String truncationToken) {
-        return createTruncatedLine(charStart, charEnd, maxWidth, truncationMode, truncationPlace,
+        return createTruncatedLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
                                    createTruncationToken(charStart, charEnd, truncationPlace, truncationToken));
     }
 
@@ -732,12 +727,12 @@ public class Typesetter {
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
-     * @param truncationMode The truncation mode to be used on the line.
+     * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
      * @param truncationToken The token to indicate the line truncation.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>truncationMode</code> is null, or
+     * @throws NullPointerException if <code>breakMode</code> is null, or
      *         <code>truncationPlace</code> is null, or <code>truncationToken</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
@@ -747,9 +742,9 @@ public class Typesetter {
      *         </ul>
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            TruncationMode truncationMode, TruncationPlace truncationPlace,
+                                            BreakMode breakMode, TruncationPlace truncationPlace,
                                             ComposedLine truncationToken) {
-        if (truncationMode == null) {
+        if (breakMode == null) {
             throw new NullPointerException("Truncation mode is null");
         }
         if (truncationPlace == null) {
@@ -768,15 +763,15 @@ public class Typesetter {
         switch (truncationPlace) {
         case START:
             return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                            truncationMode, truncationToken);
+                                            breakMode, truncationToken);
 
         case MIDDLE:
             return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                             truncationMode, truncationToken);
+                                             breakMode, truncationToken);
 
         case END:
             return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                          truncationMode, truncationToken);
+                                          breakMode, truncationToken);
         }
 
         return null;
@@ -855,8 +850,8 @@ public class Typesetter {
     }
 
     private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                  TruncationMode truncationMode, ComposedLine truncationToken) {
-        int truncatedStart = suggestBackwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationMode);
+                                                  BreakMode breakMode, ComposedLine truncationToken) {
+        int truncatedStart = suggestBackwardBreak(charStart, charEnd, tokenlessWidth, breakMode);
         if (truncatedStart > charStart) {
             ArrayList<GlyphRun> runList = new ArrayList<>();
             int tokenInsertIndex = 0;
@@ -876,10 +871,10 @@ public class Typesetter {
     }
 
     private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                   TruncationMode truncationMode, ComposedLine truncationToken) {
+                                                   BreakMode breakMode, ComposedLine truncationToken) {
         float halfWidth = tokenlessWidth / 2.0f;
-        int firstMidEnd = suggestForwardTruncationBreak(charStart, charEnd, halfWidth, truncationMode);
-        int secondMidStart = suggestBackwardTruncationBreak(charStart, charEnd, halfWidth, truncationMode);
+        int firstMidEnd = suggestForwardBreak(charStart, charEnd, halfWidth, breakMode);
+        int secondMidStart = suggestBackwardBreak(charStart, charEnd, halfWidth, breakMode);
 
         if (firstMidEnd < secondMidStart) {
             // Exclude inner whitespaces as truncation token replaces them.
@@ -904,8 +899,8 @@ public class Typesetter {
     }
 
     private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                TruncationMode truncationMode, ComposedLine truncationToken) {
-        int truncatedEnd = suggestForwardTruncationBreak(charStart, charEnd, tokenlessWidth, truncationMode);
+                                                BreakMode breakMode, ComposedLine truncationToken) {
+        int truncatedEnd = suggestForwardBreak(charStart, charEnd, tokenlessWidth, breakMode);
         if (truncatedEnd < charEnd) {
             // Exclude trailing whitespaces as truncation token replaces them.
             truncatedEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, truncatedEnd);
@@ -1048,7 +1043,7 @@ public class Typesetter {
         float lineY = frameRect.top;
 
         while (lineStart != charEnd) {
-            int lineEnd = suggestLineBreak(lineStart, frameWidth);
+            int lineEnd = suggestForwardBreak(lineStart, charEnd, frameWidth, BreakMode.LINE);
             ComposedLine composedLine = createLine(lineStart, lineEnd);
 
             float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);

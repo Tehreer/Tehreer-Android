@@ -29,8 +29,8 @@ import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.layout.BreakMode;
 import com.mta.tehreer.layout.ComposedLine;
-import com.mta.tehreer.layout.TruncationMode;
 import com.mta.tehreer.layout.TruncationPlace;
 import com.mta.tehreer.layout.Typesetter;
 
@@ -47,7 +47,7 @@ public class TLabel extends View {
     private int mMaxLines = 0;
 
     private Renderer mRenderer = new Renderer();
-    private TruncationMode mTruncationMode = null;
+    private BreakMode mTruncationMode = null;
     private TruncationPlace mTruncationPlace = TruncationPlace.END;
 
     private String mText = "";
@@ -88,14 +88,14 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
-            TruncationMode truncationMode = null;
+            BreakMode truncationMode = null;
             switch (values.getInt(R.styleable.TLabel_truncationMode, 0)) {
             case 1:
-                truncationMode = TruncationMode.WORD;
+                truncationMode = BreakMode.LINE;
                 break;
 
             case 2:
-                truncationMode = TruncationMode.CHARACTER;
+                truncationMode = BreakMode.CHARACTER;
                 break;
             }
 
@@ -255,9 +255,12 @@ public class TLabel extends View {
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
 
+            int textLength = mTypesetter.getSpanned().length();
+            int maxLines = (mMaxLines == 0 ? Integer.MAX_VALUE : mMaxLines);
+
             // Get boundary of first line.
             int lineStart = 0;
-            int lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
+            int lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
 
             // Add first line even if layout height is smaller than its height.
             ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
@@ -269,12 +272,10 @@ public class TLabel extends View {
             float textHeight = getLineHeight(composedLine);
 
             lineStart = lineEnd;
-            int textLength = mTypesetter.getSpanned().length();
-            int maxLines = (mMaxLines == 0 ? Integer.MAX_VALUE : mMaxLines);
 
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
-                lineEnd = mTypesetter.suggestLineBreak(lineStart, layoutWidth);
+                lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
                 composedLine = mTypesetter.createLine(lineStart, lineEnd);
 
                 float lineWidth = composedLine.getWidth();
@@ -438,7 +439,7 @@ public class TLabel extends View {
      *
      * @return The current truncation mode.
      */
-    public TruncationMode getTruncationMode() {
+    public BreakMode getTruncationMode() {
         return mTruncationMode;
     }
 
@@ -446,9 +447,9 @@ public class TLabel extends View {
      * Sets the truncation mode that should be used on the last line of the text in case of
      * overflow.
      *
-     * @param truncationMode A value of {@link TruncationMode}.
+     * @param truncationMode A value of {@link BreakMode}.
      */
-    public void setTruncationMode(TruncationMode truncationMode) {
+    public void setTruncationMode(BreakMode truncationMode) {
         mTruncationMode = truncationMode;
         requestLayout();
         invalidate();

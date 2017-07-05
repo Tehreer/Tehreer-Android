@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.layout;
 
-public enum TruncationMode {
-    WORD,
+public enum BreakMode {
+    LINE,
     CHARACTER
 }
