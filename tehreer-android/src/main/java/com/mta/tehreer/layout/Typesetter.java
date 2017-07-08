@@ -28,7 +28,6 @@ import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
-import com.mta.tehreer.layout.style.TehreerSpan;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -621,7 +620,7 @@ public class Typesetter {
             break;
         }
 
-        TehreerSpan[] charSpans = mSpanned.getSpans(truncationIndex, truncationIndex + 1, TehreerSpan.class);
+        Object[] charSpans = mSpanned.getSpans(truncationIndex, truncationIndex + 1, Object.class);
         TypefaceSpan typefaceSpan = null;
         TypeSizeSpan typeSizeSpan = null;
 
@@ -630,7 +629,7 @@ public class Typesetter {
         final int requiredBits = typefaceBit | typeSizeBit;
         int foundBits = 0;
 
-        for (TehreerSpan span : charSpans) {
+        for (Object span : charSpans) {
             if (span instanceof TypefaceSpan) {
                 if (typefaceSpan == null) {
                     typefaceSpan = (TypefaceSpan) span;

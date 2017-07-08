@@ -21,7 +21,7 @@ import com.mta.tehreer.graphics.Typeface;
 /**
  * The <code>TypefaceSpan</code> class represents a span for specifying custom typeface.
  */
-public class TypefaceSpan extends TehreerSpan {
+public class TypefaceSpan {
 
     private final Typeface typeface;
 

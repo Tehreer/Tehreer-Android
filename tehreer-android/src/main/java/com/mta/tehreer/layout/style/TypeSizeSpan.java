@@ -19,7 +19,7 @@ package com.mta.tehreer.layout.style;
 /**
  * The <code>TypeSizeSpan</code> class represents a span for specifying absolute type size.
  */
-public class TypeSizeSpan extends TehreerSpan {
+public class TypeSizeSpan {
 
     private final float size;
 
