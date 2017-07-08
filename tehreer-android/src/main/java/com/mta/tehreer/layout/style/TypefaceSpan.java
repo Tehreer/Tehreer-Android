@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,26 +41,5 @@ public class TypefaceSpan {
      */
     public Typeface getTypeface() {
         return typeface;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this != obj) {
-            if (obj == null || !(obj instanceof TypefaceSpan)) {
-                return false;
-            }
-
-            TypefaceSpan other = (TypefaceSpan) obj;
-            if ((typeface == null ? other.typeface != null : !typeface.equals(other.typeface))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return typeface.hashCode();
     }
 }

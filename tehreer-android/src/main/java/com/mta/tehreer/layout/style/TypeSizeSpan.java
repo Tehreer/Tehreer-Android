@@ -40,25 +40,4 @@ public class TypeSizeSpan {
     public float getSize() {
         return size;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this != obj) {
-            if (obj == null || !(obj instanceof TypeSizeSpan)) {
-                return false;
-            }
-
-            TypeSizeSpan other = (TypeSizeSpan) obj;
-            if (size != other.size) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return Float.valueOf(size).hashCode();
-    }
 }
