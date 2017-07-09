@@ -47,7 +47,7 @@ public class TLabel extends View {
     private int mMaxLines = 0;
 
     private Renderer mRenderer = new Renderer();
-    private BreakMode mTruncationMode = null;
+    private BreakMode mTruncationMode = BreakMode.LINE;
     private TruncationPlace mTruncationPlace = TruncationPlace.END;
 
     private String mText = "";
@@ -90,26 +90,26 @@ public class TLabel extends View {
         try {
             BreakMode truncationMode = null;
             switch (values.getInt(R.styleable.TLabel_truncationMode, 0)) {
-            case 1:
+            case 0:
                 truncationMode = BreakMode.LINE;
                 break;
 
-            case 2:
+            case 1:
                 truncationMode = BreakMode.CHARACTER;
                 break;
             }
 
             TruncationPlace truncationPlace = null;
             switch (values.getInt(R.styleable.TLabel_truncationPlace, 0)) {
-            case 0:
+            case 1:
                 truncationPlace = TruncationPlace.END;
                 break;
 
-            case 1:
+            case 2:
                 truncationPlace = TruncationPlace.MIDDLE;
                 break;
 
-            case 2:
+            case 3:
                 truncationPlace = TruncationPlace.START;
                 break;
             }
@@ -288,7 +288,7 @@ public class TLabel extends View {
 
                     lineStart = lineEnd;
                 } else {
-                    if (mTruncationMode != null) {
+                    if (mTruncationPlace != null) {
                         ComposedLine lastLine = mComposedLines.get(mComposedLines.size() - 1);
 
                         // Replace the last line with truncated one.
@@ -444,13 +444,12 @@ public class TLabel extends View {
     }
 
     /**
-     * Sets the truncation mode that should be used on the last line of the text in case of
-     * overflow.
+     * Sets the truncation mode that should be used on the last line of text in case of overflow.
      *
      * @param truncationMode A value of {@link BreakMode}.
      */
     public void setTruncationMode(BreakMode truncationMode) {
-        mTruncationMode = truncationMode;
+        mTruncationMode = (truncationMode == null ? BreakMode.LINE : truncationMode);
         requestLayout();
         invalidate();
     }
@@ -466,11 +465,13 @@ public class TLabel extends View {
 
     /**
      * Sets the truncation place for the last line of the text.
+     * <p>
+     * The truncation is disabled if the value of <code>truncationPlace</code> is <code>null</code>.
      *
      * @param truncationPlace A value of {@link TruncationPlace}.
      */
     public void setTruncationPlace(TruncationPlace truncationPlace) {
-        mTruncationPlace = (truncationPlace != null ? truncationPlace : TruncationPlace.END);
+        mTruncationPlace = truncationPlace;
         requestLayout();
         invalidate();
     }
