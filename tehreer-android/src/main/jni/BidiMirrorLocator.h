@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,6 @@
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_bidi_BidiMirrorLocator(JNIEnv *env);
+jint register_com_mta_tehreer_unicode_BidiMirrorLocator(JNIEnv *env);
 
 #endif

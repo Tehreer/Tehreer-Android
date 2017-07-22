@@ -41,6 +41,6 @@ private:
 
 }
 
-jint register_com_mta_tehreer_bidi_BidiBuffer(JNIEnv *env);
+jint register_com_mta_tehreer_unicode_BidiBuffer(JNIEnv *env);
 
 #endif

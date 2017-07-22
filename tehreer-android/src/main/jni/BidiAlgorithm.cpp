@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeCreateParagraph", "(JIII)J", (void *)createParagraph },
 };
 
-jint register_com_mta_tehreer_bidi_BidiAlgorithm(JNIEnv *env)
+jint register_com_mta_tehreer_unicode_BidiAlgorithm(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/bidi/BidiAlgorithm", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/unicode/BidiAlgorithm", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

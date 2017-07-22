@@ -118,10 +118,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetCharCount", "(J)I", (void *)getCharCount },
     { "nativeGetBaseLevel", "(J)B", (void *)getBaseLevel },
     { "nativeGetLevelsPtr", "(J)J", (void *)getLevelsPtr },
-    { "nativeGetOnwardRun", "(JI)Lcom/mta/tehreer/bidi/BidiRun;", (void *)getOnwardRun },
+    { "nativeGetOnwardRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getOnwardRun },
     { "nativeCreateLine", "(JII)J", (void *)createLine },
 };
 
-jint register_com_mta_tehreer_bidi_BidiParagraph(JNIEnv *env) {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/bidi/BidiParagraph", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+jint register_com_mta_tehreer_unicode_BidiParagraph(JNIEnv *env) {
+    return JavaBridge::registerClass(env, "com/mta/tehreer/unicode/BidiParagraph", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

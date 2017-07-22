@@ -82,10 +82,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeCreate", "()J", (void *)create },
     { "nativeDispose", "(J)V", (void *)dispose },
     { "nativeLoadLine", "(JJJ)V", (void *)loadLine },
-    { "nativeGetNextPair", "(JJ)Lcom/mta/tehreer/bidi/BidiPair;", (void *)getNextPair },
+    { "nativeGetNextPair", "(JJ)Lcom/mta/tehreer/unicode/BidiPair;", (void *)getNextPair },
 };
 
-jint register_com_mta_tehreer_bidi_BidiMirrorLocator(JNIEnv *env)
+jint register_com_mta_tehreer_unicode_BidiMirrorLocator(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/bidi/BidiMirrorLocator", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/unicode/BidiMirrorLocator", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

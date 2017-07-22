@@ -89,7 +89,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "release", "(J)V", (void *)release },
 };
 
-jint register_com_mta_tehreer_bidi_BidiBuffer(JNIEnv *env)
+jint register_com_mta_tehreer_unicode_BidiBuffer(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/bidi/BidiBuffer", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/unicode/BidiBuffer", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

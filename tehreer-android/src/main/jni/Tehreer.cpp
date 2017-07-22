@@ -33,18 +33,18 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
     JavaBridge::load(env);
     FreeType::load(env);
 
-    result = register_com_mta_tehreer_bidi_BidiAlgorithm(env) == JNI_OK
-          && register_com_mta_tehreer_bidi_BidiBuffer(env) == JNI_OK
-          && register_com_mta_tehreer_bidi_BidiLine(env) == JNI_OK
-          && register_com_mta_tehreer_bidi_BidiMirrorLocator(env) == JNI_OK
-          && register_com_mta_tehreer_bidi_BidiParagraph(env) == JNI_OK
-          && register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
+    result = register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
           && register_com_mta_tehreer_graphics_GlyphRasterizer(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_tables_SfntTables(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingEngine(env) == JNI_OK
-          && register_com_mta_tehreer_sfnt_ShapingResult(env) == JNI_OK;
+          && register_com_mta_tehreer_sfnt_ShapingResult(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_BidiAlgorithm(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_BidiBuffer(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_BidiLine(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_BidiMirrorLocator(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_BidiParagraph(env) == JNI_OK;
 
     if (!result) {
         return JNI_ERR;

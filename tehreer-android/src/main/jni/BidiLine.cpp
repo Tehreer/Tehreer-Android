@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,10 +74,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nativeGetCharStart", "(J)I", (void *)getCharStart },
     { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
     { "nativeGetRunCount", "(J)I", (void *)getRunCount },
-    { "nativeGetVisualRun", "(JI)Lcom/mta/tehreer/bidi/BidiRun;", (void *)getVisualRun },
+    { "nativeGetVisualRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getVisualRun },
 };
 
-jint register_com_mta_tehreer_bidi_BidiLine(JNIEnv *env)
+jint register_com_mta_tehreer_unicode_BidiLine(JNIEnv *env)
 {
-    return JavaBridge::registerClass(env, "com/mta/tehreer/bidi/BidiLine", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/unicode/BidiLine", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

@@ -66,11 +66,11 @@ void JavaBridge::load(JNIEnv* env)
     jfieldID fieldID;
     jobject field;
 
-    clazz = env->FindClass("com/mta/tehreer/bidi/BidiPair");
+    clazz = env->FindClass("com/mta/tehreer/unicode/BidiPair");
     BIDI_PAIR = (jclass)env->NewGlobalRef(clazz);
     BIDI_PAIR__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(III)V");
 
-    clazz = env->FindClass("com/mta/tehreer/bidi/BidiRun");
+    clazz = env->FindClass("com/mta/tehreer/unicode/BidiRun");
     BIDI_RUN = (jclass)env->NewGlobalRef(clazz);
     BIDI_RUN__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIB)V");
 
