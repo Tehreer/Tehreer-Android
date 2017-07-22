@@ -44,7 +44,7 @@ public class DemoApplication extends Application {
         try {
             File file = copyAsset(fileName);
             Typeface typeface = new Typeface(file);
-            TypefaceManager.getDefaultManager().registerTypeface(typeface, tag);
+            TypefaceManager.registerTypeface(typeface, tag);
         } catch (Exception e) {
             throw new RuntimeException("Unable to register typeface \"" + fileName + "\"");
         }

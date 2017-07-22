@@ -30,7 +30,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.opentype.SfntTag;
+import com.mta.tehreer.sfnt.SfntTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
 

@@ -28,8 +28,7 @@ import com.mta.tehreer.graphics.TypefaceManager;
 public class TypefaceAdapter extends ArrayAdapter<Typeface> {
 
     public TypefaceAdapter(Context context) {
-        super(context, android.R.layout.simple_spinner_item,
-              TypefaceManager.getDefaultManager().getAvailableTypefaces());
+        super(context, android.R.layout.simple_spinner_item, TypefaceManager.getAvailableTypefaces());
         setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     }
 

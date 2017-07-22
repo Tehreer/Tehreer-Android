@@ -167,7 +167,7 @@ public class GlyphInfoActivity extends AppCompatActivity {
         }
 
         Intent intent = getIntent();
-        final Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(intent.getStringExtra(TYPEFACE_NAME));
+        final Typeface typeface = TypefaceManager.getTypefaceByName(intent.getStringExtra(TYPEFACE_NAME));
         final int glyphId = intent.getIntExtra(GLYPH_ID, 0);
         final ImageView glyphInfo = (ImageView) findViewById(R.id.image_view_glyph_info);
 

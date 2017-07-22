@@ -38,8 +38,8 @@ import android.widget.TextView;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
-import com.mta.tehreer.opentype.ShapingEngine;
-import com.mta.tehreer.opentype.ShapingResult;
+import com.mta.tehreer.sfnt.ShapingEngine;
+import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.util.FloatList;
 import com.mta.tehreer.util.IntList;
 import com.mta.tehreer.util.PointList;
@@ -289,7 +289,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
         String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
 
-        Typeface typeface = TypefaceManager.getDefaultManager().getTypefaceByName(typefaceName);
+        Typeface typeface = TypefaceManager.getTypefaceByName(typefaceName);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         float displaySize = 18.0f * displayMetrics.scaledDensity;
         float sizeScale = displaySize / typeSize;

@@ -32,12 +32,12 @@ import android.text.style.UnderlineSpan;
 import android.util.SparseIntArray;
 import android.widget.TextView;
 
-import com.mta.tehreer.bidi.BaseDirection;
-import com.mta.tehreer.bidi.BidiAlgorithm;
-import com.mta.tehreer.bidi.BidiLine;
-import com.mta.tehreer.bidi.BidiPair;
-import com.mta.tehreer.bidi.BidiParagraph;
-import com.mta.tehreer.bidi.BidiRun;
+import com.mta.tehreer.unicode.BaseDirection;
+import com.mta.tehreer.unicode.BidiAlgorithm;
+import com.mta.tehreer.unicode.BidiLine;
+import com.mta.tehreer.unicode.BidiPair;
+import com.mta.tehreer.unicode.BidiParagraph;
+import com.mta.tehreer.unicode.BidiRun;
 
 public class BidiInfoActivity extends AppCompatActivity {
 

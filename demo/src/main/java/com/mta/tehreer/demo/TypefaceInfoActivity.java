@@ -27,7 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.opentype.NameTable;
+import com.mta.tehreer.sfnt.tables.NameTable;
 import com.mta.tehreer.widget.TLabel;
 
 import java.util.ArrayList;
