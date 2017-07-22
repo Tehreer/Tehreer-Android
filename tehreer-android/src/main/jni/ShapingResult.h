@@ -34,7 +34,6 @@ public:
     SFAlbumRef sfAlbum() const { return m_sfAlbum; }
 
     void setAdditionalInfo(jfloat sizeByEm, bool isBackward, jint charStart, jint charEnd);
-    void sanitizeClusterMap();
 
     jfloat sizeByEm() const { return m_sizeByEm; }
     bool isBackward() const { return m_isBackward; }

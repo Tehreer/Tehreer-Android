@@ -90,8 +90,6 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
         SFArtistSetPattern(m_sfArtist, pattern);
         SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
         SFArtistFillAlbum(m_sfArtist, shapingResult.sfAlbum());
-
-        shapingResult.sanitizeClusterMap();
     }
 
     jfloat sizeByEm = m_typeSize / m_typeface->ftFace()->units_per_EM;

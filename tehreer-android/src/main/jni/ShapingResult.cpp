@@ -47,62 +47,6 @@ void ShapingResult::setAdditionalInfo(jfloat sizeByEm, bool isBackward, jint cha
     m_charEnd = charEnd;
 }
 
-void ShapingResult::sanitizeClusterMap()
-{
-    // HACK: Instead of creating a new array, we're going to manipulate the existing one.
-    SFUInteger length = SFAlbumGetCodeunitCount(m_sfAlbum);
-    SFInteger *array = (SFInteger *)(SFAlbumGetCodeunitToGlyphMapPtr(m_sfAlbum));
-    SFInteger prior = -1;
-
-    struct ClusterStack {
-        SFUInteger index;
-        SFInteger value;
-    };
-
-    ClusterStack *stack = new ClusterStack[length + 1];
-    SFUInteger top = 0;
-
-    // Push a minimum entry in the stack.
-    stack[0].index = SFInvalidIndex;
-    stack[0].value = -1;
-
-    for (SFUInteger i = 0; i < length; i++) {
-        SFInteger value = array[i];
-        if (value > prior) {
-            // Value is increasing. Cluster would be distinct if it succeeds the stack entry;
-            // it would be continuation otherwise.
-            if (value > stack[top].value) {
-                // Push the current value on stack.
-                top++;
-                stack[top].index = i;
-                stack[top].value = value;
-            } else {
-                array[i] = array[i - 1];
-            }
-        } else {
-            // Search the smallest stack entry greater than or equal to the current value.
-            // Start looking from the top as fewer elements would be in decreasing order.
-            for (SFUInteger j = top; j > 0; j--) {
-                if (stack[j - 1].value < value) {
-                    // Update the value of all in-between elements.
-                    for (SFUInteger k = stack[j].index; k < i; k++) {
-                        array[k] = value;
-                    }
-
-                    // Pop the stack to this entry.
-                    stack[j] = stack[top];
-                    top = j;
-                    break;
-                }
-            }
-        }
-
-        prior = value;
-    }
-
-    delete[] stack;
-}
-
 static jlong create(JNIEnv *env, jobject obj)
 {
     ShapingResult *shapingResult = new ShapingResult();
