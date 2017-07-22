@@ -20,48 +20,21 @@ package com.mta.tehreer.graphics;
  * Specifies the thickness of a typeface, in terms of lightness or heaviness of the strokes.
  */
 public enum TypeWeight {
-    /**
-     * The "Thin" weight having a value equal to 100.
-     */
     THIN(100),
-    /**
-     * The "Extra-Light" weight having a value equal to 200.
-     */
     EXTRA_LIGHT(200),
-    /**
-     * The "Light" weight having a value equal to 300.
-     */
     LIGHT(300),
-    /**
-     * The "Regular" weight having a value equal to 400.
-     */
     REGULAR(400),
-    /**
-     * The "Medium" weight having a value equal to 500.
-     */
     MEDIUM(500),
-    /**
-     * The "Semi-Bold" weight having a value equal to 600.
-     */
     SEMI_BOLD(600),
-    /**
-     * The "Bold" weight having a value equal to 700.
-     */
     BOLD(700),
-    /**
-     * The "Extra-Bold" weight having a value equal to 800.
-     */
     EXTRA_BOLD(800),
-    /**
-     * The "Heavy" weight having a value equal to 900.
-     */
     HEAVY(900);
 
     /**
      * The integer value of the <code>TypeWeight</code>. Lower value indicates lighter weight;
      * higher value indicates heavier weight.
      */
-    public final int value;
+    final int value;
 
     TypeWeight(int value) {
         this.value = value;
@@ -74,7 +47,7 @@ public enum TypeWeight {
      * @return The enum constant with the specified value, or <code>null</code> if
      *         <code>TypeWeight</code> has no constant with the specified value.
      */
-    public static TypeWeight valueOf(int value) {
+    static TypeWeight valueOf(int value) {
         for (TypeWeight weight : TypeWeight.values()) {
             if (weight.value == value) {
                 return weight;
