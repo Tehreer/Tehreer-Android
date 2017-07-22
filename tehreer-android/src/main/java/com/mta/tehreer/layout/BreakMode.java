@@ -16,7 +16,16 @@
 
 package com.mta.tehreer.layout;
 
+/**
+ * Specifies the text break mode.
+ */
 public enum BreakMode {
+    /**
+     * Breaks text at a suitable opportunity as determined by Unicode Line Breaking Algorithm.
+     */
     LINE,
+    /**
+     * Breaks text at a grapheme cluster boundary.
+     */
     CHARACTER
 }

@@ -131,8 +131,7 @@ public class ComposedLine {
     }
 
     /**
-     * Returns the ascent of this line which is the maximum ascent from the baseline of all runs in
-     * the <code>ComposedLine</code>.
+     * Returns the ascent of this line which is the maximum ascent from the baseline of all runs.
      *
      * @return The ascent of this line.
      */
@@ -141,8 +140,7 @@ public class ComposedLine {
     }
 
     /**
-     * Returns the descent of this line which is the maximum descent from the baseline of all runs
-     * in the <code>ComposedLine</code>.
+     * Returns the descent of this line which is the maximum descent from the baseline of all runs.
      *
      * @return The descent of this line.
      */
@@ -151,8 +149,7 @@ public class ComposedLine {
     }
 
     /**
-     * Returns the leading of this line which is the maximum leading of all runs in the
-     * <code>ComposedLine</code>.
+     * Returns the leading of this line which is the maximum leading of all runs.
      *
      * @return The leading of this line.
      */
@@ -179,11 +176,11 @@ public class ComposedLine {
     }
 
     /**
-     * Returns the advance extent for the glyphs corresponding to the trailing whitespace
-     * characters of this line.
+     * Returns the advance sum of glyphs corresponding to the trailing whitespace characters in this
+     * line.
      *
      * @return The typographic extent for the glyphs corresponding to the trailing whitespace
-     *         characters of this line.
+     *         characters in this line.
      */
     public float getTrailingWhitespaceExtent() {
         return mTrailingWhitespaceExtent;

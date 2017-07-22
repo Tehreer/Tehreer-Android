@@ -22,7 +22,7 @@ import com.mta.tehreer.internal.JNILoader;
 import com.mta.tehreer.util.Disposable;
 
 /**
- * The <code>ShapingEngine</code> class represents the OpenType text shaping engine.
+ * The <code>ShapingEngine</code> class represents text shaping engine.
  */
 public class ShapingEngine implements Disposable {
 
@@ -93,7 +93,7 @@ public class ShapingEngine implements Disposable {
      * @param scriptTag The tag of the script whose default direction is returned.
      * @return The default writing direction of the script identified by <code>scriptTag</code>.
      */
-    public static WritingDirection getScriptDefaultDirection(int scriptTag) {
+    public static WritingDirection getScriptDirection(int scriptTag) {
         return WritingDirection.valueOf(nativeGetScriptDefaultDirection(scriptTag));
     }
 

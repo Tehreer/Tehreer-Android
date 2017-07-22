@@ -17,7 +17,7 @@
 package com.mta.tehreer.layout;
 
 /**
- * Specifies the place of text truncation.
+ * Specifies the text truncation place.
  */
 public enum TruncationPlace {
     /**

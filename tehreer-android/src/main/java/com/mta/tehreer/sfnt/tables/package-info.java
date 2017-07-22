@@ -15,6 +15,6 @@
  */
 
 /**
- * Provides classes related to SFNT font format.
+ * Provides classes representing SFNT tables.
  */
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;

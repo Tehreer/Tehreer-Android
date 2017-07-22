@@ -39,18 +39,18 @@ public class TypeFamily {
     }
 
     /**
-     * Returns the name of this type family.
+     * Returns the name of this family.
      *
-     * @return The name of this type family.
+     * @return The name of this family.
      */
     public String getFamilyName() {
         return familyName;
     }
 
     /**
-     * Returns the list of typefaces belonging to this type family.
+     * Returns the list of typefaces belonging to this family.
      *
-     * @return The list of typefaces belonging to this type family.
+     * @return The list of typefaces belonging to this family.
      */
     public List<Typeface> getTypefaces() {
         return typefaces;

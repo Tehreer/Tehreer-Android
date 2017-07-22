@@ -190,7 +190,7 @@ public class Typesetter {
                 BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
                 for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
                     int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                    WritingDirection writingDirection = ShapingEngine.getScriptDefaultDirection(scriptTag);
+                    WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
 
                     shapingEngine.setScriptTag(scriptTag);
                     shapingEngine.setWritingDirection(writingDirection);

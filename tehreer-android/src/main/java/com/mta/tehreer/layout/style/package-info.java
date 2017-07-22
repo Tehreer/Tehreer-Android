@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2017 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,6 @@
  */
 
 /**
- * Provides classes for spans supported by Tehreer library.
+ * Provides classes for custom layout styles.
  */
-package com.mta.tehreer.text.style;
+package com.mta.tehreer.layout.style;

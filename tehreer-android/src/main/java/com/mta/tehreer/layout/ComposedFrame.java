@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * Represents a frame containing multiple lines of text. The frame object is the output resulting
- * from the text-framing process performed by a typesetter object.
+ * from text-framing process performed by a typesetter object.
  */
 public class ComposedFrame {
 
