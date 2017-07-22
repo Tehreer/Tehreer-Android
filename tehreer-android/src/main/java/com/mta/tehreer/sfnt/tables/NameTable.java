@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import android.os.Build;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
@@ -23,7 +23,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `post' table.
  */
-public class PostScriptTable {
+public class PostTable {
 
     private static final int VERSION = 0;
     private static final int ITALIC_ANGLE = 4;
@@ -39,15 +39,15 @@ public class PostScriptTable {
     private final SfntTable table;
 
     /**
-     * Constructs a <code>PostScriptTable</code> object from the specified typeface.
+     * Constructs a <code>PostTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>PostScriptTable</code> object is
+     * @param typeface The typeface from which the <code>PostTable</code> object is
      *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `post' table.
      */
-    public PostScriptTable(Typeface typeface) {
+    public PostTable(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

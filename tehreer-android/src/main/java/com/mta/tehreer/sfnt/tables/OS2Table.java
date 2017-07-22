@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
@@ -23,7 +23,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `OS/2' table.
  */
-public class OS2WinMetricsTable {
+public class OS2Table {
 
     private static final int VERSION = 0;
     private static final int X_AVG_CHAR_WIDTH = 2;
@@ -88,15 +88,15 @@ public class OS2WinMetricsTable {
     private final SfntTable table;
 
     /**
-     * Constructs an <code>OS2WinMetricsTable</code> object from the specified typeface.
+     * Constructs an <code>OS2Table</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>OS2WinMetricsTable</code> object is
+     * @param typeface The typeface from which the <code>OS2Table</code> object is
      *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `OS/2' table.
      */
-    public OS2WinMetricsTable(Typeface typeface) {
+    public OS2Table(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

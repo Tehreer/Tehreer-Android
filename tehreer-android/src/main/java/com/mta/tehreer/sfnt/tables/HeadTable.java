@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
@@ -23,7 +23,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `head' table.
  */
-public class FontHeaderTable {
+public class HeadTable {
 
     private static final int VERSION = 0;
     private static final int FONT_REVISION = 4;
@@ -46,15 +46,15 @@ public class FontHeaderTable {
     private final SfntTable table;
 
     /**
-     * Constructs a <code>FontHeaderTable</code> object from the specified typeface.
+     * Constructs a <code>HeadTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>FontHeaderTable</code> object is
+     * @param typeface The typeface from which the <code>HeadTable</code> object is
      *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `head' table.
      */
-    public FontHeaderTable(Typeface typeface) {
+    public HeadTable(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

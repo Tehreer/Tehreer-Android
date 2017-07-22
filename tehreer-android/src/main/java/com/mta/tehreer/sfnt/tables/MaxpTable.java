@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
@@ -23,7 +23,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `maxp' table.
  */
-public class MaximumProfileTable {
+public class MaxpTable {
 
     private static final int VERSION = 0;
     private static final int NUM_GLYPHS = 4;
@@ -44,15 +44,15 @@ public class MaximumProfileTable {
     private final SfntTable table;
 
     /**
-     * Constructs a <code>MaximumProfileTable</code> object from the specified typeface.
+     * Constructs a <code>MaxpTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>MaximumProfileTable</code> object is
+     * @param typeface The typeface from which the <code>MaxpTable</code> object is
      *                 constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `maxp' table.
      */
-    public MaximumProfileTable(Typeface typeface) {
+    public MaxpTable(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

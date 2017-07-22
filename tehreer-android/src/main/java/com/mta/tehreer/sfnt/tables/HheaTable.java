@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sfnt;
+package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
@@ -23,7 +23,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `hhea' table.
  */
-public class HorizontalHeaderTable {
+public class HheaTable {
 
     private static final int VERSION = 0;
     private static final int ASCENDER = 4;
@@ -42,15 +42,15 @@ public class HorizontalHeaderTable {
     private final SfntTable table;
 
     /**
-     * Constructs a <code>HorizontalHeaderTable</code> object from the specified typeface.
+     * Constructs a <code>HheaTable</code> object from the specified typeface.
      *
-     * @param typeface The typeface from which the <code>HorizontalHeaderTable</code> object is
+     * @param typeface The typeface from which the <code>HheaTable</code> object is
      *        constructed.
      *
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `hhea' table.
      */
-    public HorizontalHeaderTable(Typeface typeface) {
+    public HheaTable(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

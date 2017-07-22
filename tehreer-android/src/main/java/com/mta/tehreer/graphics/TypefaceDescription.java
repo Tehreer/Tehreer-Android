@@ -16,9 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
-import com.mta.tehreer.sfnt.FontHeaderTable;
-import com.mta.tehreer.sfnt.NameTable;
-import com.mta.tehreer.sfnt.OS2WinMetricsTable;
+import com.mta.tehreer.sfnt.tables.HeadTable;
+import com.mta.tehreer.sfnt.tables.NameTable;
+import com.mta.tehreer.sfnt.tables.OS2Table;
 
 import java.util.Locale;
 
@@ -82,7 +82,7 @@ class TypefaceDescription {
         return null;
     }
 
-    private static String getFamilyName(NameTable nameTable, OS2WinMetricsTable os2Table) {
+    private static String getFamilyName(NameTable nameTable, OS2Table os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
@@ -100,7 +100,7 @@ class TypefaceDescription {
         return familyName;
     }
 
-    private static String getStyleName(NameTable nameTable, OS2WinMetricsTable os2Table) {
+    private static String getStyleName(NameTable nameTable, OS2Table os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
@@ -123,16 +123,16 @@ class TypefaceDescription {
     }
 
     static TypefaceDescription deduce(Typeface typeface) {
-        FontHeaderTable headTable = null;
-        OS2WinMetricsTable os2Table = null;
+        HeadTable headTable = null;
+        OS2Table os2Table = null;
         NameTable nameTable = null;
 
         try {
-            headTable = new FontHeaderTable(typeface);
+            headTable = new HeadTable(typeface);
         } catch (RuntimeException ignored) {
         }
         try {
-            os2Table = new OS2WinMetricsTable(typeface);
+            os2Table = new OS2Table(typeface);
         } catch (RuntimeException ignored) {
         }
         try {
