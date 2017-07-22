@@ -17,4 +17,4 @@
 /**
  * Provides the classes necessary to apply Unicode Bidirectional Algorithm on text.
  */
-package com.mta.tehreer.bidi;
+package com.mta.tehreer.unicode;

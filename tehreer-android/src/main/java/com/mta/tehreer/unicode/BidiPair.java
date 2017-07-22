@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.bidi;
+package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.internal.Sustain;
 

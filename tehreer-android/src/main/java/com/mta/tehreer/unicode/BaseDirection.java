@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.bidi;
+package com.mta.tehreer.unicode;
 
 /**
  * Specifies the base direction of a paragraph.

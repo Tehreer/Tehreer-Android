@@ -20,11 +20,6 @@ import android.graphics.RectF;
 import android.text.SpannableString;
 import android.text.Spanned;
 
-import com.mta.tehreer.bidi.BaseDirection;
-import com.mta.tehreer.bidi.BidiAlgorithm;
-import com.mta.tehreer.bidi.BidiLine;
-import com.mta.tehreer.bidi.BidiParagraph;
-import com.mta.tehreer.bidi.BidiRun;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.StringUtils;
 import com.mta.tehreer.internal.text.TopSpanIterator;
@@ -34,6 +29,11 @@ import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
+import com.mta.tehreer.unicode.BaseDirection;
+import com.mta.tehreer.unicode.BidiAlgorithm;
+import com.mta.tehreer.unicode.BidiLine;
+import com.mta.tehreer.unicode.BidiParagraph;
+import com.mta.tehreer.unicode.BidiRun;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -744,7 +744,7 @@ public class Typesetter {
                                             BreakMode breakMode, TruncationPlace truncationPlace,
                                             ComposedLine truncationToken) {
         if (breakMode == null) {
-            throw new NullPointerException("Truncation mode is null");
+            throw new NullPointerException("Break mode is null");
         }
         if (truncationPlace == null) {
             throw new NullPointerException("Truncation place is null");
