@@ -373,7 +373,7 @@ public class TLabel extends View {
     }
 
     private void setTypeface(Object tag) {
-        setTypeface(TypefaceManager.getDefaultManager().getTypeface(tag));
+        setTypeface(TypefaceManager.getTypeface(tag));
     }
 
     /**

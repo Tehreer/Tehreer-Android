@@ -41,27 +41,11 @@ public class TypefaceManager {
         }
     }
 
-    private static TypefaceManager sInstance;
-
-    private HashMap<Object, Typeface> mTags;
-    private ArrayList<Typeface> mTypefaces;
-    private boolean mSorted;
-
-    public static TypefaceManager getDefaultManager() {
-        if (sInstance == null) {
-            synchronized (TypefaceManager.class) {
-                if (sInstance == null) {
-                    sInstance = new TypefaceManager();
-                }
-            }
-        }
-
-        return sInstance;
-    }
+    private static final HashMap<Object, Typeface> tags = new HashMap<>();
+    private static final ArrayList<Typeface> typefaces = new ArrayList<>();
+    private static boolean sorted;
 
     private TypefaceManager() {
-        mTags = new HashMap<>();
-        mTypefaces = new ArrayList<>();
     }
 
     /**
@@ -74,26 +58,26 @@ public class TypefaceManager {
      * @throws IllegalArgumentException if <code>typeface</code> is already registered, or
      *         <code>tag</code> is already taken.
      */
-    public void registerTypeface(Typeface typeface, Object tag) {
+    public static void registerTypeface(Typeface typeface, Object tag) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
 
-        synchronized (this) {
-            if (mTypefaces.contains(typeface)) {
+        synchronized (TypefaceManager.class) {
+            if (typefaces.contains(typeface)) {
                 throw new IllegalArgumentException("This typeface is already registered");
             }
             if (tag != null) {
-                if (mTags.containsKey(tag)) {
+                if (tags.containsKey(tag)) {
                     throw new IllegalArgumentException("This tag is already taken");
                 }
 
-                mTags.put(tag, typeface);
+                tags.put(tag, typeface);
                 typeface.tag = tag;
             }
 
-            mSorted = false;
-            mTypefaces.add(typeface);
+            sorted = false;
+            typefaces.add(typeface);
         }
     }
 
@@ -105,19 +89,19 @@ public class TypefaceManager {
      * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
-    public void unregisterTypeface(Typeface typeface) {
+    public static void unregisterTypeface(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
 
-        synchronized (this) {
-            int index = mTypefaces.indexOf(typeface);
+        synchronized (TypefaceManager.class) {
+            int index = typefaces.indexOf(typeface);
             if (index < 0) {
                 throw new IllegalArgumentException("This typeface is not registered");
             }
 
-            mTypefaces.remove(index);
-            mTags.remove(typeface.tag);
+            typefaces.remove(index);
+            tags.remove(typeface.tag);
             typeface.tag = null;
         }
     }
@@ -131,13 +115,13 @@ public class TypefaceManager {
      *
      * @throws NullPointerException if <code>tag</code> is null.
      */
-    public Typeface getTypeface(Object tag) {
+    public static Typeface getTypeface(Object tag) {
         if (tag == null) {
             throw new NullPointerException("Tag is null");
         }
 
-        synchronized (this) {
-            return mTags.get(tag);
+        synchronized (TypefaceManager.class) {
+            return tags.get(tag);
         }
     }
 
@@ -151,13 +135,13 @@ public class TypefaceManager {
      * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
-    public Object getTypefaceTag(Typeface typeface) {
+    public static Object getTypefaceTag(Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
 
-        synchronized (this) {
-            if (!mTypefaces.contains(typeface)) {
+        synchronized (TypefaceManager.class) {
+            if (!typefaces.contains(typeface)) {
                 throw new IllegalArgumentException("This typeface is not registered");
             }
 
@@ -172,9 +156,9 @@ public class TypefaceManager {
      * @return The typeface having specified full name, or <code>null</code> if no such typeface is
      *         registered.
      */
-    public Typeface getTypefaceByName(String fullName) {
-        synchronized (this) {
-            for (Typeface typeface : mTypefaces) {
+    public static Typeface getTypefaceByName(String fullName) {
+        synchronized (TypefaceManager.class) {
+            for (Typeface typeface : typefaces) {
                 if (typeface.getFullName().equalsIgnoreCase(fullName)) {
                     return typeface;
                 }
@@ -189,13 +173,13 @@ public class TypefaceManager {
      *
      * @return A list of available type families.
      */
-    public List<TypeFamily> getAvailableFamilies() {
+    public static List<TypeFamily> getAvailableFamilies() {
         Map<String, List<Typeface>> familyMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-        synchronized (this) {
+        synchronized (TypefaceManager.class) {
             sortTypefaces();
 
-            for (Typeface typeface : mTypefaces) {
+            for (Typeface typeface : typefaces) {
                 List<Typeface> entryList = familyMap.get(typeface.getFamilyName());
                 if (entryList == null) {
                     entryList = new ArrayList<>();
@@ -224,18 +208,18 @@ public class TypefaceManager {
      *
      * @return A list of available typefaces.
      */
-    public List<Typeface> getAvailableTypefaces() {
-        synchronized (this) {
+    public static List<Typeface> getAvailableTypefaces() {
+        synchronized (TypefaceManager.class) {
             sortTypefaces();
 
-            return Collections.unmodifiableList(new ArrayList<>(mTypefaces));
+            return Collections.unmodifiableList(new ArrayList<>(typefaces));
         }
     }
 
-    private void sortTypefaces() {
-        if (!mSorted) {
-            Collections.sort(mTypefaces, new TypefaceComparator());
-            mSorted = true;
+    private static void sortTypefaces() {
+        if (!sorted) {
+            Collections.sort(typefaces, new TypefaceComparator());
+            sorted = true;
         }
     }
 }
