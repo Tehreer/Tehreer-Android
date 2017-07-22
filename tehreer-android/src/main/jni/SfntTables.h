@@ -19,6 +19,6 @@
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_sfnt_SfntTables(JNIEnv *env);
+jint register_com_mta_tehreer_sfnt_tables_SfntTables(JNIEnv *env);
 
 #endif

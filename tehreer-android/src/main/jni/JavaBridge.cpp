@@ -95,7 +95,7 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("java/io/InputStream");
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
 
-    clazz = env->FindClass("com/mta/tehreer/sfnt/NameTable$Record");
+    clazz = env->FindClass("com/mta/tehreer/sfnt/tables/NameTable$Record");
     NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
     NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
 
