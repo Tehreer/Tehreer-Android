@@ -263,7 +263,7 @@ public class TLabel extends View {
             int lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
 
             // Add first line even if layout height is smaller than its height.
-            ComposedLine composedLine = mTypesetter.createLine(lineStart, lineEnd);
+            ComposedLine composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
             mRtlText = (composedLine.getParagraphLevel() & 1) == 1;
             mComposedLines.add(composedLine);
 
@@ -276,7 +276,7 @@ public class TLabel extends View {
             // Add remaining lines fitting in layout height.
             while (lineStart < textLength) {
                 lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
-                composedLine = mTypesetter.createLine(lineStart, lineEnd);
+                composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
 
                 float lineWidth = composedLine.getWidth();
                 float lineHeight = getLineHeight(composedLine);

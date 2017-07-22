@@ -135,6 +135,11 @@ public class Typesetter {
         resolveBidi();
     }
 
+    /**
+     * Returns the spanned source text for which this typesetter object was created.
+     *
+     * @return The spanned source text for which this typesetter object was created.
+     */
     public Spanned getSpanned() {
         return mSpanned;
     }
@@ -580,7 +585,7 @@ public class Typesetter {
     }
 
     /**
-     * Creates a line of specified string range.
+     * Creates a simple line of specified string range.
      *
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
@@ -590,7 +595,7 @@ public class Typesetter {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-	public ComposedLine createLine(int charStart, int charEnd) {
+	public ComposedLine createSimpleLine(int charStart, int charEnd) {
         String rangeError = checkRange(charStart, charEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
@@ -659,7 +664,7 @@ public class Typesetter {
                 }
 
                 Typesetter typesetter = new Typesetter(tokenStr, tokenTypeface, tokenTypeSize);
-                return typesetter.createLine(0, tokenStr.length());
+                return typesetter.createSimpleLine(0, tokenStr.length());
             }
         }
 
@@ -866,7 +871,7 @@ public class Typesetter {
             return new ComposedLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
         }
 
-        return createLine(truncatedStart, charEnd);
+        return createSimpleLine(truncatedStart, charEnd);
     }
 
     private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
@@ -894,7 +899,7 @@ public class Typesetter {
             return new ComposedLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
         }
 
-        return createLine(charStart, charEnd);
+        return createSimpleLine(charStart, charEnd);
     }
 
     private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
@@ -918,7 +923,7 @@ public class Typesetter {
             return new ComposedLine(mText, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
         }
 
-        return createLine(charStart, truncatedEnd);
+        return createSimpleLine(charStart, truncatedEnd);
     }
 
     private void addTruncationTokenRuns(ComposedLine truncationToken, ArrayList<GlyphRun> runList, int insertIndex) {
@@ -1043,7 +1048,7 @@ public class Typesetter {
 
         while (lineStart != charEnd) {
             int lineEnd = suggestForwardBreak(lineStart, charEnd, frameWidth, BreakMode.LINE);
-            ComposedLine composedLine = createLine(lineStart, lineEnd);
+            ComposedLine composedLine = createSimpleLine(lineStart, lineEnd);
 
             float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
             float lineAscent = composedLine.getAscent();
