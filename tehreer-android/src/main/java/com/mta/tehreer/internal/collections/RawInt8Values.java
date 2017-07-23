@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
+import com.mta.tehreer.collections.ByteList;
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.ByteList;
 
 public class RawInt8Values extends ByteList {
 

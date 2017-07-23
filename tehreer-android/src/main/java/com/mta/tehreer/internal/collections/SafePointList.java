@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.ByteList;
+import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.internal.Exceptions;
 
-public class SafeByteList extends ByteList {
+public class SafePointList extends PointList {
 
-    private final byte[] array;
+    private final float[] array;
     private final int offset;
     private final int size;
 
-    public SafeByteList(byte[] array, int offset, int size) {
+    public SafePointList(float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -33,29 +33,38 @@ public class SafeByteList extends ByteList {
 
     @Override
     public int size() {
-        return array.length;
+        return size;
     }
 
     @Override
-    public byte get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[index + offset];
+        return array[(index + offset) * 2 + 0];
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return array[(index + offset) * 2 + 1];
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size * 2);
+    }
+
+    @Override
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeByteList(array, offset + fromIndex, toIndex - fromIndex);
+        return new SafePointList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

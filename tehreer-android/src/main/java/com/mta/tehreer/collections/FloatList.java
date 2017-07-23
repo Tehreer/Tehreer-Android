@@ -14,62 +14,62 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.util;
+package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collection.SafeByteList;
-import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.collections.SafeFloatList;
+import com.mta.tehreer.internal.Description;
 
 /**
- * Represents a primitive list of bytes.
+ * Represents a primitive list of floats.
  */
-public abstract class ByteList implements Primitive {
+public abstract class FloatList implements Primitive {
 
     /**
-     * Returns a byte list whose elements are the specified array.
+     * Returns a float list whose elements are the specified array.
      *
-     * @param array The elements of the byte list.
-     * @return A new byte list.
+     * @param array The elements of the float list.
+     * @return A new float list.
      *
      * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
-    public static ByteList of(byte[] array) {
+    public static FloatList of(float[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");
         }
 
-        return new SafeByteList(array, 0, array.length);
+        return new SafeFloatList(array, 0, array.length);
     }
 
     /**
-     * Returns the number of bytes in this list.
+     * Returns the number of floats in this list.
      *
-     * @return The number of bytes in this list.
+     * @return The number of floats in this list.
      */
     public abstract int size();
 
     /**
-     * Returns the byte at the specified index in this list.
+     * Returns the float value at the specified index in this list.
      *
-     * @param index Index of the byte element to return.
-     * @return The byte at the specified index in this list.
+     * @param index Index of the float element to return.
+     * @return The float value at the specified index in this list.
      *
      * @throws IndexOutOfBoundsException if the index is out of range (<code>index &lt; 0 || index
      *         &gt;= size()</code>).
      */
-    public abstract byte get(int index);
+    public abstract float get(int index);
 
     /**
-     * Copies all of the bytes in this list to an array, starting at the specified index of the
+     * Copies all of the floats in this list to an array, starting at the specified index of the
      * target array.
      *
-     * @param array The array into which the bytes of this list are to be copied.
+     * @param array The array into which the floats of this list are to be copied.
      * @param atIndex The index in the target array at which copying begins.
      *
      * @throws NullPointerException if <code>array</code> is null.
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>atIndex &lt; 0
      *         || (array.length - atIndex) &lt; size()</code>).
      */
-    public abstract void copyTo(byte[] array, int atIndex);
+    public abstract void copyTo(float[] array, int atIndex);
 
     /**
      * Returns a view of the portion of this list between the specified <code>fromIndex</code>,
@@ -82,16 +82,16 @@ public abstract class ByteList implements Primitive {
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>fromIndex &lt; 0
      *         || toIndex &gt; size() || fromIndex &gt; toIndex</code>).
      */
-    public abstract ByteList subList(int fromIndex, int toIndex);
+    public abstract FloatList subList(int fromIndex, int toIndex);
 
     /**
-     * Returns a new array containing all of the bytes in this list in proper sequence (from first
+     * Returns a new array containing all of the floats in this list in proper sequence (from first
      * to last element).
      *
-     * @return A new array containing all of the bytes in this list in proper sequence.
+     * @return A new array containing all of the floats in this list in proper sequence.
      */
-    public byte[] toArray() {
-        byte[] array = new byte[size()];
+    public float[] toArray() {
+        float[] array = new float[size()];
         copyTo(array, 0);
 
         return array;
@@ -103,11 +103,11 @@ public abstract class ByteList implements Primitive {
             return true;
         }
 
-        if (!(obj instanceof ByteList)) {
+        if (!(obj instanceof FloatList)) {
             return false;
         }
 
-        ByteList other = (ByteList) obj;
+        FloatList other = (FloatList) obj;
         int size = other.size();
 
         if (size() != size) {
@@ -115,7 +115,7 @@ public abstract class ByteList implements Primitive {
         }
 
         for (int i = 0; i < size; i++) {
-            if (get(i) != other.get(i)) {
+            if (Float.floatToIntBits(get(i)) != Float.floatToIntBits(other.get(i))) {
                 return false;
             }
         }
@@ -129,7 +129,7 @@ public abstract class ByteList implements Primitive {
         int result = 1;
 
         for (int i = 0; i < size; i++) {
-            result = 31 * result + get(i);
+            result = 31 * result + Float.floatToIntBits(get(i));
         }
 
         return result;
@@ -137,6 +137,6 @@ public abstract class ByteList implements Primitive {
 
     @Override
     public String toString() {
-        return Description.forByteList(this);
+        return Description.forFloatList(this);
     }
 }

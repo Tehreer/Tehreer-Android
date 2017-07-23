@@ -19,7 +19,7 @@ package com.mta.tehreer.sfnt;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JNILoader;
-import com.mta.tehreer.util.Disposable;
+import com.mta.tehreer.Disposable;
 
 /**
  * The <code>ShapingEngine</code> class represents text shaping engine.

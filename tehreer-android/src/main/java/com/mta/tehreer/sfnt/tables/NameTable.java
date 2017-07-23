@@ -19,8 +19,8 @@ package com.mta.tehreer.sfnt.tables;
 import android.os.Build;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.Sustain;
-import com.mta.tehreer.internal.util.Description;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;

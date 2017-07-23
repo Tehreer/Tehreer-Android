@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-/**
- * Provides miscellaneous utility classes.
- */
-package com.mta.tehreer.util;
+package com.mta.tehreer.internal;
+
+public class Exceptions {
+
+    public static IndexOutOfBoundsException indexOutOfBounds(int index, int size) {
+        return new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+    }
+
+    private Exceptions() {
+    }
+}

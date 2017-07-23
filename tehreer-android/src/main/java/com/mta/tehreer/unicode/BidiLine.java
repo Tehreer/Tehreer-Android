@@ -16,10 +16,10 @@
 
 package com.mta.tehreer.unicode;
 
-import com.mta.tehreer.internal.JNILoader;
-import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.util.Disposable;
+import com.mta.tehreer.internal.Description;
+import com.mta.tehreer.internal.JNILoader;
 
 import java.util.AbstractList;
 import java.util.Iterator;

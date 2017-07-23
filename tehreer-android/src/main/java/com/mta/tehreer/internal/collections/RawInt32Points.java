@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
+import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.FloatList;
 
-public class RawInt32Floats extends FloatList {
+public class RawInt32Points extends PointList {
 
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public RawInt32Floats(long pointer, int size, float scale) {
+    public RawInt32Points(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
         this.scale = scale;
@@ -38,12 +38,21 @@ public class RawInt32Floats extends FloatList {
     }
 
     @Override
-    public float get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32FromArray(pointer, index) * scale;
+        return Raw.getInt32FromArray(pointer, index * 2 + 0) * scale;
+    }
+
+    @Override
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return Raw.getInt32FromArray(pointer, index * 2 + 1) * scale;
     }
 
     @Override
@@ -52,19 +61,19 @@ public class RawInt32Floats extends FloatList {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
+        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32Floats(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
+        return new RawInt32Points(pointer + (fromIndex * 8), toIndex - fromIndex, scale);
     }
 }

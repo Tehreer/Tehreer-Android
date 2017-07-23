@@ -16,16 +16,16 @@
 
 package com.mta.tehreer.sfnt;
 
+import com.mta.tehreer.Disposable;
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JNILoader;
-import com.mta.tehreer.internal.collection.RawInt32Floats;
-import com.mta.tehreer.internal.collection.RawInt32Points;
-import com.mta.tehreer.internal.collection.RawSizeValues;
-import com.mta.tehreer.internal.collection.RawUInt16Values;
-import com.mta.tehreer.util.Disposable;
-import com.mta.tehreer.util.FloatList;
-import com.mta.tehreer.util.IntList;
-import com.mta.tehreer.util.PointList;
+import com.mta.tehreer.internal.collections.RawInt32Floats;
+import com.mta.tehreer.internal.collections.RawInt32Points;
+import com.mta.tehreer.internal.collections.RawSizeValues;
+import com.mta.tehreer.internal.collections.RawUInt16Values;
 
 /**
  * A <code>ShapingResult</code> object is a container for the results of text shaping. It is

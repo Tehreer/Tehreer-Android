@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.util;
+package com.mta.tehreer;
 
 /**
- * Marker interface that indicates the use of primitive data types.
+ * Interface for disposable objects.
  */
-public interface Primitive {
+public interface Disposable {
+    /**
+     * Releases the native memory of this object. Failing to call this method will cause memory
+     * leaks.
+     * <p>
+     * <strong>Note:</strong> The behavior is undefined if this method is called more than once on
+     * the same object.
+     */
+    void dispose();
 }

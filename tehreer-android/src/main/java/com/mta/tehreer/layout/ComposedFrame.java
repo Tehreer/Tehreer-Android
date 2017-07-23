@@ -19,7 +19,7 @@ package com.mta.tehreer.layout;
 import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
-import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.Description;
 
 import java.util.Collections;
 import java.util.List;

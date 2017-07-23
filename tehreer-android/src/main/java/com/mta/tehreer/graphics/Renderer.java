@@ -24,10 +24,10 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.Log;
 
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.util.FloatList;
-import com.mta.tehreer.util.IntList;
-import com.mta.tehreer.util.PointList;
 
 /**
  * The <code>Renderer</code> class represents a generic glyph renderer. It can be used to generate

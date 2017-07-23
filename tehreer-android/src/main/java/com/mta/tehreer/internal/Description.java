@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal;
 
-import com.mta.tehreer.internal.collection.SafeByteList;
-import com.mta.tehreer.util.ByteList;
-import com.mta.tehreer.util.FloatList;
-import com.mta.tehreer.util.IntList;
-import com.mta.tehreer.util.PointList;
+import com.mta.tehreer.collections.ByteList;
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.internal.collections.SafeByteList;
 
 import java.util.Iterator;
 

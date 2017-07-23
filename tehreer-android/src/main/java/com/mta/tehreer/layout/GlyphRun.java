@@ -19,16 +19,16 @@ package com.mta.tehreer.layout;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.collection.SafeFloatList;
-import com.mta.tehreer.internal.collection.SafeIntList;
-import com.mta.tehreer.internal.collection.SafePointList;
-import com.mta.tehreer.internal.util.Exceptions;
+import com.mta.tehreer.internal.Exceptions;
+import com.mta.tehreer.internal.collections.SafeFloatList;
+import com.mta.tehreer.internal.collections.SafeIntList;
+import com.mta.tehreer.internal.collections.SafePointList;
 import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.util.FloatList;
-import com.mta.tehreer.util.IntList;
-import com.mta.tehreer.util.PointList;
 
 /**
  * A <code>GlyphRun</code> object is a collection of consecutive glyphs sharing the same attributes

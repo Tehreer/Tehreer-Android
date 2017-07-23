@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.internal.Exceptions;
 
-public class RawUInt16Values extends IntList {
+public class SafeFloatList extends FloatList {
 
-    private final long pointer;
+    private final float[] array;
+    private final int offset;
     private final int size;
 
-    public RawUInt16Values(long pointer, int size) {
-        this.pointer = pointer;
+    public SafeFloatList(float[] array, int offset, int size) {
+        this.array = array;
+        this.offset = offset;
         this.size = size;
     }
 
@@ -36,33 +37,25 @@ public class RawUInt16Values extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getUInt16FromArray(pointer, index);
+        return array[index + offset];
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyUInt16Array(pointer, array, atIndex, size);
+    public void copyTo(float[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUInt16Values(pointer + (fromIndex * 2), toIndex - fromIndex);
+        return new SafeFloatList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

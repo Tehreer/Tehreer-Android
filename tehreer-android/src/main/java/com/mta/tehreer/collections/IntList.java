@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.util;
+package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collection.SafeIntList;
-import com.mta.tehreer.internal.util.Description;
+import com.mta.tehreer.internal.collections.SafeIntList;
+import com.mta.tehreer.internal.Description;
 
 /**
  * Represents a primitive list of integers.

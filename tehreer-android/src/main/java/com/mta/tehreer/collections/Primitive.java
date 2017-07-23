@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.collections;
 
-public class Exceptions {
-
-    public static IndexOutOfBoundsException indexOutOfBounds(int index, int size) {
-        return new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-    }
-
-    private Exceptions() {
-    }
+/**
+ * Marker interface that indicates the use of primitive data types.
+ */
+public interface Primitive {
 }

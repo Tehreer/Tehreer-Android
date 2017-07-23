@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.graphics;
 
+import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JNILoader;
-import com.mta.tehreer.util.Disposable;
 
 class GlyphRasterizer implements Disposable {
 

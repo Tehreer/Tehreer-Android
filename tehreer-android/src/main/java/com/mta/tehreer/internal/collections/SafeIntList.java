@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.internal.Exceptions;
 
-public class SafeFloatList extends FloatList {
+public class SafeIntList extends IntList {
 
-    private final float[] array;
+    private final int[] array;
     private final int offset;
     private final int size;
 
-    public SafeFloatList(float[] array, int offset, int size) {
+    public SafeIntList(int[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -37,7 +37,7 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public float get(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
@@ -46,16 +46,16 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(int[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeFloatList(array, offset + fromIndex, toIndex - fromIndex);
+        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.collection;
+package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.internal.util.Exceptions;
-import com.mta.tehreer.util.IntList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.internal.Exceptions;
+import com.mta.tehreer.internal.Raw;
 
-public class SafeIntList extends IntList {
+public class RawSizeValues extends IntList {
 
-    private final int[] array;
-    private final int offset;
+    private final long pointer;
     private final int size;
 
-    public SafeIntList(int[] array, int offset, int size) {
-        this.array = array;
-        this.offset = offset;
+    public RawSizeValues(long pointer, int size) {
+        this.pointer = pointer;
         this.size = size;
     }
 
@@ -42,12 +41,20 @@ public class SafeIntList extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[index + offset];
+        return Raw.getSizeFromArray(pointer, index);
     }
 
     @Override
     public void copyTo(int[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copySizeArray(pointer, array, atIndex, size);
     }
 
     @Override
@@ -56,6 +63,6 @@ public class SafeIntList extends IntList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
+        return new RawUInt16Values(pointer + (fromIndex * Raw.BYTES_IN_SIZE_TYPE), toIndex - fromIndex);
     }
 }

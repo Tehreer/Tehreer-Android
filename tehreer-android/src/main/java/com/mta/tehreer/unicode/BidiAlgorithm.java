@@ -16,9 +16,9 @@
 
 package com.mta.tehreer.unicode;
 
+import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JNILoader;
-import com.mta.tehreer.util.Disposable;
 
 /**
  * This class implements Unicode Bidirectional Algorithm available at

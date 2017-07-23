@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.util;
-
 /**
- * Interface for disposable objects.
+ * Contains core interfaces of the library.
  */
-public interface Disposable {
-    /**
-     * Releases the native memory of this object. Failing to call this method will cause memory
-     * leaks.
-     * <p>
-     * <strong>Note:</strong> The behavior is undefined if this method is called more than once on
-     * the same object.
-     */
-    void dispose();
-}
+package com.mta.tehreer;
