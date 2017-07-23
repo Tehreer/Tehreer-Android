@@ -59,18 +59,18 @@ public class GlyphRun {
         mGlyphCount = otherRun.mGlyphCount;
     }
 
-    private void verifyGlyphRange(int glyphStart, int glyphEnd) {
+    private String checkRange(int glyphStart, int glyphEnd) {
         if (glyphStart < 0) {
-            throw new IllegalArgumentException("Glyph Start: " + glyphStart);
+            return ("Glyph Start: " + glyphStart);
         }
         if (glyphEnd > mGlyphCount) {
-            throw new IllegalArgumentException("Glyph End: " + glyphEnd
-                                               + "Glyph Count: " + mGlyphCount);
+            return ("Glyph End: " + glyphEnd + ", Glyph Count: " + mGlyphCount);
         }
         if (glyphStart > glyphEnd) {
-            throw new IllegalArgumentException("Glyph Start: " + glyphStart
-                                               + ", Glyph End: " + glyphEnd);
+            return ("Glyph Start: " + glyphStart + ", Glyph End: " + glyphEnd);
         }
+
+        return null;
     }
 
     IntrinsicRun getGlyphRun() {
@@ -325,7 +325,10 @@ public class GlyphRun {
      * @return The typographic extent for the given glyph range in this run.
      */
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
-        verifyGlyphRange(glyphStart, glyphEnd);
+        String rangeError = checkRange(glyphStart, glyphEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
 
         glyphStart += mGlyphOffset;
         glyphEnd += mGlyphOffset;
@@ -350,7 +353,10 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public RectF computeBoundingBox(Renderer renderer, int glyphStart, int glyphEnd) {
-	    verifyGlyphRange(glyphStart, glyphEnd);
+        String rangeError = checkRange(glyphStart, glyphEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
 
 	    renderer.setTypeface(mIntrinsicRun.typeface);
 	    renderer.setTypeSize(mIntrinsicRun.typeSize);
@@ -386,7 +392,10 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public void draw(Renderer renderer, Canvas canvas, int glyphStart, int glyphEnd) {
-        verifyGlyphRange(glyphStart, glyphEnd);
+        String rangeError = checkRange(glyphStart, glyphEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
 
 	    renderer.setTypeface(mIntrinsicRun.typeface);
         renderer.setTypeSize(mIntrinsicRun.typeSize);

@@ -126,23 +126,18 @@ public class BidiAlgorithm implements Disposable {
         this.text = other.text;
     }
 
-    private void verifyTextRange(int charStart, int charEnd) {
+    private String checkRange(int charStart, int charEnd) {
         if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
+            return ("Char Start: " + charStart);
         }
         if (charEnd > text.length()) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Text Length: " + text.length());
+            return ("Char End: " + charEnd + ", Text Length: " + text.length());
         }
         if (charStart >= charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
+            return ("Bad Range: [" + charStart + ".." + charEnd + ")");
         }
-    }
 
-    private void verifyBaseLevel(byte baseLevel) {
-        if (baseLevel < 0 || baseLevel > MAX_LEVEL) {
-            throw new IllegalArgumentException("Base Level: " + baseLevel);
-        }
+        return null;
     }
 
     /**
@@ -163,7 +158,11 @@ public class BidiAlgorithm implements Disposable {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
      */
     public int getParagraphBoundary(int charStart, int charEnd) {
-        verifyTextRange(charStart, charEnd);
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
+
         return nativeGetParagraphBoundary(nativeAlgorithm, charStart, charEnd);
     }
 
@@ -188,7 +187,13 @@ public class BidiAlgorithm implements Disposable {
      * @throws NullPointerException if <code>baseDirection</code> is <code>null</code>.
      */
     public BidiParagraph createParagraph(int charStart, int charEnd, BaseDirection baseDirection) {
-        verifyTextRange(charStart, charEnd);
+        if (baseDirection == null) {
+            throw new NullPointerException("Base direction is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
 
         return new BidiParagraph(nativeBuffer,
                                  nativeCreateParagraph(nativeAlgorithm,
@@ -220,8 +225,13 @@ public class BidiAlgorithm implements Disposable {
      *         </ul>
      */
     public BidiParagraph createParagraph(int charStart, int charEnd, byte baseLevel) {
-        verifyTextRange(charStart, charEnd);
-        verifyBaseLevel(baseLevel);
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
+        if (baseLevel < 0 || baseLevel > MAX_LEVEL) {
+            throw new IllegalArgumentException("Base Level: " + baseLevel);
+        }
 
         return new BidiParagraph(nativeBuffer,
                                  nativeCreateParagraph(nativeAlgorithm,
