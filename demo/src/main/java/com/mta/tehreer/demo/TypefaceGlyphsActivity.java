@@ -37,11 +37,11 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.util.FloatList;
-import com.mta.tehreer.util.IntList;
-import com.mta.tehreer.util.PointList;
 
 public class TypefaceGlyphsActivity extends AppCompatActivity {
 
