@@ -17,12 +17,12 @@
 package com.mta.tehreer.graphics;
 
 import com.mta.tehreer.Disposable;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 class GlyphRasterizer implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     public static final int LINECAP_BUTT = 0;

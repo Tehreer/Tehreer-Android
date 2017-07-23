@@ -17,12 +17,12 @@
 package com.mta.tehreer.sfnt.tables;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 class SfntTables {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     static final int TABLE_HEAD = 0;

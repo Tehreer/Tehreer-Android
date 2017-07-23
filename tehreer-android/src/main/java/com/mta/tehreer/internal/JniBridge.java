@@ -16,21 +16,21 @@
 
 package com.mta.tehreer.internal;
 
-public class JNILoader {
+public class JniBridge {
 
-    private static boolean sLoaded = false;
+    private static boolean loaded = false;
 
-    public static void load() {
-        if (!sLoaded) {
-            synchronized (JNILoader.class) {
-                if (!sLoaded) {
+    public static void loadLibrary() {
+        if (!loaded) {
+            synchronized (JniBridge.class) {
+                if (!loaded) {
                     System.loadLibrary("tehreerjni");
-                    sLoaded = true;
+                    loaded = true;
                 }
             }
         }
     }
 
-    private JNILoader() {
+    private JniBridge() {
     }
 }

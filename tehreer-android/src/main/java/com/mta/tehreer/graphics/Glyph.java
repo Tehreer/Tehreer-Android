@@ -19,13 +19,13 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Sustain;
 
 class Glyph {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     @Sustain

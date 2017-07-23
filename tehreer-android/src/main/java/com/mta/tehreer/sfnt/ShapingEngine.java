@@ -18,7 +18,7 @@ package com.mta.tehreer.sfnt;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.Disposable;
 
 /**
@@ -27,7 +27,7 @@ import com.mta.tehreer.Disposable;
 public class ShapingEngine implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     private static class Finalizable extends ShapingEngine {

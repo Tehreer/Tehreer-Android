@@ -19,7 +19,7 @@ package com.mta.tehreer.unicode;
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.Description;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 import java.util.AbstractList;
 import java.util.Iterator;
@@ -35,7 +35,7 @@ import java.util.NoSuchElementException;
 public class BidiLine implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     private static class Finalizable extends BidiLine {

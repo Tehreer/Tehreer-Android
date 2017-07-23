@@ -18,7 +18,7 @@ package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 /**
  * This class implements Unicode Bidirectional Algorithm available at
@@ -32,7 +32,7 @@ import com.mta.tehreer.internal.JNILoader;
 public class BidiAlgorithm implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     /**

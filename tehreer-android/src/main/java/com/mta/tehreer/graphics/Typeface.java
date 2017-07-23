@@ -21,7 +21,7 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.sfnt.SfntTag;
 
@@ -36,7 +36,7 @@ import java.io.InputStream;
 public class Typeface {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     private class Finalizable {

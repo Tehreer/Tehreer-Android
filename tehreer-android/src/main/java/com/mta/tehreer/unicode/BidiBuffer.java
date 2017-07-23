@@ -16,12 +16,12 @@
 
 package com.mta.tehreer.unicode;
 
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 class BidiBuffer {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     public static native long create(String string);

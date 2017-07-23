@@ -21,7 +21,7 @@ import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.collections.RawInt32Floats;
 import com.mta.tehreer.internal.collections.RawInt32Points;
 import com.mta.tehreer.internal.collections.RawSizeValues;
@@ -35,7 +35,7 @@ import com.mta.tehreer.internal.collections.RawUInt16Values;
 public class ShapingResult implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     private static class Finalizable extends ShapingResult {

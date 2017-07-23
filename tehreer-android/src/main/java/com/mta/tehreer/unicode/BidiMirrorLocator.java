@@ -17,12 +17,12 @@
 package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.Disposable;
-import com.mta.tehreer.internal.JNILoader;
+import com.mta.tehreer.internal.JniBridge;
 
 class BidiMirrorLocator implements Disposable {
 
     static {
-        JNILoader.load();
+        JniBridge.loadLibrary();
     }
 
     long nativeMirrorLocator;
