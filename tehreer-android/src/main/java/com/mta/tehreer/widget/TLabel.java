@@ -41,8 +41,6 @@ import java.util.ArrayList;
  */
 public class TLabel extends View {
 
-    private static final String TRUNCATION_STRING = "...";
-
     private int mGravity = Gravity.TOP | Gravity.START;
     private int mMaxLines = 0;
 
