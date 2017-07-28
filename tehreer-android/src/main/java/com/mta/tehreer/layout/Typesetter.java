@@ -693,7 +693,19 @@ public class Typesetter {
      */
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
                                             BreakMode breakMode, TruncationPlace truncationPlace) {
-        return createTruncatedLine(charStart, charEnd, maxWidth, breakMode, truncationPlace, (String)null);
+        if (breakMode == null) {
+            throw new NullPointerException("Break mode is null");
+        }
+        if (truncationPlace == null) {
+            throw new NullPointerException("Truncation place is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
+
+        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+                                 createTruncationToken(charStart, charEnd, truncationPlace, null));
     }
 
     /**
@@ -704,13 +716,11 @@ public class Typesetter {
      * @param maxWidth The width at which truncation will begin.
      * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
-     * @param truncationToken The token to indicate the line truncation. If it is null or empty,
-     *                        then ellipsis character (U+2026) or three dots will be used depending
-     *                        on their availability in chosen typeface.
+     * @param truncationToken The token to indicate the line truncation.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
      * @throws NullPointerException if <code>breakMode</code> is null, or
-     *         <code>truncationPlace</code> is null
+     *         <code>truncationPlace</code> is null, or <code>truncationToken</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
@@ -721,8 +731,25 @@ public class Typesetter {
     public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
                                             BreakMode breakMode, TruncationPlace truncationPlace,
                                             String truncationToken) {
-        return createTruncatedLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
-                                   createTruncationToken(charStart, charEnd, truncationPlace, truncationToken));
+        if (breakMode == null) {
+            throw new NullPointerException("Break mode is null");
+        }
+        if (truncationPlace == null) {
+            throw new NullPointerException("Truncation place is null");
+        }
+        if (truncationToken == null) {
+            throw new NullPointerException("Truncation token is null");
+        }
+        String rangeError = checkRange(charStart, charEnd);
+        if (rangeError != null) {
+            throw new IllegalArgumentException(rangeError);
+        }
+        if (truncationToken.length() == 0) {
+            throw new IllegalArgumentException("Truncation token is empty");
+        }
+
+        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+                                 createTruncationToken(charStart, charEnd, truncationPlace, truncationToken));
     }
 
     /**
@@ -762,6 +789,12 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
+        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace, truncationToken);
+    }
+
+    public ComposedLine createCompactLine(int charStart, int charEnd, float maxWidth,
+                                          BreakMode breakMode, TruncationPlace truncationPlace,
+                                          ComposedLine truncationToken) {
         float tokenlessWidth = maxWidth - truncationToken.getWidth();
 
         switch (truncationPlace) {
