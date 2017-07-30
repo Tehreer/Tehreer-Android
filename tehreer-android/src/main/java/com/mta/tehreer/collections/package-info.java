@@ -17,4 +17,4 @@
 /**
  * Provides wrapper collection classes.
  */
-package com.mta.tehreer.collection;
+package com.mta.tehreer.collections;
