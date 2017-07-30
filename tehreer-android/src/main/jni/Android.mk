@@ -179,7 +179,7 @@ FILE_LIST := \
     Tehreer.cpp \
     Typeface.cpp
 
-LOCAL_LDLIBS := -landroid -ljnigraphics -llog
+LOCAL_LDLIBS := -latomic -landroid -ljnigraphics -llog
 LOCAL_STATIC_LIBRARIES := freetype sheenbidi sheenfigure
 LOCAL_SRC_FILES := $(FILE_LIST:%=$(LOCAL_PATH)/%)
 
