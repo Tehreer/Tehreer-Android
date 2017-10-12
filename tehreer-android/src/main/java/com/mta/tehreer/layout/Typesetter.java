@@ -1073,7 +1073,7 @@ public class Typesetter {
         }
 
         float frameWidth = frameRect.width();
-        float frameHeight = frameRect.height();
+        float frameBottom = frameRect.bottom;
 
         ArrayList<ComposedLine> frameLines = new ArrayList<>();
         int lineStart = charStart;
@@ -1087,7 +1087,7 @@ public class Typesetter {
             float lineAscent = composedLine.getAscent();
             float lineHeight = lineAscent + composedLine.getDescent();
 
-            if ((lineY + lineHeight) > frameHeight) {
+            if ((lineY + lineHeight) > frameBottom) {
                 break;
             }
 
