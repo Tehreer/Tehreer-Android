@@ -151,6 +151,10 @@ public class NameTable {
                 return builder.build();
             }
 
+            if (region == null) {
+                region = "";
+            }
+
             String secret = "";
             if (script != null) {
                 secret += script;
