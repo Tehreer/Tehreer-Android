@@ -20,6 +20,8 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -33,8 +35,11 @@ import com.mta.tehreer.layout.BreakMode;
 import com.mta.tehreer.layout.ComposedLine;
 import com.mta.tehreer.layout.TruncationPlace;
 import com.mta.tehreer.layout.Typesetter;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
+import com.mta.tehreer.layout.style.TypefaceSpan;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Displays read-only text to the user.
@@ -49,6 +54,7 @@ public class TLabel extends View {
     private TruncationPlace mTruncationPlace = TruncationPlace.END;
 
     private String mText = "";
+    private Spanned mSpanned = null;
     private Typesetter mTypesetter = null;
 
     private boolean mRtlText = false;
@@ -122,10 +128,10 @@ public class TLabel extends View {
             setTruncationPlace(truncationPlace);
             setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
             setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
-            setText(values.getString(R.styleable.TLabel_text));
             if (values.hasValue(R.styleable.TLabel_typeface)) {
                 setTypeface(values.getResourceId(R.styleable.TLabel_typeface, 0));
             }
+            setSpanned(Html.fromHtml(values.getString(R.styleable.TLabel_text)));
         } finally {
             values.recycle();
         }
@@ -309,9 +315,21 @@ public class TLabel extends View {
         if (mText != null) {
             mTypesetter = null;
 
-            Typeface typeface = mRenderer.getTypeface();
-            if (typeface != null && mText.length() > 0) {
-                mTypesetter = new Typesetter(mText, typeface, mRenderer.getTypeSize());
+            Typeface typeface = getTypeface();
+            float textSize = getTextSize();
+
+            if (mSpanned != null) {
+                List<Object> defaultSpans = new ArrayList<>();
+                if (typeface != null) {
+                    defaultSpans.add(new TypefaceSpan(typeface));
+                }
+                defaultSpans.add(new TypeSizeSpan(textSize));
+
+                mTypesetter = new Typesetter(mSpanned, defaultSpans);
+            } else {
+                if (typeface != null && mText.length() > 0) {
+                    mTypesetter = new Typesetter(mText, typeface, mRenderer.getTypeSize());
+                }
             }
 
             requestLayout();
@@ -390,6 +408,17 @@ public class TLabel extends View {
      */
     public void setText(String text) {
         mText = (text == null ? "" : text);
+        mSpanned = null;
+        updateTypesetter();
+    }
+
+    public Spanned getSpanned() {
+        return mSpanned;
+    }
+
+    public void setSpanned(Spanned spanned) {
+        mText = "";
+        mSpanned = spanned;
         updateTypesetter();
     }
 
