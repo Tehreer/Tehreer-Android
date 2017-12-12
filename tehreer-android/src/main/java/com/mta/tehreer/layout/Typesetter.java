@@ -102,7 +102,7 @@ public class Typesetter {
         spanned.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         spanned.setSpan(new TypeSizeSpan(typeSize), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-        init(text, spanned);
+        init(text, spanned, null);
 	}
 
     /**
@@ -114,6 +114,10 @@ public class Typesetter {
      * @throws IllegalArgumentException if <code>spanned</code> is empty.
      */
     public Typesetter(Spanned spanned) {
+        this(spanned, null);
+    }
+
+    public Typesetter(Spanned spanned, List<Object> defaultSpans) {
         if (spanned == null) {
             throw new NullPointerException("Spanned text is null");
         }
@@ -121,10 +125,10 @@ public class Typesetter {
             throw new IllegalArgumentException("Spanned text is empty");
         }
 
-        init(StringUtils.copyString(spanned), spanned);
+        init(StringUtils.copyString(spanned), spanned, defaultSpans);
     }
 
-    private void init(String text, Spanned spanned) {
+    private void init(String text, Spanned spanned, List<Object> defaultSpans) {
         mText = text;
         mSpanned = spanned;
         mBreakRecord = new byte[text.length()];
@@ -132,7 +136,7 @@ public class Typesetter {
         mIntrinsicRuns = new ArrayList<>();
 
         resolveBreaks();
-        resolveBidi();
+        resolveBidi(defaultSpans);
     }
 
     /**
@@ -169,7 +173,7 @@ public class Typesetter {
         }
     }
 
-    private void resolveBidi() {
+    private void resolveBidi(List<Object> defaultSpans) {
         // TODO: Analyze script runs.
 
         BidiAlgorithm bidiAlgorithm = null;
@@ -196,7 +200,7 @@ public class Typesetter {
                     shapingEngine.setWritingDirection(writingDirection);
 
                     resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
-                                     bidiRun.embeddingLevel, shapingEngine);
+                                     bidiRun.embeddingLevel, shapingEngine, defaultSpans);
                 }
                 mBidiParagraphs.add(paragraph);
 
@@ -216,26 +220,47 @@ public class Typesetter {
     }
 
     private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
-                                  ShapingEngine shapingEngine) {
-        Spanned spanned = mSpanned;
-        TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypefaceSpan.class);
+                                  ShapingEngine shapingEngine, List<Object> defaultSpans) {
+        Typeface defaultTypeface = null;
+        float defaultSize = DEFAULT_FONT_SIZE;
+
+        if (defaultSpans != null) {
+            for (Object span : defaultSpans) {
+                if (span instanceof TypefaceSpan) {
+                    defaultTypeface = ((TypefaceSpan) span).getTypeface();
+                } else if (span instanceof TypeSizeSpan) {
+                    defaultSize = ((TypeSizeSpan) span).getSize();
+                }
+            }
+        }
+
+        TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(mSpanned, charStart, charEnd, TypefaceSpan.class);
 
         while (iterator.hasNext()) {
             TypefaceSpan spanObject = iterator.next();
             int spanStart = iterator.getSpanStart();
             int spanEnd = iterator.getSpanEnd();
 
-            if (spanObject == null || spanObject.getTypeface() == null) {
+            Typeface spanTypeface = null;
+            if (spanObject != null) {
+                spanTypeface = spanObject.getTypeface();
+            }
+            if (spanTypeface == null) {
+                spanTypeface = defaultTypeface;
+            }
+            if (spanTypeface == null) {
+                //spanObject = new TypefaceSpan(TypefaceManager.getTypefaceByName("KFGQPC Uthmanic Script HAFS"));
+
                 throw new IllegalArgumentException("No typeface is specified for range ["
                                                    + spanStart + ".." + spanEnd + ")");
             }
 
-            resolveFonts(spanStart, spanEnd, bidiLevel, shapingEngine, spanObject.getTypeface());
+            resolveFonts(spanStart, spanEnd, bidiLevel, shapingEngine, spanTypeface, defaultSize);
         }
     }
 
     private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
-                              ShapingEngine shapingEngine, Typeface typeface) {
+                              ShapingEngine shapingEngine, Typeface typeface, float defaultSize) {
         Spanned spanned = mSpanned;
         TopSpanIterator<TypeSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypeSizeSpan.class);
 
@@ -244,15 +269,9 @@ public class Typesetter {
             int spanStart = iterator.getSpanStart();
             int spanEnd = iterator.getSpanEnd();
 
-            float typeSize;
-
-            if (spanObject == null) {
-                typeSize = DEFAULT_FONT_SIZE;
-            } else {
-                typeSize = spanObject.getSize();
-                if (typeSize < 0.0f) {
-                    typeSize = 0.0f;
-                }
+            float typeSize = (spanObject == null ? defaultSize : spanObject.getSize());
+            if (typeSize < 0.0f) {
+                typeSize = 0.0f;
             }
 
             IntrinsicRun intrinsicRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
@@ -1016,14 +1035,30 @@ public class Typesetter {
                 int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
                 int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
 
-                GlyphRun glyphRun = new GlyphRun(intrinsicRun, feasibleStart, feasibleEnd);
+                boolean forward = false;
+
                 if (previousRun != null) {
                     byte bidiLevel = intrinsicRun.bidiLevel;
                     if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
                         insertIndex = runList.size();
+                        forward = true;
                     }
                 }
-                runList.add(insertIndex, glyphRun);
+
+                int spanStart = feasibleStart;
+                while (spanStart < feasibleEnd) {
+                    int spanEnd = mSpanned.nextSpanTransition(spanStart, feasibleEnd, Object.class);
+                    Object[] spans = mSpanned.getSpans(spanStart, spanEnd, Object.class);
+
+                    GlyphRun glyphRun = new GlyphRun(intrinsicRun, spanStart, spanEnd, spans);
+                    runList.add(insertIndex, glyphRun);
+
+                    if (forward) {
+                        insertIndex++;
+                    }
+
+                    spanStart = spanEnd;
+                }
 
                 previousRun = intrinsicRun;
                 visualStart = feasibleEnd;

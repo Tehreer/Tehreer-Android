@@ -18,6 +18,7 @@ package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;
+import android.text.style.ForegroundColorSpan;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -39,16 +40,18 @@ public class GlyphRun {
     private IntrinsicRun mIntrinsicRun;
 	private int mCharStart;
 	private int mCharEnd;
+    private Object[] mSpans;
     private int mGlyphOffset;
     private int mGlyphCount;
     private float mOriginX;
     private float mOriginY;
     private float mWidth = Float.NEGATIVE_INFINITY;
 
-	GlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd) {
+	GlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd, Object[] spans) {
         mIntrinsicRun = intrinsicRun;
         mCharStart = charStart;
         mCharEnd = charEnd;
+        mSpans = spans;
         mGlyphOffset = intrinsicRun.charGlyphStart(charStart);
         mGlyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - mGlyphOffset;
 	}
@@ -57,6 +60,7 @@ public class GlyphRun {
         mIntrinsicRun = otherRun.mIntrinsicRun;
         mGlyphOffset = otherRun.mGlyphOffset;
         mGlyphCount = otherRun.mGlyphCount;
+        mSpans = otherRun.mSpans;
     }
 
     private String checkRange(int glyphStart, int glyphEnd) {
@@ -401,10 +405,20 @@ public class GlyphRun {
         renderer.setTypeSize(mIntrinsicRun.typeSize);
         renderer.setWritingDirection(mIntrinsicRun.writingDirection());
 
-	    renderer.drawGlyphs(canvas,
+        int defaultFillColor = renderer.getFillColor();
+
+        for (Object span : mSpans) {
+            if (span instanceof ForegroundColorSpan) {
+                renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
+            }
+        }
+
+        renderer.drawGlyphs(canvas,
                             getGlyphIds().subList(glyphStart, glyphEnd),
                             getGlyphOffsets().subList(glyphStart, glyphEnd),
                             getGlyphAdvances().subList(glyphStart, glyphEnd));
+
+        renderer.setFillColor(defaultFillColor);
 	}
 
     @Override
