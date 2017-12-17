@@ -149,6 +149,28 @@ public class TypefaceManager {
         }
     }
 
+    public static TypeFamily getTypefaceFamily(String familyName) {
+        List<Typeface> entryList = new ArrayList<>();
+
+        synchronized (TypefaceManager.class) {
+            sortTypefaces();
+
+            for (Typeface typeface : typefaces) {
+                if (typeface.getFamilyName().equalsIgnoreCase(familyName)) {
+                    entryList.add(typeface);
+                }
+            }
+        }
+
+        TypeFamily typeFamily = null;
+
+        if (entryList.size() > 0) {
+            typeFamily = new TypeFamily(familyName, entryList);
+        }
+
+        return typeFamily;
+    }
+
     /**
      * Looks for a registered typeface having specified full name.
      *
