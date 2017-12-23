@@ -225,8 +225,8 @@ public class ShapingRunIterator {
 
             while ((next = findRun(current.end)) != null) {
                 if (current.typeface == next.typeface
-                        && current.typeSize == next.typeSize
-                        && current.scaleX == next.scaleX) {
+                        && Float.compare(current.typeSize, next.typeSize) == 0
+                        && Float.compare(current.scaleX, next.scaleX) == 0) {
                     current.end = next.end;
                 } else {
                     break;
