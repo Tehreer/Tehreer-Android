@@ -39,7 +39,10 @@ public class ShapingRunIterator {
     private final List<TypeWidth> mWidthOrder = Arrays.asList(TypeWidth.values());
     private final List<TypeWeight> mWeightOrder = Arrays.asList(TypeWeight.values());
 
-    private final Spanned mSpanned;
+    private final Spanned spanned;
+    private final ShapingRun initial;
+
+    private int mLimit;
     private ShapingRun mCurrent;
     private ShapingRun mNext;
 
@@ -54,9 +57,27 @@ public class ShapingRunIterator {
         float scaleX;
     }
 
-    public ShapingRunIterator(Spanned spanned) {
-        mSpanned = spanned;
-        mNext = findRun(0);
+    public ShapingRunIterator(Spanned spanned, List<Object> defaultSpans) {
+        this.spanned = spanned;
+        this.initial = resolveInitial(defaultSpans.toArray());
+    }
+
+    private ShapingRun resolveInitial(Object[] spans) {
+        ShapingRun shapingRun = new ShapingRun();
+        shapingRun.typeWeight = TypeWeight.REGULAR;
+        shapingRun.typeSlope = TypeSlope.PLAIN;
+        shapingRun.typeSize = 16.0f;
+        shapingRun.scaleX = 1.0f;
+
+        resolveSpans(shapingRun, spans);
+
+        return shapingRun;
+    }
+
+    public void reset(int charStart, int charEnd) {
+        mLimit = charEnd;
+        mCurrent = null;
+        mNext = findRun(charStart);
     }
 
     private static int nearestIndex(int matchIndex, int loopIndex, int lastIndex) {
@@ -172,45 +193,55 @@ public class ShapingRunIterator {
         }
     }
 
+    private void resolveSpans(ShapingRun shapingRun, Object[] spans) {
+        for (Object span : spans) {
+            if (span instanceof TypefaceSpan) {
+                TypefaceSpan typefaceSpan = (TypefaceSpan) span;
+                resolveTypeface(shapingRun, typefaceSpan.getFamily(), TypeWidth.NORMAL);
+            } else if (span instanceof AbsoluteSizeSpan) {
+                AbsoluteSizeSpan absoluteSizeSpan = (AbsoluteSizeSpan) span;
+                shapingRun.typeSize = absoluteSizeSpan.getSize();
+            } else if (span instanceof RelativeSizeSpan) {
+                RelativeSizeSpan relativeSizeSpan = (RelativeSizeSpan) span;
+                shapingRun.typeSize *= relativeSizeSpan.getSizeChange();
+            } else if (span instanceof StyleSpan) {
+                StyleSpan styleSpan = (StyleSpan) span;
+                mergeStyle(shapingRun, styleSpan.getStyle());
+                updateTypeface(shapingRun);
+            } else if (span instanceof TextAppearanceSpan) {
+                TextAppearanceSpan appearanceSpan = (TextAppearanceSpan) span;
+                shapingRun.typeSize = appearanceSpan.getTextSize();
+                mergeStyle(shapingRun, appearanceSpan.getTextStyle());
+
+                String familyName = appearanceSpan.getFamily();
+                if (familyName != null) {
+                    resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL);
+                } else {
+                    updateTypeface(shapingRun);
+                }
+            }
+        }
+
+        if (shapingRun.typeSize < 0.0f) {
+            shapingRun.typeSize = 0.0f;
+        }
+    }
+
     private ShapingRun findRun(int runStart) {
-        int length = mSpanned.length();
-        if (runStart < length) {
-            int runEnd = mSpanned.nextSpanTransition(runStart, length, MetricAffectingSpan.class);
-            MetricAffectingSpan[] spanObjects = mSpanned.getSpans(runStart, runEnd, MetricAffectingSpan.class);
+        if (runStart < mLimit) {
+            int runEnd = spanned.nextSpanTransition(runStart, mLimit, MetricAffectingSpan.class);
+            MetricAffectingSpan[] spans = spanned.getSpans(runStart, runEnd, MetricAffectingSpan.class);
 
             ShapingRun shapingRun = new ShapingRun();
             shapingRun.start = runStart;
             shapingRun.end = runEnd;
-            shapingRun.typeWeight = TypeWeight.REGULAR;
-            shapingRun.typeSlope = TypeSlope.PLAIN;
+            shapingRun.typeface = initial.typeface;
+            shapingRun.typeWeight = initial.typeWeight;
+            shapingRun.typeSlope = initial.typeSlope;
+            shapingRun.typeSize = initial.typeSize;
+            shapingRun.scaleX = initial.scaleX;
 
-            for (MetricAffectingSpan span : spanObjects) {
-                if (span instanceof TypefaceSpan) {
-                    TypefaceSpan typefaceSpan = (TypefaceSpan) span;
-                    resolveTypeface(shapingRun, typefaceSpan.getFamily(), TypeWidth.NORMAL);
-                } else if (span instanceof AbsoluteSizeSpan) {
-                    AbsoluteSizeSpan absoluteSizeSpan = (AbsoluteSizeSpan) span;
-                    shapingRun.typeSize = absoluteSizeSpan.getSize();
-                } else if (span instanceof RelativeSizeSpan) {
-                    RelativeSizeSpan relativeSizeSpan = (RelativeSizeSpan) span;
-                    shapingRun.typeSize *= relativeSizeSpan.getSizeChange();
-                } else if (span instanceof StyleSpan) {
-                    StyleSpan styleSpan = (StyleSpan) span;
-                    mergeStyle(shapingRun, styleSpan.getStyle());
-                    updateTypeface(shapingRun);
-                } else if (span instanceof TextAppearanceSpan) {
-                    TextAppearanceSpan appearanceSpan = (TextAppearanceSpan) span;
-                    shapingRun.typeSize = appearanceSpan.getTextSize();
-                    mergeStyle(shapingRun, appearanceSpan.getTextStyle());
-
-                    String familyName = appearanceSpan.getFamily();
-                    if (familyName != null) {
-                        resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL);
-                    } else {
-                        updateTypeface(shapingRun);
-                    }
-                }
-            }
+            resolveSpans(shapingRun, spans);
 
             return shapingRun;
         }
@@ -223,6 +254,7 @@ public class ShapingRunIterator {
             ShapingRun current = mNext;
             ShapingRun next;
 
+            // Merge runs of similar style.
             while ((next = findRun(current.end)) != null) {
                 if (current.typeface == next.typeface
                         && Float.compare(current.typeSize, next.typeSize) == 0
