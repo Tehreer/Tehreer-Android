@@ -103,6 +103,39 @@ public class TypeFamily {
         }
     }
 
+    private static void filterTypeSlope(List<Typeface> typefaces, TypeSlope typeSlope) {
+        TypeSlope[] allSlopes = TypeSlope.values();
+        boolean[] available = new boolean[allSlopes.length];
+
+        // Check the availability of each slope.
+        for (Typeface typeface : typefaces) {
+            available[typeface.getSlope().ordinal()] = true;
+        }
+
+        int slopeCount = allSlopes.length;
+        int matchIndex = typeSlope.ordinal();
+        boolean forwardLoop = (typeSlope == TypeSlope.ITALIC);
+
+        for (int i = 0; i < slopeCount; i++) {
+            // - If the value is ‘italic’, check italic faces first, then oblique, then normal.
+            // - If the value is ‘oblique’, check oblique faces first, then italic, then normal.
+            // - If the value is ‘normal’, check normal faces first, then oblique, then italic.
+            int position = (matchIndex + (forwardLoop ? i : slopeCount - i)) % slopeCount;
+            TypeSlope currentSlope = allSlopes[position];
+            if (available[currentSlope.ordinal()]) {
+                // The closest matching slope has been determined.
+                // Remove typefaces with other slopes.
+                Iterator<Typeface> iterator = typefaces.iterator();
+                while (iterator.hasNext()) {
+                    Typeface typeface = iterator.next();
+                    if (typeface.getSlope() != currentSlope) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this != obj) {
