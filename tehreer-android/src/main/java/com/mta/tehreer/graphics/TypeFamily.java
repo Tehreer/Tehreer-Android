@@ -27,7 +27,6 @@ public class TypeFamily {
 
     private final String familyName;
     private final List<Typeface> typefaces;
-    private List<Typeface> mSortedTypefaces;
 
     /**
      * Constructs a type family object.
@@ -64,12 +63,12 @@ public class TypeFamily {
 
         // Check the availability of each width.
         for (Typeface typeface : typefaces) {
-            available[typeface.getWidth().index()] = true;
+            available[typeface.getWidth().ordinal()] = true;
         }
 
         int lastIndex = allWidths.length - 1;
-        int matchIndex = typeWidth.index();
-        int normalIndex = TypeWidth.NORMAL.index();
+        int matchIndex = typeWidth.ordinal();
+        int normalIndex = TypeWidth.NORMAL.ordinal();
 
         for (int i = 0; i <= lastIndex; i++) {
             int position;
@@ -77,10 +76,7 @@ public class TypeFamily {
             // - If the value is ‘normal’ or lower, check narrower widths first, then wider ones.
             // - Otherwise, check wider widths first, then narrower ones.
             if (matchIndex <= normalIndex) {
-                position = matchIndex - i;
-                if (position < 0) {
-                    position = i;
-                }
+                position = (i <= matchIndex ? matchIndex - i : i);
             } else {
                 position = matchIndex + i;
                 if (position > lastIndex) {
@@ -89,7 +85,7 @@ public class TypeFamily {
             }
 
             TypeWidth currentWidth = allWidths[position];
-            if (available[currentWidth.index()]) {
+            if (available[currentWidth.ordinal()]) {
                 // The closest matching width has been determined.
                 // Remove typefaces with other widths.
                 Iterator<Typeface> iterator = typefaces.iterator();
@@ -129,6 +125,52 @@ public class TypeFamily {
                 while (iterator.hasNext()) {
                     Typeface typeface = iterator.next();
                     if (typeface.getSlope() != currentSlope) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    private static void filterTypeWeight(List<Typeface> typefaces, TypeWeight typeWeight) {
+        TypeWeight[] allWeights = TypeWeight.values();
+        boolean[] available = new boolean[allWeights.length];
+
+        // Check the availability of each weight.
+        for (Typeface typeface : typefaces) {
+            available[typeface.getWeight().ordinal()] = true;
+        }
+
+        int lastIndex = allWeights.length - 1;
+        int matchIndex = typeWeight.ordinal();
+        int regularIndex = TypeWeight.REGULAR.ordinal();
+        int mediumIndex = TypeWeight.MEDIUM.ordinal();
+
+        for (int i = 0; i <= lastIndex; i++) {
+            int position;
+
+            if (matchIndex == regularIndex) {
+                position = regularIndex + i;
+                if (position == mediumIndex) {
+                    matchIndex = mediumIndex;
+                }
+            } else if (matchIndex <= mediumIndex) {
+                position = (i <= matchIndex ? matchIndex - i : i);
+            } else {
+                position = matchIndex + i;
+                if (position > lastIndex) {
+                    position = lastIndex - i;
+                }
+            }
+
+            TypeWeight currentWeight = allWeights[position];
+            if (available[currentWeight.ordinal()]) {
+                // The closest matching width has been determined.
+                // Remove typefaces with other weights.
+                Iterator<Typeface> iterator = typefaces.iterator();
+                while (iterator.hasNext()) {
+                    Typeface typeface = iterator.next();
+                    if (typeface.getWeight() != currentWeight) {
                         iterator.remove();
                     }
                 }

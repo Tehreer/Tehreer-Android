@@ -41,10 +41,6 @@ public enum TypeWidth {
         this.value = value;
     }
 
-    int index() {
-        return value - 1;
-    }
-
     /**
      * Returns the enum constant of <code>TypeWidth</code> with the specified value.
      *
