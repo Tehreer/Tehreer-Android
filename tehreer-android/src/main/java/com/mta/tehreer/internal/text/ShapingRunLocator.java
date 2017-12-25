@@ -30,10 +30,11 @@ import com.mta.tehreer.graphics.TypeWeight;
 import com.mta.tehreer.graphics.TypeWidth;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
 
 import java.util.List;
 
-public class ShapingRunIterator {
+public class ShapingRunLocator {
 
     private final Spanned spanned;
     private final ShapingRun initial;
@@ -53,7 +54,7 @@ public class ShapingRunIterator {
         float scaleX;
     }
 
-    public ShapingRunIterator(Spanned spanned, List<Object> defaultSpans) {
+    public ShapingRunLocator(Spanned spanned, List<Object> defaultSpans) {
         this.spanned = spanned;
         this.initial = resolveInitial(defaultSpans.toArray());
     }
@@ -94,7 +95,15 @@ public class ShapingRunIterator {
 
     private static void resolveSpans(ShapingRun shapingRun, Object[] spans) {
         for (Object span : spans) {
-            if (span instanceof TypefaceSpan) {
+            if (span instanceof com.mta.tehreer.layout.style.TypefaceSpan) {
+                com.mta.tehreer.layout.style.TypefaceSpan typefaceSpan = (com.mta.tehreer.layout.style.TypefaceSpan) span;
+                shapingRun.typeface = typefaceSpan.getTypeface();
+                shapingRun.typeWeight = shapingRun.typeface.getWeight();
+                shapingRun.typeSlope = shapingRun.typeface.getSlope();
+            } else if (span instanceof TypeSizeSpan) {
+                TypeSizeSpan typeSizeSpan = (TypeSizeSpan) span;
+                shapingRun.typeSize = typeSizeSpan.getSize();
+            } else if (span instanceof TypefaceSpan) {
                 TypefaceSpan typefaceSpan = (TypefaceSpan) span;
                 resolveTypeface(shapingRun, typefaceSpan.getFamily(), TypeWidth.NORMAL);
             } else if (span instanceof AbsoluteSizeSpan) {
