@@ -16,17 +16,20 @@
 
 package com.mta.tehreer.layout.style;
 
+import android.text.TextPaint;
+import android.text.style.MetricAffectingSpan;
+
 import com.mta.tehreer.graphics.Typeface;
 
 /**
- * The <code>TypefaceSpan</code> class represents a span for specifying custom typeface.
+ * The <code>ConcreteTypefaceSpan</code> class represents a span for specifying particular typeface.
  */
-public class TypefaceSpan {
+public class TypefaceSpan extends MetricAffectingSpan {
 
     private final Typeface typeface;
 
     /**
-     * Constructs a typeface span object.
+     * Constructs a concrete typeface span object.
      *
      * @param typeface The typeface object.
      */
@@ -41,5 +44,13 @@ public class TypefaceSpan {
      */
     public Typeface getTypeface() {
         return typeface;
+    }
+
+    @Override
+    public void updateMeasureState(TextPaint textPaint) {
+    }
+
+    @Override
+    public void updateDrawState(TextPaint textPaint) {
     }
 }

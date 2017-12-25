@@ -16,10 +16,13 @@
 
 package com.mta.tehreer.layout.style;
 
+import android.text.TextPaint;
+import android.text.style.MetricAffectingSpan;
+
 /**
  * The <code>TypeSizeSpan</code> class represents a span for specifying absolute type size.
  */
-public class TypeSizeSpan {
+public class TypeSizeSpan extends MetricAffectingSpan {
 
     private final float size;
 
@@ -39,5 +42,13 @@ public class TypeSizeSpan {
      */
     public float getSize() {
         return size;
+    }
+
+    @Override
+    public void updateMeasureState(TextPaint textPaint) {
+    }
+
+    @Override
+    public void updateDrawState(TextPaint textPaint) {
     }
 }
