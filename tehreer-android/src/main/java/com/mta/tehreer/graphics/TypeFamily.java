@@ -57,125 +57,96 @@ public class TypeFamily {
         return typefaces;
     }
 
-    private static void filterTypeWidth(List<Typeface> typefaces, TypeWidth typeWidth) {
-        TypeWidth[] allWidths = TypeWidth.values();
-        boolean[] available = new boolean[allWidths.length];
-
-        // Check the availability of each width.
-        for (Typeface typeface : typefaces) {
-            available[typeface.getWidth().ordinal()] = true;
-        }
-
-        int lastIndex = allWidths.length - 1;
-        int matchIndex = typeWidth.ordinal();
-        int normalIndex = TypeWidth.NORMAL.ordinal();
-
-        for (int i = 0; i <= lastIndex; i++) {
-            int position;
-
-            // - If the value is ‘normal’ or lower, check narrower widths first, then wider ones.
-            // - Otherwise, check wider widths first, then narrower ones.
-            if (matchIndex <= normalIndex) {
-                position = (i <= matchIndex ? matchIndex - i : i);
-            } else {
-                position = matchIndex + i;
-                if (position > lastIndex) {
-                    position = lastIndex - i;
-                }
-            }
-
-            TypeWidth currentWidth = allWidths[position];
-            if (available[currentWidth.ordinal()]) {
-                // The closest matching width has been determined.
-                // Remove typefaces with other widths.
-                Iterator<Typeface> iterator = typefaces.iterator();
-                while (iterator.hasNext()) {
-                    Typeface typeface = iterator.next();
-                    if (typeface.getWidth() != currentWidth) {
-                        iterator.remove();
-                    }
-                }
-            }
-        }
+    private static int widthGap(TypeWidth desired, TypeWidth candidate) {
+        return Math.abs(desired.ordinal() - candidate.ordinal());
     }
 
-    private static void filterTypeSlope(List<Typeface> typefaces, TypeSlope typeSlope) {
-        TypeSlope[] allSlopes = TypeSlope.values();
-        boolean[] available = new boolean[allSlopes.length];
+    private static int slopeGap(TypeSlope desired, TypeSlope candidate) {
+        // - If the value is ‘normal’, check normal faces first, then oblique, then italic.
+        // - If the value is ‘italic’, check italic faces first, then oblique, then normal.
+        // - If the value is ‘oblique’, check oblique faces first, then italic, then normal.
+        int[] gaps = {
+            // "If the value is ‘normal’, normal faces are checked first, then oblique faces, then
+            // italic faces."
+            /*   PLAIN: */ 0, 2, 1,
+            // "If the value is ‘italic’, italic faces are checked first, then oblique, then normal
+            // faces."
+            /*  ITALIC: */ 2, 0, 1,
+            // "If the value is ‘oblique’, oblique faces are checked first, then italic faces and
+            // then normal faces."
+            /* OBLIQUE: */ 2, 1, 0,
+        };
+        int row = desired.ordinal();
+        int column = candidate.ordinal();
 
-        // Check the availability of each slope.
-        for (Typeface typeface : typefaces) {
-            available[typeface.getSlope().ordinal()] = true;
-        }
-
-        int slopeCount = allSlopes.length;
-        int matchIndex = typeSlope.ordinal();
-        boolean forwardLoop = (typeSlope == TypeSlope.ITALIC);
-
-        for (int i = 0; i < slopeCount; i++) {
-            // - If the value is ‘italic’, check italic faces first, then oblique, then normal.
-            // - If the value is ‘oblique’, check oblique faces first, then italic, then normal.
-            // - If the value is ‘normal’, check normal faces first, then oblique, then italic.
-            int position = (matchIndex + (forwardLoop ? i : slopeCount - i)) % slopeCount;
-            TypeSlope currentSlope = allSlopes[position];
-            if (available[currentSlope.ordinal()]) {
-                // The closest matching slope has been determined.
-                // Remove typefaces with other slopes.
-                Iterator<Typeface> iterator = typefaces.iterator();
-                while (iterator.hasNext()) {
-                    Typeface typeface = iterator.next();
-                    if (typeface.getSlope() != currentSlope) {
-                        iterator.remove();
-                    }
-                }
-            }
-        }
+        return gaps[(row * 3) + column];
     }
 
-    private static void filterTypeWeight(List<Typeface> typefaces, TypeWeight typeWeight) {
-        TypeWeight[] allWeights = TypeWeight.values();
-        boolean[] available = new boolean[allWeights.length];
+    private static int weightGap(TypeWeight desired, TypeWeight candidate) {
+        int[] gaps = {
+            // "If the desired weight is less than 400, weights below the desired weight are checked
+            // in descending order followed by weights above the desired weight in ascending order
+            // until a match is found."
+            /* 100: */ 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            /* 200: */ 1, 0, 2, 3, 4, 5, 6, 7, 8,
+            /* 300: */ 2, 1, 0, 3, 4, 5, 6, 7, 8,
 
-        // Check the availability of each weight.
-        for (Typeface typeface : typefaces) {
-            available[typeface.getWeight().ordinal()] = true;
-        }
+            // "If the desired weight is 400, 500 is checked first and then the rule for desired
+            // weights less than 400 is used."
+            /* 400: */ 4, 3, 2, 0, 1, 5, 6, 7, 8,
 
-        int lastIndex = allWeights.length - 1;
-        int matchIndex = typeWeight.ordinal();
-        int regularIndex = TypeWeight.REGULAR.ordinal();
-        int mediumIndex = TypeWeight.MEDIUM.ordinal();
+            // "If the desired weight is 500, 400 is checked first and then the rule for desired
+            // weights less than 400 is used."
+            /* 500: */ 4, 3, 2, 1, 0, 5, 6, 7, 8,
 
-        for (int i = 0; i <= lastIndex; i++) {
-            int position;
+            // "If the desired weight is greater than 500, weights above the desired weight are
+            // checked in ascending order followed by weights below the desired weight in descending
+            // order until a match is found."
+            /* 600: */ 8, 7, 6, 5, 4, 0, 1, 2, 3,
+            /* 700: */ 8, 7, 6, 5, 4, 3, 0, 1, 2,
+            /* 800: */ 8, 7, 6, 5, 4, 3, 2, 0, 1,
+            /* 900: */ 8, 7, 6, 5, 4, 3, 2, 1, 0,
+        };
+        int row = desired.ordinal();
+        int column = candidate.ordinal();
 
-            if (matchIndex == regularIndex) {
-                position = regularIndex + i;
-                if (position == mediumIndex) {
-                    matchIndex = mediumIndex;
+        return gaps[(row * 9) + column];
+    }
+
+    public Typeface getTypefaceByStyle(TypeWidth typeWidth, TypeWeight typeWeight, TypeSlope typeSlope) {
+        // BASED ON CSS FONT MATCHING ALGORITHM.
+        Iterator<Typeface> iterator = typefaces.iterator();
+        if (iterator.hasNext()) {
+            Typeface candidate = iterator.next();
+
+            while (iterator.hasNext()) {
+                Typeface current = iterator.next();
+
+                int widthGap = widthGap(typeWidth, current.getWidth())
+                             - widthGap(typeWidth, candidate.getWidth());
+                if (widthGap > 0) {
+                    continue;
                 }
-            } else if (matchIndex <= mediumIndex) {
-                position = (i <= matchIndex ? matchIndex - i : i);
-            } else {
-                position = matchIndex + i;
-                if (position > lastIndex) {
-                    position = lastIndex - i;
+
+                int slopeGap = slopeGap(typeSlope, current.getSlope())
+                             - slopeGap(typeSlope, candidate.getSlope());
+                if (slopeGap > 0) {
+                    continue;
                 }
+
+                int weightGap = weightGap(typeWeight, current.getWeight())
+                              - weightGap(typeWeight, candidate.getWeight());
+                if (weightGap > 0) {
+                    continue;
+                }
+
+                candidate = current;
             }
 
-            TypeWeight currentWeight = allWeights[position];
-            if (available[currentWeight.ordinal()]) {
-                // The closest matching width has been determined.
-                // Remove typefaces with other weights.
-                Iterator<Typeface> iterator = typefaces.iterator();
-                while (iterator.hasNext()) {
-                    Typeface typeface = iterator.next();
-                    if (typeface.getWeight() != currentWeight) {
-                        iterator.remove();
-                    }
-                }
-            }
+            return candidate;
         }
+
+        return null;
     }
 
     @Override
