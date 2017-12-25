@@ -21,10 +21,10 @@ import android.text.SpannableString;
 import android.text.Spanned;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.text.ShapingRunLocator;
 import com.mta.tehreer.internal.text.StringUtils;
-import com.mta.tehreer.internal.text.TopSpanIterator;
-import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
+import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
@@ -46,8 +46,6 @@ import java.util.List;
  * breaking, and do other contextual analysis based on the characters in the string.
  */
 public class Typesetter {
-
-    private static final float DEFAULT_FONT_SIZE = 16.0f;
 
     private class Finalizable {
 
@@ -136,7 +134,7 @@ public class Typesetter {
         mIntrinsicRuns = new ArrayList<>();
 
         resolveBreaks();
-        resolveBidi(defaultSpans);
+        resolveBidi(new ShapingRunLocator(spanned, defaultSpans));
     }
 
     /**
@@ -173,7 +171,7 @@ public class Typesetter {
         }
     }
 
-    private void resolveBidi(List<Object> defaultSpans) {
+    private void resolveBidi(ShapingRunLocator shapingRunLocator) {
         // TODO: Analyze script runs.
 
         BidiAlgorithm bidiAlgorithm = null;
@@ -196,11 +194,12 @@ public class Typesetter {
                     int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
                     WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
 
+                    shapingRunLocator.reset(bidiRun.charStart, bidiRun.charEnd);
+
                     shapingEngine.setScriptTag(scriptTag);
                     shapingEngine.setWritingDirection(writingDirection);
 
-                    resolveTypefaces(bidiRun.charStart, bidiRun.charEnd,
-                                     bidiRun.embeddingLevel, shapingEngine, defaultSpans);
+                    resolveTypefaces(shapingRunLocator, shapingEngine, bidiRun.embeddingLevel);
                 }
                 mBidiParagraphs.add(paragraph);
 
@@ -219,84 +218,35 @@ public class Typesetter {
         }
     }
 
-    private void resolveTypefaces(int charStart, int charEnd, byte bidiLevel,
-                                  ShapingEngine shapingEngine, List<Object> defaultSpans) {
-        Typeface defaultTypeface = null;
-        float defaultSize = DEFAULT_FONT_SIZE;
+    private void resolveTypefaces(ShapingRunLocator locator, ShapingEngine shapingEngine, byte bidiLevel) {
+        while (locator.moveNext()) {
+            int runStart = locator.getRunStart();
+            int runEnd = locator.getRunEnd();
+            Typeface typeface = locator.getTypeface();
+            float typeSize = locator.getTypeSize();
 
-        if (defaultSpans != null) {
-            for (Object span : defaultSpans) {
-                if (span instanceof TypefaceSpan) {
-                    defaultTypeface = ((TypefaceSpan) span).getTypeface();
-                } else if (span instanceof TypeSizeSpan) {
-                    defaultSize = ((TypeSizeSpan) span).getSize();
+            if (typeface == null) {
+                throw new IllegalArgumentException("No typeface is specified for range ["
+                                                   + runStart + ".." + runEnd + ")");
+            }
+
+            shapingEngine.setTypeface(typeface);
+            shapingEngine.setTypeSize(typeSize);
+
+            ShapingResult shapingResult = null;
+            IntrinsicRun intrinsicRun;
+
+            try {
+                shapingResult = shapingEngine.shapeText(mText, runStart, runEnd);
+                intrinsicRun = new IntrinsicRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
+            } finally {
+                if (shapingResult != null) {
+                    shapingResult.dispose();
                 }
             }
-        }
 
-        TopSpanIterator<TypefaceSpan> iterator = new TopSpanIterator<>(mSpanned, charStart, charEnd, TypefaceSpan.class);
-
-        while (iterator.hasNext()) {
-            TypefaceSpan spanObject = iterator.next();
-            int spanStart = iterator.getSpanStart();
-            int spanEnd = iterator.getSpanEnd();
-
-            Typeface spanTypeface = null;
-            if (spanObject != null) {
-                spanTypeface = spanObject.getTypeface();
-            }
-            if (spanTypeface == null) {
-                spanTypeface = defaultTypeface;
-            }
-            if (spanTypeface == null) {
-                //spanObject = new TypefaceSpan(TypefaceManager.getTypefaceByName("KFGQPC Uthmanic Script HAFS"));
-
-                throw new IllegalArgumentException("No typeface is specified for range ["
-                                                   + spanStart + ".." + spanEnd + ")");
-            }
-
-            resolveFonts(spanStart, spanEnd, bidiLevel, shapingEngine, spanTypeface, defaultSize);
-        }
-    }
-
-    private void resolveFonts(int charStart, int charEnd, byte bidiLevel,
-                              ShapingEngine shapingEngine, Typeface typeface, float defaultSize) {
-        Spanned spanned = mSpanned;
-        TopSpanIterator<TypeSizeSpan> iterator = new TopSpanIterator<>(spanned, charStart, charEnd, TypeSizeSpan.class);
-
-        while (iterator.hasNext()) {
-            TypeSizeSpan spanObject = iterator.next();
-            int spanStart = iterator.getSpanStart();
-            int spanEnd = iterator.getSpanEnd();
-
-            float typeSize = (spanObject == null ? defaultSize : spanObject.getSize());
-            if (typeSize < 0.0f) {
-                typeSize = 0.0f;
-            }
-
-            IntrinsicRun intrinsicRun = resolveGlyphs(spanStart, spanEnd, bidiLevel, shapingEngine, typeface, typeSize);
             mIntrinsicRuns.add(intrinsicRun);
         }
-    }
-
-    private IntrinsicRun resolveGlyphs(int charStart, int charEnd, byte bidiLevel,
-                                       ShapingEngine shapingEngine, Typeface typeface, float typeSize) {
-        shapingEngine.setTypeface(typeface);
-        shapingEngine.setTypeSize(typeSize);
-
-        ShapingResult shapingResult = null;
-        IntrinsicRun intrinsicRun = null;
-
-        try {
-            shapingResult = shapingEngine.shapeText(mText, charStart, charEnd);
-            intrinsicRun = new IntrinsicRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
-        } finally {
-            if (shapingResult != null) {
-                shapingResult.dispose();
-            }
-        }
-
-        return intrinsicRun;
     }
 
     private String checkRange(int charStart, int charEnd) {
