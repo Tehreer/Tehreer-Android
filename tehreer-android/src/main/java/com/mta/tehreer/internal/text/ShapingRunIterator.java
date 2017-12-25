@@ -31,13 +31,9 @@ import com.mta.tehreer.graphics.TypeWidth;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ShapingRunIterator {
-
-    private final List<TypeWidth> mWidthOrder = Arrays.asList(TypeWidth.values());
-    private final List<TypeWeight> mWeightOrder = Arrays.asList(TypeWeight.values());
 
     private final Spanned spanned;
     private final ShapingRun initial;
@@ -62,7 +58,7 @@ public class ShapingRunIterator {
         this.initial = resolveInitial(defaultSpans.toArray());
     }
 
-    private ShapingRun resolveInitial(Object[] spans) {
+    private static ShapingRun resolveInitial(Object[] spans) {
         ShapingRun shapingRun = new ShapingRun();
         shapingRun.typeWeight = TypeWeight.REGULAR;
         shapingRun.typeSlope = TypeSlope.PLAIN;
@@ -74,160 +70,7 @@ public class ShapingRunIterator {
         return shapingRun;
     }
 
-    public void reset(int charStart, int charEnd) {
-        mLimit = charEnd;
-        mCurrent = null;
-        mNext = findRun(charStart);
-    }
-
-    private static int nearestIndex(int matchIndex, int loopIndex, int lastIndex) {
-        int division = loopIndex / 2;
-        int remainder = loopIndex % 2;
-        int margin = division + remainder;
-
-        if (margin > matchIndex) {
-            return loopIndex;
-        }
-
-        if (margin + matchIndex > lastIndex) {
-            return lastIndex - loopIndex;
-        }
-
-        if (remainder == 0) {
-            return matchIndex + margin;
-        }
-
-        return matchIndex - margin;
-    }
-
-    private static Typeface findTypeface(TypeFamily typeFamily, TypeWidth typeWidth,
-                                         TypeWeight typeWeight, TypeSlope typeSlope) {
-        for (Typeface typeface : typeFamily.getTypefaces()) {
-            if (typeface.getWidth() == typeWidth
-                    && typeface.getWeight() == typeWeight
-                    && typeface.getSlope() == typeSlope) {
-                return typeface;
-            }
-        }
-
-        return null;
-    }
-
-    private Typeface getTypefaceByStyle(TypeFamily typeFamily, TypeWidth typeWidth,
-                                        TypeWeight typeWeight, TypeSlope typeSlope) {
-        int widthIndex = mWidthOrder.indexOf(typeWidth);
-        int widthLast = mWidthOrder.size() - 1;
-
-        int weightIndex = mWeightOrder.indexOf(typeWeight);
-        int weightLast = mWeightOrder.size() - 1;
-
-        for (int i = 0; i <= widthLast; i++) {
-            int widthNearest = nearestIndex(widthIndex, i, widthLast);
-            TypeWidth widthValue = mWidthOrder.get(widthNearest);
-
-            for (int j = 0; j <= weightLast; j++) {
-                int weightNearest = nearestIndex(weightIndex, i, weightLast);
-                TypeWeight weightValue = mWeightOrder.get(weightNearest);
-                TypeSlope slopeValue = typeSlope;
-
-                for (int k = 0; k <= 1; k++) {
-                    Typeface typeface = findTypeface(typeFamily, widthValue, weightValue, slopeValue);
-                    if (typeface != null) {
-                        return typeface;
-                    }
-
-                    if (slopeValue == TypeSlope.ITALIC) {
-                        slopeValue = TypeSlope.OBLIQUE;
-                    } else if (slopeValue == TypeSlope.OBLIQUE) {
-                        slopeValue = TypeSlope.ITALIC;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Typeface getTypefaceByStyle(String familyName, TypeWidth typeWidth,
-                                        TypeWeight typeWeight, TypeSlope typeSlope) {
-        TypeFamily typeFamily = TypefaceManager.getTypefaceFamily(familyName);
-        if (typeFamily != null) {
-            return getTypefaceByStyle(typeFamily, typeWidth, typeWeight, typeSlope);
-        }
-
-        return null;
-    }
-
-    private void mergeStyle(ShapingRun shapingRun, int newStyle) {
-        switch (newStyle) {
-        case android.graphics.Typeface.NORMAL:
-            shapingRun.typeWeight = TypeWeight.REGULAR;
-            break;
-
-        case android.graphics.Typeface.BOLD:
-            shapingRun.typeWeight = TypeWeight.BOLD;
-            break;
-
-        case android.graphics.Typeface.ITALIC:
-            shapingRun.typeSlope = TypeSlope.ITALIC;
-            break;
-
-        case android.graphics.Typeface.BOLD_ITALIC:
-            shapingRun.typeWeight = TypeWeight.BOLD;
-            shapingRun.typeSlope = TypeSlope.ITALIC;
-            break;
-        }
-    }
-
-    private void resolveTypeface(ShapingRun shapingRun, String familyName, TypeWidth typeWidth) {
-        shapingRun.typeface = getTypefaceByStyle(familyName, typeWidth,
-                                                 shapingRun.typeWeight, shapingRun.typeSlope);
-    }
-
-    private void updateTypeface(ShapingRun shapingRun) {
-        Typeface typeface = shapingRun.typeface;
-        if (typeface != null) {
-            resolveTypeface(shapingRun, typeface.getFamilyName(), typeface.getWidth());
-        }
-    }
-
-    private void resolveSpans(ShapingRun shapingRun, Object[] spans) {
-        for (Object span : spans) {
-            if (span instanceof TypefaceSpan) {
-                TypefaceSpan typefaceSpan = (TypefaceSpan) span;
-                resolveTypeface(shapingRun, typefaceSpan.getFamily(), TypeWidth.NORMAL);
-            } else if (span instanceof AbsoluteSizeSpan) {
-                AbsoluteSizeSpan absoluteSizeSpan = (AbsoluteSizeSpan) span;
-                shapingRun.typeSize = absoluteSizeSpan.getSize();
-            } else if (span instanceof RelativeSizeSpan) {
-                RelativeSizeSpan relativeSizeSpan = (RelativeSizeSpan) span;
-                shapingRun.typeSize *= relativeSizeSpan.getSizeChange();
-            } else if (span instanceof StyleSpan) {
-                StyleSpan styleSpan = (StyleSpan) span;
-                mergeStyle(shapingRun, styleSpan.getStyle());
-                updateTypeface(shapingRun);
-            } else if (span instanceof TextAppearanceSpan) {
-                TextAppearanceSpan appearanceSpan = (TextAppearanceSpan) span;
-                shapingRun.typeSize = appearanceSpan.getTextSize();
-                mergeStyle(shapingRun, appearanceSpan.getTextStyle());
-
-                String familyName = appearanceSpan.getFamily();
-                if (familyName != null) {
-                    resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL);
-                } else {
-                    updateTypeface(shapingRun);
-                }
-            }
-        }
-
-        if (shapingRun.typeSize < 0.0f) {
-            shapingRun.typeSize = 0.0f;
-        }
-    }
-
-    private ShapingRun findRun(int runStart) {
+    private ShapingRun resolveRun(int runStart) {
         if (runStart < mLimit) {
             int runEnd = spanned.nextSpanTransition(runStart, mLimit, MetricAffectingSpan.class);
             MetricAffectingSpan[] spans = spanned.getSpans(runStart, runEnd, MetricAffectingSpan.class);
@@ -249,13 +92,90 @@ public class ShapingRunIterator {
         return null;
     }
 
+    private static void resolveSpans(ShapingRun shapingRun, Object[] spans) {
+        for (Object span : spans) {
+            if (span instanceof TypefaceSpan) {
+                TypefaceSpan typefaceSpan = (TypefaceSpan) span;
+                resolveTypeface(shapingRun, typefaceSpan.getFamily(), TypeWidth.NORMAL);
+            } else if (span instanceof AbsoluteSizeSpan) {
+                AbsoluteSizeSpan absoluteSizeSpan = (AbsoluteSizeSpan) span;
+                shapingRun.typeSize = absoluteSizeSpan.getSize();
+            } else if (span instanceof RelativeSizeSpan) {
+                RelativeSizeSpan relativeSizeSpan = (RelativeSizeSpan) span;
+                shapingRun.typeSize *= relativeSizeSpan.getSizeChange();
+            } else if (span instanceof StyleSpan) {
+                StyleSpan styleSpan = (StyleSpan) span;
+                resolveStyle(shapingRun, styleSpan.getStyle());
+                updateTypeface(shapingRun);
+            } else if (span instanceof TextAppearanceSpan) {
+                TextAppearanceSpan appearanceSpan = (TextAppearanceSpan) span;
+                shapingRun.typeSize = appearanceSpan.getTextSize();
+                resolveStyle(shapingRun, appearanceSpan.getTextStyle());
+
+                String familyName = appearanceSpan.getFamily();
+                if (familyName != null) {
+                    resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL);
+                } else {
+                    updateTypeface(shapingRun);
+                }
+            }
+        }
+
+        if (shapingRun.typeSize < 0.0f) {
+            shapingRun.typeSize = 0.0f;
+        }
+    }
+
+    private static void resolveStyle(ShapingRun shapingRun, int newStyle) {
+        switch (newStyle) {
+        case android.graphics.Typeface.NORMAL:
+            shapingRun.typeWeight = TypeWeight.REGULAR;
+            break;
+
+        case android.graphics.Typeface.BOLD:
+            shapingRun.typeWeight = TypeWeight.BOLD;
+            break;
+
+        case android.graphics.Typeface.ITALIC:
+            shapingRun.typeSlope = TypeSlope.ITALIC;
+            break;
+
+        case android.graphics.Typeface.BOLD_ITALIC:
+            shapingRun.typeWeight = TypeWeight.BOLD;
+            shapingRun.typeSlope = TypeSlope.ITALIC;
+            break;
+        }
+    }
+
+    private static void resolveTypeface(ShapingRun shapingRun, String familyName, TypeWidth typeWidth) {
+        TypeFamily typeFamily = TypefaceManager.getTypefaceFamily(familyName);
+        if (typeFamily != null) {
+            shapingRun.typeface = typeFamily.getTypefaceByStyle(typeWidth, shapingRun.typeWeight, shapingRun.typeSlope);
+        } else {
+            shapingRun.typeface = null;
+        }
+    }
+
+    private static void updateTypeface(ShapingRun shapingRun) {
+        Typeface typeface = shapingRun.typeface;
+        if (typeface != null) {
+            resolveTypeface(shapingRun, typeface.getFamilyName(), typeface.getWidth());
+        }
+    }
+
+    public void reset(int charStart, int charEnd) {
+        mLimit = charEnd;
+        mCurrent = null;
+        mNext = resolveRun(charStart);
+    }
+
     public boolean moveNext() {
         if (mNext != null) {
             ShapingRun current = mNext;
             ShapingRun next;
 
             // Merge runs of similar style.
-            while ((next = findRun(current.end)) != null) {
+            while ((next = resolveRun(current.end)) != null) {
                 if (current.typeface == next.typeface
                         && Float.compare(current.typeSize, next.typeSize) == 0
                         && Float.compare(current.scaleX, next.scaleX) == 0) {
