@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.text;
+package com.mta.tehreer.internal.layout;
 
 import android.text.GetChars;
 
