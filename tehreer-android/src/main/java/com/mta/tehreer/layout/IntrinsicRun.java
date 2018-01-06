@@ -18,61 +18,37 @@ package com.mta.tehreer.layout;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.sfnt.ShapingResult;
 
 class IntrinsicRun {
 
+    final int charStart;
+    final int charEnd;
+    final boolean isBackward;
+    final byte bidiLevel;
+    final WritingDirection writingDirection;
     final Typeface typeface;
     final float typeSize;
     final float sizeByEm;
-    final byte bidiLevel;
-    final WritingDirection writingDirection;
-    final boolean isBackward;
-    final int charStart;
-    final int charEnd;
     final int[] glyphIds;
     final float[] glyphOffsets;
     final float[] glyphAdvances;
     final int[] clusterMap;
 
-    IntrinsicRun(ShapingResult shapingResult, Typeface typeface, float typeSize,
-                 byte bidiLevel, WritingDirection writingDirection) {
-        float sizeByEm = typeSize / typeface.getUnitsPerEm();
-
-        this.typeface = typeface;
-        this.typeSize = typeSize;
-        this.sizeByEm = sizeByEm;
-        this.bidiLevel = bidiLevel;
-        this.writingDirection = writingDirection;
-        this.isBackward = shapingResult.isBackward();
-        this.charStart = shapingResult.getCharStart();
-        this.charEnd = shapingResult.getCharEnd();
-        this.glyphIds = shapingResult.getGlyphIds().toArray();
-        this.glyphOffsets = shapingResult.getGlyphOffsets().toArray();
-        this.glyphAdvances = shapingResult.getGlyphAdvances().toArray();
-        this.clusterMap = shapingResult.getClusterMap().toArray();
-    }
-
-    IntrinsicRun(int charStart, int charEnd, int glyphId, float advance,
-                 Typeface typeface, float typeSize, byte bidiLevel) {
-        float sizeByEm = typeSize / typeface.getUnitsPerEm();
-
-        this.typeface = typeface;
-        this.typeSize = typeSize;
-        this.sizeByEm = sizeByEm;
-        this.bidiLevel = bidiLevel;
-        this.writingDirection = ((bidiLevel & 1) == 0) ? WritingDirection.LEFT_TO_RIGHT : WritingDirection.RIGHT_TO_LEFT;
-        this.isBackward = false;
+    IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
+                 Typeface typeface, float typeSize, WritingDirection writingDirection,
+                 int[] glyphIds, float[] offsets, float[] advances, int[] clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
-        this.glyphIds = new int[] { glyphId };
-        this.glyphOffsets = new float[] { 0, 0 };
-        this.glyphAdvances = new float[] { advance };
-        this.clusterMap = new int[charEnd - charStart];
-    }
-
-    WritingDirection writingDirection() {
-        return writingDirection;
+        this.isBackward = isBackward;
+        this.bidiLevel = bidiLevel;
+        this.typeface = typeface;
+        this.typeSize = typeSize;
+        this.sizeByEm = typeSize / typeface.getUnitsPerEm();
+        this.writingDirection = writingDirection;
+        this.glyphIds = glyphIds;
+        this.glyphOffsets = offsets;
+        this.glyphAdvances = advances;
+        this.clusterMap = clusterMap;
     }
 
     int glyphCount() {
