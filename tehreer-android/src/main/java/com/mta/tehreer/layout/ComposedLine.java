@@ -20,7 +20,7 @@ import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
-import com.mta.tehreer.internal.text.StringUtils;
+import com.mta.tehreer.internal.layout.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
