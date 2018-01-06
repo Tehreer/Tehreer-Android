@@ -137,7 +137,7 @@ public class GlyphRun {
      * @return The writing direction of this run.
      */
     public WritingDirection getWritingDirection() {
-        return mIntrinsicRun.writingDirection();
+        return mIntrinsicRun.writingDirection;
     }
 
     /**
@@ -369,7 +369,7 @@ public class GlyphRun {
 
 	    renderer.setTypeface(mIntrinsicRun.typeface);
 	    renderer.setTypeSize(mIntrinsicRun.typeSize);
-        renderer.setWritingDirection(mIntrinsicRun.writingDirection());
+        renderer.setWritingDirection(mIntrinsicRun.writingDirection);
 
         return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
                                            getGlyphOffsets().subList(glyphStart, glyphEnd),
@@ -408,7 +408,7 @@ public class GlyphRun {
 
 	    renderer.setTypeface(mIntrinsicRun.typeface);
         renderer.setTypeSize(mIntrinsicRun.typeSize);
-        renderer.setWritingDirection(mIntrinsicRun.writingDirection());
+        renderer.setWritingDirection(mIntrinsicRun.writingDirection);
 
         int defaultFillColor = renderer.getFillColor();
         ReplacementSpan replacement = null;
