@@ -19,12 +19,13 @@ package com.mta.tehreer.layout;
 import android.graphics.RectF;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.text.ShapingRunLocator;
 import com.mta.tehreer.internal.text.StringUtils;
-import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
+import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
@@ -222,12 +223,22 @@ public class Typesetter {
         while (locator.moveNext()) {
             int runStart = locator.getRunStart();
             int runEnd = locator.getRunEnd();
+
             Typeface typeface = locator.getTypeface();
             float typeSize = locator.getTypeSize();
 
             if (typeface == null) {
                 throw new IllegalArgumentException("No typeface is specified for range ["
                                                    + runStart + ".." + runEnd + ")");
+            }
+
+            ReplacementSpan replacement = locator.getReplacement();
+            if (replacement != null) {
+                int glyphId = typeface.getGlyphId(' ');
+                int advance = replacement.getSize(null, mSpanned, runStart, runEnd, null);
+
+                mIntrinsicRuns.add(new IntrinsicRun(runStart, runEnd, glyphId, advance, typeface, typeSize, bidiLevel));
+                continue;
             }
 
             shapingEngine.setTypeface(typeface);
