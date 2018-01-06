@@ -22,8 +22,8 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.text.ShapingRunLocator;
-import com.mta.tehreer.internal.text.StringUtils;
+import com.mta.tehreer.internal.layout.ShapingRunLocator;
+import com.mta.tehreer.internal.layout.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -233,27 +233,45 @@ public class Typesetter {
             }
 
             ReplacementSpan replacement = locator.getReplacement();
-            if (replacement != null) {
-                int glyphId = typeface.getGlyphId(' ');
-                int advance = replacement.getSize(null, mSpanned, runStart, runEnd, null);
-
-                mIntrinsicRuns.add(new IntrinsicRun(runStart, runEnd, glyphId, advance, typeface, typeSize, bidiLevel));
-                continue;
-            }
-
-            shapingEngine.setTypeface(typeface);
-            shapingEngine.setTypeSize(typeSize);
-
-            ShapingResult shapingResult = null;
             IntrinsicRun intrinsicRun;
 
-            try {
-                shapingResult = shapingEngine.shapeText(mText, runStart, runEnd);
-                intrinsicRun = new IntrinsicRun(shapingResult, typeface, typeSize, bidiLevel, shapingEngine.getWritingDirection());
-            } finally {
-                if (shapingResult != null) {
-                    shapingResult.dispose();
+            if (replacement == null) {
+                shapingEngine.setTypeface(typeface);
+                shapingEngine.setTypeSize(typeSize);
+
+                ShapingResult shapingResult = null;
+
+                try {
+                    shapingResult = shapingEngine.shapeText(mText, runStart, runEnd);
+
+                    WritingDirection writingDirection = shapingEngine.getWritingDirection();
+                    boolean isBackward = shapingResult.isBackward();
+                    int[] glyphIds = shapingResult.getGlyphIds().toArray();
+                    float[] offsets = shapingResult.getGlyphOffsets().toArray();
+                    float[] advances = shapingResult.getGlyphAdvances().toArray();
+                    int[] clusterMap = shapingResult.getClusterMap().toArray();
+
+                    intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
+                                                    typeface, typeSize, writingDirection,
+                                                    glyphIds, offsets, advances, clusterMap);
+                } finally {
+                    if (shapingResult != null) {
+                        shapingResult.dispose();
+                    }
                 }
+            } else {
+                int spaceGlyph = typeface.getGlyphId(' ');
+                int replacementSize = replacement.getSize(null, mSpanned, runStart, runEnd, null);
+
+                WritingDirection writingDirection = shapingEngine.getWritingDirection();
+                int[] glyphIds = new int[] { spaceGlyph };
+                float[] offsets = new float[] { 0.0f, 0.0f };
+                float[] advances = new float[] { replacementSize };
+                int[] clusterMap = new int[runEnd - runStart];
+
+                intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
+                                                typeface, typeSize, writingDirection,
+                                                glyphIds, offsets, advances, clusterMap);
             }
 
             mIntrinsicRuns.add(intrinsicRun);
