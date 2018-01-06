@@ -20,6 +20,7 @@ import android.text.Spanned;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.MetricAffectingSpan;
 import android.text.style.RelativeSizeSpan;
+import android.text.style.ReplacementSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.style.TypefaceSpan;
@@ -46,6 +47,8 @@ public class ShapingRunLocator {
     private static class ShapingRun {
         int start;
         int end;
+
+        ReplacementSpan replacement;
 
         Typeface typeface;
         TypeWeight typeWeight;
@@ -127,6 +130,8 @@ public class ShapingRunLocator {
                 } else {
                     updateTypeface(shapingRun);
                 }
+            } else if (span instanceof ReplacementSpan) {
+                shapingRun.replacement = (ReplacementSpan) span;
             }
         }
 
@@ -185,7 +190,8 @@ public class ShapingRunLocator {
 
             // Merge runs of similar style.
             while ((next = resolveRun(current.end)) != null) {
-                if (current.typeface == next.typeface
+                if (current.replacement == next.replacement
+                        && current.typeface == next.typeface
                         && Float.compare(current.typeSize, next.typeSize) == 0
                         && Float.compare(current.scaleX, next.scaleX) == 0) {
                     current.end = next.end;
@@ -208,6 +214,10 @@ public class ShapingRunLocator {
 
     public int getRunEnd() {
         return mCurrent.end;
+    }
+
+    public ReplacementSpan getReplacement() {
+        return mCurrent.replacement;
     }
 
     public Typeface getTypeface() {
