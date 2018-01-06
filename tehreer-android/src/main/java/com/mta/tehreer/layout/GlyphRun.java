@@ -19,6 +19,7 @@ package com.mta.tehreer.layout;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -77,8 +78,12 @@ public class GlyphRun {
         return null;
     }
 
-    IntrinsicRun getGlyphRun() {
+    IntrinsicRun getIntrinsicRun() {
         return mIntrinsicRun;
+    }
+
+    Object[] getSpans() {
+	    return mSpans;
     }
 
     /**
@@ -406,17 +411,29 @@ public class GlyphRun {
         renderer.setWritingDirection(mIntrinsicRun.writingDirection());
 
         int defaultFillColor = renderer.getFillColor();
+        ReplacementSpan replacement = null;
 
         for (Object span : mSpans) {
             if (span instanceof ForegroundColorSpan) {
                 renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
+            } else if (span instanceof ReplacementSpan) {
+                replacement = (ReplacementSpan) span;
             }
         }
 
-        renderer.drawGlyphs(canvas,
-                            getGlyphIds().subList(glyphStart, glyphEnd),
-                            getGlyphOffsets().subList(glyphStart, glyphEnd),
-                            getGlyphAdvances().subList(glyphStart, glyphEnd));
+        if (replacement == null) {
+            renderer.drawGlyphs(canvas,
+                                getGlyphIds().subList(glyphStart, glyphEnd),
+                                getGlyphOffsets().subList(glyphStart, glyphEnd),
+                                getGlyphAdvances().subList(glyphStart, glyphEnd));
+        } else {
+            int top = (int) -(getAscent() + 0.5f);
+            int bottom = (int) (getDescent() + 0.5f);
+
+            replacement.draw(canvas,
+                             null, mCharStart, mCharEnd,
+                             0, top, 0, bottom, null);
+        }
 
         renderer.setFillColor(defaultFillColor);
 	}
