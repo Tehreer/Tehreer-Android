@@ -53,6 +53,24 @@ class IntrinsicRun {
         this.clusterMap = shapingResult.getClusterMap().toArray();
     }
 
+    IntrinsicRun(int charStart, int charEnd, int glyphId, float advance,
+                 Typeface typeface, float typeSize, byte bidiLevel) {
+        float sizeByEm = typeSize / typeface.getUnitsPerEm();
+
+        this.typeface = typeface;
+        this.typeSize = typeSize;
+        this.sizeByEm = sizeByEm;
+        this.bidiLevel = bidiLevel;
+        this.writingDirection = ((bidiLevel & 1) == 0) ? WritingDirection.LEFT_TO_RIGHT : WritingDirection.RIGHT_TO_LEFT;
+        this.isBackward = false;
+        this.charStart = charStart;
+        this.charEnd = charEnd;
+        this.glyphIds = new int[] { glyphId };
+        this.glyphOffsets = new float[] { 0, 0 };
+        this.glyphAdvances = new float[] { advance };
+        this.clusterMap = new int[charEnd - charStart];
+    }
+
     WritingDirection writingDirection() {
         return writingDirection;
     }
