@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,8 +224,8 @@ public class ComposedLine {
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
         for (GlyphRun glyphRun : mRunList) {
-            float translateX = x + (glyphRun.getOriginX() * renderer.getScaleX());
-            float translateY = y + (glyphRun.getOriginY() * renderer.getScaleY());
+            float translateX = x + glyphRun.getOriginX();
+            float translateY = y + glyphRun.getOriginY();
 
             canvas.translate(translateX, translateY);
             glyphRun.draw(renderer, canvas);
