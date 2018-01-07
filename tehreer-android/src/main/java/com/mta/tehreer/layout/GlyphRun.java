@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ReplacementSpan;
+import android.text.style.ScaleXSpan;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -408,6 +409,7 @@ public class GlyphRun {
 
 	    renderer.setTypeface(mIntrinsicRun.typeface);
         renderer.setTypeSize(mIntrinsicRun.typeSize);
+        renderer.setScaleX(1.0f);
         renderer.setWritingDirection(mIntrinsicRun.writingDirection);
 
         int defaultFillColor = renderer.getFillColor();
@@ -418,6 +420,8 @@ public class GlyphRun {
                 renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
             } else if (span instanceof ReplacementSpan) {
                 replacement = (ReplacementSpan) span;
+            } else if (span instanceof ScaleXSpan) {
+                renderer.setScaleX(((ScaleXSpan) span).getScaleX());
             }
         }
 
