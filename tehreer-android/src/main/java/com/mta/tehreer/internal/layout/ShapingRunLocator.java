@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.MetricAffectingSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.ReplacementSpan;
+import android.text.style.ScaleXSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.style.TypefaceSpan;
@@ -130,6 +131,9 @@ public class ShapingRunLocator {
                 } else {
                     updateTypeface(shapingRun);
                 }
+            } else if (span instanceof ScaleXSpan) {
+                ScaleXSpan scaleXSpan = (ScaleXSpan) span;
+                shapingRun.scaleX = scaleXSpan.getScaleX();
             } else if (span instanceof ReplacementSpan) {
                 shapingRun.replacement = (ReplacementSpan) span;
             }
@@ -226,5 +230,9 @@ public class ShapingRunLocator {
 
     public float getTypeSize() {
         return mCurrent.typeSize;
+    }
+
+    public float getScaleX() {
+        return mCurrent.scaleX;
     }
 }
