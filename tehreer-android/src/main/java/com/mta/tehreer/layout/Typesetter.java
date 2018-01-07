@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -250,6 +250,14 @@ public class Typesetter {
                     float[] offsets = shapingResult.getGlyphOffsets().toArray();
                     float[] advances = shapingResult.getGlyphAdvances().toArray();
                     int[] clusterMap = shapingResult.getClusterMap().toArray();
+
+                    float scaleX = locator.getScaleX();
+                    if (Float.compare(scaleX, 1.0f) != 0) {
+                        for (int i = 0; i < glyphIds.length; i++) {
+                            offsets[i * 2] *= scaleX;
+                            advances[i] *= scaleX;
+                        }
+                    }
 
                     intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
                                                     typeface, typeSize, writingDirection,
