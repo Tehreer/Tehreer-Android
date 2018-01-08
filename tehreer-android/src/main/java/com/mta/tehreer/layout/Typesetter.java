@@ -134,6 +134,10 @@ public class Typesetter {
         mBidiParagraphs = new ArrayList<>();
         mIntrinsicRuns = new ArrayList<>();
 
+        if (defaultSpans == null) {
+            defaultSpans = Collections.EMPTY_LIST;
+        }
+
         resolveBreaks();
         resolveBidi(new ShapingRunLocator(spanned, defaultSpans));
     }
