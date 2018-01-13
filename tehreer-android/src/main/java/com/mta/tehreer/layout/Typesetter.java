@@ -263,6 +263,13 @@ public class Typesetter {
                         }
                     }
 
+                    float baselineShift = locator.getBaselineShift();
+                    if (Float.compare(baselineShift, 0.0f) != 0) {
+                        for (int i = 0; i < glyphIds.length; i++) {
+                            offsets[(i * 2) + 1] += baselineShift;
+                        }
+                    }
+
                     intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
                                                     typeface, typeSize, writingDirection,
                                                     glyphIds, offsets, advances, clusterMap);
