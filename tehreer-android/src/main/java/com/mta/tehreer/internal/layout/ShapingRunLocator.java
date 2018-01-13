@@ -23,6 +23,8 @@ import android.text.style.RelativeSizeSpan;
 import android.text.style.ReplacementSpan;
 import android.text.style.ScaleXSpan;
 import android.text.style.StyleSpan;
+import android.text.style.SubscriptSpan;
+import android.text.style.SuperscriptSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.style.TypefaceSpan;
 
@@ -56,6 +58,7 @@ public class ShapingRunLocator {
         TypeSlope typeSlope;
         float typeSize;
         float scaleX;
+        float baselineShift;
     }
 
     public ShapingRunLocator(Spanned spanned, List<Object> defaultSpans) {
@@ -134,6 +137,10 @@ public class ShapingRunLocator {
             } else if (span instanceof ScaleXSpan) {
                 ScaleXSpan scaleXSpan = (ScaleXSpan) span;
                 shapingRun.scaleX = scaleXSpan.getScaleX();
+            } else if (span instanceof SuperscriptSpan) {
+                resolveBaselineShift(shapingRun, 0.5f);
+            } else if (span instanceof SubscriptSpan) {
+                resolveBaselineShift(shapingRun, -0.5f);
             } else if (span instanceof ReplacementSpan) {
                 shapingRun.replacement = (ReplacementSpan) span;
             }
@@ -181,6 +188,15 @@ public class ShapingRunLocator {
         }
     }
 
+    private static void resolveBaselineShift(ShapingRun shapingRun, float multiplier) {
+        Typeface typeface = shapingRun.typeface;
+        if (typeface != null) {
+            float sizeByEm = shapingRun.typeSize / typeface.getUnitsPerEm();
+            float ascent = typeface.getAscent() * sizeByEm;
+            shapingRun.baselineShift = ascent * multiplier;
+        }
+    }
+
     public void reset(int charStart, int charEnd) {
         mLimit = charEnd;
         mCurrent = null;
@@ -194,10 +210,11 @@ public class ShapingRunLocator {
 
             // Merge runs of similar style.
             while ((next = resolveRun(current.end)) != null) {
-                if (current.replacement == next.replacement
-                        && current.typeface == next.typeface
+                if (current.typeface == next.typeface
                         && Float.compare(current.typeSize, next.typeSize) == 0
-                        && Float.compare(current.scaleX, next.scaleX) == 0) {
+                        && Float.compare(current.scaleX, next.scaleX) == 0
+                        && Float.compare(current.baselineShift, next.baselineShift) == 0
+                        && current.replacement == next.replacement) {
                     current.end = next.end;
                 } else {
                     break;
@@ -220,10 +237,6 @@ public class ShapingRunLocator {
         return mCurrent.end;
     }
 
-    public ReplacementSpan getReplacement() {
-        return mCurrent.replacement;
-    }
-
     public Typeface getTypeface() {
         return mCurrent.typeface;
     }
@@ -234,5 +247,13 @@ public class ShapingRunLocator {
 
     public float getScaleX() {
         return mCurrent.scaleX;
+    }
+
+    public float getBaselineShift() {
+        return mCurrent.baselineShift;
+    }
+
+    public ReplacementSpan getReplacement() {
+        return mCurrent.replacement;
     }
 }
