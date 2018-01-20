@@ -326,6 +326,79 @@ public class GlyphRun {
         return (mIntrinsicRun.ascent() + mIntrinsicRun.descent() + mIntrinsicRun.leading());
     }
 
+    public int getCharIndexFromDistance(float distance) {
+        IntList clusterMap = getClusterMap();
+        FloatList advances = getGlyphAdvances();
+        int charCount = clusterMap.size();
+
+        WritingDirection writingDirection = getWritingDirection();
+        if (writingDirection == WritingDirection.RIGHT_TO_LEFT) {
+            // Reverse the distance in case of right to left direction.
+            distance = getWidth() - distance;
+        }
+
+        int clusterStart = 0;
+        int glyphStart = -1;
+        float computedAdvance = 0.0f;
+
+        int leadingCharIndex = -1;
+        int trailingCharIndex = -1;
+        float leadingEdgeAdvance = 0.0f;
+
+        for (int i = 0; i < charCount; i++) {
+            int glyphIndex = clusterMap.get(i);
+            if (glyphIndex == glyphStart) {
+                continue;
+            }
+
+            // Find the advance of current cluster.
+            float clusterAdvance = 0.0f;
+            for (int j = glyphStart; j < glyphIndex; j++) {
+                clusterAdvance += advances.get(j);
+            }
+
+            // Divide the advance evenly between cluster length.
+            int clusterLength = i - clusterStart;
+            float charAdvance = clusterAdvance / clusterLength;
+
+            // Compare individual code points with input distance.
+            for (int j = 0; j < clusterLength; j++) {
+                // TODO: Iterate on code points rather than UTF-16 code units of java string.
+
+                if (computedAdvance <= distance) {
+                    leadingCharIndex = i + j;
+                    leadingEdgeAdvance = computedAdvance;
+                } else {
+                    trailingCharIndex = i + j;
+                    break;
+                }
+
+                computedAdvance += charAdvance;
+            }
+
+            clusterStart = i;
+            glyphStart = glyphIndex;
+        }
+
+        if (leadingCharIndex == -1) {
+            // No char is covered by the input distance.
+            return mCharStart;
+        }
+
+        if (trailingCharIndex == -1) {
+            // Whole run is covered by the input distance.
+            return mCharEnd;
+        }
+
+        if (distance <= (leadingEdgeAdvance + computedAdvance) / 2.0) {
+            // Input distance is closer to first edge.
+            return leadingCharIndex;
+        }
+
+        // Input distance is closer to second edge.
+        return trailingCharIndex;
+    }
+
     /**
      * Calculates the typographic extent for the given glyph range in this run. The typographic
      * extent is equal to the sum of advances of glyphs.
