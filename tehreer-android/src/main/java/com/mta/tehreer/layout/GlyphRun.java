@@ -338,15 +338,16 @@ public class GlyphRun {
         }
 
         int clusterStart = 0;
-        int glyphStart = -1;
+        int glyphStart = 0;
         float computedAdvance = 0.0f;
 
-        int leadingCharIndex = -1;
-        int trailingCharIndex = -1;
+        int leadingCharIndex = mCharStart;
+        int trailingCharIndex = mCharEnd;
         float leadingEdgeAdvance = 0.0f;
 
-        for (int i = 0; i < charCount; i++) {
-            int glyphIndex = clusterMap.get(i);
+        process:
+        for (int i = 1; i <= charCount; i++) {
+            int glyphIndex = (i < charCount ? clusterMap.get(i) : mGlyphCount);
             if (glyphIndex == glyphStart) {
                 continue;
             }
@@ -366,11 +367,11 @@ public class GlyphRun {
                 // TODO: Iterate on code points rather than UTF-16 code units of java string.
 
                 if (computedAdvance <= distance) {
-                    leadingCharIndex = i + j;
+                    leadingCharIndex = mCharStart + clusterStart + j;
                     leadingEdgeAdvance = computedAdvance;
                 } else {
-                    trailingCharIndex = i + j;
-                    break;
+                    trailingCharIndex = mCharStart + clusterStart + j;
+                    break process;
                 }
 
                 computedAdvance += charAdvance;
