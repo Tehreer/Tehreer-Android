@@ -195,6 +195,23 @@ public class ComposedLine {
         return mRunList;
     }
 
+    public int getCharIndexFromDistance(float distance) {
+        GlyphRun containerRun = null;
+
+        for (GlyphRun glyphRun : getRuns()) {
+            if (glyphRun.getOriginX() >= distance) {
+                containerRun = glyphRun;
+                break;
+            }
+        }
+
+        if (containerRun == null) {
+            containerRun = mRunList.get(mRunList.size() - 1);
+        }
+
+        return containerRun.getCharIndexFromDistance(distance - containerRun.getOriginX());
+    }
+
     /**
      * Returns the pen offset required to draw flush text.
      *
