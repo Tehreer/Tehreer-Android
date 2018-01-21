@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.AttributeSet;
@@ -62,6 +63,7 @@ public class TLabel extends View {
     private int mTextHeight = 0;
 
     private ArrayList<ComposedLine> mComposedLines = new ArrayList<>();
+    private ArrayList<PointF> mLinePositions = new ArrayList<>();
 
     private static float getLineHeight(ComposedLine composedLine) {
         return composedLine.getAscent() + composedLine.getDescent();
@@ -187,63 +189,13 @@ public class TLabel extends View {
 
         long t1 = System.nanoTime();
 
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
-        int unpaddedWidth = getWidth() - (paddingLeft + paddingRight);
-        int unpaddedHeight = getHeight() - (paddingTop + paddingBottom);
-        int visibleBottom = paddingTop + unpaddedHeight;
-
-        float penLeft = paddingLeft;
-        float penTop = paddingTop;
-        float flushFactor = 0.0f;
-
-        int relativeGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
-        int horizontalGravity = mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
-        int verticalGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-
-        // Resolve relative layout direction.
-        if (relativeGravity == Gravity.START) {
-            horizontalGravity = !mRtlText ? Gravity.LEFT : Gravity.RIGHT;
-        } else if (relativeGravity == Gravity.END) {
-            horizontalGravity = !mRtlText ? Gravity.RIGHT : Gravity.LEFT;
-        }
-
-        // Resolve initial pen left and flush factor.
-        if (horizontalGravity == Gravity.RIGHT) {
-            penLeft += unpaddedWidth - mTextWidth;
-            flushFactor = 1.0f;
-        } else if (horizontalGravity != Gravity.LEFT) {
-            penLeft += (unpaddedWidth - mTextWidth) / 2.0f;
-            flushFactor = 0.5f;
-        }
-
-        // Resolve initial pen top.
-        if (verticalGravity == Gravity.BOTTOM) {
-            penTop += unpaddedHeight - mTextHeight;
-        } else if (verticalGravity != Gravity.TOP) {
-            penTop += (unpaddedHeight - mTextHeight) / 2.0f;
-        }
-
         canvas.save();
 
-        for (ComposedLine composedLine : mComposedLines) {
-            float lineHeight = getLineHeight(composedLine);
-            float penBottom = penTop + lineHeight;
-
-            if (penTop < visibleBottom) {
-                if (penBottom > paddingTop) {
-                    float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
-                    float lineY = penTop + composedLine.getAscent();
-
-                    composedLine.draw(mRenderer, canvas, lineX, lineY);
-                }
-            } else {
-                break;
-            }
-
-            penTop = penBottom;
+        int lineCount = mLinePositions.size();
+        for (int i = 0; i < lineCount; i++) {
+            ComposedLine line = mComposedLines.get(i);
+            PointF position = mLinePositions.get(i);
+            line.draw(mRenderer, canvas, position.x, position.y);
         }
 
         canvas.restore();
@@ -255,6 +207,7 @@ public class TLabel extends View {
     private void updateLines(int layoutWidth, int layoutHeight) {
         mRtlText = false;
         mComposedLines.clear();
+        mLinePositions.clear();
 
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
@@ -306,8 +259,69 @@ public class TLabel extends View {
             mTextWidth = (int) (textWidth + 1.0f);
             mTextHeight = (int) (textHeight + 1.0f);
 
+            updateLinePositions();
+
             long t2 = System.nanoTime();
             Log.i("Tehreer", "Time taken to create lines: " + ((t2 - t1) / Math.pow(10, 6)));
+        }
+    }
+
+    private void updateLinePositions() {
+        int paddingLeft = getPaddingLeft();
+        int paddingTop = getPaddingTop();
+        int paddingRight = getPaddingRight();
+        int paddingBottom = getPaddingBottom();
+        int unpaddedWidth = getWidth() - (paddingLeft + paddingRight);
+        int unpaddedHeight = getHeight() - (paddingTop + paddingBottom);
+        int visibleBottom = paddingTop + unpaddedHeight;
+
+        float penLeft = 0.0f;
+        float penTop = 0.0f;
+        float flushFactor = 0.0f;
+
+        int relativeGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
+        int horizontalGravity = mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+        int verticalGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+
+        // Resolve relative layout direction.
+        if (relativeGravity == Gravity.START) {
+            horizontalGravity = !mRtlText ? Gravity.LEFT : Gravity.RIGHT;
+        } else if (relativeGravity == Gravity.END) {
+            horizontalGravity = !mRtlText ? Gravity.RIGHT : Gravity.LEFT;
+        }
+
+        // Resolve initial pen left and flush factor.
+        if (horizontalGravity == Gravity.RIGHT) {
+            penLeft += unpaddedWidth - mTextWidth;
+            flushFactor = 1.0f;
+        } else if (horizontalGravity != Gravity.LEFT) {
+            penLeft += (unpaddedWidth - mTextWidth) / 2.0f;
+            flushFactor = 0.5f;
+        }
+
+        // Resolve initial pen top.
+        if (verticalGravity == Gravity.BOTTOM) {
+            penTop += unpaddedHeight - mTextHeight;
+        } else if (verticalGravity != Gravity.TOP) {
+            penTop += (unpaddedHeight - mTextHeight) / 2.0f;
+        }
+
+        for (ComposedLine composedLine : mComposedLines) {
+            float lineHeight = getLineHeight(composedLine);
+            float penBottom = penTop + lineHeight;
+
+            if (penTop < visibleBottom) {
+                if (penBottom > paddingTop) {
+                    float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
+                    float lineY = penTop + composedLine.getAscent();
+
+                    mLinePositions.add(new PointF(lineX, lineY));
+                }
+            } else {
+                break;
+            }
+
+            penTop = penBottom;
         }
     }
 
