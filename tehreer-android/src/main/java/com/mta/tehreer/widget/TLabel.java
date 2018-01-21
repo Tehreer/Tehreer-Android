@@ -351,6 +351,27 @@ public class TLabel extends View {
         }
     }
 
+    public int getCharIndexFromPosition(float x, float y) {
+        int lineCount = mLinePositions.size();
+        int lineIndex;
+
+        for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+            PointF position = mLinePositions.get(lineIndex);
+            if (position.y >= y) {
+                break;
+            }
+        }
+
+        if (lineIndex == lineCount) {
+            lineIndex -= 1;
+        }
+
+        ComposedLine line = mComposedLines.get(lineIndex);
+        PointF position = mLinePositions.get(lineIndex);
+
+        return line.getCharIndexFromDistance(x - position.x);
+    }
+
     /**
      * Returns the horizontal and vertical alignment of this Label.
      *
