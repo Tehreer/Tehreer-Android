@@ -191,11 +191,13 @@ public class TLabel extends View {
 
         canvas.save();
 
-        int lineCount = mLinePositions.size();
+        int lineCount = mComposedLines.size();
         for (int i = 0; i < lineCount; i++) {
             ComposedLine line = mComposedLines.get(i);
             PointF position = mLinePositions.get(i);
-            line.draw(mRenderer, canvas, position.x, position.y);
+            if (position != null) {
+                line.draw(mRenderer, canvas, position.x, position.y);
+            }
         }
 
         canvas.restore();
@@ -306,20 +308,24 @@ public class TLabel extends View {
             penTop += (unpaddedHeight - mTextHeight) / 2.0f;
         }
 
+        mLinePositions.ensureCapacity(mComposedLines.size());
+
         for (ComposedLine composedLine : mComposedLines) {
             float lineHeight = getLineHeight(composedLine);
             float penBottom = penTop + lineHeight;
+
+            PointF position = null;
 
             if (penTop < visibleBottom) {
                 if (penBottom > paddingTop) {
                     float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
                     float lineY = penTop + composedLine.getAscent();
 
-                    mLinePositions.add(new PointF(lineX, lineY));
+                    position = new PointF(lineX, lineY);
                 }
-            } else {
-                break;
             }
+
+            mLinePositions.add(position);
 
             penTop = penBottom;
         }
@@ -352,12 +358,12 @@ public class TLabel extends View {
     }
 
     public int getCharIndexFromPosition(float x, float y) {
-        int lineCount = mLinePositions.size();
+        int lineCount = mComposedLines.size();
         int lineIndex;
 
         for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
             PointF position = mLinePositions.get(lineIndex);
-            if (position.y >= y) {
+            if (position != null && position.y >= y) {
                 break;
             }
         }
@@ -389,6 +395,8 @@ public class TLabel extends View {
      */
     public void setGravity(int gravity) {
         mGravity = gravity;
+
+        requestLayout();
         invalidate();
     }
 
