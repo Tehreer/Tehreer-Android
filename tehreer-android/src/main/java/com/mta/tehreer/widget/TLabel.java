@@ -146,8 +146,12 @@ public class TLabel extends View {
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-        int horizontalPadding = getPaddingLeft() + getPaddingRight();
-        int verticalPadding = getPaddingTop() + getPaddingBottom();
+        int paddingLeft = getPaddingLeft();
+        int paddingTop = getPaddingTop();
+        int paddingRight = getPaddingRight();
+        int paddingBottom = getPaddingBottom();
+        int horizontalPadding = paddingLeft + paddingRight;
+        int verticalPadding = paddingTop + paddingBottom;
 
         int layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED
                            ? Integer.MAX_VALUE
@@ -179,6 +183,9 @@ public class TLabel extends View {
                 actualHeight = Math.min(heightSize, actualHeight);
             }
         }
+
+        updateLinePositions(paddingLeft, paddingTop, paddingRight, paddingBottom,
+                            actualWidth, actualHeight);
 
         setMeasuredDimension(actualWidth, actualHeight);
     }
@@ -261,24 +268,18 @@ public class TLabel extends View {
             mTextWidth = (int) (textWidth + 1.0f);
             mTextHeight = (int) (textHeight + 1.0f);
 
-            updateLinePositions();
-
             long t2 = System.nanoTime();
             Log.i("Tehreer", "Time taken to create lines: " + ((t2 - t1) / Math.pow(10, 6)));
         }
     }
 
-    private void updateLinePositions() {
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
-        int unpaddedWidth = getWidth() - (paddingLeft + paddingRight);
-        int unpaddedHeight = getHeight() - (paddingTop + paddingBottom);
-        int visibleBottom = paddingTop + unpaddedHeight;
+    private void updateLinePositions(int paddingLeft, int paddingTop, int paddingRight, int paddingBottom,
+                                     int containerWidth, int containerHeight) {
+        int unpaddedWidth = containerWidth - (paddingLeft + paddingRight);
+        int unpaddedHeight = containerHeight - (paddingTop + paddingBottom);
 
-        float penLeft = 0.0f;
-        float penTop = 0.0f;
+        float penLeft = paddingLeft;
+        float penTop = paddingTop;
         float flushFactor = 0.0f;
 
         int relativeGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
@@ -311,23 +312,11 @@ public class TLabel extends View {
         mLinePositions.ensureCapacity(mComposedLines.size());
 
         for (ComposedLine composedLine : mComposedLines) {
-            float lineHeight = getLineHeight(composedLine);
-            float penBottom = penTop + lineHeight;
+            float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
+            float lineY = penTop + composedLine.getAscent();
+            mLinePositions.add(new PointF(lineX, lineY));
 
-            PointF position = null;
-
-            if (penTop < visibleBottom) {
-                if (penBottom > paddingTop) {
-                    float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
-                    float lineY = penTop + composedLine.getAscent();
-
-                    position = new PointF(lineX, lineY);
-                }
-            }
-
-            mLinePositions.add(position);
-
-            penTop = penBottom;
+            penTop += getLineHeight(composedLine);
         }
     }
 
