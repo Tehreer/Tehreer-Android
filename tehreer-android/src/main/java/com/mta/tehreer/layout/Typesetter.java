@@ -400,11 +400,7 @@ public class Typesetter {
         return null;
     }
 
-    private interface BidiRunConsumer {
-        void accept(BidiRun bidiRun);
-    }
-
-    private class TruncationHandler implements BidiRunConsumer {
+    private class TruncationHandler implements Paragraphs.RunConsumer {
 
         final int charStart;
         final int charEnd;
@@ -468,7 +464,7 @@ public class Typesetter {
         }
 
         void addAllRuns() {
-            addContinuousLineRuns(charStart, charEnd, this);
+            Paragraphs.iterateLineRuns(mBidiParagraphs, charStart, charEnd, this);
         }
     }
 
@@ -557,28 +553,8 @@ public class Typesetter {
         }
     }
 
-    private void addContinuousLineRuns(int charStart, int charEnd, BidiRunConsumer runConsumer) {
-        int paragraphIndex = Paragraphs.binarySearch(mBidiParagraphs, charStart);
-        int feasibleStart;
-        int feasibleEnd;
-
-        do {
-            BidiParagraph bidiParagraph = mBidiParagraphs.get(paragraphIndex);
-            feasibleStart = Math.max(bidiParagraph.getCharStart(), charStart);
-            feasibleEnd = Math.min(bidiParagraph.getCharEnd(), charEnd);
-
-            BidiLine bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd);
-            for (BidiRun bidiRun : bidiLine.getVisualRuns()) {
-                runConsumer.accept(bidiRun);
-            }
-            bidiLine.dispose();
-
-            paragraphIndex++;
-        } while (feasibleEnd != charEnd);
-    }
-
     private void addContinuousLineRuns(int charStart, int charEnd, final List<GlyphRun> runList) {
-        addContinuousLineRuns(charStart, charEnd, new BidiRunConsumer() {
+        Paragraphs.iterateLineRuns(mBidiParagraphs, charStart, charEnd, new Paragraphs.RunConsumer() {
             @Override
             public void accept(BidiRun bidiRun) {
                 int visualStart = bidiRun.charStart;

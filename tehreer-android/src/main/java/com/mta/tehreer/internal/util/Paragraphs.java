@@ -16,13 +16,19 @@
 
 package com.mta.tehreer.internal.util;
 
+import com.mta.tehreer.unicode.BidiLine;
 import com.mta.tehreer.unicode.BidiParagraph;
+import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 public class Paragraphs {
+
+    public interface RunConsumer {
+        void accept(BidiRun bidiRun);
+    }
 
     public static int binarySearch(List<BidiParagraph> paragraphs, final int charIndex) {
         return Collections.binarySearch(paragraphs, null, new Comparator<BidiParagraph>() {
@@ -45,5 +51,26 @@ public class Paragraphs {
         int paragraphIndex = binarySearch(paragraphs, charIndex);
         BidiParagraph charParagraph = paragraphs.get(paragraphIndex);
         return charParagraph.getBaseLevel();
+    }
+
+    public static void iterateLineRuns(List<BidiParagraph> paragraphs,
+                                       int charStart, int charEnd, RunConsumer runConsumer) {
+        int paragraphIndex = binarySearch(paragraphs, charStart);
+        int feasibleStart;
+        int feasibleEnd;
+
+        do {
+            BidiParagraph bidiParagraph = paragraphs.get(paragraphIndex);
+            feasibleStart = Math.max(bidiParagraph.getCharStart(), charStart);
+            feasibleEnd = Math.min(bidiParagraph.getCharEnd(), charEnd);
+
+            BidiLine bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd);
+            for (BidiRun bidiRun : bidiLine.getVisualRuns()) {
+                runConsumer.accept(bidiRun);
+            }
+            bidiLine.dispose();
+
+            paragraphIndex++;
+        } while (feasibleEnd != charEnd);
     }
 }
