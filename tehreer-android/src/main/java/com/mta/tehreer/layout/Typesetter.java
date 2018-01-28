@@ -22,9 +22,12 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ShapingRunLocator;
-import com.mta.tehreer.internal.layout.StringUtils;
+import com.mta.tehreer.internal.util.Paragraphs;
+import com.mta.tehreer.internal.util.Runs;
+import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -37,10 +40,8 @@ import com.mta.tehreer.unicode.BidiLine;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
-import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -59,15 +60,6 @@ public class Typesetter {
                 super.finalize();
             }
         }
-    }
-
-    private static final byte BREAK_TYPE_NONE = 0;
-    private static final byte BREAK_TYPE_LINE = 1 << 0;
-    private static final byte BREAK_TYPE_CHARACTER = 1 << 2;
-    private static final byte BREAK_TYPE_PARAGRAPH = 1 << 4;
-
-    private static byte specializeBreakType(byte breakType, boolean forward) {
-        return (byte) (forward ? breakType : breakType << 1);
     }
 
     private final Finalizable finalizable = new Finalizable();
@@ -153,28 +145,8 @@ public class Typesetter {
     }
 
     private void resolveBreaks() {
-        resolveBreaks(BreakIterator.getLineInstance(), BREAK_TYPE_LINE);
-        resolveBreaks(BreakIterator.getCharacterInstance(), BREAK_TYPE_CHARACTER);
-    }
-
-    private void resolveBreaks(BreakIterator breakIterator, byte breakType) {
-        breakIterator.setText(mText);
-        breakIterator.first();
-
-        byte forwardType = specializeBreakType(breakType, true);
-        int charNext;
-
-        while ((charNext = breakIterator.next()) != BreakIterator.DONE) {
-            mBreakRecord[charNext - 1] |= forwardType;
-        }
-
-        breakIterator.last();
-        byte backwardType = specializeBreakType(breakType, false);
-        int charIndex;
-
-        while ((charIndex = breakIterator.previous()) != BreakIterator.DONE) {
-            mBreakRecord[charIndex] |= backwardType;
-        }
+        BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.LINE);
+        BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.CHARACTER);
     }
 
     private void resolveBidi(ShapingRunLocator shapingRunLocator) {
@@ -188,8 +160,8 @@ public class Typesetter {
             shapingEngine = new ShapingEngine();
 
             BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
-            byte forwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
-            byte backwardType = specializeBreakType(BREAK_TYPE_PARAGRAPH, false);
+            byte forwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, true);
+            byte backwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, false);
 
             int paragraphStart = 0;
             int suggestedEnd = mText.length();
@@ -312,224 +284,6 @@ public class Typesetter {
         return null;
     }
 
-    private int indexOfBidiParagraph(final int charIndex) {
-        return Collections.binarySearch(mBidiParagraphs, null, new Comparator<BidiParagraph>() {
-            @Override
-            public int compare(BidiParagraph obj1, BidiParagraph obj2) {
-                if (charIndex < obj1.getCharStart()) {
-                    return 1;
-                }
-
-                if (charIndex >= obj1.getCharEnd()) {
-                    return -1;
-                }
-
-                return 0;
-            }
-        });
-    }
-
-    private int indexOfGlyphRun(final int charIndex) {
-        return Collections.binarySearch(mIntrinsicRuns, null, new Comparator<IntrinsicRun>() {
-            @Override
-            public int compare(IntrinsicRun obj1, IntrinsicRun obj2) {
-                if (charIndex < obj1.charStart) {
-                    return 1;
-                }
-
-                if (charIndex >= obj1.charEnd) {
-                    return -1;
-                }
-
-                return 0;
-            }
-        });
-    }
-
-    private byte getCharParagraphLevel(int charIndex) {
-        int paragraphIndex = indexOfBidiParagraph(charIndex);
-        BidiParagraph charParagraph = mBidiParagraphs.get(paragraphIndex);
-        return charParagraph.getBaseLevel();
-    }
-
-    private float measureChars(int charStart, int charEnd) {
-        float measuredWidth = 0.0f;
-
-        if (charEnd > charStart) {
-            int runIndex = indexOfGlyphRun(charStart);
-
-            do {
-                IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
-                int glyphStart = intrinsicRun.charGlyphStart(charStart);
-                int glyphEnd;
-
-                int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
-                glyphEnd = intrinsicRun.charGlyphEnd(segmentEnd - 1);
-
-                measuredWidth += intrinsicRun.measureGlyphs(glyphStart, glyphEnd);
-
-                charStart = segmentEnd;
-                runIndex++;
-            } while (charStart < charEnd);
-        }
-
-        return measuredWidth;
-    }
-
-    private int findForwardBreak(byte breakType, int charStart, int charEnd, float maxWidth) {
-        int forwardBreak = charStart;
-        int charIndex = charStart;
-        float measuredWidth = 0.0f;
-
-        byte mustType = specializeBreakType(BREAK_TYPE_PARAGRAPH, true);
-        breakType = specializeBreakType(breakType, true);
-
-        while (charIndex < charEnd) {
-            byte charType = mBreakRecord[charIndex];
-
-            // Handle necessary break.
-            if ((charType & mustType) == mustType) {
-                int segmentEnd = charIndex + 1;
-
-                measuredWidth += measureChars(forwardBreak, segmentEnd);
-                if (measuredWidth <= maxWidth) {
-                    forwardBreak = segmentEnd;
-                }
-                break;
-            }
-
-            // Handle optional break.
-            if ((charType & breakType) == breakType) {
-                int segmentEnd = charIndex + 1;
-
-                measuredWidth += measureChars(forwardBreak, segmentEnd);
-                if (measuredWidth > maxWidth) {
-                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(mText, forwardBreak, segmentEnd);
-                    float whitespaceWidth = measureChars(whitespaceStart, segmentEnd);
-
-                    // Break if excluding whitespaces width helps.
-                    if ((measuredWidth - whitespaceWidth) <= maxWidth) {
-                        forwardBreak = segmentEnd;
-                    }
-                    break;
-                }
-
-                forwardBreak = segmentEnd;
-            }
-
-            charIndex++;
-        }
-
-        return forwardBreak;
-    }
-
-    private int findBackwardBreak(byte breakType, int charStart, int charEnd, float maxWidth) {
-        int backwardBreak = charEnd;
-        int charIndex = charEnd - 1;
-        float measuredWidth = 0.0f;
-
-        byte mustType = specializeBreakType(BREAK_TYPE_PARAGRAPH, false);
-        breakType = specializeBreakType(breakType, false);
-
-        while (charIndex >= charStart) {
-            byte charType = mBreakRecord[charIndex];
-
-            // Handle necessary break.
-            if ((charType & mustType) == mustType) {
-                measuredWidth += measureChars(backwardBreak, charIndex);
-                if (measuredWidth <= maxWidth) {
-                    backwardBreak = charIndex;
-                }
-                break;
-            }
-
-            // Handle optional break.
-            if ((charType & breakType) == breakType) {
-                measuredWidth += measureChars(charIndex, backwardBreak);
-                if (measuredWidth > maxWidth) {
-                    int whitespaceStart = StringUtils.getTrailingWhitespaceStart(mText, charIndex, backwardBreak);
-                    float whitespaceWidth = measureChars(whitespaceStart, backwardBreak);
-
-                    // Break if excluding trailing whitespaces helps.
-                    if ((measuredWidth - whitespaceWidth) <= maxWidth) {
-                        backwardBreak = charIndex;
-                    }
-                    break;
-                }
-
-                backwardBreak = charIndex;
-            }
-
-            charIndex--;
-        }
-
-        return backwardBreak;
-    }
-
-    private int suggestForwardCharBreak(int charStart, int charEnd, float maxWidth) {
-        int forwardBreak = findForwardBreak(BREAK_TYPE_CHARACTER, charStart, charEnd, maxWidth);
-
-        // Take at least one character (grapheme) if max size is too small.
-        if (forwardBreak == charStart) {
-            for (int i = charStart; i < charEnd; i++) {
-                if ((mBreakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
-                    forwardBreak = i + 1;
-                    break;
-                }
-            }
-
-            // Character range does not cover even a single grapheme?
-            if (forwardBreak == charStart) {
-                forwardBreak = Math.min(charStart + 1, charEnd);
-            }
-        }
-
-        return forwardBreak;
-    }
-
-    private int suggestBackwardCharBreak(int charStart, int charEnd, float maxWidth) {
-        int backwardBreak = findBackwardBreak(BREAK_TYPE_CHARACTER, charStart, charEnd, maxWidth);
-
-        // Take at least one character (grapheme) if max size is too small.
-        if (backwardBreak == charEnd) {
-            for (int i = charEnd - 1; i >= charStart; i++) {
-                if ((mBreakRecord[i] & BREAK_TYPE_CHARACTER) != 0) {
-                    backwardBreak = i;
-                    break;
-                }
-            }
-
-            // Character range does not cover even a single grapheme?
-            if (backwardBreak == charEnd) {
-                backwardBreak = Math.max(charEnd - 1, charStart);
-            }
-        }
-
-        return backwardBreak;
-    }
-
-    private int suggestForwardLineBreak(int charStart, int charEnd, float maxWidth) {
-        int forwardBreak = findForwardBreak(BREAK_TYPE_LINE, charStart, charEnd, maxWidth);
-
-        // Fallback to character break if no line break occurs in max size.
-        if (forwardBreak == charStart) {
-            forwardBreak = suggestForwardCharBreak(charStart, charEnd, maxWidth);
-        }
-
-        return forwardBreak;
-    }
-
-    private int suggestBackwardLineBreak(int charStart, int charEnd, float maxWidth) {
-        int backwardBreak = findBackwardBreak(BREAK_TYPE_LINE, charStart, charEnd, maxWidth);
-
-        // Fallback to character break if no line break occurs in max size.
-        if (backwardBreak == charEnd) {
-            backwardBreak = suggestBackwardCharBreak(charStart, charEnd, maxWidth);
-        }
-
-        return backwardBreak;
-    }
-
     /**
      * Suggests a forward break index based on the provided range and width. The measurement
      * proceeds from first character to last character. If there is still room after measuring all
@@ -557,10 +311,12 @@ public class Typesetter {
 
         switch (breakMode) {
         case CHARACTER:
-            return suggestForwardCharBreak(charStart, charEnd, breakWidth);
+            return BreakResolver.suggestForwardCharBreak(mText, mIntrinsicRuns, mBreakRecord,
+                                                         charStart, charEnd, breakWidth);
 
         case LINE:
-            return suggestForwardLineBreak(charStart, charEnd, breakWidth);
+            return BreakResolver.suggestForwardLineBreak(mText, mIntrinsicRuns, mBreakRecord,
+                                                         charStart, charEnd, breakWidth);
         }
 
         return -1;
@@ -593,10 +349,12 @@ public class Typesetter {
 
         switch (breakMode) {
         case CHARACTER:
-            return suggestBackwardCharBreak(charStart, charEnd, breakWidth);
+            return BreakResolver.suggestBackwardCharBreak(mText, mIntrinsicRuns, mBreakRecord,
+                                                          charStart, charEnd, breakWidth);
 
         case LINE:
-            return suggestBackwardLineBreak(charStart, charEnd, breakWidth);
+            return BreakResolver.suggestBackwardLineBreak(mText, mIntrinsicRuns, mBreakRecord,
+                                                          charStart, charEnd, breakWidth);
         }
 
         return -1;
@@ -622,7 +380,8 @@ public class Typesetter {
         ArrayList<GlyphRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
 
-		return new ComposedLine(mText, charStart, charEnd, lineRuns, getCharParagraphLevel(charStart));
+		return new ComposedLine(mText, charStart, charEnd, lineRuns,
+                                Paragraphs.levelOfChar(mBidiParagraphs, charStart));
 	}
 
     private ComposedLine createTruncationToken(int charStart, int charEnd,
@@ -919,7 +678,8 @@ public class Typesetter {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mText, truncatedStart, charEnd, runList, getCharParagraphLevel(truncatedStart));
+            return new ComposedLine(mText, truncatedStart, charEnd, runList,
+                                    Paragraphs.levelOfChar(mBidiParagraphs, truncatedStart));
         }
 
         return createSimpleLine(truncatedStart, charEnd);
@@ -947,7 +707,8 @@ public class Typesetter {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mText, charStart, charEnd, runList, getCharParagraphLevel(charStart));
+            return new ComposedLine(mText, charStart, charEnd, runList,
+                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
         }
 
         return createSimpleLine(charStart, charEnd);
@@ -971,7 +732,8 @@ public class Typesetter {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mText, charStart, truncatedEnd, runList, getCharParagraphLevel(charStart));
+            return new ComposedLine(mText, charStart, truncatedEnd, runList,
+                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
         }
 
         return createSimpleLine(charStart, truncatedEnd);
@@ -987,7 +749,7 @@ public class Typesetter {
     }
 
     private void addContinuousLineRuns(int charStart, int charEnd, BidiRunConsumer runConsumer) {
-        int paragraphIndex = indexOfBidiParagraph(charStart);
+        int paragraphIndex = Paragraphs.binarySearch(mBidiParagraphs, charStart);
         int feasibleStart;
         int feasibleEnd;
 
@@ -1028,7 +790,7 @@ public class Typesetter {
             IntrinsicRun previousRun = null;
 
             do {
-                int runIndex = indexOfGlyphRun(visualStart);
+                int runIndex = Runs.binarySearch(mIntrinsicRuns, visualStart);
 
                 IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
                 int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
