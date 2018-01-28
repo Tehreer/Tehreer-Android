@@ -124,7 +124,7 @@ public class Typesetter {
             defaultSpans = Collections.EMPTY_LIST;
         }
 
-        resolveBreaks();
+        BreakResolver.fillBreaks(mText, mBreakRecord);
         ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBreakRecord,
                                mBidiParagraphs, mIntrinsicRuns);
     }
@@ -136,11 +136,6 @@ public class Typesetter {
      */
     public Spanned getSpanned() {
         return mSpanned;
-    }
-
-    private void resolveBreaks() {
-        BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.LINE);
-        BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.CHARACTER);
     }
 
     private String checkRange(int charStart, int charEnd) {

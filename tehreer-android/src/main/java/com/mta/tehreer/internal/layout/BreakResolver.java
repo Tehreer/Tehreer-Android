@@ -32,7 +32,7 @@ public class BreakResolver {
         return (byte) (forward ? type : type << 1);
     }
 
-    public static void fillBreaks(String text, byte[] breaks, byte type) {
+    private static void fillBreaks(String text, byte[] breaks, byte type) {
         BreakIterator iterator;
 
         switch (type) {
@@ -62,6 +62,11 @@ public class BreakResolver {
         while ((charIndex = iterator.previous()) != BreakIterator.DONE) {
             breaks[charIndex] |= backwardType;
         }
+    }
+
+    public static void fillBreaks(String text, byte[] breaks) {
+        BreakResolver.fillBreaks(text, breaks, BreakResolver.LINE);
+        BreakResolver.fillBreaks(text, breaks, BreakResolver.CHARACTER);
     }
 
     private static int findForwardBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
