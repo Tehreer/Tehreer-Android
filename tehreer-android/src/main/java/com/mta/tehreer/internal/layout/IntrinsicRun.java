@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.layout;
+package com.mta.tehreer.internal.layout;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 
-class IntrinsicRun {
+public class IntrinsicRun {
 
-    final int charStart;
-    final int charEnd;
-    final boolean isBackward;
-    final byte bidiLevel;
-    final WritingDirection writingDirection;
-    final Typeface typeface;
-    final float typeSize;
-    final float sizeByEm;
-    final int[] glyphIds;
-    final float[] glyphOffsets;
-    final float[] glyphAdvances;
-    final int[] clusterMap;
+    public final int charStart;
+    public final int charEnd;
+    public final boolean isBackward;
+    public final byte bidiLevel;
+    public final WritingDirection writingDirection;
+    public final Typeface typeface;
+    public final float typeSize;
+    public final float sizeByEm;
+    public final int[] glyphIds;
+    public final float[] glyphOffsets;
+    public final float[] glyphAdvances;
+    public final int[] clusterMap;
 
-    IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
-                 Typeface typeface, float typeSize, WritingDirection writingDirection,
-                 int[] glyphIds, float[] offsets, float[] advances, int[] clusterMap) {
+    public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
+                        Typeface typeface, float typeSize, WritingDirection writingDirection,
+                        int[] glyphIds, float[] offsets, float[] advances, int[] clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.isBackward = isBackward;
@@ -51,15 +51,15 @@ class IntrinsicRun {
         this.clusterMap = clusterMap;
     }
 
-    int glyphCount() {
+    public int glyphCount() {
         return glyphIds.length;
     }
 
-    int charGlyphStart(int charIndex) {
+    public int charGlyphStart(int charIndex) {
         return clusterMap[charIndex - charStart];
     }
 
-    int charGlyphEnd(int charIndex) {
+    public int charGlyphEnd(int charIndex) {
         int glyphEnd;
 
         if (!isBackward) {
@@ -79,19 +79,19 @@ class IntrinsicRun {
         return glyphEnd;
     }
 
-    float ascent() {
+    public float ascent() {
         return typeface.getAscent() * sizeByEm;
     }
 
-    float descent() {
+    public float descent() {
         return typeface.getDescent() * sizeByEm;
     }
 
-    float leading() {
+    public float leading() {
         return typeface.getLeading() * sizeByEm;
     }
 
-    float measureGlyphs(int glyphStart, int glyphEnd) {
+    public float measureGlyphs(int glyphStart, int glyphEnd) {
         float size = 0.0f;
 
         for (int i = glyphStart; i < glyphEnd; i++) {

@@ -22,6 +22,7 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ShapingRunLocator;
 import com.mta.tehreer.internal.layout.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
