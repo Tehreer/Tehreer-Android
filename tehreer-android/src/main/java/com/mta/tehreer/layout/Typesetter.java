@@ -19,24 +19,17 @@ package com.mta.tehreer.layout;
 import android.graphics.RectF;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
-import com.mta.tehreer.internal.layout.ShapingRunLocator;
+import com.mta.tehreer.internal.layout.ShapeResolver;
+import com.mta.tehreer.internal.layout.TruncationResolver;
 import com.mta.tehreer.internal.util.Paragraphs;
 import com.mta.tehreer.internal.util.Runs;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
-import com.mta.tehreer.sfnt.SfntTag;
-import com.mta.tehreer.sfnt.ShapingEngine;
-import com.mta.tehreer.sfnt.ShapingResult;
-import com.mta.tehreer.sfnt.WritingDirection;
-import com.mta.tehreer.unicode.BaseDirection;
-import com.mta.tehreer.unicode.BidiAlgorithm;
-import com.mta.tehreer.unicode.BidiLine;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
@@ -132,7 +125,8 @@ public class Typesetter {
         }
 
         resolveBreaks();
-        resolveBidi(new ShapingRunLocator(spanned, defaultSpans));
+        ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBreakRecord,
+                               mBidiParagraphs, mIntrinsicRuns);
     }
 
     /**
@@ -147,127 +141,6 @@ public class Typesetter {
     private void resolveBreaks() {
         BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.LINE);
         BreakResolver.fillBreaks(mText, mBreakRecord, BreakResolver.CHARACTER);
-    }
-
-    private void resolveBidi(ShapingRunLocator shapingRunLocator) {
-        // TODO: Analyze script runs.
-
-        BidiAlgorithm bidiAlgorithm = null;
-        ShapingEngine shapingEngine = null;
-
-        try {
-            bidiAlgorithm = new BidiAlgorithm(mText);
-            shapingEngine = new ShapingEngine();
-
-            BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
-            byte forwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, true);
-            byte backwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, false);
-
-            int paragraphStart = 0;
-            int suggestedEnd = mText.length();
-
-            while (paragraphStart != suggestedEnd) {
-                BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
-                for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
-                    int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                    WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
-
-                    shapingRunLocator.reset(bidiRun.charStart, bidiRun.charEnd);
-
-                    shapingEngine.setScriptTag(scriptTag);
-                    shapingEngine.setWritingDirection(writingDirection);
-
-                    resolveTypefaces(shapingRunLocator, shapingEngine, bidiRun.embeddingLevel);
-                }
-                mBidiParagraphs.add(paragraph);
-
-                mBreakRecord[paragraph.getCharStart()] |= backwardType;
-                mBreakRecord[paragraph.getCharEnd() - 1] |= forwardType;
-
-                paragraphStart = paragraph.getCharEnd();
-            }
-        } finally {
-            if (shapingEngine != null) {
-                shapingEngine.dispose();
-            }
-            if (bidiAlgorithm != null) {
-                bidiAlgorithm.dispose();
-            }
-        }
-    }
-
-    private void resolveTypefaces(ShapingRunLocator locator, ShapingEngine shapingEngine, byte bidiLevel) {
-        while (locator.moveNext()) {
-            int runStart = locator.getRunStart();
-            int runEnd = locator.getRunEnd();
-
-            Typeface typeface = locator.getTypeface();
-            float typeSize = locator.getTypeSize();
-
-            if (typeface == null) {
-                throw new IllegalArgumentException("No typeface is specified for range ["
-                                                   + runStart + ".." + runEnd + ")");
-            }
-
-            ReplacementSpan replacement = locator.getReplacement();
-            IntrinsicRun intrinsicRun;
-
-            if (replacement == null) {
-                shapingEngine.setTypeface(typeface);
-                shapingEngine.setTypeSize(typeSize);
-
-                ShapingResult shapingResult = null;
-
-                try {
-                    shapingResult = shapingEngine.shapeText(mText, runStart, runEnd);
-
-                    WritingDirection writingDirection = shapingEngine.getWritingDirection();
-                    boolean isBackward = shapingResult.isBackward();
-                    int[] glyphIds = shapingResult.getGlyphIds().toArray();
-                    float[] offsets = shapingResult.getGlyphOffsets().toArray();
-                    float[] advances = shapingResult.getGlyphAdvances().toArray();
-                    int[] clusterMap = shapingResult.getClusterMap().toArray();
-
-                    float scaleX = locator.getScaleX();
-                    if (Float.compare(scaleX, 1.0f) != 0) {
-                        for (int i = 0; i < glyphIds.length; i++) {
-                            offsets[i * 2] *= scaleX;
-                            advances[i] *= scaleX;
-                        }
-                    }
-
-                    float baselineShift = locator.getBaselineShift();
-                    if (Float.compare(baselineShift, 0.0f) != 0) {
-                        for (int i = 0; i < glyphIds.length; i++) {
-                            offsets[(i * 2) + 1] += baselineShift;
-                        }
-                    }
-
-                    intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
-                                                    typeface, typeSize, writingDirection,
-                                                    glyphIds, offsets, advances, clusterMap);
-                } finally {
-                    if (shapingResult != null) {
-                        shapingResult.dispose();
-                    }
-                }
-            } else {
-                int spaceGlyph = typeface.getGlyphId(' ');
-                int replacementSize = replacement.getSize(null, mSpanned, runStart, runEnd, null);
-
-                WritingDirection writingDirection = shapingEngine.getWritingDirection();
-                int[] glyphIds = new int[] { spaceGlyph };
-                float[] offsets = new float[] { 0.0f, 0.0f };
-                float[] advances = new float[] { replacementSize };
-                int[] clusterMap = new int[runEnd - runStart];
-
-                intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
-                                                typeface, typeSize, writingDirection,
-                                                glyphIds, offsets, advances, clusterMap);
-            }
-
-            mIntrinsicRuns.add(intrinsicRun);
-        }
     }
 
     private String checkRange(int charStart, int charEnd) {
@@ -384,70 +257,6 @@ public class Typesetter {
                                 Paragraphs.levelOfChar(mBidiParagraphs, charStart));
 	}
 
-    private ComposedLine createTruncationToken(int charStart, int charEnd,
-                                               TruncationPlace truncationPlace, String tokenStr) {
-        int truncationIndex = 0;
-
-        switch (truncationPlace) {
-        case START:
-            truncationIndex = charStart;
-            break;
-
-        case MIDDLE:
-            truncationIndex = (charStart + charEnd) / 2;
-            break;
-
-        case END:
-            truncationIndex = charEnd - 1;
-            break;
-        }
-
-        Object[] charSpans = mSpanned.getSpans(truncationIndex, truncationIndex + 1, Object.class);
-        TypefaceSpan typefaceSpan = null;
-        TypeSizeSpan typeSizeSpan = null;
-
-        final int typefaceBit = 1;
-        final int typeSizeBit = 1 << 1;
-        final int requiredBits = typefaceBit | typeSizeBit;
-        int foundBits = 0;
-
-        for (Object span : charSpans) {
-            if (span instanceof TypefaceSpan) {
-                if (typefaceSpan == null) {
-                    typefaceSpan = (TypefaceSpan) span;
-                    foundBits |= typefaceBit;
-                }
-            } else if (span instanceof TypeSizeSpan) {
-                if (typeSizeSpan == null) {
-                    typeSizeSpan = (TypeSizeSpan) span;
-                    foundBits |= typeSizeBit;
-                }
-            }
-
-            if (foundBits == requiredBits) {
-                Typeface tokenTypeface = typefaceSpan.getTypeface();
-                float tokenTypeSize = typeSizeSpan.getSize();
-
-                if (tokenStr == null || tokenStr.length() == 0) {
-                    // Token string is not given. Use ellipsis character if available; fallback to
-                    // three dots.
-
-                    int ellipsisGlyphId = tokenTypeface.getGlyphId(0x2026);
-                    if (ellipsisGlyphId == 0) {
-                        tokenStr = "...";
-                    } else {
-                        tokenStr = "\u2026";
-                    }
-                }
-
-                Typesetter typesetter = new Typesetter(tokenStr, tokenTypeface, tokenTypeSize);
-                return typesetter.createSimpleLine(0, tokenStr.length());
-            }
-        }
-
-        return null;
-    }
-
     /**
      * Creates a line of specified string range, truncating it with ellipsis character (U+2026) or
      * three dots if it overflows the max width.
@@ -482,7 +291,7 @@ public class Typesetter {
         }
 
         return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
-                                 createTruncationToken(charStart, charEnd, truncationPlace, null));
+                TruncationResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
     }
 
     /**
@@ -526,7 +335,7 @@ public class Typesetter {
         }
 
         return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
-                                 createTruncationToken(charStart, charEnd, truncationPlace, truncationToken));
+                TruncationResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
     }
 
     /**
