@@ -94,7 +94,7 @@ public class ShapeResolver {
 
             if (typeface == null) {
                 throw new IllegalArgumentException("No typeface is specified for range ["
-                        + runStart + ".." + runEnd + ")");
+                                                   + runStart + ".." + runEnd + ")");
             }
 
             ReplacementSpan replacement = locator.getReplacement();
@@ -132,8 +132,8 @@ public class ShapeResolver {
                     }
 
                     intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
-                            typeface, typeSize, writingDirection,
-                            glyphIds, offsets, advances, clusterMap);
+                                                    typeface, typeSize, writingDirection,
+                                                    glyphIds, offsets, advances, clusterMap);
                 } finally {
                     if (shapingResult != null) {
                         shapingResult.dispose();
@@ -150,8 +150,8 @@ public class ShapeResolver {
                 int[] clusterMap = new int[runEnd - runStart];
 
                 intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
-                        typeface, typeSize, writingDirection,
-                        glyphIds, offsets, advances, clusterMap);
+                                                typeface, typeSize, writingDirection,
+                                                glyphIds, offsets, advances, clusterMap);
             }
 
             runs.add(intrinsicRun);

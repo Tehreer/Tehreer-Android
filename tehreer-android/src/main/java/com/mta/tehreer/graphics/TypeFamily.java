@@ -62,16 +62,15 @@ public class TypeFamily {
     }
 
     private static int slopeGap(TypeSlope desired, TypeSlope candidate) {
-        // - If the value is ‘normal’, check normal faces first, then oblique, then italic.
-        // - If the value is ‘italic’, check italic faces first, then oblique, then normal.
-        // - If the value is ‘oblique’, check oblique faces first, then italic, then normal.
         int[] gaps = {
             // "If the value is ‘normal’, normal faces are checked first, then oblique faces, then
             // italic faces."
             /*   PLAIN: */ 0, 2, 1,
+
             // "If the value is ‘italic’, italic faces are checked first, then oblique, then normal
             // faces."
             /*  ITALIC: */ 2, 0, 1,
+
             // "If the value is ‘oblique’, oblique faces are checked first, then italic faces and
             // then normal faces."
             /* OBLIQUE: */ 2, 1, 0,
