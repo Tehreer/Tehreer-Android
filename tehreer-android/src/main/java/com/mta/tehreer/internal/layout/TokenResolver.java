@@ -25,7 +25,7 @@ import com.mta.tehreer.layout.Typesetter;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 
-public class TruncationResolver {
+public class TokenResolver {
 
     public static ComposedLine createToken(Spanned spanned, int charStart, int charEnd,
                                            TruncationPlace truncationPlace, String tokenStr) {

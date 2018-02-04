@@ -24,7 +24,7 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ShapeResolver;
-import com.mta.tehreer.internal.layout.TruncationResolver;
+import com.mta.tehreer.internal.layout.TokenResolver;
 import com.mta.tehreer.internal.util.Paragraphs;
 import com.mta.tehreer.internal.util.Runs;
 import com.mta.tehreer.internal.util.StringUtils;
@@ -286,7 +286,7 @@ public class Typesetter {
         }
 
         return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
-                TruncationResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
+                TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
     }
 
     /**
@@ -330,7 +330,7 @@ public class Typesetter {
         }
 
         return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
-                TruncationResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
+                TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
     }
 
     /**
