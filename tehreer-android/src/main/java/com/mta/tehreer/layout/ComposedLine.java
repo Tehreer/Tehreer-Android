@@ -28,30 +28,31 @@ import java.util.List;
  */
 public class ComposedLine {
 
-	private int mCharStart;
-	private int mCharEnd;
-    private byte mParagraphLevel;
+	private final int charStart;
+	private final int charEnd;
+    private final byte paragraphLevel;
+    private final float ascent;
+    private final float descent;
+    private final float leading;
+    private final float extent;
+    private final float trailingWhitespaceExtent;
+	private final List<GlyphRun> runList;
+
     private float mOriginX;
     private float mOriginY;
-    private float mAscent;
-    private float mDescent;
-    private float mLeading;
-    private float mWidth;
-    private float mTrailingWhitespaceExtent;
-	private List<GlyphRun> mRunList;
 
 	ComposedLine(int charStart, int charEnd, byte paragraphLevel,
-                 float ascent, float descent, float leading, float width,
+                 float ascent, float descent, float leading, float extent,
                  float trailingWhitespaceExtent, List<GlyphRun> runList) {
-	    mCharStart = charStart;
-	    mCharEnd = charEnd;
-	    mParagraphLevel = paragraphLevel;
-	    mAscent = ascent;
-	    mDescent = descent;
-	    mLeading = leading;
-	    mWidth = width;
-	    mTrailingWhitespaceExtent = trailingWhitespaceExtent;
-	    mRunList = runList;
+	    this.charStart = charStart;
+	    this.charEnd = charEnd;
+	    this.paragraphLevel = paragraphLevel;
+	    this.ascent = ascent;
+	    this.descent = descent;
+	    this.leading = leading;
+	    this.extent = extent;
+	    this.trailingWhitespaceExtent = trailingWhitespaceExtent;
+	    this.runList = runList;
     }
 
     /**
@@ -60,7 +61,7 @@ public class ComposedLine {
      * @return The index to the first character of this line in source text.
      */
 	public int getCharStart() {
-		return mCharStart;
+		return charStart;
 	}
 
     /**
@@ -69,7 +70,7 @@ public class ComposedLine {
      * @return The index after the last character of this line in source text.
      */
 	public int getCharEnd() {
-		return mCharEnd;
+		return charEnd;
 	}
 
     /**
@@ -78,7 +79,7 @@ public class ComposedLine {
      * @return The paragraph level of this line.
      */
     public byte getParagraphLevel() {
-        return mParagraphLevel;
+        return paragraphLevel;
     }
 
     /**
@@ -113,7 +114,7 @@ public class ComposedLine {
      * @return The ascent of this line.
      */
     public float getAscent() {
-        return mAscent;
+        return ascent;
     }
 
     /**
@@ -122,7 +123,7 @@ public class ComposedLine {
      * @return The descent of this line.
      */
     public float getDescent() {
-        return mDescent;
+        return descent;
     }
 
     /**
@@ -131,7 +132,7 @@ public class ComposedLine {
      * @return The leading of this line.
      */
     public float getLeading() {
-        return mLeading;
+        return leading;
     }
 
     /**
@@ -140,7 +141,7 @@ public class ComposedLine {
      * @return The typographic width of this line.
      */
     public float getWidth() {
-        return mWidth;
+        return extent;
     }
 
     /**
@@ -149,7 +150,7 @@ public class ComposedLine {
      * @return The typographic height of this line.
      */
     public float getHeight() {
-        return (mAscent + mDescent + mLeading);
+        return (ascent + descent + leading);
     }
 
     /**
@@ -160,7 +161,7 @@ public class ComposedLine {
      *         characters in this line.
      */
     public float getTrailingWhitespaceExtent() {
-        return mTrailingWhitespaceExtent;
+        return trailingWhitespaceExtent;
     }
 
     /**
@@ -169,7 +170,7 @@ public class ComposedLine {
      * @return An unmodifiable list that contains all the runs of this line.
      */
     public List<GlyphRun> getRuns() {
-        return mRunList;
+        return runList;
     }
 
     public int getCharIndexFromDistance(float distance) {
@@ -183,7 +184,7 @@ public class ComposedLine {
         }
 
         if (containerRun == null) {
-            containerRun = mRunList.get(mRunList.size() - 1);
+            containerRun = runList.get(runList.size() - 1);
         }
 
         return containerRun.getCharIndexFromDistance(distance - containerRun.getOriginX());
@@ -200,9 +201,9 @@ public class ComposedLine {
      * @return A value which can be used to offset the current pen position for the flush operation.
      */
     public float getFlushPenOffset(float flushFactor, float flushExtent) {
-        float penOffset = (flushExtent - (mWidth - mTrailingWhitespaceExtent)) * flushFactor;
-        if ((mParagraphLevel & 1) == 1) {
-            penOffset -= mTrailingWhitespaceExtent;
+        float penOffset = (flushExtent - (extent - trailingWhitespaceExtent)) * flushFactor;
+        if ((paragraphLevel & 1) == 1) {
+            penOffset -= trailingWhitespaceExtent;
         }
 
         return penOffset;
@@ -217,7 +218,7 @@ public class ComposedLine {
      * @param y The y- position at which to draw this line.
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
-        for (GlyphRun glyphRun : mRunList) {
+        for (GlyphRun glyphRun : runList) {
             float translateX = x + glyphRun.getOriginX();
             float translateY = y + glyphRun.getOriginY();
 
@@ -239,7 +240,7 @@ public class ComposedLine {
                 + ", width=" + getWidth()
                 + ", height=" + getHeight()
                 + ", trailingWhitespaceExtent=" + getTrailingWhitespaceExtent()
-                + ", runs=" + Description.forIterable(mRunList)
+                + ", runs=" + Description.forIterable(runList)
                 + "}";
     }
 }
