@@ -29,9 +29,7 @@ import com.mta.tehreer.internal.layout.TokenResolver;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
-import com.mta.tehreer.unicode.BidiParagraph;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -384,55 +382,10 @@ public class Typesetter {
             throw new IllegalArgumentException("Frame rect is empty");
         }
 
-        float flushFactor;
-        switch (textAlignment) {
-        case RIGHT:
-            flushFactor = 1.0f;
-            break;
+        FrameResolver resolver = FrameResolver.with(mSpanned, mBidiParagraphs, mIntrinsicRuns, mBreakRecord);
+        resolver.setFrameRect(frameRect);
+        resolver.setTextAlignment(textAlignment);
 
-        case CENTER:
-            flushFactor = 0.5f;
-            break;
-
-        default:
-            flushFactor = 0.0f;
-            break;
-        }
-
-        float frameWidth = frameRect.width();
-        float frameBottom = frameRect.bottom;
-
-        ArrayList<ComposedLine> frameLines = new ArrayList<>();
-        int lineStart = charStart;
-        float lineY = frameRect.top;
-
-        while (lineStart != charEnd) {
-            int lineEnd = suggestForwardBreak(lineStart, charEnd, frameWidth, BreakMode.LINE);
-            ComposedLine composedLine = createSimpleLine(lineStart, lineEnd);
-
-            float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
-            float lineAscent = composedLine.getAscent();
-            float lineHeight = lineAscent + composedLine.getDescent();
-
-            if ((lineY + lineHeight) > frameBottom) {
-                break;
-            }
-
-            composedLine.setOriginX(frameRect.left + lineX);
-            composedLine.setOriginY(lineY + lineAscent);
-
-            frameLines.add(composedLine);
-
-            lineStart = lineEnd;
-            lineY += lineHeight;
-        }
-
-        return new ComposedFrame(charStart, lineStart, frameLines);
-    }
-
-    void dispose() {
-        for (BidiParagraph paragraph : mBidiParagraphs) {
-            paragraph.dispose();
-        }
+        return resolver.createFrame(charStart, charEnd);
     }
 }
