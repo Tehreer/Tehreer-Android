@@ -20,9 +20,7 @@ import android.graphics.Canvas;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
-import com.mta.tehreer.internal.util.StringUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,40 +40,19 @@ public class ComposedLine {
     private float mTrailingWhitespaceExtent;
 	private List<GlyphRun> mRunList;
 
-	ComposedLine(String text, int charStart, int charEnd, List<GlyphRun> runList, byte paragraphLevel) {
-		mCharStart = charStart;
-		mCharEnd = charEnd;
-        mParagraphLevel = paragraphLevel;
-        mRunList = Collections.unmodifiableList(runList);
-
-        int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
-
-        for (GlyphRun glyphRun : runList) {
-            glyphRun.setOriginX(mWidth);
-
-            float runAscent = glyphRun.getAscent();
-            float runDescent = glyphRun.getDescent();
-            float runLeading = glyphRun.getLeading();
-
-            int runCharStart = glyphRun.getCharStart();
-            int runCharEnd = glyphRun.getCharEnd();
-            int runGlyphCount = glyphRun.getGlyphCount();
-            float runWidth = glyphRun.computeTypographicExtent(0, runGlyphCount);
-
-            if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
-                int whitespaceGlyphStart = glyphRun.getCharGlyphStart(trailingWhitespaceStart);
-                int whitespaceGlyphEnd = glyphRun.getCharGlyphEnd(runCharEnd - 1);
-                float whitespaceWidth = glyphRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
-
-                mTrailingWhitespaceExtent += whitespaceWidth;
-            }
-
-            mAscent = Math.max(mAscent, runAscent);
-            mDescent = Math.max(mDescent, runDescent);
-            mLeading = Math.max(mLeading, runLeading);
-            mWidth += runWidth;
-        }
-	}
+	ComposedLine(int charStart, int charEnd, byte paragraphLevel,
+                 float ascent, float descent, float leading, float width,
+                 float trailingWhitespaceExtent, List<GlyphRun> runList) {
+	    mCharStart = charStart;
+	    mCharEnd = charEnd;
+	    mParagraphLevel = paragraphLevel;
+	    mAscent = ascent;
+	    mDescent = descent;
+	    mLeading = leading;
+	    mWidth = width;
+	    mTrailingWhitespaceExtent = trailingWhitespaceExtent;
+	    mRunList = runList;
+    }
 
     /**
      * Returns the index to the first character of this line in source text.

@@ -32,6 +32,7 @@ import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 class LineResolver {
@@ -61,12 +62,53 @@ class LineResolver {
                                            charEnd - charStart, glyphOffset));
     }
 
+    static ComposedLine createComposedLine(CharSequence text, int charStart, int charEnd,
+                                           List<GlyphRun> runList, byte paragraphLevel) {
+        float lineAscent = 0.0f;
+        float lineDescent = 0.0f;
+        float lineLeading = 0.0f;
+        float lineWidth = 0.0f;
+
+        int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
+        float trailingWhitespaceExtent = 0.0f;
+
+        for (GlyphRun glyphRun : runList) {
+            glyphRun.setOriginX(lineWidth);
+
+            float runAscent = glyphRun.getAscent();
+            float runDescent = glyphRun.getDescent();
+            float runLeading = glyphRun.getLeading();
+
+            int runCharStart = glyphRun.getCharStart();
+            int runCharEnd = glyphRun.getCharEnd();
+            int runGlyphCount = glyphRun.getGlyphCount();
+            float runWidth = glyphRun.computeTypographicExtent(0, runGlyphCount);
+
+            if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
+                int whitespaceGlyphStart = glyphRun.getCharGlyphStart(trailingWhitespaceStart);
+                int whitespaceGlyphEnd = glyphRun.getCharGlyphEnd(runCharEnd - 1);
+                float whitespaceWidth = glyphRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
+
+                trailingWhitespaceExtent += whitespaceWidth;
+            }
+
+            lineAscent = Math.max(lineAscent, runAscent);
+            lineDescent = Math.max(lineDescent, runDescent);
+            lineLeading = Math.max(lineLeading, runLeading);
+            lineWidth += runWidth;
+        }
+
+        return new ComposedLine(charStart, charEnd, paragraphLevel,
+                                lineAscent, lineDescent, lineLeading, lineWidth,
+                                trailingWhitespaceExtent, Collections.unmodifiableList(runList));
+    }
+
     ComposedLine createSimpleLine(int charStart, int charEnd) {
         ArrayList<GlyphRun> lineRuns = new ArrayList<>();
         addContinuousLineRuns(charStart, charEnd, lineRuns);
 
-        return new ComposedLine(mSpanned, charStart, charEnd, lineRuns,
-                Paragraphs.levelOfChar(mBidiParagraphs, charStart));
+        return createComposedLine(mSpanned, charStart, charEnd, lineRuns,
+                                  Paragraphs.levelOfChar(mBidiParagraphs, charStart));
     }
 
     ComposedLine createCompactLine(int charStart, int charEnd, float maxWidth,
@@ -174,8 +216,8 @@ class LineResolver {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mSpanned, truncatedStart, charEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, truncatedStart));
+            return createComposedLine(mSpanned, truncatedStart, charEnd, runList,
+                                      Paragraphs.levelOfChar(mBidiParagraphs, truncatedStart));
         }
 
         return createSimpleLine(truncatedStart, charEnd);
@@ -203,8 +245,8 @@ class LineResolver {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mSpanned, charStart, charEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
+            return createComposedLine(mSpanned, charStart, charEnd, runList,
+                                      Paragraphs.levelOfChar(mBidiParagraphs, charStart));
         }
 
         return createSimpleLine(charStart, charEnd);
@@ -228,8 +270,8 @@ class LineResolver {
             }
             addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
 
-            return new ComposedLine(mSpanned, charStart, truncatedEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
+            return createComposedLine(mSpanned, charStart, truncatedEnd, runList,
+                                      Paragraphs.levelOfChar(mBidiParagraphs, charStart));
         }
 
         return createSimpleLine(charStart, truncatedEnd);
