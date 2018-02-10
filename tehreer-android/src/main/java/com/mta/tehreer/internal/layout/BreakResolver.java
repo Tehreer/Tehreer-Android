@@ -18,6 +18,7 @@ package com.mta.tehreer.internal.layout;
 
 import com.mta.tehreer.internal.util.Runs;
 import com.mta.tehreer.internal.util.StringUtils;
+import com.mta.tehreer.layout.BreakMode;
 
 import java.text.BreakIterator;
 import java.util.List;
@@ -69,7 +70,7 @@ public class BreakResolver {
         BreakResolver.fillBreaks(text, breaks, BreakResolver.CHARACTER);
     }
 
-    private static int findForwardBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
+    private static int findForwardBreak(CharSequence text, List<IntrinsicRun> runs, byte[] breaks,
                                         byte type, int start, int end, float extent) {
         int forwardBreak = start;
         int charIndex = start;
@@ -117,7 +118,7 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    private static int findBackwardBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
+    private static int findBackwardBreak(CharSequence text, List<IntrinsicRun> runs, byte[] breaks,
                                          byte type, int start, int end, float extent) {
         int backwardBreak = end;
         int charIndex = end - 1;
@@ -161,8 +162,8 @@ public class BreakResolver {
         return backwardBreak;
     }
 
-    public static int suggestForwardCharBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
-                                              int charStart, int charEnd, float extent) {
+    public static int suggestForwardCharBreak(CharSequence text, List<IntrinsicRun> runs,
+                                              byte[] breaks, int charStart, int charEnd, float extent) {
         int forwardBreak = findForwardBreak(text, runs, breaks, CHARACTER, charStart, charEnd, extent);
 
         // Take at least one character (grapheme) if extent is too small.
@@ -183,8 +184,8 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    public static int suggestBackwardCharBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
-                                               int start, int end, float extent) {
+    public static int suggestBackwardCharBreak(CharSequence text, List<IntrinsicRun> runs,
+                                               byte[] breaks, int start, int end, float extent) {
         int backwardBreak = findBackwardBreak(text, runs, breaks, CHARACTER, start, end, extent);
 
         // Take at least one character (grapheme) if extent is too small.
@@ -205,8 +206,8 @@ public class BreakResolver {
         return backwardBreak;
     }
 
-    public static int suggestForwardLineBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
-                                              int start, int end, float extent) {
+    public static int suggestForwardLineBreak(CharSequence text, List<IntrinsicRun> runs,
+                                              byte[] breaks, int start, int end, float extent) {
         int forwardBreak = findForwardBreak(text, runs, breaks, LINE, start, end, extent);
 
         // Fallback to character break if no line break occurs in desired extent.
@@ -217,8 +218,8 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    public static int suggestBackwardLineBreak(String text, List<IntrinsicRun> runs, byte[] breaks,
-                                               int start, int end, float extent) {
+    public static int suggestBackwardLineBreak(CharSequence text, List<IntrinsicRun> runs,
+                                               byte[] breaks, int start, int end, float extent) {
         int backwardBreak = findBackwardBreak(text, runs, breaks, LINE, start, end, extent);
 
         // Fallback to character break if no line break occurs in desired extent.
@@ -227,5 +228,31 @@ public class BreakResolver {
         }
 
         return backwardBreak;
+    }
+
+    public static int suggestForwardBreak(CharSequence text, List<IntrinsicRun> runs, byte[] breaks,
+                                          int start, int end, float extent, BreakMode mode) {
+        switch (mode) {
+        case CHARACTER:
+            return BreakResolver.suggestForwardCharBreak(text, runs, breaks, start, end, extent);
+
+        case LINE:
+            return BreakResolver.suggestForwardLineBreak(text, runs, breaks, start, end, extent);
+        }
+
+        return -1;
+    }
+
+    public static int suggestBackwardBreak(CharSequence text, List<IntrinsicRun> runs, byte[] breaks,
+                                           int start, int end, float extent, BreakMode mode) {
+        switch (mode) {
+        case CHARACTER:
+            return BreakResolver.suggestBackwardCharBreak(text, runs, breaks, start, end, extent);
+
+        case LINE:
+            return BreakResolver.suggestBackwardLineBreak(text, runs, breaks, start, end, extent);
+        }
+
+        return -1;
     }
 }
