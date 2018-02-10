@@ -22,8 +22,8 @@ import android.text.Spanned;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.BreakResolver;
-import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
+import com.mta.tehreer.internal.layout.RunCollection;
 import com.mta.tehreer.internal.layout.ShapeResolver;
 import com.mta.tehreer.internal.layout.TokenResolver;
 import com.mta.tehreer.internal.util.StringUtils;
@@ -45,7 +45,7 @@ public class Typesetter {
     private Spanned mSpanned;
     private byte[] mBreakRecord;
     private ParagraphCollection mBidiParagraphs;
-    private ArrayList<IntrinsicRun> mIntrinsicRuns;
+    private RunCollection mIntrinsicRuns;
 
     /**
      * Constructs the typesetter object using given text, typeface and type size.
@@ -103,7 +103,7 @@ public class Typesetter {
         mSpanned = spanned;
         mBreakRecord = new byte[text.length()];
         mBidiParagraphs = new ParagraphCollection();
-        mIntrinsicRuns = new ArrayList<>();
+        mIntrinsicRuns = new RunCollection();
 
         if (defaultSpans == null) {
             defaultSpans = Collections.EMPTY_LIST;

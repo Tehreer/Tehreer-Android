@@ -25,7 +25,7 @@ import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
-import com.mta.tehreer.internal.util.Runs;
+import com.mta.tehreer.internal.layout.RunCollection;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.unicode.BidiRun;
 
@@ -38,9 +38,9 @@ class LineResolver {
 
     private Spanned mSpanned;
     private ParagraphCollection mBidiParagraphs;
-    private List<IntrinsicRun> mIntrinsicRuns;
+    private RunCollection mIntrinsicRuns;
 
-    LineResolver(Spanned spanned, ParagraphCollection paragraphs, List<IntrinsicRun> runs) {
+    LineResolver(Spanned spanned, ParagraphCollection paragraphs, RunCollection runs) {
         mSpanned = spanned;
         mBidiParagraphs = paragraphs;
         mIntrinsicRuns = runs;
@@ -300,7 +300,7 @@ class LineResolver {
             IntrinsicRun previousRun = null;
 
             do {
-                int runIndex = Runs.binarySearch(mIntrinsicRuns, visualStart);
+                int runIndex = mIntrinsicRuns.binarySearch(visualStart);
 
                 IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
                 int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);

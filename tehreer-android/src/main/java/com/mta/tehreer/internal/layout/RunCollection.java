@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.layout;
 
-import com.mta.tehreer.internal.layout.IntrinsicRun;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
-public class Runs {
+public class RunCollection extends ArrayList<IntrinsicRun> {
 
-    public static int binarySearch(List<IntrinsicRun> runs, final int charIndex) {
-        return Collections.binarySearch(runs, null, new Comparator<IntrinsicRun>() {
+    public int binarySearch(final int charIndex) {
+        return Collections.binarySearch(this, null, new Comparator<IntrinsicRun>() {
             @Override
             public int compare(IntrinsicRun obj1, IntrinsicRun obj2) {
                 if (charIndex < obj1.charStart) {
@@ -41,27 +39,27 @@ public class Runs {
         });
     }
 
-    public static float measureChars(List<IntrinsicRun> runs, int charStart, int charEnd) {
-        float measuredWidth = 0.0f;
+    public float measureChars(int charStart, int charEnd) {
+        float extent = 0.0f;
 
         if (charEnd > charStart) {
-            int runIndex = binarySearch(runs, charStart);
+            int runIndex = binarySearch(charStart);
 
             do {
-                IntrinsicRun intrinsicRun = runs.get(runIndex);
+                IntrinsicRun intrinsicRun = get(runIndex);
                 int glyphStart = intrinsicRun.charGlyphStart(charStart);
                 int glyphEnd;
 
                 int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
                 glyphEnd = intrinsicRun.charGlyphEnd(segmentEnd - 1);
 
-                measuredWidth += intrinsicRun.measureGlyphs(glyphStart, glyphEnd);
+                extent += intrinsicRun.measureGlyphs(glyphStart, glyphEnd);
 
                 charStart = segmentEnd;
                 runIndex++;
             } while (charStart < charEnd);
         }
 
-        return measuredWidth;
+        return extent;
     }
 }
