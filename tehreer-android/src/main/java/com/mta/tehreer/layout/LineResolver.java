@@ -18,7 +18,11 @@ package com.mta.tehreer.layout;
 
 import android.text.Spanned;
 
+import com.mta.tehreer.internal.collections.SafeFloatList;
+import com.mta.tehreer.internal.collections.SafeIntList;
+import com.mta.tehreer.internal.collections.SafePointList;
 import com.mta.tehreer.internal.layout.BreakResolver;
+import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.util.Paragraphs;
 import com.mta.tehreer.internal.util.Runs;
@@ -27,6 +31,7 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class LineResolver {
@@ -39,6 +44,21 @@ class LineResolver {
         mSpanned = spanned;
         mBidiParagraphs = paragraphs;
         mIntrinsicRuns = runs;
+    }
+
+    static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd, Object[] spans) {
+        int glyphOffset = intrinsicRun.charGlyphStart(charStart);
+        int glyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - glyphOffset;
+
+        return new GlyphRun(charStart, charEnd, Arrays.asList(spans),
+                            intrinsicRun.isBackward, intrinsicRun.bidiLevel,
+                            intrinsicRun.typeface, intrinsicRun.typeSize, intrinsicRun.writingDirection,
+                            new SafeIntList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
+                            new SafePointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
+                            new SafeFloatList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
+                            new ClusterMap(intrinsicRun.clusterMap,
+                                           charStart - intrinsicRun.charStart,
+                                           charEnd - charStart, glyphOffset));
     }
 
     ComposedLine createSimpleLine(int charStart, int charEnd) {
@@ -267,7 +287,7 @@ class LineResolver {
                     int spanEnd = mSpanned.nextSpanTransition(spanStart, feasibleEnd, Object.class);
                     Object[] spans = mSpanned.getSpans(spanStart, spanEnd, Object.class);
 
-                    GlyphRun glyphRun = new GlyphRun(intrinsicRun, spanStart, spanEnd, spans);
+                    GlyphRun glyphRun = createGlyphRun(intrinsicRun, spanStart, spanEnd, spans);
                     runList.add(insertIndex, glyphRun);
 
                     if (forward) {

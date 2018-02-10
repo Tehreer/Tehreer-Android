@@ -27,15 +27,9 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.collections.SafeFloatList;
-import com.mta.tehreer.internal.collections.SafeIntList;
-import com.mta.tehreer.internal.collections.SafePointList;
-import com.mta.tehreer.internal.layout.ClusterMap;
-import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -61,25 +55,22 @@ public class GlyphRun {
 
     private float mWidth = Float.NEGATIVE_INFINITY;
 
-	GlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd, Object[] spans) {
-        int glyphOffset = intrinsicRun.charGlyphStart(charStart);
-        int glyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - glyphOffset;
-
+    GlyphRun(int charStart, int charEnd, List<Object> spans, boolean isBackward, byte bidiLevel,
+             Typeface typeface, float typeSize, WritingDirection writingDirection,
+             IntList glyphIds, PointList offsets, FloatList advances, IntList clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
-        this.spans = Arrays.asList(spans);
-        this.bidiLevel = intrinsicRun.bidiLevel;
-        this.isBackward = intrinsicRun.isBackward;
-        this.typeface = intrinsicRun.typeface;
-        this.typeSize = intrinsicRun.typeSize;
-        this.writingDirection = intrinsicRun.writingDirection;
-        this.glyphIds = new SafeIntList(intrinsicRun.glyphIds, glyphOffset, glyphCount);
-        this.glyphOffsets = new SafePointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount);
-        this.glyphAdvances = new SafeFloatList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount);
-        this.clusterMap = new ClusterMap(intrinsicRun.clusterMap,
-                                         charStart - intrinsicRun.charStart,
-                                         charEnd - charStart, glyphOffset);
-	}
+        this.spans = spans;
+        this.isBackward = isBackward;
+        this.bidiLevel = bidiLevel;
+        this.typeface = typeface;
+        this.typeSize = typeSize;
+        this.writingDirection = writingDirection;
+        this.glyphIds = glyphIds;
+        this.glyphOffsets = offsets;
+        this.glyphAdvances = advances;
+        this.clusterMap = clusterMap;
+    }
 
     GlyphRun(GlyphRun otherRun) {
         this.charStart = otherRun.charStart;
