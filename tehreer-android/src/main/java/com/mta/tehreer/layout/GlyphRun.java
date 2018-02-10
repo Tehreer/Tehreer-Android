@@ -27,10 +27,10 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.collections.SafeFloatList;
 import com.mta.tehreer.internal.collections.SafeIntList;
 import com.mta.tehreer.internal.collections.SafePointList;
+import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
@@ -76,9 +76,9 @@ public class GlyphRun {
         this.glyphIds = new SafeIntList(intrinsicRun.glyphIds, glyphOffset, glyphCount);
         this.glyphOffsets = new SafePointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount);
         this.glyphAdvances = new SafeFloatList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount);
-        this.clusterMap = new IndexList(intrinsicRun.clusterMap,
-                                        charStart - intrinsicRun.charStart,
-                                        charEnd - charStart, glyphOffset);
+        this.clusterMap = new ClusterMap(intrinsicRun.clusterMap,
+                                         charStart - intrinsicRun.charStart,
+                                         charEnd - charStart, glyphOffset);
 	}
 
     GlyphRun(GlyphRun otherRun) {
@@ -214,56 +214,6 @@ public class GlyphRun {
      */
     public IntList getClusterMap() {
         return clusterMap;
-    }
-
-    private static class IndexList extends IntList {
-
-        final int[] array;
-        final int offset;
-        final int size;
-        final int difference;
-
-        IndexList(int[] array, int offset, int size, int difference) {
-            this.array = array;
-            this.offset = offset;
-            this.size = size;
-            this.difference = difference;
-        }
-
-        @Override
-        public int size() {
-            return size;
-        }
-
-        @Override
-        public int get(int index) {
-            if (index < 0 || index >= size) {
-                throw Exceptions.indexOutOfBounds(index, size);
-            }
-
-            return array[index + offset] - difference;
-        }
-
-        @Override
-        public void copyTo(int[] array, int atIndex) {
-            System.arraycopy(this.array, offset, array, atIndex, size);
-
-            if (difference != 0) {
-                int length = size();
-                for (int i = atIndex; i < length; i++) {
-                    array[i] -= difference;
-                }
-            }
-        }
-
-        @Override
-        public IntList subList(int fromIndex, int toIndex) {
-            if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-                throw new IndexOutOfBoundsException();
-            }
-
-            return new IndexList(array, offset + fromIndex, toIndex - fromIndex, difference);
-        }
     }
 
     int getCharGlyphStart(int charIndex) {
