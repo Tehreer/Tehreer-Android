@@ -35,9 +35,9 @@ public class StringUtils {
         return new String(chars);
     }
 
-    public static int getLeadingWhitespaceEnd(String string, int charStart, int charEnd) {
+    public static int getLeadingWhitespaceEnd(CharSequence charSequence, int charStart, int charEnd) {
         for (int i = charStart; i < charEnd; i++) {
-            if (!Character.isWhitespace(string.charAt(i))) {
+            if (!Character.isWhitespace(charSequence.charAt(i))) {
                 return i;
             }
         }
@@ -45,9 +45,9 @@ public class StringUtils {
         return charEnd;
     }
 
-    public static int getTrailingWhitespaceStart(String string, int charStart, int charEnd) {
+    public static int getTrailingWhitespaceStart(CharSequence charSequence, int charStart, int charEnd) {
         for (int i = charEnd - 1; i >= charStart; i--) {
-            if (!Character.isWhitespace(string.charAt(i))) {
+            if (!Character.isWhitespace(charSequence.charAt(i))) {
                 return i + 1;
             }
         }
