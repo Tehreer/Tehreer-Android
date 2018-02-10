@@ -24,10 +24,9 @@ import com.mta.tehreer.internal.collections.SafePointList;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
-import com.mta.tehreer.internal.util.Paragraphs;
+import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.util.Runs;
 import com.mta.tehreer.internal.util.StringUtils;
-import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.ArrayList;
@@ -38,10 +37,10 @@ import java.util.List;
 class LineResolver {
 
     private Spanned mSpanned;
-    private List<BidiParagraph> mBidiParagraphs;
+    private ParagraphCollection mBidiParagraphs;
     private List<IntrinsicRun> mIntrinsicRuns;
 
-    LineResolver(Spanned spanned, List<BidiParagraph> paragraphs, List<IntrinsicRun> runs) {
+    LineResolver(Spanned spanned, ParagraphCollection paragraphs, List<IntrinsicRun> runs) {
         mSpanned = spanned;
         mBidiParagraphs = paragraphs;
         mIntrinsicRuns = runs;
@@ -105,7 +104,7 @@ class LineResolver {
 
     ComposedLine createSimpleLine(int start, int end) {
         final List<GlyphRun> runList = new ArrayList<>();
-        Paragraphs.iterateLineRuns(mBidiParagraphs, start, end, new Paragraphs.RunConsumer() {
+        mBidiParagraphs.forEachLineRun(start, end, new ParagraphCollection.RunConsumer() {
 
             @Override
             public void accept(BidiRun bidiRun) {
@@ -117,7 +116,7 @@ class LineResolver {
         });
 
         return createComposedLine(mSpanned, start, end, runList,
-                                  Paragraphs.levelOfChar(mBidiParagraphs, start));
+                                  mBidiParagraphs.charLevel(start));
     }
 
     ComposedLine createCompactLine(int start, int end, float extent, byte[] breaks, BreakMode mode,
@@ -138,7 +137,7 @@ class LineResolver {
         return null;
     }
 
-    private class TruncationHandler implements Paragraphs.RunConsumer {
+    private class TruncationHandler implements ParagraphCollection.RunConsumer {
 
         final int charStart;
         final int charEnd;
@@ -202,7 +201,7 @@ class LineResolver {
         }
 
         void addAllRuns() {
-            Paragraphs.iterateLineRuns(mBidiParagraphs, charStart, charEnd, this);
+            mBidiParagraphs.forEachLineRun(charStart, charEnd, this);
         }
     }
 
@@ -222,7 +221,7 @@ class LineResolver {
             addTokenRuns(token, runList, tokenInsertIndex);
 
             return createComposedLine(mSpanned, truncatedStart, end, runList,
-                                      Paragraphs.levelOfChar(mBidiParagraphs, truncatedStart));
+                                      mBidiParagraphs.charLevel(truncatedStart));
         }
 
         return createSimpleLine(truncatedStart, end);
@@ -251,7 +250,7 @@ class LineResolver {
             addTokenRuns(token, runList, tokenInsertIndex);
 
             return createComposedLine(mSpanned, start, end, runList,
-                                      Paragraphs.levelOfChar(mBidiParagraphs, start));
+                                      mBidiParagraphs.charLevel(start));
         }
 
         return createSimpleLine(start, end);
@@ -276,7 +275,7 @@ class LineResolver {
             addTokenRuns(token, runList, tokenInsertIndex);
 
             return createComposedLine(mSpanned, start, truncatedEnd, runList,
-                                      Paragraphs.levelOfChar(mBidiParagraphs, start));
+                                      mBidiParagraphs.charLevel(start));
         }
 
         return createSimpleLine(start, truncatedEnd);

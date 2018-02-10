@@ -23,6 +23,7 @@ import android.text.Spanned;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
+import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.ShapeResolver;
 import com.mta.tehreer.internal.layout.TokenResolver;
 import com.mta.tehreer.internal.util.StringUtils;
@@ -40,23 +41,10 @@ import java.util.List;
  */
 public class Typesetter {
 
-    private class Finalizable {
-
-        @Override
-        protected void finalize() throws Throwable {
-            try {
-                dispose();
-            } finally {
-                super.finalize();
-            }
-        }
-    }
-
-    private final Finalizable finalizable = new Finalizable();
     private String mText;
     private Spanned mSpanned;
     private byte[] mBreakRecord;
-    private ArrayList<BidiParagraph> mBidiParagraphs;
+    private ParagraphCollection mBidiParagraphs;
     private ArrayList<IntrinsicRun> mIntrinsicRuns;
 
     /**
@@ -114,7 +102,7 @@ public class Typesetter {
         mText = text;
         mSpanned = spanned;
         mBreakRecord = new byte[text.length()];
-        mBidiParagraphs = new ArrayList<>();
+        mBidiParagraphs = new ParagraphCollection();
         mIntrinsicRuns = new ArrayList<>();
 
         if (defaultSpans == null) {

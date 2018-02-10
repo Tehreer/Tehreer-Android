@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.layout;
 
 import com.mta.tehreer.unicode.BidiLine;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
-public class Paragraphs {
+public class ParagraphCollection extends ArrayList<BidiParagraph> {
 
-    public interface RunConsumer {
-        void accept(BidiRun bidiRun);
-    }
-
-    public static int binarySearch(List<BidiParagraph> paragraphs, final int charIndex) {
-        return Collections.binarySearch(paragraphs, null, new Comparator<BidiParagraph>() {
+    public int binarySearch(final int charIndex) {
+        return Collections.binarySearch(this, null, new Comparator<BidiParagraph>() {
             @Override
             public int compare(BidiParagraph obj1, BidiParagraph obj2) {
                 if (charIndex < obj1.getCharStart()) {
@@ -47,22 +43,26 @@ public class Paragraphs {
         });
     }
 
-    public static byte levelOfChar(List<BidiParagraph> paragraphs, int charIndex) {
-        int paragraphIndex = binarySearch(paragraphs, charIndex);
-        BidiParagraph charParagraph = paragraphs.get(paragraphIndex);
+    public byte charLevel(int charIndex) {
+        int paragraphIndex = binarySearch(charIndex);
+        BidiParagraph charParagraph = get(paragraphIndex);
+
         return charParagraph.getBaseLevel();
     }
 
-    public static void iterateLineRuns(List<BidiParagraph> paragraphs,
-                                       int charStart, int charEnd, RunConsumer runConsumer) {
-        int paragraphIndex = binarySearch(paragraphs, charStart);
+    public interface RunConsumer {
+        void accept(BidiRun bidiRun);
+    }
+
+    public void forEachLineRun(int lineStart, int lineEnd, RunConsumer runConsumer) {
+        int paragraphIndex = binarySearch(lineStart);
         int feasibleStart;
         int feasibleEnd;
 
         do {
-            BidiParagraph bidiParagraph = paragraphs.get(paragraphIndex);
-            feasibleStart = Math.max(bidiParagraph.getCharStart(), charStart);
-            feasibleEnd = Math.min(bidiParagraph.getCharEnd(), charEnd);
+            BidiParagraph bidiParagraph = get(paragraphIndex);
+            feasibleStart = Math.max(bidiParagraph.getCharStart(), lineStart);
+            feasibleEnd = Math.min(bidiParagraph.getCharEnd(), lineEnd);
 
             BidiLine bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd);
             for (BidiRun bidiRun : bidiLine.getVisualRuns()) {
@@ -71,6 +71,19 @@ public class Paragraphs {
             bidiLine.dispose();
 
             paragraphIndex++;
-        } while (feasibleEnd != charEnd);
+        } while (feasibleEnd != lineEnd);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            int size = size();
+            for (int i = 0; i < size; i++) {
+                BidiParagraph paragraph = get(i);
+                paragraph.dispose();
+            }
+        } finally {
+            super.finalize();
+        }
     }
 }
