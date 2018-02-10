@@ -25,13 +25,10 @@ import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ShapeResolver;
 import com.mta.tehreer.internal.layout.TokenResolver;
-import com.mta.tehreer.internal.util.Paragraphs;
-import com.mta.tehreer.internal.util.Runs;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 import com.mta.tehreer.unicode.BidiParagraph;
-import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -245,11 +242,8 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        ArrayList<GlyphRun> lineRuns = new ArrayList<>();
-        addContinuousLineRuns(charStart, charEnd, lineRuns);
-
-		return new ComposedLine(mText, charStart, charEnd, lineRuns,
-                                Paragraphs.levelOfChar(mBidiParagraphs, charStart));
+        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        return resolver.createSimpleLine(charStart, charEnd);
 	}
 
     /**
@@ -285,7 +279,8 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
                 TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
     }
 
@@ -329,7 +324,8 @@ public class Typesetter {
             throw new IllegalArgumentException("Truncation token is empty");
         }
 
-        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
                 TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
     }
 
@@ -370,241 +366,8 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        return createCompactLine(charStart, charEnd, maxWidth, breakMode, truncationPlace, truncationToken);
-    }
-
-    public ComposedLine createCompactLine(int charStart, int charEnd, float maxWidth,
-                                          BreakMode breakMode, TruncationPlace truncationPlace,
-                                          ComposedLine truncationToken) {
-        float tokenlessWidth = maxWidth - truncationToken.getWidth();
-
-        switch (truncationPlace) {
-        case START:
-            return createStartTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                            breakMode, truncationToken);
-
-        case MIDDLE:
-            return createMiddleTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                             breakMode, truncationToken);
-
-        case END:
-            return createEndTruncatedLine(charStart, charEnd, tokenlessWidth,
-                                          breakMode, truncationToken);
-        }
-
-        return null;
-    }
-
-    private class TruncationHandler implements Paragraphs.RunConsumer {
-
-        final int charStart;
-        final int charEnd;
-        final int skipStart;
-        final int skipEnd;
-        final List<GlyphRun> runList;
-
-        int leadingTokenIndex = -1;
-        int trailingTokenIndex = -1;
-
-        TruncationHandler(int charStart, int charEnd, int skipStart, int skipEnd, List<GlyphRun> runList) {
-            this.charStart = charStart;
-            this.charEnd = charEnd;
-            this.skipStart = skipStart;
-            this.skipEnd = skipEnd;
-            this.runList = runList;
-        }
-
-        @Override
-        public void accept(BidiRun bidiRun) {
-            int visualStart = bidiRun.charStart;
-            int visualEnd = bidiRun.charEnd;
-
-            if (bidiRun.isRightToLeft()) {
-                // Handle second part of characters.
-                if (visualEnd >= skipEnd) {
-                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
-
-                    if (visualStart < skipEnd) {
-                        trailingTokenIndex = runList.size();
-                    }
-                }
-
-                // Handle first part of characters.
-                if (visualStart <= skipStart) {
-                    if (visualEnd > skipStart) {
-                        leadingTokenIndex = runList.size();
-                    }
-
-                    addVisualRuns(visualStart, Math.min(visualEnd, skipStart), runList);
-                }
-            } else {
-                // Handle first part of characters.
-                if (visualStart <= skipStart) {
-                    addVisualRuns(visualStart, Math.min(visualEnd, skipStart), runList);
-
-                    if (visualEnd > skipStart) {
-                        leadingTokenIndex = runList.size();
-                    }
-                }
-
-                // Handle second part of characters.
-                if (visualEnd >= skipEnd) {
-                    if (visualStart < skipEnd) {
-                        trailingTokenIndex = runList.size();
-                    }
-
-                    addVisualRuns(Math.max(visualStart, skipEnd), visualEnd, runList);
-                }
-            }
-        }
-
-        void addAllRuns() {
-            Paragraphs.iterateLineRuns(mBidiParagraphs, charStart, charEnd, this);
-        }
-    }
-
-    private ComposedLine createStartTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                  BreakMode breakMode, ComposedLine truncationToken) {
-        int truncatedStart = suggestBackwardBreak(charStart, charEnd, tokenlessWidth, breakMode);
-        if (truncatedStart > charStart) {
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-            int tokenInsertIndex = 0;
-
-            if (truncatedStart < charEnd) {
-                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, charStart, truncatedStart, runList);
-                truncationHandler.addAllRuns();
-
-                tokenInsertIndex = truncationHandler.trailingTokenIndex;
-            }
-            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
-
-            return new ComposedLine(mText, truncatedStart, charEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, truncatedStart));
-        }
-
-        return createSimpleLine(truncatedStart, charEnd);
-    }
-
-    private ComposedLine createMiddleTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                   BreakMode breakMode, ComposedLine truncationToken) {
-        float halfWidth = tokenlessWidth / 2.0f;
-        int firstMidEnd = suggestForwardBreak(charStart, charEnd, halfWidth, breakMode);
-        int secondMidStart = suggestBackwardBreak(charStart, charEnd, halfWidth, breakMode);
-
-        if (firstMidEnd < secondMidStart) {
-            // Exclude inner whitespaces as truncation token replaces them.
-            firstMidEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, firstMidEnd);
-            secondMidStart = StringUtils.getLeadingWhitespaceEnd(mText, secondMidStart, charEnd);
-
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-            int tokenInsertIndex = 0;
-
-            if (charStart < firstMidEnd || secondMidStart < charEnd) {
-                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, firstMidEnd, secondMidStart, runList);
-                truncationHandler.addAllRuns();
-
-                tokenInsertIndex = truncationHandler.leadingTokenIndex;
-            }
-            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
-
-            return new ComposedLine(mText, charStart, charEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
-        }
-
-        return createSimpleLine(charStart, charEnd);
-    }
-
-    private ComposedLine createEndTruncatedLine(int charStart, int charEnd, float tokenlessWidth,
-                                                BreakMode breakMode, ComposedLine truncationToken) {
-        int truncatedEnd = suggestForwardBreak(charStart, charEnd, tokenlessWidth, breakMode);
-        if (truncatedEnd < charEnd) {
-            // Exclude trailing whitespaces as truncation token replaces them.
-            truncatedEnd = StringUtils.getTrailingWhitespaceStart(mText, charStart, truncatedEnd);
-
-            ArrayList<GlyphRun> runList = new ArrayList<>();
-            int tokenInsertIndex = 0;
-
-            if (charStart < truncatedEnd) {
-                TruncationHandler truncationHandler = new TruncationHandler(charStart, charEnd, truncatedEnd, charEnd, runList);
-                truncationHandler.addAllRuns();
-
-                tokenInsertIndex = truncationHandler.leadingTokenIndex;
-            }
-            addTruncationTokenRuns(truncationToken, runList, tokenInsertIndex);
-
-            return new ComposedLine(mText, charStart, truncatedEnd, runList,
-                                    Paragraphs.levelOfChar(mBidiParagraphs, charStart));
-        }
-
-        return createSimpleLine(charStart, truncatedEnd);
-    }
-
-    private void addTruncationTokenRuns(ComposedLine truncationToken, ArrayList<GlyphRun> runList, int insertIndex) {
-        for (GlyphRun truncationRun : truncationToken.getRuns()) {
-            GlyphRun modifiedRun = new GlyphRun(truncationRun);
-            runList.add(insertIndex, modifiedRun);
-
-            insertIndex++;
-        }
-    }
-
-    private void addContinuousLineRuns(int charStart, int charEnd, final List<GlyphRun> runList) {
-        Paragraphs.iterateLineRuns(mBidiParagraphs, charStart, charEnd, new Paragraphs.RunConsumer() {
-            @Override
-            public void accept(BidiRun bidiRun) {
-                int visualStart = bidiRun.charStart;
-                int visualEnd = bidiRun.charEnd;
-
-                addVisualRuns(visualStart, visualEnd, runList);
-            }
-        });
-    }
-
-    private void addVisualRuns(int visualStart, int visualEnd, List<GlyphRun> runList) {
-        if (visualStart < visualEnd) {
-            // ASSUMPTIONS:
-            //      - Visual range may fall in one or more glyph runs.
-            //      - Consecutive intrinsic runs may have same bidi level.
-
-            int insertIndex = runList.size();
-            IntrinsicRun previousRun = null;
-
-            do {
-                int runIndex = Runs.binarySearch(mIntrinsicRuns, visualStart);
-
-                IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
-                int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
-                int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
-
-                boolean forward = false;
-
-                if (previousRun != null) {
-                    byte bidiLevel = intrinsicRun.bidiLevel;
-                    if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
-                        insertIndex = runList.size();
-                        forward = true;
-                    }
-                }
-
-                int spanStart = feasibleStart;
-                while (spanStart < feasibleEnd) {
-                    int spanEnd = mSpanned.nextSpanTransition(spanStart, feasibleEnd, Object.class);
-                    Object[] spans = mSpanned.getSpans(spanStart, spanEnd, Object.class);
-
-                    GlyphRun glyphRun = new GlyphRun(intrinsicRun, spanStart, spanEnd, spans);
-                    runList.add(insertIndex, glyphRun);
-
-                    if (forward) {
-                        insertIndex++;
-                    }
-
-                    spanStart = spanEnd;
-                }
-
-                previousRun = intrinsicRun;
-                visualStart = feasibleEnd;
-            } while (visualStart != visualEnd);
-        }
+        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace, truncationToken);
     }
 
     /**
