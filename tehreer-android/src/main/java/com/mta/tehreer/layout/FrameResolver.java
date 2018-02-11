@@ -30,25 +30,30 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import java.util.ArrayList;
 import java.util.List;
 
-class FrameResolver {
+public class FrameResolver {
 
+    private Typesetter mTypesetter;
     private Spanned mSpanned;
-    private ParagraphCollection mBidiParagraphs;
-    private RunCollection mIntrinsicRuns;
+    private ParagraphCollection mParagraphs;
+    private RunCollection mRuns;
     private byte[] mBreaks;
 
     private RectF mFrameRect;
     private TextAlignment mTextAlignment;
 
-    static FrameResolver with(Spanned spanned, ParagraphCollection paragraphs, RunCollection runs, byte[] breaks) {
-        return new FrameResolver(spanned, paragraphs, runs, breaks);
+    public FrameResolver() {
     }
 
-    private FrameResolver(Spanned spanned, ParagraphCollection paragraphs, RunCollection runs, byte[] breaks) {
-        mSpanned = spanned;
-        mBidiParagraphs = paragraphs;
-        mIntrinsicRuns = runs;
-        mBreaks = breaks;
+    public Typesetter getTypesetter() {
+        return mTypesetter;
+    }
+
+    public void setTypesetter(Typesetter typesetter) {
+        mTypesetter = typesetter;
+        mSpanned = typesetter.getSpanned();
+        mParagraphs = typesetter.getParagraphs();
+        mRuns = typesetter.getRuns();
+        mBreaks = typesetter.getBreaks();
     }
 
     public RectF getFrameRect() {
@@ -99,12 +104,12 @@ class FrameResolver {
 
     public ComposedFrame createFrame(int charStart, int charEnd) {
         FrameFiller frameFiller = new FrameFiller();
-        int paragraphIndex = mBidiParagraphs.binarySearch(charStart);
+        int paragraphIndex = mParagraphs.binarySearch(charStart);
         int segmentEnd = charStart;
 
         // Iterate over all paragraphs in provided range.
         do {
-            BidiParagraph paragraph = mBidiParagraphs.get(paragraphIndex);
+            BidiParagraph paragraph = mParagraphs.get(paragraphIndex);
             segmentEnd = Math.min(charEnd, paragraph.getCharEnd());
 
             // Get the spans of this paragraph.
@@ -140,7 +145,7 @@ class FrameResolver {
 
     private class FrameFiller {
 
-        final LineResolver lineResolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        final LineResolver lineResolver = new LineResolver(mSpanned, mParagraphs, mRuns);
 
         final List<ComposedLine> frameLines = new ArrayList<>();
         final float frameWidth = mFrameRect.width();
@@ -153,7 +158,7 @@ class FrameResolver {
         void addParagraphLines(int charStart, int charEnd, float flushFactor) {
             int lineStart = charStart;
             while (lineStart != charEnd) {
-                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mIntrinsicRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
+                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
                 ComposedLine composedLine = lineResolver.createSimpleLine(lineStart, lineEnd);
 
                 float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);

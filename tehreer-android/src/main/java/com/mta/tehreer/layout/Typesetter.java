@@ -121,6 +121,18 @@ public class Typesetter {
         return mSpanned;
     }
 
+    ParagraphCollection getParagraphs() {
+        return mBidiParagraphs;
+    }
+
+    RunCollection getRuns() {
+        return mIntrinsicRuns;
+    }
+
+    byte[] getBreaks() {
+        return mBreakRecord;
+    }
+
     private String checkRange(int charStart, int charEnd) {
         if (charStart < 0) {
             return ("Char Start: " + charStart);
@@ -382,7 +394,8 @@ public class Typesetter {
             throw new IllegalArgumentException("Frame rect is empty");
         }
 
-        FrameResolver resolver = FrameResolver.with(mSpanned, mBidiParagraphs, mIntrinsicRuns, mBreakRecord);
+        FrameResolver resolver = new FrameResolver();
+        resolver.setTypesetter(this);
         resolver.setFrameRect(frameRect);
         resolver.setTextAlignment(textAlignment);
 
