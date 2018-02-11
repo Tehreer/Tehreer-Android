@@ -17,13 +17,18 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.RectF;
+import android.text.Layout;
 import android.text.Spanned;
+import android.text.style.AlignmentSpan;
+import android.text.style.ParagraphStyle;
 
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
+import com.mta.tehreer.unicode.BidiParagraph;
 
 import java.util.ArrayList;
+import java.util.List;
 
 class FrameResolver {
 
@@ -62,52 +67,112 @@ class FrameResolver {
         this.mTextAlignment = textAlignment;
     }
 
-    public ComposedFrame createFrame(int charStart, int charEnd) {
-        LineResolver lineResolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+    private float getFlushFactor(Layout.Alignment layoutAlignment, byte paragraphLevel) {
+        boolean isLTR = ((paragraphLevel & 1) == 0);
 
-        float flushFactor;
-        switch (mTextAlignment) {
-        case RIGHT:
-            flushFactor = 1.0f;
-            break;
+        if (layoutAlignment != null) {
+            switch (layoutAlignment) {
+            case ALIGN_NORMAL:
+                return (isLTR ? 0.0f : 1.0f);
 
-        case CENTER:
-            flushFactor = 0.5f;
-            break;
+            case ALIGN_CENTER:
+                return 0.5f;
 
-        default:
-            flushFactor = 0.0f;
-            break;
+            case ALIGN_OPPOSITE:
+                return (isLTR ? 1.0f : 0.0f);
+            }
+        } else if (mTextAlignment != null) {
+            switch (mTextAlignment) {
+            case LEFT:
+                return 0.0f;
+
+            case RIGHT:
+                return 1.0f;
+
+            case CENTER:
+                return 0.5f;
+            }
         }
 
-        float frameWidth = mFrameRect.width();
-        float frameBottom = mFrameRect.bottom;
+        return 0.0f;
+    }
 
-        ArrayList<ComposedLine> frameLines = new ArrayList<>();
-        int lineStart = charStart;
-        float lineY = mFrameRect.top;
+    public ComposedFrame createFrame(int charStart, int charEnd) {
+        FrameFiller frameFiller = new FrameFiller();
+        int paragraphIndex = mBidiParagraphs.binarySearch(charStart);
+        int segmentEnd = charStart;
 
-        while (lineStart != charEnd) {
-            int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mIntrinsicRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
-            ComposedLine composedLine = lineResolver.createSimpleLine(lineStart, lineEnd);
+        // Iterate over all paragraphs in provided range.
+        do {
+            BidiParagraph paragraph = mBidiParagraphs.get(paragraphIndex);
+            segmentEnd = Math.min(charEnd, paragraph.getCharEnd());
 
-            float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
-            float lineAscent = composedLine.getAscent();
-            float lineHeight = lineAscent + composedLine.getDescent();
+            // Get the spans of this paragraph.
+            int spanEnd = mSpanned.nextSpanTransition(charStart, segmentEnd, ParagraphStyle.class);
+            ParagraphStyle[] spans = mSpanned.getSpans(charStart, spanEnd, ParagraphStyle.class);
 
-            if ((lineY + lineHeight) > frameBottom) {
+            Layout.Alignment alignment = null;
+
+            // Get the top most alignment.
+            for (int n = spans.length - 1; n >= 0; n--) {
+                if (spans[n] instanceof AlignmentSpan) {
+                    alignment = ((AlignmentSpan) spans[n]).getAlignment();
+                    break;
+                }
+            }
+
+            // Calculate flush factor from alignment.
+            float flushFactor = getFlushFactor(alignment, paragraph.getBaseLevel());
+
+            // Fill the lines of this paragraph.
+            frameFiller.addParagraphLines(charStart, segmentEnd, flushFactor);
+
+            if (frameFiller.filled) {
                 break;
             }
 
-            composedLine.setOriginX(mFrameRect.left + lineX);
-            composedLine.setOriginY(lineY + lineAscent);
+            charStart = segmentEnd;
+            paragraphIndex++;
+        } while (charStart < charEnd);
 
-            frameLines.add(composedLine);
+        return new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
+    }
 
-            lineStart = lineEnd;
-            lineY += lineHeight;
+    private class FrameFiller {
+
+        final LineResolver lineResolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
+        final List<ComposedLine> frameLines = new ArrayList<>();
+        final float frameWidth = mFrameRect.width();
+        final float frameLeft = mFrameRect.left;
+        final float frameBottom = mFrameRect.bottom;
+
+        float lineY = mFrameRect.top;
+        boolean filled = false;
+
+        void addParagraphLines(int charStart, int charEnd, float flushFactor) {
+            int lineStart = charStart;
+            while (lineStart != charEnd) {
+                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mIntrinsicRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
+                ComposedLine composedLine = lineResolver.createSimpleLine(lineStart, lineEnd);
+
+                float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
+                float lineAscent = composedLine.getAscent();
+                float lineHeight = lineAscent + composedLine.getDescent();
+
+                if ((lineY + lineHeight) > frameBottom) {
+                    filled = true;
+                    return;
+                }
+
+                composedLine.setOriginX(frameLeft + lineX);
+                composedLine.setOriginY(lineY + lineAscent);
+
+                frameLines.add(composedLine);
+
+                lineStart = lineEnd;
+                lineY += lineHeight;
+            }
         }
-
-        return new ComposedFrame(charStart, lineStart, frameLines);
     }
 }
