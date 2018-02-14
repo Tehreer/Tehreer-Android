@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,4 +32,12 @@ public enum TextAlignment {
      * Aligns text to the center of the line.
      */
     CENTER,
+    /**
+     * Aligns text to the left side of the line if its paragraph level even.
+     */
+    INTRINSIC,
+    /**
+     * Aligns text to the right side of the line if its paragraph level even.
+     */
+    EXTRINSIC,
 }
