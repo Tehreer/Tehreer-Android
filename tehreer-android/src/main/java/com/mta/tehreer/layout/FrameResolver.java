@@ -39,7 +39,11 @@ public class FrameResolver {
     private byte[] mBreaks;
 
     private RectF mFrameRect;
-    private TextAlignment mTextAlignment;
+    private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
+    private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
+    private BreakMode mTruncationMode = BreakMode.LINE;
+    private TruncationPlace mTruncationPlace = TruncationPlace.END;
+    private int mMaxLines;
 
     public FrameResolver() {
     }
@@ -72,6 +76,38 @@ public class FrameResolver {
         this.mTextAlignment = textAlignment;
     }
 
+    public VerticalAlignment getVerticalAlignment() {
+        return mVerticalAlignment;
+    }
+
+    public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
+        mVerticalAlignment = verticalAlignment;
+    }
+
+    public BreakMode getTruncationMode() {
+        return mTruncationMode;
+    }
+
+    public void setTruncationMode(BreakMode truncationMode) {
+        mTruncationMode = truncationMode;
+    }
+
+    public TruncationPlace getTruncationPlace() {
+        return mTruncationPlace;
+    }
+
+    public void setTruncationPlace(TruncationPlace truncationPlace) {
+        mTruncationPlace = truncationPlace;
+    }
+
+    public int getMaxLines() {
+        return mMaxLines;
+    }
+
+    public void setMaxLines(int maxLines) {
+        mMaxLines = maxLines;
+    }
+
     private float getFlushFactor(Layout.Alignment layoutAlignment, byte paragraphLevel) {
         boolean isLTR = ((paragraphLevel & 1) == 0);
 
@@ -96,6 +132,12 @@ public class FrameResolver {
 
             case CENTER:
                 return 0.5f;
+
+            case INTRINSIC:
+                return (isLTR ? 0.0f : 1.0f);
+
+            case EXTRINSIC:
+                return (isLTR ? 1.0f : 0.0f);
             }
         }
 
@@ -105,7 +147,7 @@ public class FrameResolver {
     public ComposedFrame createFrame(int charStart, int charEnd) {
         FrameFiller frameFiller = new FrameFiller();
         int paragraphIndex = mParagraphs.binarySearch(charStart);
-        int segmentEnd = charStart;
+        int segmentEnd;
 
         // Iterate over all paragraphs in provided range.
         do {
@@ -140,6 +182,8 @@ public class FrameResolver {
             paragraphIndex++;
         } while (charStart < charEnd);
 
+        frameFiller.handleTruncation(charEnd);
+
         return new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
     }
 
@@ -156,6 +200,8 @@ public class FrameResolver {
         boolean filled = false;
 
         void addParagraphLines(int charStart, int charEnd, float flushFactor) {
+            int maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
+
             int lineStart = charStart;
             while (lineStart != charEnd) {
                 int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
@@ -165,7 +211,9 @@ public class FrameResolver {
                 float lineAscent = composedLine.getAscent();
                 float lineHeight = lineAscent + composedLine.getDescent();
 
-                if ((lineY + lineHeight) > frameBottom) {
+                int totalLines = frameLines.size();
+
+                if (((lineY + lineHeight) > frameBottom && totalLines > 1) || totalLines > maxLines) {
                     filled = true;
                     return;
                 }
@@ -177,6 +225,17 @@ public class FrameResolver {
 
                 lineStart = lineEnd;
                 lineY += lineHeight;
+            }
+        }
+
+        void handleTruncation(int frameEnd) {
+            if (mTruncationPlace != null) {
+                int lastIndex = frameLines.size() - 1;
+                ComposedLine lastLine = frameLines.get(lastIndex);
+
+                // Replace the last line with truncated one.
+                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, frameWidth, mTruncationMode, mTruncationPlace);
+                frameLines.set(lastIndex, truncatedLine);
             }
         }
     }
