@@ -17,26 +17,27 @@
 package com.mta.tehreer.internal.layout;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class RunCollection extends ArrayList<IntrinsicRun> {
 
-    public int binarySearch(final int charIndex) {
-        return Collections.binarySearch(this, null, new Comparator<IntrinsicRun>() {
-            @Override
-            public int compare(IntrinsicRun obj1, IntrinsicRun obj2) {
-                if (charIndex < obj1.charStart) {
-                    return 1;
-                }
+    public int binarySearch(int charIndex) {
+        int low = 0;
+        int high = size() - 1;
 
-                if (charIndex >= obj1.charEnd) {
-                    return -1;
-                }
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            IntrinsicRun value = get(mid);
 
-                return 0;
+            if (charIndex >= value.charEnd) {
+                low = mid + 1;
+            } else if (charIndex < value.charStart) {
+                high = mid - 1;
+            } else {
+                return mid;
             }
-        });
+        }
+
+        return -(low + 1);
     }
 
     public float measureChars(int charStart, int charEnd) {

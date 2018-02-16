@@ -21,26 +21,28 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.List;
 
 public class ParagraphCollection extends ArrayList<BidiParagraph> {
 
-    public int binarySearch(final int charIndex) {
-        return Collections.binarySearch(this, null, new Comparator<BidiParagraph>() {
-            @Override
-            public int compare(BidiParagraph obj1, BidiParagraph obj2) {
-                if (charIndex < obj1.getCharStart()) {
-                    return 1;
-                }
+    public int binarySearch(int charIndex) {
+        int low = 0;
+        int high = size() - 1;
 
-                if (charIndex >= obj1.getCharEnd()) {
-                    return -1;
-                }
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            BidiParagraph value = get(mid);
 
-                return 0;
+            if (charIndex >= value.getCharEnd()) {
+                low = mid + 1;
+            } else if (charIndex < value.getCharStart()) {
+                high = mid - 1;
+            } else {
+                return mid;
             }
-        });
+        }
+
+        return -(low + 1);
     }
 
     public byte charLevel(int charIndex) {
