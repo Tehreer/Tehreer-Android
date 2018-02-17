@@ -67,9 +67,13 @@ public class ParagraphCollection extends ArrayList<BidiParagraph> {
             feasibleEnd = Math.min(bidiParagraph.getCharEnd(), lineEnd);
 
             BidiLine bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd);
-            for (BidiRun bidiRun : bidiLine.getVisualRuns()) {
-                runConsumer.accept(bidiRun);
+            List<BidiRun> bidiRuns = bidiLine.getVisualRuns();
+
+            int runCount = bidiRuns.size();
+            for (int i = 0; i < runCount; i++) {
+                runConsumer.accept(bidiRuns.get(i));
             }
+
             bidiLine.dispose();
 
             paragraphIndex++;
