@@ -240,7 +240,9 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver resolver = new LineResolver();
+        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
         return resolver.createSimpleLine(charStart, charEnd);
 	}
 
@@ -277,7 +279,9 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver resolver = new LineResolver();
+        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
                 TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
     }
@@ -322,7 +326,9 @@ public class Typesetter {
             throw new IllegalArgumentException("Truncation token is empty");
         }
 
-        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver resolver = new LineResolver();
+        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
                 TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
     }
@@ -364,7 +370,9 @@ public class Typesetter {
             throw new IllegalArgumentException(rangeError);
         }
 
-        LineResolver resolver = new LineResolver(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver resolver = new LineResolver();
+        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace, truncationToken);
     }
 

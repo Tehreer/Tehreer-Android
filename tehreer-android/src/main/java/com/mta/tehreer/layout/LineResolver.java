@@ -40,7 +40,10 @@ class LineResolver {
     private ParagraphCollection mBidiParagraphs;
     private RunCollection mIntrinsicRuns;
 
-    LineResolver(Spanned spanned, ParagraphCollection paragraphs, RunCollection runs) {
+    LineResolver() {
+    }
+
+    void reset(Spanned spanned, ParagraphCollection paragraphs, RunCollection runs) {
         mSpanned = spanned;
         mBidiParagraphs = paragraphs;
         mIntrinsicRuns = runs;
