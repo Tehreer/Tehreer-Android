@@ -71,7 +71,9 @@ class LineResolver {
         int trailingWhitespaceStart = StringUtils.getTrailingWhitespaceStart(text, charStart, charEnd);
         float trailingWhitespaceExtent = 0.0f;
 
-        for (GlyphRun glyphRun : runList) {
+        int runCount = runList.size();
+        for (int i = 0; i < runCount; i++) {
+            GlyphRun glyphRun = runList.get(i);
             glyphRun.setOriginX(lineExtent);
 
             float runAscent = glyphRun.getAscent();
