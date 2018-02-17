@@ -283,7 +283,7 @@ public class Typesetter {
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
-                TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, null));
+                TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, null));
     }
 
     /**
@@ -330,7 +330,7 @@ public class Typesetter {
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
-                TokenResolver.createToken(mSpanned, charStart, charEnd, truncationPlace, truncationToken));
+                TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, truncationToken));
     }
 
     /**
