@@ -167,9 +167,9 @@ public class FrameResolver {
             Layout.Alignment alignment = null;
 
             // Get the top most alignment.
-            for (int n = spans.length - 1; n >= 0; n--) {
-                if (spans[n] instanceof AlignmentSpan) {
-                    alignment = ((AlignmentSpan) spans[n]).getAlignment();
+            for (int i = spans.length - 1; i >= 0; i--) {
+                if (spans[i] instanceof AlignmentSpan) {
+                    alignment = ((AlignmentSpan) spans[i]).getAlignment();
                     break;
                 }
             }
@@ -203,6 +203,8 @@ public class FrameResolver {
         float lineY = mFrameRect.top;
         boolean filled = false;
 
+        float lastFlushFactor = 0.0f;
+
         void addParagraphLines(int charStart, int charEnd, float flushFactor) {
             int maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
 
@@ -215,9 +217,8 @@ public class FrameResolver {
                 float lineAscent = composedLine.getAscent();
                 float lineHeight = lineAscent + composedLine.getDescent();
 
-                int totalLines = frameLines.size();
-
-                if (((lineY + lineHeight) > frameBottom && totalLines > 1) || totalLines > maxLines) {
+                // Make sure that at least one line is added even if frame is smaller in height.
+                if ((lineY + lineHeight) > frameBottom && frameLines.size() > 1) {
                     filled = true;
                     return;
                 }
@@ -226,6 +227,13 @@ public class FrameResolver {
                 composedLine.setOriginY(lineY + lineAscent);
 
                 frameLines.add(composedLine);
+                lastFlushFactor = flushFactor;
+
+                // Stop the filling process if maximum lines have been added.
+                if (frameLines.size() == maxLines) {
+                    filled = true;
+                    return;
+                }
 
                 lineStart = lineEnd;
                 lineY += lineHeight;
@@ -237,8 +245,15 @@ public class FrameResolver {
                 int lastIndex = frameLines.size() - 1;
                 ComposedLine lastLine = frameLines.get(lastIndex);
 
-                // Replace the last line with truncated one.
+                // Create the truncated line.
                 ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, frameWidth, mTruncationMode, mTruncationPlace);
+                float lineX = truncatedLine.getFlushPenOffset(lastFlushFactor, frameWidth);
+                float lineAscent = truncatedLine.getAscent();
+
+                truncatedLine.setOriginX(frameLeft + lineX);
+                truncatedLine.setOriginY(lineY + lineAscent);
+
+                // Replace the last line with truncated one.
                 frameLines.set(lastIndex, truncatedLine);
             }
         }
