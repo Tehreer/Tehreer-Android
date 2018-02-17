@@ -28,7 +28,6 @@ public class IntrinsicRun {
     public final WritingDirection writingDirection;
     public final Typeface typeface;
     public final float typeSize;
-    public final float sizeByEm;
     public final int[] glyphIds;
     public final float[] glyphOffsets;
     public final float[] glyphAdvances;
@@ -43,7 +42,6 @@ public class IntrinsicRun {
         this.bidiLevel = bidiLevel;
         this.typeface = typeface;
         this.typeSize = typeSize;
-        this.sizeByEm = typeSize / typeface.getUnitsPerEm();
         this.writingDirection = writingDirection;
         this.glyphIds = glyphIds;
         this.glyphOffsets = offsets;
@@ -77,18 +75,6 @@ public class IntrinsicRun {
         }
 
         return glyphEnd;
-    }
-
-    public float ascent() {
-        return typeface.getAscent() * sizeByEm;
-    }
-
-    public float descent() {
-        return typeface.getDescent() * sizeByEm;
-    }
-
-    public float leading() {
-        return typeface.getLeading() * sizeByEm;
     }
 
     public float measureGlyphs(int glyphStart, int glyphEnd) {
