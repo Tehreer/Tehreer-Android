@@ -32,18 +32,19 @@ import java.util.List;
 
 public class FrameResolver {
 
+    private LineResolver mLineResolver = new LineResolver();
     private Typesetter mTypesetter;
     private Spanned mSpanned;
     private ParagraphCollection mParagraphs;
     private RunCollection mRuns;
     private byte[] mBreaks;
 
-    private RectF mFrameRect;
+    private RectF mFrameRect = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
     private TruncationPlace mTruncationPlace = TruncationPlace.END;
-    private int mMaxLines;
+    private int mMaxLines = 0;
 
     public FrameResolver() {
     }
@@ -58,14 +59,19 @@ public class FrameResolver {
         mParagraphs = typesetter.getParagraphs();
         mRuns = typesetter.getRuns();
         mBreaks = typesetter.getBreaks();
+        mLineResolver.reset(mSpanned, mParagraphs, mRuns);
     }
 
     public RectF getFrameRect() {
-        return mFrameRect;
+        return new RectF(mFrameRect);
     }
 
     public void setFrameRect(RectF frameRect) {
-        this.mFrameRect = frameRect;
+        if (frameRect == null) {
+            throw new NullPointerException("Frame rect is null");
+        }
+
+        mFrameRect.set(frameRect);
     }
 
     public TextAlignment getTextAlignment() {
@@ -73,7 +79,7 @@ public class FrameResolver {
     }
 
     public void setTextAlignment(TextAlignment textAlignment) {
-        this.mTextAlignment = textAlignment;
+        mTextAlignment = textAlignment;
     }
 
     public VerticalAlignment getVerticalAlignment() {
@@ -189,8 +195,6 @@ public class FrameResolver {
 
     private class FrameFiller {
 
-        final LineResolver lineResolver = new LineResolver(mSpanned, mParagraphs, mRuns);
-
         final List<ComposedLine> frameLines = new ArrayList<>();
         final float frameWidth = mFrameRect.width();
         final float frameLeft = mFrameRect.left;
@@ -205,7 +209,7 @@ public class FrameResolver {
             int lineStart = charStart;
             while (lineStart != charEnd) {
                 int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
-                ComposedLine composedLine = lineResolver.createSimpleLine(lineStart, lineEnd);
+                ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
 
                 float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
                 float lineAscent = composedLine.getAscent();
