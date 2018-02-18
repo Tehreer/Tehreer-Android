@@ -20,7 +20,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PointF;
+import android.graphics.RectF;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.AttributeSet;
@@ -33,9 +33,13 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.BreakMode;
+import com.mta.tehreer.layout.ComposedFrame;
 import com.mta.tehreer.layout.ComposedLine;
+import com.mta.tehreer.layout.FrameResolver;
+import com.mta.tehreer.layout.TextAlignment;
 import com.mta.tehreer.layout.TruncationPlace;
 import com.mta.tehreer.layout.Typesetter;
+import com.mta.tehreer.layout.VerticalAlignment;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 
@@ -47,27 +51,20 @@ import java.util.List;
  */
 public class TLabel extends View {
 
-    private int mGravity = Gravity.TOP | Gravity.START;
-    private int mMaxLines = 0;
-
     private Renderer mRenderer = new Renderer();
-    private BreakMode mTruncationMode = BreakMode.LINE;
-    private TruncationPlace mTruncationPlace = TruncationPlace.END;
+    private FrameResolver mResolver = new FrameResolver();
+
+    private int mGravity = Gravity.TOP | Gravity.START;
 
     private String mText = "";
     private Spanned mSpanned = null;
     private Typesetter mTypesetter = null;
 
-    private boolean mRtlText = false;
     private int mTextWidth = 0;
     private int mTextHeight = 0;
 
-    private ArrayList<ComposedLine> mComposedLines = new ArrayList<>();
-    private ArrayList<PointF> mLinePositions = new ArrayList<>();
-
-    private static float getLineHeight(ComposedLine composedLine) {
-        return composedLine.getAscent() + composedLine.getDescent();
-    }
+    private RectF mLayoutRect = new RectF();
+    private ComposedFrame mComposedFrame = null;
 
     public TLabel(Context context) {
         super(context);
@@ -153,14 +150,11 @@ public class TLabel extends View {
         int horizontalPadding = paddingLeft + paddingRight;
         int verticalPadding = paddingTop + paddingBottom;
 
-        int layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED
-                           ? Integer.MAX_VALUE
-                           : widthSize - horizontalPadding);
-        int layoutHeight = (heightMode == MeasureSpec.UNSPECIFIED
-                            ? Integer.MAX_VALUE
-                            : heightSize - verticalPadding);
-        updateLines(layoutWidth, layoutHeight);
+        int layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED ? 0 : widthSize - horizontalPadding);
+        int layoutHeight = (heightMode == MeasureSpec.UNSPECIFIED ? 0 : heightSize - verticalPadding);
+        updateFrame(layoutWidth, layoutHeight);
 
+        boolean needsRelayout = false;
         int actualWidth;
         int actualHeight;
 
@@ -169,8 +163,9 @@ public class TLabel extends View {
         } else {
             actualWidth = horizontalPadding + mTextWidth;
 
-            if (widthMode == MeasureSpec.AT_MOST) {
-                actualWidth = Math.min(widthSize, actualWidth);
+            if (widthMode == MeasureSpec.AT_MOST && widthSize < actualWidth) {
+                actualWidth = widthSize;
+                needsRelayout = true;
             }
         }
 
@@ -179,13 +174,15 @@ public class TLabel extends View {
         } else {
             actualHeight = verticalPadding + mTextHeight;
 
-            if (heightMode == MeasureSpec.AT_MOST) {
-                actualHeight = Math.min(heightSize, actualHeight);
+            if (heightMode == MeasureSpec.AT_MOST && heightSize < actualHeight) {
+                actualHeight = heightSize;
+                needsRelayout = true;
             }
         }
 
-        updateLinePositions(paddingLeft, paddingTop, paddingRight, paddingBottom,
-                            actualWidth, actualHeight);
+        if (needsRelayout) {
+            updateFrame(actualWidth - horizontalPadding, actualHeight - verticalPadding);
+        }
 
         setMeasuredDimension(actualWidth, actualHeight);
     }
@@ -198,131 +195,43 @@ public class TLabel extends View {
 
         canvas.save();
 
-        int lineCount = mComposedLines.size();
-        for (int i = 0; i < lineCount; i++) {
-            ComposedLine line = mComposedLines.get(i);
-            PointF position = mLinePositions.get(i);
-            if (position != null) {
-                line.draw(mRenderer, canvas, position.x, position.y);
-            }
+        if (mComposedFrame != null) {
+            mComposedFrame.draw(mRenderer, canvas, getPaddingLeft(), getPaddingTop());
         }
 
         canvas.restore();
 
         long t2 = System.nanoTime();
-        Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) / Math.pow(10, 6)));
+        Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) * 1E-6));
     }
 
-    private void updateLines(int layoutWidth, int layoutHeight) {
-        mRtlText = false;
-        mComposedLines.clear();
-        mLinePositions.clear();
+    private void updateFrame(int layoutWidth, int layoutHeight) {
+        mTextWidth = 0;
+        mTextHeight = 0;
 
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
 
-            int textLength = mTypesetter.getSpanned().length();
-            int maxLines = (mMaxLines == 0 ? Integer.MAX_VALUE : mMaxLines);
+            mResolver.setTypesetter(mTypesetter);
 
-            // Get boundary of first line.
-            int lineStart = 0;
-            int lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
+            mLayoutRect.set(0.0f, 0.0f, layoutWidth, layoutHeight);
+            mResolver.setFrameRect(mLayoutRect);
 
-            // Add first line even if layout height is smaller than its height.
-            ComposedLine composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
-            mRtlText = (composedLine.getParagraphLevel() & 1) == 1;
-            mComposedLines.add(composedLine);
+            mComposedFrame = mResolver.createFrame(0, mTypesetter.getSpanned().length());
 
-            // Setup text width and height based on first line.
-            float textWidth = composedLine.getWidth();
-            float textHeight = getLineHeight(composedLine);
-
-            lineStart = lineEnd;
-
-            // Add remaining lines fitting in layout height.
-            while (lineStart < textLength) {
-                lineEnd = mTypesetter.suggestForwardBreak(lineStart, textLength, layoutWidth, BreakMode.LINE);
-                composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
-
-                float lineWidth = composedLine.getWidth();
-                float lineHeight = getLineHeight(composedLine);
-
-                if ((textHeight + lineHeight) <= layoutHeight && mComposedLines.size() < maxLines) {
-                    textWidth = Math.max(textWidth, lineWidth);
-                    textHeight += lineHeight;
-                    mComposedLines.add(composedLine);
-
-                    lineStart = lineEnd;
-                } else {
-                    if (mTruncationPlace != null) {
-                        ComposedLine lastLine = mComposedLines.get(mComposedLines.size() - 1);
-
-                        // Replace the last line with truncated one.
-                        ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), textLength, layoutWidth, mTruncationMode, mTruncationPlace);
-                        mComposedLines.set(mComposedLines.size() - 1, truncatedLine);
-                    }
-                    break;
-                }
-            }
-
-            mTextWidth = (int) (textWidth + 1.0f);
-            mTextHeight = (int) (textHeight + 1.0f);
+            mTextWidth = (int) (mComposedFrame.getWidth() + 1.0f);
+            mTextHeight = (int) (mComposedFrame.getHeight() + 1.0f);
 
             long t2 = System.nanoTime();
-            Log.i("Tehreer", "Time taken to create lines: " + ((t2 - t1) / Math.pow(10, 6)));
-        }
-    }
-
-    private void updateLinePositions(int paddingLeft, int paddingTop, int paddingRight, int paddingBottom,
-                                     int containerWidth, int containerHeight) {
-        int unpaddedWidth = containerWidth - (paddingLeft + paddingRight);
-        int unpaddedHeight = containerHeight - (paddingTop + paddingBottom);
-
-        float penLeft = paddingLeft;
-        float penTop = paddingTop;
-        float flushFactor = 0.0f;
-
-        int relativeGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
-        int horizontalGravity = mGravity & Gravity.HORIZONTAL_GRAVITY_MASK;
-        int verticalGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;
-
-        // Resolve relative layout direction.
-        if (relativeGravity == Gravity.START) {
-            horizontalGravity = !mRtlText ? Gravity.LEFT : Gravity.RIGHT;
-        } else if (relativeGravity == Gravity.END) {
-            horizontalGravity = !mRtlText ? Gravity.RIGHT : Gravity.LEFT;
-        }
-
-        // Resolve initial pen left and flush factor.
-        if (horizontalGravity == Gravity.RIGHT) {
-            penLeft += unpaddedWidth - mTextWidth;
-            flushFactor = 1.0f;
-        } else if (horizontalGravity != Gravity.LEFT) {
-            penLeft += (unpaddedWidth - mTextWidth) / 2.0f;
-            flushFactor = 0.5f;
-        }
-
-        // Resolve initial pen top.
-        if (verticalGravity == Gravity.BOTTOM) {
-            penTop += unpaddedHeight - mTextHeight;
-        } else if (verticalGravity != Gravity.TOP) {
-            penTop += (unpaddedHeight - mTextHeight) / 2.0f;
-        }
-
-        mLinePositions.ensureCapacity(mComposedLines.size());
-
-        for (ComposedLine composedLine : mComposedLines) {
-            float lineX = penLeft + composedLine.getFlushPenOffset(flushFactor, mTextWidth);
-            float lineY = penTop + composedLine.getAscent();
-            mLinePositions.add(new PointF(lineX, lineY));
-
-            penTop += getLineHeight(composedLine);
+            Log.i("Tehreer", "Time taken to resolve frame: " + ((t2 - t1) * 1E-6));
         }
     }
 
     private void updateTypesetter() {
         if (mText != null) {
             mTypesetter = null;
+
+            long t1 = System.nanoTime();
 
             Typeface typeface = getTypeface();
             float textSize = getTextSize();
@@ -341,30 +250,23 @@ public class TLabel extends View {
                 }
             }
 
+            long t2 = System.nanoTime();
+            Log.i("Tehreer", "Time taken to create typesetter: " + ((t2 - t1) * 1E-6));
+
             requestLayout();
             invalidate();
         }
     }
 
     public int getCharIndexFromPosition(float x, float y) {
-        int lineCount = mComposedLines.size();
-        int lineIndex;
+        float adjustedX = x - getPaddingLeft();
+        float adjustedY = y - getPaddingTop();
 
-        for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
-            PointF position = mLinePositions.get(lineIndex);
-            if (position != null && position.y >= y) {
-                break;
-            }
-        }
+        int index = mComposedFrame.getLineIndexFromPosition(adjustedX, adjustedY);
+        ComposedLine line = mComposedFrame.getLines().get(index);
+        float originX = line.getOriginX();
 
-        if (lineIndex == lineCount) {
-            lineIndex -= 1;
-        }
-
-        ComposedLine line = mComposedLines.get(lineIndex);
-        PointF position = mLinePositions.get(lineIndex);
-
-        return line.getCharIndexFromDistance(x - position.x);
+        return line.getCharIndexFromDistance(adjustedX - originX);
     }
 
     /**
@@ -384,6 +286,53 @@ public class TLabel extends View {
      */
     public void setGravity(int gravity) {
         mGravity = gravity;
+
+        int horizontalGravity = mGravity & Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK;
+        int verticalGravity = mGravity & Gravity.VERTICAL_GRAVITY_MASK;
+
+        TextAlignment textAlignment;
+        VerticalAlignment verticalAlignment;
+
+        // Resolve horizontal gravity.
+        switch (horizontalGravity) {
+        case Gravity.LEFT:
+            textAlignment = TextAlignment.LEFT;
+            break;
+
+        case Gravity.RIGHT:
+            textAlignment = TextAlignment.RIGHT;
+            break;
+
+        case Gravity.CENTER_HORIZONTAL:
+            textAlignment = TextAlignment.CENTER;
+            break;
+
+        case Gravity.END:
+            textAlignment = TextAlignment.EXTRINSIC;
+            break;
+
+        default:
+            textAlignment = TextAlignment.INTRINSIC;
+            break;
+        }
+
+        // Resolve vertical gravity.
+        switch (verticalGravity) {
+        case Gravity.TOP:
+            verticalAlignment = VerticalAlignment.TOP;
+            break;
+
+        case Gravity.BOTTOM:
+            verticalAlignment = VerticalAlignment.BOTTOM;
+            break;
+
+        default:
+            verticalAlignment = VerticalAlignment.MIDDLE;
+            break;
+        }
+
+        mResolver.setTextAlignment(textAlignment);
+        mResolver.setVerticalAlignment(verticalAlignment);
 
         requestLayout();
         invalidate();
@@ -499,7 +448,7 @@ public class TLabel extends View {
      * @return The current truncation mode.
      */
     public BreakMode getTruncationMode() {
-        return mTruncationMode;
+        return mResolver.getTruncationMode();
     }
 
     /**
@@ -508,7 +457,7 @@ public class TLabel extends View {
      * @param truncationMode A value of {@link BreakMode}.
      */
     public void setTruncationMode(BreakMode truncationMode) {
-        mTruncationMode = (truncationMode == null ? BreakMode.LINE : truncationMode);
+        mResolver.setTruncationMode(truncationMode == null ? BreakMode.LINE : truncationMode);
         requestLayout();
         invalidate();
     }
@@ -519,7 +468,7 @@ public class TLabel extends View {
      * @return The current truncation place.
      */
     public TruncationPlace getTruncationPlace() {
-        return mTruncationPlace;
+        return mResolver.getTruncationPlace();
     }
 
     /**
@@ -530,7 +479,7 @@ public class TLabel extends View {
      * @param truncationPlace A value of {@link TruncationPlace}.
      */
     public void setTruncationPlace(TruncationPlace truncationPlace) {
-        mTruncationPlace = truncationPlace;
+        mResolver.setTruncationPlace(truncationPlace);
         requestLayout();
         invalidate();
     }
@@ -541,7 +490,7 @@ public class TLabel extends View {
      * @return The maximum number of lines that should be displayed.
      */
     public int getMaxLines() {
-        return mMaxLines;
+        return mResolver.getMaxLines();
     }
 
     /**
@@ -550,7 +499,7 @@ public class TLabel extends View {
      * @param maxLines The maximum number of lines that should be displayed.
      */
     public void setMaxLines(int maxLines) {
-        mMaxLines = maxLines;
+        mResolver.setMaxLines(maxLines);
         requestLayout();
         invalidate();
     }
