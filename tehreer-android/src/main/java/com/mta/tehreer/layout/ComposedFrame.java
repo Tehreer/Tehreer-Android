@@ -94,6 +94,23 @@ public class ComposedFrame {
     public List<ComposedLine> getLines() {
         return lineList;
     }
+
+    public int getLineIndexFromPosition(float x, float y) {
+        int lineCount = lineList.size();
+        int lineIndex;
+
+        for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+            ComposedLine line = lineList.get(lineIndex);
+            if (line.getOriginY() >= y) {
+                break;
+            }
+        }
+
+        if (lineIndex == lineCount) {
+            lineIndex = lineCount - 1;
+        }
+
+        return lineIndex;
     }
 
     /**
