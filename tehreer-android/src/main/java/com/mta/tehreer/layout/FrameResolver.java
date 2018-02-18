@@ -39,7 +39,7 @@ public class FrameResolver {
     private RunCollection mRuns;
     private byte[] mBreaks;
 
-    private RectF mFrameRect = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+    private RectF mFrameRect = new RectF(0, 0, 0, 0);
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
@@ -112,6 +112,21 @@ public class FrameResolver {
 
     public void setMaxLines(int maxLines) {
         mMaxLines = maxLines;
+    }
+
+    private float getVerticalMultiplier() {
+        float multiplier;
+
+        switch (mVerticalAlignment) {
+        case BOTTOM:
+            return 1.0f;
+
+        case MIDDLE:
+            return 0.5f;
+
+        default:
+            return 0.0f;
+        }
     }
 
     private float getFlushFactor(Layout.Alignment layoutAlignment, byte paragraphLevel) {
@@ -189,41 +204,57 @@ public class FrameResolver {
         } while (charStart < charEnd);
 
         frameFiller.handleTruncation(charEnd);
+        frameFiller.resolveAlignments();
 
-        return new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
+        ComposedFrame frame = new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
+        frame.setContainerRect(mFrameRect.left, mFrameRect.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
+
+        return frame;
     }
 
     private class FrameFiller {
 
         final List<ComposedLine> frameLines = new ArrayList<>();
-        final float frameWidth = mFrameRect.width();
-        final float frameLeft = mFrameRect.left;
-        final float frameBottom = mFrameRect.bottom;
+        float layoutWidth;
+        float layoutHeight;
 
-        float lineY = mFrameRect.top;
+        float lineY = 0.0f;
         boolean filled = false;
 
         float lastFlushFactor = 0.0f;
+
+        FrameFiller() {
+            layoutWidth = mFrameRect.width();
+            if (layoutWidth <= 0.0f) {
+                layoutWidth = Float.POSITIVE_INFINITY;
+            }
+
+            layoutHeight = mFrameRect.height();
+            if (layoutHeight <= 0.0f) {
+                layoutHeight = Float.POSITIVE_INFINITY;
+            }
+        }
 
         void addParagraphLines(int charStart, int charEnd, float flushFactor) {
             int maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
 
             int lineStart = charStart;
             while (lineStart != charEnd) {
-                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, frameWidth, BreakMode.LINE);
+                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, layoutWidth, BreakMode.LINE);
                 ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
 
-                float lineX = composedLine.getFlushPenOffset(flushFactor, frameWidth);
+                float lineX = composedLine.getFlushPenOffset(flushFactor, layoutWidth);
                 float lineAscent = composedLine.getAscent();
-                float lineHeight = lineAscent + composedLine.getDescent();
+                float lineHeight = composedLine.getHeight();
 
                 // Make sure that at least one line is added even if frame is smaller in height.
-                if ((lineY + lineHeight) > frameBottom && frameLines.size() > 1) {
+                if ((lineY + lineHeight) > layoutHeight && frameLines.size() > 0) {
                     filled = true;
                     return;
                 }
 
-                composedLine.setOriginX(frameLeft + lineX);
+                // Set the position of composed line.
+                composedLine.setOriginX(lineX);
                 composedLine.setOriginY(lineY + lineAscent);
 
                 frameLines.add(composedLine);
@@ -245,16 +276,51 @@ public class FrameResolver {
                 int lastIndex = frameLines.size() - 1;
                 ComposedLine lastLine = frameLines.get(lastIndex);
 
+                // No need to truncate if frame range is already covered.
+                if (lastLine.getCharEnd() == frameEnd) {
+                    return;
+                }
+
                 // Create the truncated line.
-                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, frameWidth, mTruncationMode, mTruncationPlace);
-                float lineX = truncatedLine.getFlushPenOffset(lastFlushFactor, frameWidth);
+                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, layoutWidth, mTruncationMode, mTruncationPlace);
+                float lineX = truncatedLine.getFlushPenOffset(lastFlushFactor, layoutWidth);
                 float lineAscent = truncatedLine.getAscent();
 
-                truncatedLine.setOriginX(frameLeft + lineX);
+                // Move the y to last line's position.
+                lineY = lastLine.getOriginY() - lastLine.getAscent();
+
+                // Set the position of truncated line.
+                truncatedLine.setOriginX(lineX);
                 truncatedLine.setOriginY(lineY + lineAscent);
 
                 // Replace the last line with truncated one.
                 frameLines.set(lastIndex, truncatedLine);
+            }
+        }
+
+        void resolveAlignments() {
+            // Find out the occupied height.
+            int lineCount = frameLines.size();
+            ComposedLine lastLine = frameLines.get(lineCount - 1);
+            float occupiedHeight = lastLine.getOriginY() - lastLine.getAscent() + lastLine.getHeight();
+
+            // Set the layout height if unknown.
+            if (layoutHeight == Float.POSITIVE_INFINITY) {
+                layoutHeight = occupiedHeight;
+            }
+
+            // Find out the offset for vertical alignment.
+            float verticalMultiplier = getVerticalMultiplier();
+            float remainingHeight = layoutHeight - occupiedHeight;
+            float dy = remainingHeight * verticalMultiplier;
+
+            // TODO: Find out unknown layout width.
+
+            for (int i = 0; i < lineCount; i++) {
+                ComposedLine composedLine = frameLines.get(i);
+                float lineY = composedLine.getOriginY() + dy;
+
+                composedLine.setOriginY(lineY);
             }
         }
     }
