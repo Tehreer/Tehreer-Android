@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,26 @@ import java.util.List;
  */
 public class ComposedFrame {
 
-    private int mCharStart;
-    private int mCharEnd;
-    private List<ComposedLine> mLineList;
+    private final int charStart;
+    private final int charEnd;
+    private final List<ComposedLine> lineList;
+
+    private float mOriginX;
+    private float mOriginY;
+    private float mWidth;
+    private float mHeight;
 
     ComposedFrame(int charStart, int charEnd, List<ComposedLine> lineList) {
-        mCharStart = charStart;
-        mCharEnd = charEnd;
-        mLineList = Collections.unmodifiableList(lineList);
+        this.charStart = charStart;
+        this.charEnd = charEnd;
+        this.lineList = Collections.unmodifiableList(lineList);
+    }
+
+    void setContainerRect(float originX, float originY, float width, float height) {
+        mOriginX = originX;
+        mOriginY = originY;
+        mWidth = width;
+        mHeight = height;
     }
 
     /**
@@ -46,7 +58,7 @@ public class ComposedFrame {
      * @return The index to the first character of this frame in source text.
      */
     public int getCharStart() {
-        return mCharStart;
+        return charStart;
     }
 
     /**
@@ -55,7 +67,23 @@ public class ComposedFrame {
      * @return The index after the last character of this frame in source text.
      */
     public int getCharEnd() {
-        return mCharEnd;
+        return charEnd;
+    }
+
+    public float getOriginX() {
+        return mOriginX;
+    }
+
+    public float getOriginY() {
+        return mOriginY;
+    }
+
+    public float getWidth() {
+        return mWidth;
+    }
+
+    public float getHeight() {
+        return mHeight;
     }
 
     /**
@@ -64,7 +92,8 @@ public class ComposedFrame {
      * @return An unmodifiable list that contains all the lines of this frame.
      */
     public List<ComposedLine> getLines() {
-        return mLineList;
+        return lineList;
+    }
     }
 
     /**
@@ -76,7 +105,7 @@ public class ComposedFrame {
      * @param y The y- position at which to draw this frame.
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
-        for (ComposedLine composedLine : mLineList) {
+        for (ComposedLine composedLine : lineList) {
             canvas.translate(x, y);
             composedLine.draw(renderer, canvas, composedLine.getOriginX(), composedLine.getOriginY());
             canvas.translate(-x, -y);
@@ -85,9 +114,9 @@ public class ComposedFrame {
 
     @Override
     public String toString() {
-        return "ComposedFrame{charStart=" + mCharStart
-                + ", charEnd=" + mCharEnd
-                + ", lines=" + Description.forIterable(mLineList)
+        return "ComposedFrame{charStart=" + charStart
+                + ", charEnd=" + charEnd
+                + ", lines=" + Description.forIterable(lineList)
                 + "}";
     }
 }
