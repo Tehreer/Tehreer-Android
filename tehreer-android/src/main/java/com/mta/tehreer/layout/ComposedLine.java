@@ -31,12 +31,13 @@ public class ComposedLine {
 	private final int charStart;
 	private final int charEnd;
     private final byte paragraphLevel;
-    private final float ascent;
-    private final float descent;
-    private final float leading;
     private final float extent;
     private final float trailingWhitespaceExtent;
 	private final List<GlyphRun> runList;
+
+    private float mAscent;
+    private float mDescent;
+    private float mLeading;
 
     private float mOriginX;
     private float mOriginY;
@@ -47,12 +48,13 @@ public class ComposedLine {
 	    this.charStart = charStart;
 	    this.charEnd = charEnd;
 	    this.paragraphLevel = paragraphLevel;
-	    this.ascent = ascent;
-	    this.descent = descent;
-	    this.leading = leading;
 	    this.extent = extent;
 	    this.trailingWhitespaceExtent = trailingWhitespaceExtent;
 	    this.runList = runList;
+
+	    mAscent = ascent;
+	    mDescent = descent;
+	    mLeading = leading;
     }
 
     /**
@@ -114,7 +116,11 @@ public class ComposedLine {
      * @return The ascent of this line.
      */
     public float getAscent() {
-        return ascent;
+        return mAscent;
+    }
+
+    void setAscent(float ascent) {
+        mAscent = ascent;
     }
 
     /**
@@ -123,7 +129,11 @@ public class ComposedLine {
      * @return The descent of this line.
      */
     public float getDescent() {
-        return descent;
+        return mDescent;
+    }
+
+    void setDescent(float descent) {
+        mDescent = descent;
     }
 
     /**
@@ -132,7 +142,11 @@ public class ComposedLine {
      * @return The leading of this line.
      */
     public float getLeading() {
-        return leading;
+        return mLeading;
+    }
+
+    void setLeading(float leading) {
+        mLeading = leading;
     }
 
     /**
@@ -150,7 +164,7 @@ public class ComposedLine {
      * @return The typographic height of this line.
      */
     public float getHeight() {
-        return (ascent + descent + leading);
+        return (mAscent + mDescent + mLeading);
     }
 
     /**

@@ -45,6 +45,8 @@ public class FrameResolver {
     private BreakMode mTruncationMode = BreakMode.LINE;
     private TruncationPlace mTruncationPlace = TruncationPlace.END;
     private int mMaxLines = 0;
+    private float mExtraLineSpacing = 0.0f;
+    private float mLineHeightMultiplier = 0.0f;
 
     public FrameResolver() {
     }
@@ -114,9 +116,23 @@ public class FrameResolver {
         mMaxLines = maxLines;
     }
 
-    private float getVerticalMultiplier() {
-        float multiplier;
+    public float getExtraLineSpacing() {
+        return mExtraLineSpacing;
+    }
 
+    public void setExtraLineSpacing(float extraLineSpacing) {
+        mExtraLineSpacing = extraLineSpacing;
+    }
+
+    public float getLineHeightMultiplier() {
+        return mLineHeightMultiplier;
+    }
+
+    public void setLineHeightMultiplier(float lineHeightMultiplier) {
+        mLineHeightMultiplier = lineHeightMultiplier;
+    }
+
+    private float getVerticalMultiplier() {
         switch (mVerticalAlignment) {
         case BOTTOM:
             return 1.0f;
@@ -242,9 +258,8 @@ public class FrameResolver {
             while (lineStart != charEnd) {
                 int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, layoutWidth, BreakMode.LINE);
                 ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
+                prepareLine(composedLine, flushFactor);
 
-                float lineX = composedLine.getFlushPenOffset(flushFactor, layoutWidth);
-                float lineAscent = composedLine.getAscent();
                 float lineHeight = composedLine.getHeight();
 
                 // Make sure that at least one line is added even if frame is smaller in height.
@@ -252,10 +267,6 @@ public class FrameResolver {
                     filled = true;
                     return;
                 }
-
-                // Set the position of composed line.
-                composedLine.setOriginX(lineX);
-                composedLine.setOriginY(lineY + lineAscent);
 
                 frameLines.add(composedLine);
                 lastFlushFactor = flushFactor;
@@ -271,6 +282,28 @@ public class FrameResolver {
             }
         }
 
+        void prepareLine(ComposedLine composedLine, float flushFactor) {
+            // Resolve line spacing and line height multiple.
+            if (mLineHeightMultiplier != 0.0f) {
+                float oldHeight = composedLine.getHeight();
+                float newHeight = oldHeight * mLineHeightMultiplier;
+                float difference = newHeight - oldHeight;
+
+                composedLine.setAscent(composedLine.getAscent() + difference);
+            }
+            if (mExtraLineSpacing != 0.0f) {
+                composedLine.setLeading(composedLine.getLeading() + mExtraLineSpacing);
+            }
+
+            // Compute the origin of line.
+            float originX = composedLine.getFlushPenOffset(flushFactor, layoutWidth);
+            float originY = lineY + composedLine.getAscent();
+
+            // Set the origin of line.
+            composedLine.setOriginX(originX);
+            composedLine.setOriginY(originY);
+        }
+
         void handleTruncation(int frameEnd) {
             if (mTruncationPlace != null) {
                 int lastIndex = frameLines.size() - 1;
@@ -281,17 +314,12 @@ public class FrameResolver {
                     return;
                 }
 
-                // Create the truncated line.
-                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, layoutWidth, mTruncationMode, mTruncationPlace);
-                float lineX = truncatedLine.getFlushPenOffset(lastFlushFactor, layoutWidth);
-                float lineAscent = truncatedLine.getAscent();
-
                 // Move the y to last line's position.
                 lineY = lastLine.getOriginY() - lastLine.getAscent();
 
-                // Set the position of truncated line.
-                truncatedLine.setOriginX(lineX);
-                truncatedLine.setOriginY(lineY + lineAscent);
+                // Create the truncated line.
+                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, layoutWidth, mTruncationMode, mTruncationPlace);
+                prepareLine(truncatedLine, lastFlushFactor);
 
                 // Replace the last line with truncated one.
                 frameLines.set(lastIndex, truncatedLine);
