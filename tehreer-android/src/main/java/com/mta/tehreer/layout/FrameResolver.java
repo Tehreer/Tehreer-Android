@@ -16,10 +16,12 @@
 
 package com.mta.tehreer.layout;
 
+import android.graphics.Paint;
 import android.graphics.RectF;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.AlignmentSpan;
+import android.text.style.LineHeightSpan;
 import android.text.style.ParagraphStyle;
 
 import com.mta.tehreer.internal.layout.BreakResolver;
@@ -191,25 +193,12 @@ public class FrameResolver {
             BidiParagraph paragraph = mParagraphs.get(paragraphIndex);
             segmentEnd = Math.min(charEnd, paragraph.getCharEnd());
 
-            // Get the spans of this paragraph.
-            int spanEnd = mSpanned.nextSpanTransition(charStart, segmentEnd, ParagraphStyle.class);
-            ParagraphStyle[] spans = mSpanned.getSpans(charStart, spanEnd, ParagraphStyle.class);
-
-            Layout.Alignment alignment = null;
-
-            // Get the top most alignment.
-            for (int i = spans.length - 1; i >= 0; i--) {
-                if (spans[i] instanceof AlignmentSpan) {
-                    alignment = ((AlignmentSpan) spans[i]).getAlignment();
-                    break;
-                }
-            }
-
-            // Calculate flush factor from alignment.
-            float flushFactor = getFlushFactor(alignment, paragraph.getBaseLevel());
-
-            // Fill the lines of this paragraph.
-            frameFiller.addParagraphLines(charStart, segmentEnd, flushFactor);
+            // Setup the frame filler and add the lines.
+            frameFiller.charStart = charStart;
+            frameFiller.charEnd = segmentEnd;
+            frameFiller.baseLevel = paragraph.getBaseLevel();
+            frameFiller.spans = mSpanned.getSpans(charStart, segmentEnd, ParagraphStyle.class);
+            frameFiller.addParagraphLines();
 
             if (frameFiller.filled) {
                 break;
@@ -233,11 +222,18 @@ public class FrameResolver {
         final List<ComposedLine> frameLines = new ArrayList<>();
         float layoutWidth;
         float layoutHeight;
+        int maxLines;
+
+        int charStart;
+        int charEnd;
+        byte baseLevel;
+        ParagraphStyle[] spans;
 
         float lineY = 0.0f;
         boolean filled = false;
 
         float lastFlushFactor = 0.0f;
+        Paint.FontMetricsInt fontMetrics;
 
         FrameFiller() {
             layoutWidth = mFrameRect.width();
@@ -249,11 +245,25 @@ public class FrameResolver {
             if (layoutHeight <= 0.0f) {
                 layoutHeight = Float.POSITIVE_INFINITY;
             }
+
+            maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
         }
 
-        void addParagraphLines(int charStart, int charEnd, float flushFactor) {
-            int maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
+        void addParagraphLines() {
+            Layout.Alignment alignment = null;
 
+            // Get the top most alignment.
+            for (int i = spans.length - 1; i >= 0; i--) {
+                if (spans[i] instanceof AlignmentSpan) {
+                    alignment = ((AlignmentSpan) spans[i]).getAlignment();
+                    break;
+                }
+            }
+
+            // Calculate the flush factor from alignment.
+            float flushFactor = getFlushFactor(alignment, baseLevel);
+
+            // Iterate over each line of this paragraph.
             int lineStart = charStart;
             while (lineStart != charEnd) {
                 int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, layoutWidth, BreakMode.LINE);
@@ -283,6 +293,35 @@ public class FrameResolver {
         }
 
         void prepareLine(ComposedLine composedLine, float flushFactor) {
+            // Resolve line height spans.
+            for (ParagraphStyle style : spans) {
+                if (style instanceof LineHeightSpan) {
+                    if (fontMetrics == null) {
+                        fontMetrics = new Paint.FontMetricsInt();
+                    }
+
+                    fontMetrics.ascent = (int) -(composedLine.getAscent() + 0.5f);
+                    fontMetrics.descent = (int) (composedLine.getDescent() + 0.5f);
+                    fontMetrics.leading = (int) (composedLine.getLeading() + 0.5f);
+                    fontMetrics.top = fontMetrics.ascent;
+                    fontMetrics.bottom = fontMetrics.descent;
+
+                    LineHeightSpan span = (LineHeightSpan) style;
+                    int start = composedLine.getCharStart();
+                    int end = composedLine.getCharEnd();
+                    int spanstartv = (int) (lineY + 0.5f);
+                    int v = (int) (lineY + 0.5f);
+
+                    // FIXME: Pass the top of line where this span starts from in `spanstartv`.
+                    span.chooseHeight(mSpanned, start, end, spanstartv, v, fontMetrics);
+
+                    // Override the line metrics.
+                    composedLine.setAscent(-fontMetrics.ascent);
+                    composedLine.setDescent(fontMetrics.descent);
+                    composedLine.setLeading(fontMetrics.leading);
+                }
+            }
+
             // Resolve line height multiplier.
             if (mLineHeightMultiplier != 0.0f) {
                 float oldHeight = composedLine.getHeight();
