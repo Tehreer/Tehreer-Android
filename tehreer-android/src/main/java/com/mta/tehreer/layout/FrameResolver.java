@@ -283,14 +283,20 @@ public class FrameResolver {
         }
 
         void prepareLine(ComposedLine composedLine, float flushFactor) {
-            // Resolve line spacing and line height multiple.
+            // Resolve line height multiplier.
             if (mLineHeightMultiplier != 0.0f) {
                 float oldHeight = composedLine.getHeight();
                 float newHeight = oldHeight * mLineHeightMultiplier;
                 float difference = newHeight - oldHeight;
+                float topOffset = difference / 2.0f;
+                float bottomOffset = difference / 4.0f;
 
-                composedLine.setAscent(composedLine.getAscent() + difference);
+                // Adjust metrics in such a way that text remains in middle.
+                composedLine.setAscent(composedLine.getAscent() + topOffset);
+                composedLine.setDescent(composedLine.getDescent() + bottomOffset);
+                composedLine.setLeading(composedLine.getLeading() + bottomOffset);
             }
+            // Resolve extra line spacing.
             if (mExtraLineSpacing != 0.0f) {
                 composedLine.setLeading(composedLine.getLeading() + mExtraLineSpacing);
             }
