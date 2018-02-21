@@ -21,6 +21,8 @@ import android.graphics.RectF;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.AlignmentSpan;
+import android.text.style.LeadingMarginSpan;
+import android.text.style.LeadingMarginSpan.LeadingMarginSpan2;
 import android.text.style.LineHeightSpan;
 import android.text.style.ParagraphStyle;
 
@@ -229,6 +231,9 @@ public class FrameResolver {
         byte baseLevel;
         ParagraphStyle[] spans;
 
+        float lineExtent = 0.0f;
+        float leadingOffset = 0.0f;
+
         float lineY = 0.0f;
         boolean filled = false;
 
@@ -249,7 +254,27 @@ public class FrameResolver {
             maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
         }
 
-        void addParagraphLines() {
+        int binarySearch(int charIndex) {
+            int low = 0;
+            int high = frameLines.size() - 1;
+
+            while (low <= high) {
+                int mid = (low + high) >>> 1;
+                ComposedLine value = frameLines.get(mid);
+
+                if (charIndex >= value.getCharEnd()) {
+                    low = mid + 1;
+                } else if (charIndex < value.getCharStart()) {
+                    high = mid - 1;
+                } else {
+                    return mid;
+                }
+            }
+
+            return -1;
+        }
+
+        float computeFlushFactor() {
             Layout.Alignment alignment = null;
 
             // Get the top most alignment.
@@ -260,13 +285,54 @@ public class FrameResolver {
                 }
             }
 
-            // Calculate the flush factor from alignment.
-            float flushFactor = getFlushFactor(alignment, baseLevel);
+            return getFlushFactor(alignment, baseLevel);
+        }
+
+        void resolveLeadingOffset() {
+            if ((baseLevel & 1) == 0) {
+                leadingOffset = layoutWidth - lineExtent;
+            }
+        }
+
+        void addParagraphLines() {
+            int firstLineIndex = frameLines.size();
+            int leadingLineCount = 1;
+
+            float leadingLineExtent = layoutWidth;
+            float trailingLineExtent = layoutWidth;
+
+            // Compute leading margins.
+            for (ParagraphStyle style : spans) {
+                if (style instanceof LeadingMarginSpan) {
+                    LeadingMarginSpan span = (LeadingMarginSpan) style;
+                    leadingLineExtent -= span.getLeadingMargin(true);
+                    trailingLineExtent -= span.getLeadingMargin(false);
+
+                    if (span instanceof LeadingMarginSpan.LeadingMarginSpan2) {
+                        LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
+                        int spanTotalLines = span2.getLeadingMarginLineCount();
+
+                        int spanStart = mSpanned.getSpanStart(span2);
+                        if (spanStart < charStart) {
+                            int spanFirstLine = binarySearch(spanStart);
+                            spanTotalLines = (spanFirstLine + spanTotalLines) - firstLineIndex;
+                        }
+
+                        if (spanTotalLines > leadingLineCount) {
+                            leadingLineCount = spanTotalLines;
+                        }
+                    }
+                }
+            }
+
+            float flushFactor = computeFlushFactor();
+            lineExtent = leadingLineExtent;
+            resolveLeadingOffset();
 
             // Iterate over each line of this paragraph.
             int lineStart = charStart;
             while (lineStart != charEnd) {
-                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, layoutWidth, BreakMode.LINE);
+                int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, charEnd, lineExtent, BreakMode.LINE);
                 ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
                 prepareLine(composedLine, flushFactor);
 
@@ -285,6 +351,12 @@ public class FrameResolver {
                 if (frameLines.size() == maxLines) {
                     filled = true;
                     return;
+                }
+
+                // Find out extent of next line.
+                if (--leadingLineCount <= 0) {
+                    lineExtent = trailingLineExtent;
+                    resolveLeadingOffset();
                 }
 
                 lineStart = lineEnd;
@@ -335,13 +407,14 @@ public class FrameResolver {
                 composedLine.setDescent(composedLine.getDescent() + bottomOffset);
                 composedLine.setLeading(composedLine.getLeading() + bottomOffset);
             }
+
             // Resolve extra line spacing.
             if (mExtraLineSpacing != 0.0f) {
                 composedLine.setLeading(composedLine.getLeading() + mExtraLineSpacing);
             }
 
             // Compute the origin of line.
-            float originX = composedLine.getFlushPenOffset(flushFactor, layoutWidth);
+            float originX = leadingOffset + composedLine.getFlushPenOffset(flushFactor, lineExtent);
             float originY = lineY + composedLine.getAscent();
 
             // Set the origin of line.
@@ -363,7 +436,7 @@ public class FrameResolver {
                 lineY = lastLine.getOriginY() - lastLine.getAscent();
 
                 // Create the truncated line.
-                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, layoutWidth, mTruncationMode, mTruncationPlace);
+                ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, lineExtent, mTruncationMode, mTruncationPlace);
                 prepareLine(truncatedLine, lastFlushFactor);
 
                 // Replace the last line with truncated one.
