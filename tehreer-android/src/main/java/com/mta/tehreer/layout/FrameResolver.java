@@ -295,9 +295,7 @@ public class FrameResolver {
         }
 
         void addParagraphLines() {
-            int firstLineIndex = frameLines.size();
             int leadingLineCount = 1;
-
             float leadingLineExtent = layoutWidth;
             float trailingLineExtent = layoutWidth;
 
@@ -311,13 +309,6 @@ public class FrameResolver {
                     if (span instanceof LeadingMarginSpan.LeadingMarginSpan2) {
                         LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
                         int spanTotalLines = span2.getLeadingMarginLineCount();
-
-                        int spanStart = mSpanned.getSpanStart(span2);
-                        if (spanStart < charStart) {
-                            int spanFirstLine = binarySearch(spanStart);
-                            spanTotalLines = (spanFirstLine + spanTotalLines) - firstLineIndex;
-                        }
-
                         if (spanTotalLines > leadingLineCount) {
                             leadingLineCount = spanTotalLines;
                         }
