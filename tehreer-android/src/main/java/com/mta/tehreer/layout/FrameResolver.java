@@ -234,6 +234,7 @@ public class FrameResolver {
         float lineExtent = 0.0f;
         float leadingOffset = 0.0f;
 
+        int paragraphTop = 0;
         float lineY = 0.0f;
         boolean filled = false;
 
@@ -295,6 +296,8 @@ public class FrameResolver {
         }
 
         void addParagraphLines() {
+            paragraphTop = (int) (lineY + 0.5f);
+
             int leadingLineCount = 1;
             float leadingLineExtent = layoutWidth;
             float trailingLineExtent = layoutWidth;
@@ -370,13 +373,20 @@ public class FrameResolver {
                     fontMetrics.bottom = fontMetrics.descent;
 
                     LineHeightSpan span = (LineHeightSpan) style;
-                    int start = composedLine.getCharStart();
-                    int end = composedLine.getCharEnd();
-                    int spanstartv = (int) (lineY + 0.5f);
-                    int v = (int) (lineY + 0.5f);
+                    int lineStart = composedLine.getCharStart();
+                    int lineEnd = composedLine.getCharEnd();
+                    int lineTop = (int) (lineY + 0.5f);
+                    int spanTop = paragraphTop;
 
-                    // FIXME: Pass the top of line where this span starts from in `spanstartv`.
-                    span.chooseHeight(mSpanned, start, end, spanstartv, v, fontMetrics);
+                    // Fix span top in case it starts in a previous paragraph.
+                    int spanStart = mSpanned.getSpanStart(span);
+                    if (spanStart < charStart) {
+                        int lineIndex = binarySearch(spanStart);
+                        ComposedLine spanLine = frameLines.get(lineIndex);
+                        spanTop = (int) (spanLine.getTop() + 0.5f);
+                    }
+
+                    span.chooseHeight(mSpanned, lineStart, lineEnd, spanTop, lineTop, fontMetrics);
 
                     // Override the line metrics.
                     composedLine.setAscent(-fontMetrics.ascent);
@@ -424,7 +434,7 @@ public class FrameResolver {
                 }
 
                 // Move the y to last line's position.
-                lineY = lastLine.getOriginY() - lastLine.getAscent();
+                lineY = lastLine.getTop();
 
                 // Create the truncated line.
                 ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, lineExtent, mTruncationMode, mTruncationPlace);
@@ -439,7 +449,7 @@ public class FrameResolver {
             // Find out the occupied height.
             int lineCount = frameLines.size();
             ComposedLine lastLine = frameLines.get(lineCount - 1);
-            float occupiedHeight = lastLine.getOriginY() - lastLine.getAscent() + lastLine.getHeight();
+            float occupiedHeight = lastLine.getTop() + lastLine.getHeight();
 
             // Set the layout height if unknown.
             if (layoutHeight == Float.POSITIVE_INFINITY) {
