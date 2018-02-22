@@ -236,7 +236,6 @@ public class FrameResolver {
         float lineExtent = 0.0f;
         float leadingOffset = 0.0f;
 
-        int paragraphTop = 0;
         float lineY = 0.0f;
         boolean filled = false;
 
@@ -298,8 +297,6 @@ public class FrameResolver {
         }
 
         void addParagraphLines() {
-            paragraphTop = (int) (lineY + 0.5f);
-
             // Extract line height spans and create font metrics if necessary.
             pickHeightSpans = mSpanned.getSpans(charStart, charEnd, LineHeightSpan.class);
             int chooseHeightCount = pickHeightSpans.length;
@@ -315,7 +312,7 @@ public class FrameResolver {
             // Compute top of first line related to each line height span.
             for (int i = 0; i < chooseHeightCount; i++) {
                 int spanStart = mSpanned.getSpanStart(pickHeightSpans[i]);
-                int spanTop = paragraphTop;
+                int spanTop = (int) (lineY + 0.5f);
 
                 // Fix span top in case it starts in a previous paragraph.
                 if (spanStart < charStart) {
@@ -338,7 +335,7 @@ public class FrameResolver {
                     leadingLineExtent -= span.getLeadingMargin(true);
                     trailingLineExtent -= span.getLeadingMargin(false);
 
-                    if (span instanceof LeadingMarginSpan.LeadingMarginSpan2) {
+                    if (span instanceof LeadingMarginSpan2) {
                         LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
                         int spanTotalLines = span2.getLeadingMarginLineCount();
                         if (spanTotalLines > leadingLineCount) {
@@ -415,14 +412,11 @@ public class FrameResolver {
             if (mLineHeightMultiplier != 0.0f) {
                 float oldHeight = composedLine.getHeight();
                 float newHeight = oldHeight * mLineHeightMultiplier;
-                float difference = newHeight - oldHeight;
-                float topOffset = difference / 2.0f;
-                float bottomOffset = difference / 4.0f;
+                float midOffset = (newHeight - oldHeight) / 2.0f;
 
-                // Adjust metrics in such a way that text remains in middle.
-                composedLine.setAscent(composedLine.getAscent() + topOffset);
-                composedLine.setDescent(composedLine.getDescent() + bottomOffset);
-                composedLine.setLeading(composedLine.getLeading() + bottomOffset);
+                // Adjust metrics in such a way that text remains in the middle of line.
+                composedLine.setAscent(composedLine.getAscent() + midOffset);
+                composedLine.setDescent(composedLine.getDescent() + midOffset);
             }
 
             // Resolve extra line spacing.
