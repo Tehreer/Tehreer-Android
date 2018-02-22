@@ -230,6 +230,8 @@ public class FrameResolver {
         int charEnd;
         byte baseLevel;
         ParagraphStyle[] spans;
+        LineHeightSpan[] pickHeightSpans;
+        int[] pickHeightTops;
 
         float lineExtent = 0.0f;
         float leadingOffset = 0.0f;
@@ -298,6 +300,33 @@ public class FrameResolver {
         void addParagraphLines() {
             paragraphTop = (int) (lineY + 0.5f);
 
+            // Extract line height spans and create font metrics if necessary.
+            pickHeightSpans = mSpanned.getSpans(charStart, charEnd, LineHeightSpan.class);
+            int chooseHeightCount = pickHeightSpans.length;
+            if (chooseHeightCount > 0 && fontMetrics == null) {
+                fontMetrics = new Paint.FontMetricsInt();
+            }
+
+            // Setup array for caching top of first line related to each line height span.
+            if (pickHeightTops == null || pickHeightTops.length < chooseHeightCount) {
+                pickHeightTops = new int[chooseHeightCount];
+            }
+
+            // Compute top of first line related to each line height span.
+            for (int i = 0; i < chooseHeightCount; i++) {
+                int spanStart = mSpanned.getSpanStart(pickHeightSpans[i]);
+                int spanTop = paragraphTop;
+
+                // Fix span top in case it starts in a previous paragraph.
+                if (spanStart < charStart) {
+                    int lineIndex = binarySearch(spanStart);
+                    ComposedLine spanLine = frameLines.get(lineIndex);
+                    spanTop = (int) (spanLine.getTop() + 0.5f);
+                }
+
+                pickHeightTops[i] = spanTop;
+            }
+
             int leadingLineCount = 1;
             float leadingLineExtent = layoutWidth;
             float trailingLineExtent = layoutWidth;
@@ -360,39 +389,26 @@ public class FrameResolver {
 
         void prepareLine(ComposedLine composedLine, float flushFactor) {
             // Resolve line height spans.
-            for (ParagraphStyle style : spans) {
-                if (style instanceof LineHeightSpan) {
-                    if (fontMetrics == null) {
-                        fontMetrics = new Paint.FontMetricsInt();
-                    }
+            int chooseHeightCount = pickHeightSpans.length;
+            for (int i = 0; i < chooseHeightCount; i++) {
+                fontMetrics.ascent = (int) -(composedLine.getAscent() + 0.5f);
+                fontMetrics.descent = (int) (composedLine.getDescent() + 0.5f);
+                fontMetrics.leading = (int) (composedLine.getLeading() + 0.5f);
+                fontMetrics.top = fontMetrics.ascent;
+                fontMetrics.bottom = fontMetrics.descent;
 
-                    fontMetrics.ascent = (int) -(composedLine.getAscent() + 0.5f);
-                    fontMetrics.descent = (int) (composedLine.getDescent() + 0.5f);
-                    fontMetrics.leading = (int) (composedLine.getLeading() + 0.5f);
-                    fontMetrics.top = fontMetrics.ascent;
-                    fontMetrics.bottom = fontMetrics.descent;
+                LineHeightSpan span = pickHeightSpans[i];
+                int lineStart = composedLine.getCharStart();
+                int lineEnd = composedLine.getCharEnd();
+                int lineTop = (int) (lineY + 0.5f);
+                int spanTop = pickHeightTops[i];
 
-                    LineHeightSpan span = (LineHeightSpan) style;
-                    int lineStart = composedLine.getCharStart();
-                    int lineEnd = composedLine.getCharEnd();
-                    int lineTop = (int) (lineY + 0.5f);
-                    int spanTop = paragraphTop;
+                span.chooseHeight(mSpanned, lineStart, lineEnd, spanTop, lineTop, fontMetrics);
 
-                    // Fix span top in case it starts in a previous paragraph.
-                    int spanStart = mSpanned.getSpanStart(span);
-                    if (spanStart < charStart) {
-                        int lineIndex = binarySearch(spanStart);
-                        ComposedLine spanLine = frameLines.get(lineIndex);
-                        spanTop = (int) (spanLine.getTop() + 0.5f);
-                    }
-
-                    span.chooseHeight(mSpanned, lineStart, lineEnd, spanTop, lineTop, fontMetrics);
-
-                    // Override the line metrics.
-                    composedLine.setAscent(-fontMetrics.ascent);
-                    composedLine.setDescent(fontMetrics.descent);
-                    composedLine.setLeading(fontMetrics.leading);
-                }
+                // Override the line metrics.
+                composedLine.setAscent(-fontMetrics.ascent);
+                composedLine.setDescent(fontMetrics.descent);
+                composedLine.setLeading(fontMetrics.leading);
             }
 
             // Resolve line height multiplier.
