@@ -297,6 +297,27 @@ public class FrameResolver {
         }
 
         void addParagraphLines() {
+            int leadingLineCount = 1;
+            float leadingLineExtent = layoutWidth;
+            float trailingLineExtent = layoutWidth;
+
+            // Compute margins for leading and trailing lines.
+            for (ParagraphStyle style : spans) {
+                if (style instanceof LeadingMarginSpan) {
+                    LeadingMarginSpan span = (LeadingMarginSpan) style;
+                    leadingLineExtent -= span.getLeadingMargin(true);
+                    trailingLineExtent -= span.getLeadingMargin(false);
+
+                    if (span instanceof LeadingMarginSpan2) {
+                        LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
+                        int spanTotalLines = span2.getLeadingMarginLineCount();
+                        if (spanTotalLines > leadingLineCount) {
+                            leadingLineCount = spanTotalLines;
+                        }
+                    }
+                }
+            }
+
             // Extract line height spans and create font metrics if necessary.
             pickHeightSpans = mSpanned.getSpans(charStart, charEnd, LineHeightSpan.class);
             int chooseHeightCount = pickHeightSpans.length;
@@ -322,27 +343,6 @@ public class FrameResolver {
                 }
 
                 pickHeightTops[i] = spanTop;
-            }
-
-            int leadingLineCount = 1;
-            float leadingLineExtent = layoutWidth;
-            float trailingLineExtent = layoutWidth;
-
-            // Compute leading margins.
-            for (ParagraphStyle style : spans) {
-                if (style instanceof LeadingMarginSpan) {
-                    LeadingMarginSpan span = (LeadingMarginSpan) style;
-                    leadingLineExtent -= span.getLeadingMargin(true);
-                    trailingLineExtent -= span.getLeadingMargin(false);
-
-                    if (span instanceof LeadingMarginSpan2) {
-                        LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
-                        int spanTotalLines = span2.getLeadingMarginLineCount();
-                        if (spanTotalLines > leadingLineCount) {
-                            leadingLineCount = spanTotalLines;
-                        }
-                    }
-                }
             }
 
             float flushFactor = computeFlushFactor();
