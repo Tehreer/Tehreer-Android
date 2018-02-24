@@ -152,8 +152,8 @@ public class TLabel extends View {
         int horizontalPadding = paddingLeft + paddingRight;
         int verticalPadding = paddingTop + paddingBottom;
 
-        int layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED ? 0 : widthSize - horizontalPadding);
-        int layoutHeight = (heightMode == MeasureSpec.UNSPECIFIED ? 0 : heightSize - verticalPadding);
+        float layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : widthSize - horizontalPadding);
+        float layoutHeight = (heightMode == MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : heightSize - verticalPadding);
         updateFrame(layoutWidth, layoutHeight);
 
         boolean needsRelayout = false;
@@ -207,16 +207,16 @@ public class TLabel extends View {
         Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) * 1E-6));
     }
 
-    private void updateFrame(int layoutWidth, int layoutHeight) {
+    private void updateFrame(float layoutWidth, float layoutHeight) {
         mTextWidth = 0;
         mTextHeight = 0;
 
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
 
-            mResolver.setTypesetter(mTypesetter);
-
             mLayoutRect.set(0.0f, 0.0f, layoutWidth, layoutHeight);
+
+            mResolver.setTypesetter(mTypesetter);
             mResolver.setFrameBounds(mLayoutRect);
 
             mComposedFrame = mResolver.createFrame(0, mTypesetter.getSpanned().length());
