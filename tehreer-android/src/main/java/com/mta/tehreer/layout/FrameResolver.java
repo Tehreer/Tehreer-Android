@@ -46,7 +46,7 @@ public class FrameResolver {
     private RunCollection mRuns;
     private byte[] mBreaks;
 
-    private RectF mFrameBounds = new RectF();
+    private RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
@@ -55,6 +55,9 @@ public class FrameResolver {
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
 
+    /**
+     * Constructs a frame resolver object.
+     */
     public FrameResolver() {
     }
 
@@ -86,7 +89,8 @@ public class FrameResolver {
     }
 
     /**
-     * Returns the rectangle specifying the frame bound. The default value is an empty rectangle.
+     * Returns the rectangle specifying the frame bounds. The default value is an infinite rectangle
+     * at zero origin.
      *
      * @return The current frame rectangle.
      */
@@ -95,11 +99,12 @@ public class FrameResolver {
     }
 
     /**
-     * Sets the rectangle specifying the frame bounds. The default value is an empty rectangle.
+     * Sets the rectangle specifying the frame bounds. The default value is an infinite rectangle at
+     * zero origin.
      *
      * @param frameBounds A rectangle specifying the frame bounds.
      *
-     * @throws NullPointerException if <code>frameRect</code> is null.
+     * @throws NullPointerException if <code>frameBounds</code> is null.
      */
     public void setFrameBounds(RectF frameBounds) {
         if (frameBounds == null) {
@@ -215,9 +220,9 @@ public class FrameResolver {
     }
 
     /**
-     * Makes a frame at most this many lines tall.
+     * Sets the maximum number of lines that a frame should consist of.
      *
-     * @param maxLines The maximum number of lines that a frame should consist of.
+     * @param maxLines Maximum number of lines.
      */
     public void setMaxLines(int maxLines) {
         mMaxLines = maxLines;
@@ -331,7 +336,8 @@ public class FrameResolver {
      *
      * <p>
      * The resolver keeps on filling the frame until it either runs out of text or it finds that
-     * text no longer fits in frame bounds.
+     * text no longer fits in frame bounds. The resulting frame consists of at least one line even
+     * if frame bounds are smaller.
      *
      * @param charStart The index to first character of the frame in source text.
      * @param charEnd The index after the last character of the line in source text.
@@ -410,14 +416,7 @@ public class FrameResolver {
 
         FrameFiller() {
             layoutWidth = mFrameBounds.width();
-            if (layoutWidth <= 0.0f) {
-                layoutWidth = Float.POSITIVE_INFINITY;
-            }
-
             layoutHeight = mFrameBounds.height();
-            if (layoutHeight <= 0.0f) {
-                layoutHeight = Float.POSITIVE_INFINITY;
-            }
 
             maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
         }
