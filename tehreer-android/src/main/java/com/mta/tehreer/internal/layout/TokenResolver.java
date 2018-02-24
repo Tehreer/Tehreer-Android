@@ -52,7 +52,7 @@ public class TokenResolver {
 
             int ellipsisGlyphId = tokenTypeface.getGlyphId(0x2026);
             if (ellipsisGlyphId == 0) {
-                tokenStr = "۔۔۔";
+                tokenStr = "...";
             } else {
                 tokenStr = "\u2026";
             }
