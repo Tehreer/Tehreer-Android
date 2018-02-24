@@ -34,6 +34,9 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This class resolves text frames by using a typesetter object.
+ */
 public class FrameResolver {
 
     private LineResolver mLineResolver = new LineResolver();
@@ -43,7 +46,7 @@ public class FrameResolver {
     private RunCollection mRuns;
     private byte[] mBreaks;
 
-    private RectF mFrameRect = new RectF(0, 0, 0, 0);
+    private RectF mFrameBounds = new RectF();
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
@@ -55,11 +58,25 @@ public class FrameResolver {
     public FrameResolver() {
     }
 
+    /**
+     * Returns the typesetter to use for resolving frames.
+     *
+     * @return The current typesetter object.
+     */
     public Typesetter getTypesetter() {
         return mTypesetter;
     }
 
+    /**
+     * Sets the typesetter to use for resolving frames.
+     *
+     * @param typesetter A typesetter object.
+     */
     public void setTypesetter(Typesetter typesetter) {
+        if (typesetter == null) {
+            throw new NullPointerException("Typesetter is null");
+        }
+
         mTypesetter = typesetter;
         mSpanned = typesetter.getSpanned();
         mParagraphs = typesetter.getParagraphs();
@@ -68,70 +85,194 @@ public class FrameResolver {
         mLineResolver.reset(mSpanned, mParagraphs, mRuns);
     }
 
-    public RectF getFrameRect() {
-        return new RectF(mFrameRect);
+    /**
+     * Returns the rectangle specifying the frame bound. The default value is an empty rectangle.
+     *
+     * @return The current frame rectangle.
+     */
+    public RectF getFrameBounds() {
+        return new RectF(mFrameBounds);
     }
 
-    public void setFrameRect(RectF frameRect) {
-        if (frameRect == null) {
-            throw new NullPointerException("Frame rect is null");
+    /**
+     * Sets the rectangle specifying the frame bounds. The default value is an empty rectangle.
+     *
+     * @param frameBounds A rectangle specifying the frame bounds.
+     *
+     * @throws NullPointerException if <code>frameRect</code> is null.
+     */
+    public void setFrameBounds(RectF frameBounds) {
+        if (frameBounds == null) {
+            throw new NullPointerException("Frame bounds rectangle is null");
         }
 
-        mFrameRect.set(frameRect);
+        mFrameBounds.set(frameBounds);
     }
 
+    /**
+     * Returns the text alignment to apply on each line of a frame. The default value is
+     * {@link TextAlignment#INTRINSIC}.
+     *
+     * @return The current text alignment.
+     */
     public TextAlignment getTextAlignment() {
         return mTextAlignment;
     }
 
+    /**
+     * Sets the text alignment to apply on each line of a frame. The default value is
+     * {@link TextAlignment#INTRINSIC}.
+     *
+     * @param textAlignment A value of {@link TextAlignment}.
+     */
     public void setTextAlignment(TextAlignment textAlignment) {
+        if (textAlignment == null) {
+            throw new NullPointerException("Text alignment is null");
+        }
+
         mTextAlignment = textAlignment;
     }
 
+    /**
+     * Returns the vertical alignment to apply on the contents of a frame. The default value is
+     * {@link VerticalAlignment#TOP}.
+     *
+     * @return The current vertical alignment.
+     */
     public VerticalAlignment getVerticalAlignment() {
         return mVerticalAlignment;
     }
 
+    /**
+     * Sets the vertical alignment to apply on the contents of a frame. The default value is
+     * {@link VerticalAlignment#TOP}.
+     *
+     * @param verticalAlignment A value of {@link VerticalAlignment}.
+     *
+     * @throws NullPointerException if <code>verticalAlignment</code> is null.
+     */
     public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
+        if (verticalAlignment == null) {
+            throw new NullPointerException("Vertical alignment is null");
+        }
+
         mVerticalAlignment = verticalAlignment;
     }
 
+    /**
+     * Returns the truncation mode to apply on the last line of a frame in case of overflow. The
+     * default value is {@link BreakMode#LINE}.
+     *
+     * @return The current truncation mode.
+     */
     public BreakMode getTruncationMode() {
         return mTruncationMode;
     }
 
+    /**
+     * Sets the truncation mode to apply on the last line of a frame in case of overflow. The
+     * default value is {@link BreakMode#LINE}.
+     *
+     * @param truncationMode A value of {@link BreakMode}.
+     *
+     * @throws NullPointerException if <code>truncationMode</code> is null.
+     */
     public void setTruncationMode(BreakMode truncationMode) {
+        if (truncationMode == null) {
+            throw new NullPointerException("Truncation mode is null");
+        }
+
         mTruncationMode = truncationMode;
     }
 
+    /**
+     * Returns the truncation place for the last line of a frame.
+     *
+     * @return The current truncation place.
+     */
     public TruncationPlace getTruncationPlace() {
         return mTruncationPlace;
     }
 
+    /**
+     * Sets the truncation place for the last line of a frame.
+     * <p>
+     * The truncation is disabled if the value of <code>truncationPlace</code> is <code>null</code>.
+     *
+     * @param truncationPlace A value of {@link TruncationPlace}.
+     */
     public void setTruncationPlace(TruncationPlace truncationPlace) {
         mTruncationPlace = truncationPlace;
     }
 
+    /**
+     * Returns the maximum number of lines that a frame should consist of.
+     *
+     * @return The current max lines.
+     */
     public int getMaxLines() {
         return mMaxLines;
     }
 
+    /**
+     * Makes a frame at most this many lines tall.
+     *
+     * @param maxLines The maximum number of lines that a frame should consist of.
+     */
     public void setMaxLines(int maxLines) {
         mMaxLines = maxLines;
     }
 
+    /**
+     * Returns the extra spacing to add after each line of a frame. It is resolved before line
+     * height multiplier. The default value is zero.
+     *
+     * @return The current extra line spacing.
+     *
+     * @see #getLineHeightMultiplier()
+     */
     public float getExtraLineSpacing() {
         return mExtraLineSpacing;
     }
 
+    /**
+     * Sets the extra spacing to add after each line of a frame. It is resolved before line height
+     * multiplier. The default value is zero.
+     *
+     * <p>
+     * The extra spacing is added in the leading of each line soon after it is composed.
+     *
+     * @param extraLineSpacing The extra line spacing in pixels.
+     *
+     * @see #setLineHeightMultiplier(float)
+     */
     public void setExtraLineSpacing(float extraLineSpacing) {
         mExtraLineSpacing = extraLineSpacing;
     }
 
+    /**
+     * Returns the height multiplier to apply on each line of a frame. It is resolved after extra
+     * line spacing. The default value is one.
+     *
+     * @return The current line height multiplier.
+     *
+     * @see #getExtraLineSpacing()
+     */
     public float getLineHeightMultiplier() {
         return mLineHeightMultiplier;
     }
 
+    /**
+     * Sets the height multiplier to apply on each line of a frame. It is resolved after extra line
+     * spacing. The default value is one.
+     *
+     * <p>
+     * The additional spacing is adjusted in such a way that text remains in the middle of the line.
+     *
+     * @param lineHeightMultiplier The multiplication factor.
+     *
+     * @see #setExtraLineSpacing(float)
+     */
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mLineHeightMultiplier = lineHeightMultiplier;
     }
@@ -185,7 +326,32 @@ public class FrameResolver {
         return 0.0f;
     }
 
+    /**
+     * Creates a frame representing specified string range in source text.
+     *
+     * <p>
+     * The resolver keeps on filling the frame until it either runs out of text or it finds that
+     * text no longer fits in frame bounds.
+     *
+     * @param charStart The index to first character of the frame in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @return A new composed frame.
+     *
+     * @throws IllegalArgumentException if <code>charStart</code> is negative, or
+     *         <code>charEnd</code> is greater than the length of source text, or
+     *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
+     */
     public ComposedFrame createFrame(int charStart, int charEnd) {
+        if (charStart < 0) {
+            throw new IllegalArgumentException("Char Start: " + charStart);
+        }
+        if (charEnd > mSpanned.length()) {
+            throw new IllegalArgumentException("Char End: " + charEnd + ", Text Length: " + mSpanned.length());
+        }
+        if (charStart >= charEnd) {
+            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
+        }
+
         FrameFiller frameFiller = new FrameFiller();
         int paragraphIndex = mParagraphs.binarySearch(charStart);
         int segmentEnd;
@@ -214,7 +380,7 @@ public class FrameResolver {
         frameFiller.resolveAlignments();
 
         ComposedFrame frame = new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
-        frame.setContainerRect(mFrameRect.left, mFrameRect.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
+        frame.setContainerRect(mFrameBounds.left, mFrameBounds.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
 
         return frame;
     }
@@ -243,12 +409,12 @@ public class FrameResolver {
         Paint.FontMetricsInt fontMetrics;
 
         FrameFiller() {
-            layoutWidth = mFrameRect.width();
+            layoutWidth = mFrameBounds.width();
             if (layoutWidth <= 0.0f) {
                 layoutWidth = Float.POSITIVE_INFINITY;
             }
 
-            layoutHeight = mFrameRect.height();
+            layoutHeight = mFrameBounds.height();
             if (layoutHeight <= 0.0f) {
                 layoutHeight = Float.POSITIVE_INFINITY;
             }

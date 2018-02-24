@@ -217,7 +217,7 @@ public class TLabel extends View {
             mResolver.setTypesetter(mTypesetter);
 
             mLayoutRect.set(0.0f, 0.0f, layoutWidth, layoutHeight);
-            mResolver.setFrameRect(mLayoutRect);
+            mResolver.setFrameBounds(mLayoutRect);
 
             mComposedFrame = mResolver.createFrame(0, mTypesetter.getSpanned().length());
 
@@ -506,20 +506,55 @@ public class TLabel extends View {
         invalidate();
     }
 
+    /**
+     * Returns the extra spacing that should be added after each text line. It is resolved before line
+     * height multiplier. The default value is zero.
+     *
+     * @return The current extra line spacing.
+     *
+     * @see #getLineHeightMultiplier()
+     */
     public float getExtraLineSpacing() {
         return mResolver.getExtraLineSpacing();
     }
 
+    /**
+     * Sets the extra spacing that should be added after each text line. It is resolved before line
+     * height multiplier. The default value is zero.
+     *
+     * @param extraLineSpacing The extra line spacing in pixels.
+     *
+     * @see #setLineHeightMultiplier(float)
+     */
     public void setExtraLineSpacing(float extraLineSpacing) {
         mResolver.setExtraLineSpacing(extraLineSpacing);
         requestLayout();
         invalidate();
     }
 
+    /**
+     * Returns the height multiplier that should be applied on each text line. It is resolved after
+     * extra line spacing. The default value is one.
+     *
+     * @return The current line height multiplier.
+     *
+     * @see #getExtraLineSpacing()
+     */
     public float getLineHeightMultiplier() {
         return mResolver.getLineHeightMultiplier();
     }
 
+    /**
+     * Sets the height multiplier to apply on each text line. It is resolved after extra line
+     * spacing. The default value is one.
+     *
+     * <p>
+     * The additional spacing is adjusted in such a way that text remains in the middle of the line.
+     *
+     * @param lineHeightMultiplier The multiplication factor.
+     *
+     * @see #setExtraLineSpacing(float)
+     */
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mResolver.setLineHeightMultiplier(lineHeightMultiplier);
         requestLayout();

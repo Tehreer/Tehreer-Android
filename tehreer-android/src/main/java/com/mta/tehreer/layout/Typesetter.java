@@ -404,7 +404,7 @@ public class Typesetter {
 
         FrameResolver resolver = new FrameResolver();
         resolver.setTypesetter(this);
-        resolver.setFrameRect(frameRect);
+        resolver.setFrameBounds(frameRect);
         resolver.setTextAlignment(textAlignment);
 
         return resolver.createFrame(charStart, charEnd);
