@@ -56,7 +56,7 @@ public class TLabel extends View {
 
     private int mGravity = Gravity.TOP | Gravity.START;
 
-    private String mText = "";
+    private String mText = null;
     private Spanned mSpanned = null;
     private Typesetter mTypesetter = null;
 
@@ -230,34 +230,35 @@ public class TLabel extends View {
     }
 
     private void updateTypesetter() {
+        mTypesetter = null;
+
+        long t1 = System.nanoTime();
+
         if (mText != null) {
-            mTypesetter = null;
-
-            long t1 = System.nanoTime();
-
             Typeface typeface = getTypeface();
-            float textSize = getTextSize();
-
-            if (mSpanned != null) {
+            if (typeface != null && mText.length() > 0) {
+                mTypesetter = new Typesetter(mText, typeface, getTextSize());
+            }
+        } else if (mSpanned != null) {
+            if (mSpanned.length() > 0) {
                 List<Object> defaultSpans = new ArrayList<>();
+                Typeface typeface = getTypeface();
+                float textSize = getTextSize();
+
                 if (typeface != null) {
                     defaultSpans.add(new TypefaceSpan(typeface));
                 }
                 defaultSpans.add(new TypeSizeSpan(textSize));
 
                 mTypesetter = new Typesetter(mSpanned, defaultSpans);
-            } else {
-                if (typeface != null && mText.length() > 0) {
-                    mTypesetter = new Typesetter(mText, typeface, mRenderer.getTypeSize());
-                }
             }
-
-            long t2 = System.nanoTime();
-            Log.i("Tehreer", "Time taken to create typesetter: " + ((t2 - t1) * 1E-6));
-
-            requestLayout();
-            invalidate();
         }
+
+        long t2 = System.nanoTime();
+        Log.i("Tehreer", "Time taken to create typesetter: " + ((t2 - t1) * 1E-6));
+
+        requestLayout();
+        invalidate();
     }
 
     public int getCharIndexFromPosition(float x, float y) {
@@ -340,16 +341,64 @@ public class TLabel extends View {
         invalidate();
     }
 
+    /**
+     * Returns the typesetter that is being used to compose text lines.
+     *
+     * @return The current typesetter.
+     */
     public Typesetter getTypesetter() {
         return mTypesetter;
     }
 
+    /**
+     * Sets the typesetter that should be used to compose text lines. Calling this method will make
+     * text and spanned properties <code>null</code>.
+     * <p>
+     * A typesetter is preferred over spanned as it avoids an extra step of creating typesetter
+     * from spanned.
+     *
+     * @param typesetter A typesetter object.
+     *
+     * @see #setText(String)
+     * @see #setSpanned(Spanned)
+     */
     public void setTypesetter(Typesetter typesetter) {
         mText = null;
+        mSpanned = null;
         mTypesetter = typesetter;
 
         requestLayout();
         invalidate();
+    }
+
+    /**
+     * Returns the current spanned that is being displayed. This property will be <code>null</code>
+     * if either text or typesetter is being used instead.
+     *
+     * @return The spanned being displayed.
+     *
+     * @see #getTypesetter()
+     * @see #getText()
+     */
+    public Spanned getSpanned() {
+        return mSpanned;
+    }
+
+    /**
+     * Sets the spanned that should be displayed. Calling this method will make text property
+     * <code>null</code>.
+     * <p>
+     * If performance is required, a typesetter should be used directly.
+     *
+     * @param spanned The spanned to display.
+     *
+     * @see #setTypesetter(Typesetter)
+     * @see #setSpanned(Spanned)
+     */
+    public void setSpanned(Spanned spanned) {
+        mText = null;
+        mSpanned = spanned;
+        updateTypesetter();
     }
 
     /**
@@ -376,32 +425,30 @@ public class TLabel extends View {
     }
 
     /**
-     * Returns the current text that is being displayed.
+     * Returns the current text that is being displayed. This property will be <code>null</code> if
+     * either spanned or typesetter is being used instead.
      *
      * @return The text being displayed.
+     *
+     * @see #getTypesetter()
+     * @see #getSpanned()
      */
     public String getText() {
         return mText;
     }
 
     /**
-     * Sets the text that should be displayed.
+     * Sets the text that should be displayed. Calling this method will make spanned property
+     * <code>null</code>.
      *
      * @param text The text to display.
+     *
+     * @see #setTypesetter(Typesetter)
+     * @see #setSpanned(Spanned)
      */
     public void setText(String text) {
         mText = (text == null ? "" : text);
         mSpanned = null;
-        updateTypesetter();
-    }
-
-    public Spanned getSpanned() {
-        return mSpanned;
-    }
-
-    public void setSpanned(Spanned spanned) {
-        mText = "";
-        mSpanned = spanned;
         updateTypesetter();
     }
 
