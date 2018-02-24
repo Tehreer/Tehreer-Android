@@ -294,6 +294,27 @@ public class GlyphRun {
         return (getAscent() + getDescent() + getLeading());
     }
 
+    /**
+     * Determines the character index from distance.
+     * <p>
+     * The process involves iterating over the clusters of glyph run. If a cluster consists of
+     * multiple characters, its total advance is evenly distributed among the number of characters
+     * it contains. The advance of each character is added to track the covered distance. This way
+     * leading and trailing characters are determined near to the distance passed-in as a parameter.
+     * Afterwards, the index of closer character is returned.
+     * <p>
+     * If <code>distance</code> is negative, then run's starting index is returned. If it is beyond
+     * run's extent, then ending index is returned.
+     *
+     * @param distance The distance for which to determine the character index. It should be offset
+     *                 from zero origin.
+     * @return The index of character representing the passed-in distance. It will be an absolute
+     *         index in source string.
+     *
+     * @see #getCharStart()
+     * @see #getCharEnd()
+     * @see #computeTypographicExtent(int, int)
+     */
     public int getCharIndexFromDistance(float distance) {
         IntList clusterMap = getClusterMap();
         FloatList advances = getGlyphAdvances();
@@ -314,7 +335,6 @@ public class GlyphRun {
         int trailingCharIndex = charEnd;
         float leadingEdgeAdvance = 0.0f;
 
-        process:
         for (int i = 1; i <= charCount; i++) {
             int glyphIndex = (i < charCount ? clusterMap.get(i) : glyphCount);
             if (glyphIndex == glyphStart) {
@@ -331,6 +351,8 @@ public class GlyphRun {
             int clusterLength = i - clusterStart;
             float charAdvance = clusterAdvance / clusterLength;
 
+            boolean trailingCharFound = false;
+
             // Compare individual code points with input distance.
             for (int j = 0; j < clusterLength; j++) {
                 // TODO: Iterate on code points rather than UTF-16 code units of java string.
@@ -340,10 +362,16 @@ public class GlyphRun {
                     leadingEdgeAdvance = computedAdvance;
                 } else {
                     trailingCharIndex = charStart + clusterStart + j;
-                    break process;
+                    trailingCharFound = true;
+                    break;
                 }
 
                 computedAdvance += charAdvance;
+            }
+
+            // Break the outer loop if trailing char has been found.
+            if (trailingCharFound) {
+                break;
             }
 
             clusterStart = i;
