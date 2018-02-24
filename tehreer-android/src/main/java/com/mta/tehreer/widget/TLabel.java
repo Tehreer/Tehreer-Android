@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,6 +119,8 @@ public class TLabel extends View {
 
             setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.START));
             setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
+            setExtraLineSpacing(values.getFloat(R.styleable.TLabel_extraLineSpacing, 0.0f));
+            setLineHeightMultiplier(values.getFloat(R.styleable.TLabel_lineHeightMultiplier, 0.0f));
             setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
@@ -500,6 +502,26 @@ public class TLabel extends View {
      */
     public void setMaxLines(int maxLines) {
         mResolver.setMaxLines(maxLines);
+        requestLayout();
+        invalidate();
+    }
+
+    public float getExtraLineSpacing() {
+        return mResolver.getExtraLineSpacing();
+    }
+
+    public void setExtraLineSpacing(float extraLineSpacing) {
+        mResolver.setExtraLineSpacing(extraLineSpacing);
+        requestLayout();
+        invalidate();
+    }
+
+    public float getLineHeightMultiplier() {
+        return mResolver.getLineHeightMultiplier();
+    }
+
+    public void setLineHeightMultiplier(float lineHeightMultiplier) {
+        mResolver.setLineHeightMultiplier(lineHeightMultiplier);
         requestLayout();
         invalidate();
     }
