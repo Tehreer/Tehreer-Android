@@ -208,6 +208,7 @@ public class TLabel extends View {
     }
 
     private void updateFrame(float layoutWidth, float layoutHeight) {
+        mComposedFrame = null;
         mTextWidth = 0;
         mTextHeight = 0;
 
@@ -363,6 +364,15 @@ public class TLabel extends View {
 
         requestLayout();
         invalidate();
+    }
+
+    /**
+     * Returns the current composed frame that is being displayed.
+     *
+     * @return The composed frame being displayed.
+     */
+    public ComposedFrame getComposedFrame() {
+        return mComposedFrame;
     }
 
     /**
