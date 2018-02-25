@@ -263,15 +263,15 @@ public class TLabel extends View {
     }
 
     /**
-     * Returns the index of character representing the specified position, or -1 if there is no
-     * character at this position.
+     * Performs hit testing. Returns the index of character representing the specified position, or
+     * -1 if there is no character at this position.
      *
      * @param x The x- coordinate of position.
      * @param y The y- coordinate of position.
      * @return The index of character representing the specified position, or -1 if there is no
      *         character at this position.
      */
-    public int getCharIndexFromPosition(float x, float y) {
+    public int hitTestPosition(float x, float y) {
         float adjustedX = x - getPaddingLeft();
         float adjustedY = y - getPaddingTop();
 
