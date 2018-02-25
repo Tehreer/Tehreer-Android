@@ -191,21 +191,25 @@ public class ComposedLine {
         return runList;
     }
 
+    /**
+     * Returns the index of character nearest to the specified distance.
+     *
+     * @param distance The distance for which to determine the character index. It should be offset
+     *                 from zero origin.
+     * @return The index of character nearest to the specified distance. It will be an absolute
+     *         index in source string.
+     */
     public int getCharIndexFromDistance(float distance) {
-        GlyphRun containerRun = null;
+        GlyphRun glyphRun = null;
 
-        for (GlyphRun glyphRun : getRuns()) {
-            if (glyphRun.getOriginX() >= distance) {
-                containerRun = glyphRun;
+        for (int i = runList.size() - 1; i >= 0; i--) {
+            glyphRun = runList.get(i);
+            if (glyphRun.getOriginX() <= distance) {
                 break;
             }
         }
 
-        if (containerRun == null) {
-            containerRun = runList.get(runList.size() - 1);
-        }
-
-        return containerRun.getCharIndexFromDistance(distance - containerRun.getOriginX());
+        return glyphRun.getCharIndexFromDistance(distance - glyphRun.getOriginX());
     }
 
     /**
