@@ -70,18 +70,38 @@ public class ComposedFrame {
         return charEnd;
     }
 
+    /**
+     * Returns the x- origin of this frame.
+     *
+     * @return The x- origin of this frame.
+     */
     public float getOriginX() {
         return mOriginX;
     }
 
+    /**
+     * Returns the y- origin of this frame.
+     *
+     * @return The y- origin of this frame.
+     */
     public float getOriginY() {
         return mOriginY;
     }
 
+    /**
+     * Returns the width of this frame.
+     *
+     * @return The width of this frame.
+     */
     public float getWidth() {
         return mWidth;
     }
 
+    /**
+     * Returns the height of this frame.
+     *
+     * @return The height of this frame.
+     */
     public float getHeight() {
         return mHeight;
     }
@@ -95,13 +115,22 @@ public class ComposedFrame {
         return lineList;
     }
 
+    /**
+     * Returns the index of line representing the specified position.
+     *
+     * @param x The x- coordinate of position.
+     * @param y The y- coordinate of position.
+     * @return The index of line representing the specified position.
+     */
     public int getLineIndexFromPosition(float x, float y) {
         int lineCount = lineList.size();
         int lineIndex;
 
         for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
             ComposedLine line = lineList.get(lineIndex);
-            if (line.getOriginY() >= y) {
+            float top = line.getTop();
+            float bottom = top + line.getHeight();
+            if (y >= top && y <= bottom) {
                 break;
             }
         }
@@ -133,6 +162,10 @@ public class ComposedFrame {
     public String toString() {
         return "ComposedFrame{charStart=" + charStart
                 + ", charEnd=" + charEnd
+                + ", originX=" + getOriginX()
+                + ", originY=" + getOriginY()
+                + ", width=" + getWidth()
+                + ", height=" + getHeight()
                 + ", lines=" + Description.forIterable(lineList)
                 + "}";
     }
