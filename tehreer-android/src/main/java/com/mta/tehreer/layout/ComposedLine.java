@@ -35,6 +35,8 @@ public class ComposedLine {
     private final float trailingWhitespaceExtent;
 	private final List<GlyphRun> runList;
 
+    private Object[] mSpans;
+
     private float mAscent;
     private float mDescent;
     private float mLeading;
@@ -74,6 +76,14 @@ public class ComposedLine {
 	public int getCharEnd() {
 		return charEnd;
 	}
+
+	Object[] getSpans() {
+	    return mSpans;
+    }
+
+    void setSpans(Object[] spans) {
+	    mSpans = spans;
+    }
 
     /**
      * Returns the paragraph level of this line.
