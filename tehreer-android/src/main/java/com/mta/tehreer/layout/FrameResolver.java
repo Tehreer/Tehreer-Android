@@ -384,7 +384,7 @@ public class FrameResolver {
         frameFiller.handleTruncation(charEnd);
         frameFiller.resolveAlignments();
 
-        ComposedFrame frame = new ComposedFrame(charStart, segmentEnd, frameFiller.frameLines);
+        ComposedFrame frame = new ComposedFrame(mSpanned, charStart, segmentEnd, frameFiller.frameLines);
         frame.setContainerRect(mFrameBounds.left, mFrameBounds.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
 
         return frame;
@@ -405,9 +405,11 @@ public class FrameResolver {
         LineHeightSpan[] pickHeightSpans;
         int[] pickHeightTops;
 
+        int leadingLineCount = 1;
+        Paint.FontMetricsInt fontMetrics;
+
         float lineExtent = 0.0f;
         float leadingOffset = 0.0f;
-        Paint.FontMetricsInt fontMetrics;
 
         float lineTop = 0.0f;
         boolean filled = false;
@@ -462,7 +464,6 @@ public class FrameResolver {
         }
 
         void addParagraphLines() {
-            int leadingLineCount = 1;
             float leadingLineExtent = layoutWidth;
             float trailingLineExtent = layoutWidth;
 
@@ -600,8 +601,9 @@ public class FrameResolver {
             composedLine.setOriginX(originX);
             composedLine.setOriginY(originY);
 
-            // Set the spans of line.
+            // Set supporting properties of line.
             composedLine.setSpans(paragraphSpans);
+            composedLine.setFirst(leadingLineCount > 0);
         }
 
         void handleTruncation(int frameEnd) {
