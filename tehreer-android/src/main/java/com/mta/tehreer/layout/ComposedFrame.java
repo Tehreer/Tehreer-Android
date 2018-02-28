@@ -169,9 +169,7 @@ public class ComposedFrame {
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
         canvas.translate(x, y);
 
-        int lineCount = lineList.size();
-        for (int i = 0; i < lineCount; i++) {
-            ComposedLine composedLine = lineList.get(i);
+        for (ComposedLine composedLine : lineList) {
             Object[] spans = composedLine.getSpans();
 
             int left = 0;
@@ -185,24 +183,22 @@ public class ComposedFrame {
                     boolean isLTR = (paragraphLevel & 1) == 0;
 
                     Paint paint = lazyPaint();
+                    int margin = (isLTR ? left : right);
                     int dir = (isLTR ? Layout.DIR_LEFT_TO_RIGHT : Layout.DIR_RIGHT_TO_LEFT);
                     int top = (int) (composedLine.getTop() + 0.5f);
                     int baseline = (int) (composedLine.getOriginY() + 0.5f);
-                    int bottom = (int) (composedLine.getTop() + composedLine.getHeight());
+                    int bottom = (int) (composedLine.getTop() + composedLine.getHeight() + 0.5f);
                     Spanned text = (Spanned) source;
                     int start = text.getSpanStart(span);
                     int end = text.getSpanEnd(span);
                     boolean first = composedLine.isFirst();
 
-                    if (isLTR) {
-                        span.drawLeadingMargin(canvas, paint, left, dir, top, baseline, bottom,
-                                               text, start, end, first, null);
+                    span.drawLeadingMargin(canvas, paint, margin, dir, top, baseline, bottom,
+                                           text, start, end, first, null);
 
+                    if (isLTR) {
                         left += span.getLeadingMargin(first);
                     } else {
-                        span.drawLeadingMargin(canvas, paint, right, dir, top, baseline, bottom,
-                                               text, start, end, first, null);
-
                         right -= span.getLeadingMargin(first);
                     }
                 }
