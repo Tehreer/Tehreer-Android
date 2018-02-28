@@ -36,6 +36,7 @@ public class ComposedLine {
 	private final List<GlyphRun> runList;
 
     private Object[] mSpans;
+    private boolean mFirst;
 
     private float mAscent;
     private float mDescent;
@@ -83,6 +84,14 @@ public class ComposedLine {
 
     void setSpans(Object[] spans) {
 	    mSpans = spans;
+    }
+
+    boolean isFirst() {
+	    return mFirst;
+    }
+
+    void setFirst(boolean first) {
+	    mFirst = first;
     }
 
     /**
