@@ -17,6 +17,10 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.text.Layout;
+import android.text.Spanned;
+import android.text.style.LeadingMarginSpan;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
@@ -30,6 +34,7 @@ import java.util.List;
  */
 public class ComposedFrame {
 
+    private final CharSequence source;
     private final int charStart;
     private final int charEnd;
     private final List<ComposedLine> lineList;
@@ -39,7 +44,10 @@ public class ComposedFrame {
     private float mWidth;
     private float mHeight;
 
-    ComposedFrame(int charStart, int charEnd, List<ComposedLine> lineList) {
+    private Paint paint;
+
+    ComposedFrame(CharSequence source, int charStart, int charEnd, List<ComposedLine> lineList) {
+        this.source = source;
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.lineList = Collections.unmodifiableList(lineList);
@@ -50,6 +58,14 @@ public class ComposedFrame {
         mOriginY = originY;
         mWidth = width;
         mHeight = height;
+    }
+
+    private Paint lazyPaint() {
+        if (paint == null) {
+            paint = new Paint();
+        }
+
+        return paint;
     }
 
     /**
@@ -151,11 +167,51 @@ public class ComposedFrame {
      * @param y The y- position at which to draw this frame.
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
-        for (ComposedLine composedLine : lineList) {
-            canvas.translate(x, y);
+        canvas.translate(x, y);
+
+        int lineCount = lineList.size();
+        for (int i = 0; i < lineCount; i++) {
+            ComposedLine composedLine = lineList.get(i);
+            Object[] spans = composedLine.getSpans();
+
+            int left = 0;
+            int right = (int) (getWidth() + 0.5f);
+
+            for (Object style : spans) {
+                if (style instanceof LeadingMarginSpan) {
+                    LeadingMarginSpan span = (LeadingMarginSpan) style;
+
+                    byte paragraphLevel = composedLine.getParagraphLevel();
+                    boolean isLTR = (paragraphLevel & 1) == 0;
+
+                    Paint paint = lazyPaint();
+                    int dir = (isLTR ? Layout.DIR_LEFT_TO_RIGHT : Layout.DIR_RIGHT_TO_LEFT);
+                    int top = (int) (composedLine.getTop() + 0.5f);
+                    int baseline = (int) (composedLine.getOriginY() + 0.5f);
+                    int bottom = (int) (composedLine.getTop() + composedLine.getHeight());
+                    Spanned text = (Spanned) source;
+                    int start = text.getSpanStart(span);
+                    int end = text.getSpanEnd(span);
+                    boolean first = composedLine.isFirst();
+
+                    if (isLTR) {
+                        span.drawLeadingMargin(canvas, paint, left, dir, top, baseline, bottom,
+                                               text, start, end, first, null);
+
+                        left += span.getLeadingMargin(first);
+                    } else {
+                        span.drawLeadingMargin(canvas, paint, right, dir, top, baseline, bottom,
+                                               text, start, end, first, null);
+
+                        right -= span.getLeadingMargin(first);
+                    }
+                }
+            }
+
             composedLine.draw(renderer, canvas, composedLine.getOriginX(), composedLine.getOriginY());
-            canvas.translate(-x, -y);
         }
+
+        canvas.translate(-x, -y);
     }
 
     @Override
