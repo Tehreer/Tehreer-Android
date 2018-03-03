@@ -316,6 +316,48 @@ public class GlyphRun {
     }
 
     /**
+     * Returns the index to the first character of specified cluster in source string. In most
+     * cases, it would be the same index as the specified one. But if the character occurs within a
+     * cluster, then a previous index would be returned; whether the run logically flows forward or
+     * backward.
+     *
+     * @param charIndex The index of a character in source string.
+     * @return The index to the first character of specified cluster in source string.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
+     *         than or equal to run end.
+     */
+    public int getActualClusterStart(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
+        return Clusters.actualClusterStart(clusterMap, charIndex);
+    }
+
+    /**
+     * Returns the index after the last character of specified cluster in source string. In most
+     * cases, it would be one index after the specified one. But if the character occurs within a
+     * cluster, then an even further index would be returned; whether the run logically flows
+     * forward or backward.
+     *
+     * @param charIndex The index of a character in source string.
+     * @return The index after the last character of specified cluster in source string.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
+     *         than or equal to run end.
+     */
+    public int getActualClusterEnd(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
+        return Clusters.actualClusterEnd(clusterMap, charIndex);
+    }
+
+    /**
      * Determines the index of character nearest to the specified distance.
      * <p>
      * The process involves iterating over the clusters of this glyph run. If a cluster consists of

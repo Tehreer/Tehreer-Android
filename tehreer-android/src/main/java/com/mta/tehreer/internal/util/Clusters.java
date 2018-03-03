@@ -58,4 +58,31 @@ public class Clusters {
 
         return glyphCount;
     }
+
+    public static int actualClusterStart(IntList clusterMap, int arrayIndex) {
+        int leading = clusterMap.get(arrayIndex);
+
+        for (int i = arrayIndex - 1; i >= 0; i--) {
+            int mapping = clusterMap.get(i);
+            if (mapping != leading) {
+                return i + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    public static int actualClusterEnd(IntList clusterMap, int arrayIndex) {
+        int leading = clusterMap.get(arrayIndex);
+        int length = clusterMap.size();
+
+        for (int i = arrayIndex + 1; i < length; i++) {
+            int mapping = clusterMap.get(i);
+            if (mapping != leading) {
+                return i;
+            }
+        }
+
+        return length;
+    }
 }
