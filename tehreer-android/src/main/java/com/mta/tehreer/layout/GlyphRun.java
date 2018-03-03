@@ -89,6 +89,17 @@ public class GlyphRun {
         this.originY = otherRun.originY;
     }
 
+    private String checkCharIndex(int charIndex) {
+        if (charIndex < charStart) {
+            return ("Char Index: " + charIndex + ", Char Start: " + charStart);
+        }
+        if (charIndex >= charEnd) {
+            return ("Char Index: " + charIndex + ", Char End: " + charEnd);
+        }
+
+        return null;
+    }
+
     private String checkRange(int glyphStart, int glyphEnd) {
         if (glyphStart < 0) {
             return ("Glyph Start: " + glyphStart);
@@ -207,11 +218,21 @@ public class GlyphRun {
         return clusterMap;
     }
 
-    int getCharGlyphStart(int charIndex) {
+    int getLeadingGlyphIndex(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
         return Clusters.getGlyphStart(clusterMap, charIndex - charStart);
     }
 
-    int getCharGlyphEnd(int charIndex) {
+    int getTrailingGlyphIndex(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
         return Clusters.getGlyphEnd(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
     }
 

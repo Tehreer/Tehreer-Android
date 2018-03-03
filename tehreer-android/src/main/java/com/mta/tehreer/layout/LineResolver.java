@@ -89,8 +89,8 @@ class LineResolver {
             float runExtent = glyphRun.computeTypographicExtent(0, runGlyphCount);
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
-                int whitespaceGlyphStart = glyphRun.getCharGlyphStart(trailingWhitespaceStart);
-                int whitespaceGlyphEnd = glyphRun.getCharGlyphEnd(runCharEnd - 1);
+                int whitespaceGlyphStart = glyphRun.getLeadingGlyphIndex(trailingWhitespaceStart);
+                int whitespaceGlyphEnd = glyphRun.getTrailingGlyphIndex(runCharEnd - 1);
                 float whitespaceExtent = glyphRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
 
                 trailingWhitespaceExtent += whitespaceExtent;
