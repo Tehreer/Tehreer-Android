@@ -224,7 +224,7 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        return Clusters.getGlyphStart(clusterMap, charIndex - charStart);
+        return Clusters.leadingGlyphIndex(clusterMap, charIndex - charStart);
     }
 
     int getTrailingGlyphIndex(int charIndex) {
@@ -233,7 +233,7 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        return Clusters.getGlyphEnd(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
+        return Clusters.trailingGlyphIndex(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
     }
 
     /**

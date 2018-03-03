@@ -20,27 +20,42 @@ import com.mta.tehreer.collections.IntList;
 
 public class Clusters {
 
-    public static int getGlyphStart(IntList clusterMap, int arrayIndex) {
+    public static int leadingGlyphIndex(IntList clusterMap, int arrayIndex) {
         return clusterMap.get(arrayIndex);
     }
 
-    public static int getGlyphEnd(IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
-        int glyphEnd;
-
+    public static int trailingGlyphIndex(IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
-            int charNext = arrayIndex + 1;
-
-            glyphEnd = (charNext < clusterMap.size()
-                        ? clusterMap.get(charNext)
-                        : glyphCount);
-        } else {
-            int charPrevious = arrayIndex - 1;
-
-            glyphEnd = (charPrevious > -1
-                        ? clusterMap.get(charPrevious)
-                        : glyphCount);
+            return forwardTrailing(clusterMap, arrayIndex, glyphCount);
         }
 
-        return glyphEnd;
+        return backwardTrailing(clusterMap, arrayIndex, glyphCount);
+    }
+
+    private static int forwardTrailing(IntList clusterMap, int arrayIndex, int glyphCount) {
+        int leading = clusterMap.get(arrayIndex);
+        int length = clusterMap.size();
+
+        for (int i = arrayIndex + 1; i < length; i++) {
+            int mapping = clusterMap.get(i);
+            if (mapping != leading) {
+                return mapping;
+            }
+        }
+
+        return glyphCount;
+    }
+
+    private static int backwardTrailing(IntList clusterMap, int arrayIndex, int glyphCount) {
+        int leading = clusterMap.get(arrayIndex);
+
+        for (int i = arrayIndex - 1; i >= 0; i--) {
+            int mapping = clusterMap.get(i);
+            if (mapping != leading) {
+                return mapping;
+            }
+        }
+
+        return glyphCount;
     }
 }
