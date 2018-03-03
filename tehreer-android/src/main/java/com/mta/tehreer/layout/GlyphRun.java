@@ -218,24 +218,6 @@ public class GlyphRun {
         return clusterMap;
     }
 
-    int getLeadingGlyphIndex(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
-
-        return Clusters.leadingGlyphIndex(clusterMap, charIndex - charStart);
-    }
-
-    int getTrailingGlyphIndex(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
-
-        return Clusters.trailingGlyphIndex(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
-    }
-
     /**
      * Returns the x- origin of this run in parent line.
      *
@@ -355,6 +337,52 @@ public class GlyphRun {
         }
 
         return Clusters.actualClusterEnd(clusterMap, charIndex - charStart) + charStart;
+    }
+
+    /**
+     * Returns the index of leading glyph related to specified cluster. The trailing glyph will
+     * always come after the leading glyph even if the run logically flows backward.
+     *
+     * @param charIndex The index of a character in source string.
+     * @return The index of leading glyph related to specified cluster.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
+     *         than or equal to run end.
+     *
+     * @see #getTrailingGlyphIndex(int)
+     * @see #getActualClusterStart(int)
+     * @see #getActualClusterEnd(int)
+     */
+    public int getLeadingGlyphIndex(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
+        return Clusters.leadingGlyphIndex(clusterMap, charIndex - charStart);
+    }
+
+    /**
+     * Returns the index of trailing glyph related to specified cluster. The leading glyph will
+     * always come before the trailing glyph even if the run logically flows backward.
+     *
+     * @param charIndex The index of a character in source string.
+     * @return The index of trailing glyph related to specified cluster.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
+     *         than or equal to run end.
+     *
+     * @see #getLeadingGlyphIndex(int)
+     * @see #getActualClusterStart(int)
+     * @see #getActualClusterEnd(int)
+     */
+    public int getTrailingGlyphIndex(int charIndex) {
+        String indexError = checkCharIndex(charIndex);
+        if (indexError != null) {
+            throw new IllegalArgumentException(indexError);
+        }
+
+        return Clusters.trailingGlyphIndex(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
     }
 
     /**
