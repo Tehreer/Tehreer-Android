@@ -333,7 +333,7 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        return Clusters.actualClusterStart(clusterMap, charIndex);
+        return Clusters.actualClusterStart(clusterMap, charIndex - charStart) + charStart;
     }
 
     /**
@@ -354,7 +354,7 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        return Clusters.actualClusterEnd(clusterMap, charIndex);
+        return Clusters.actualClusterEnd(clusterMap, charIndex - charStart) + charStart;
     }
 
     /**
