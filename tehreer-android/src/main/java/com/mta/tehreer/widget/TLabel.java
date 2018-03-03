@@ -275,9 +275,7 @@ public class TLabel extends View {
         float adjustedX = x - getPaddingLeft();
         float adjustedY = y - getPaddingTop();
 
-        int lineIndex = mComposedFrame.getLineIndexFromPosition(adjustedX, adjustedY);
-        ComposedLine composedLine = mComposedFrame.getLines().get(lineIndex);
-
+        ComposedLine composedLine = mComposedFrame.getLineForPosition(adjustedX, adjustedY);
         float lineLeft = composedLine.getOriginX();
         float lineRight = lineLeft + composedLine.getWidth();
 

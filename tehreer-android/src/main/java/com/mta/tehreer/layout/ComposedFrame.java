@@ -26,6 +26,7 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -132,18 +133,19 @@ public class ComposedFrame {
     }
 
     /**
-     * Returns the index of line representing the specified position.
+     * Returns a suitable line representing the specified position.
      *
      * @param x The x- coordinate of position.
      * @param y The y- coordinate of position.
-     * @return The index of line representing the specified position.
+     * @return A suitable line representing the specified position.
      */
-    public int getLineIndexFromPosition(float x, float y) {
-        int lineCount = lineList.size();
-        int lineIndex;
+    public ComposedLine getLineForPosition(float x, float y) {
+        Iterator<ComposedLine> iterator = lineList.iterator();
+        ComposedLine line = null;
 
-        for (lineIndex = 0; lineIndex < lineCount; lineIndex++) {
-            ComposedLine line = lineList.get(lineIndex);
+        while (iterator.hasNext()) {
+            line = iterator.next();
+
             float top = line.getTop();
             float bottom = top + line.getHeight();
             if (y >= top && y <= bottom) {
@@ -151,11 +153,7 @@ public class ComposedFrame {
             }
         }
 
-        if (lineIndex == lineCount) {
-            lineIndex = lineCount - 1;
-        }
-
-        return lineIndex;
+        return line;
     }
 
     /**
