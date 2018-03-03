@@ -295,27 +295,28 @@ public class GlyphRun {
     }
 
     /**
-     * Determines the character index from distance.
+     * Determines the index of character nearest to the specified distance.
      * <p>
-     * The process involves iterating over the clusters of glyph run. If a cluster consists of
+     * The process involves iterating over the clusters of this glyph run. If a cluster consists of
      * multiple characters, its total advance is evenly distributed among the number of characters
      * it contains. The advance of each character is added to track the covered distance. This way
-     * leading and trailing characters are determined near to the distance passed-in as a parameter.
-     * Afterwards, the index of closer character is returned.
+     * leading and trailing characters are determined close to the specified distance. Afterwards,
+     * the index of nearer character is returned.
      * <p>
      * If <code>distance</code> is negative, then run's starting index is returned. If it is beyond
-     * run's extent, then ending index is returned.
+     * run's extent, then ending index is returned. The indices will be reversed in case of
+     * right-to-left run.
      *
      * @param distance The distance for which to determine the character index. It should be offset
      *                 from zero origin.
-     * @return The index of character representing the passed-in distance. It will be an absolute
+     * @return The index of character nearest to the specified distance. It will be an absolute
      *         index in source string.
      *
      * @see #getCharStart()
      * @see #getCharEnd()
      * @see #computeTypographicExtent(int, int)
      */
-    public int getCharIndexFromDistance(float distance) {
+    public int computeNearestCharIndex(float distance) {
         IntList clusterMap = getClusterMap();
         FloatList advances = getGlyphAdvances();
         int charCount = clusterMap.size();

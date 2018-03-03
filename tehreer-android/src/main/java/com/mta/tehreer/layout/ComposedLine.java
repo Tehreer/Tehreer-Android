@@ -218,7 +218,7 @@ public class ComposedLine {
      * @return The index of character nearest to the specified distance. It will be an absolute
      *         index in source string.
      */
-    public int getCharIndexFromDistance(float distance) {
+    public int computeNearestCharIndex(float distance) {
         GlyphRun glyphRun = null;
 
         for (int i = runList.size() - 1; i >= 0; i--) {
@@ -228,7 +228,7 @@ public class ComposedLine {
             }
         }
 
-        return glyphRun.getCharIndexFromDistance(distance - glyphRun.getOriginX());
+        return glyphRun.computeNearestCharIndex(distance - glyphRun.getOriginX());
     }
 
     /**

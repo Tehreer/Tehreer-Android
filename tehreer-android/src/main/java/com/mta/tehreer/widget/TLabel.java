@@ -283,7 +283,7 @@ public class TLabel extends View {
 
         // Check if position exists within the line horizontally.
         if (adjustedX >= lineLeft && adjustedX <= lineRight) {
-            int charIndex = composedLine.getCharIndexFromDistance(adjustedX - lineLeft);
+            int charIndex = composedLine.computeNearestCharIndex(adjustedX - lineLeft);
             int lastIndex = composedLine.getCharEnd() - 1;
 
             // Make sure to provide character of this line.
