@@ -133,6 +133,40 @@ public class ComposedFrame {
     }
 
     /**
+     * Returns the line containing the specified character.
+     *
+     * @param charIndex The index of character for which to return the line.
+     * @return The line containing the specified character.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than frame start or
+     *         greater than or equal to frame end.
+     */
+    public ComposedLine getLineForChar(int charIndex) {
+        if (charIndex < charStart || charIndex >= charEnd) {
+            throw new IllegalArgumentException("Char Index: " + charIndex
+                                               + ", Frame Range: [" + charStart + ".." + charEnd + ")");
+        }
+
+        int low = 0;
+        int high = lineList.size() - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            ComposedLine value = lineList.get(mid);
+
+            if (charIndex >= value.getCharEnd()) {
+                low = mid + 1;
+            } else if (charIndex < value.getCharStart()) {
+                high = mid - 1;
+            } else {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Returns a suitable line representing the specified position.
      *
      * @param x The x- coordinate of position.
