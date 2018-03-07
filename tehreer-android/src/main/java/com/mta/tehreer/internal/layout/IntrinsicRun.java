@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,21 +28,28 @@ public class IntrinsicRun {
     public final WritingDirection writingDirection;
     public final Typeface typeface;
     public final float typeSize;
+    public final float ascent;
+    public final float descent;
+    public final float leading;
     public final int[] glyphIds;
     public final float[] glyphOffsets;
     public final float[] glyphAdvances;
     public final int[] clusterMap;
 
     public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
-                        Typeface typeface, float typeSize, WritingDirection writingDirection,
+                        WritingDirection writingDirection, Typeface typeface, float typeSize,
+                        float ascent, float descent, float leading,
                         int[] glyphIds, float[] offsets, float[] advances, int[] clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.isBackward = isBackward;
         this.bidiLevel = bidiLevel;
+        this.writingDirection = writingDirection;
         this.typeface = typeface;
         this.typeSize = typeSize;
-        this.writingDirection = writingDirection;
+        this.ascent = ascent;
+        this.descent = descent;
+        this.leading = leading;
         this.glyphIds = glyphIds;
         this.glyphOffsets = offsets;
         this.glyphAdvances = advances;
