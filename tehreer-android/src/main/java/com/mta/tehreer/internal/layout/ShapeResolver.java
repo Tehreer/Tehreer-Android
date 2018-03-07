@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.graphics.Paint;
 import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
@@ -85,17 +86,23 @@ public class ShapeResolver {
 
     private static void resolveTypefaces(String text, Spanned spanned, List<IntrinsicRun> runs,
                                          ShapingRunLocator locator, ShapingEngine engine, byte bidiLevel) {
+        Paint.FontMetricsInt metrics = null;
+
         while (locator.moveNext()) {
             int runStart = locator.getRunStart();
             int runEnd = locator.getRunEnd();
 
             Typeface typeface = locator.getTypeface();
-            float typeSize = locator.getTypeSize();
-
             if (typeface == null) {
                 throw new IllegalArgumentException("No typeface is specified for range ["
                                                    + runStart + ".." + runEnd + ")");
             }
+
+            float typeSize = locator.getTypeSize();
+            float sizeByEm = typeSize / typeface.getUnitsPerEm();
+            float ascent = typeface.getAscent() * sizeByEm;
+            float descent = typeface.getDescent() * sizeByEm;
+            float leading = typeface.getLeading() * sizeByEm;
 
             ReplacementSpan replacement = locator.getReplacement();
             IntrinsicRun intrinsicRun;
@@ -132,7 +139,8 @@ public class ShapeResolver {
                     }
 
                     intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
-                                                    typeface, typeSize, writingDirection,
+                                                    writingDirection, typeface, typeSize,
+                                                    ascent, descent, leading,
                                                     glyphIds, offsets, advances, clusterMap);
                 } finally {
                     if (shapingResult != null) {
@@ -140,8 +148,16 @@ public class ShapeResolver {
                     }
                 }
             } else {
+                if (metrics == null) {
+                    metrics = new Paint.FontMetricsInt();
+                }
+
+                metrics.ascent = (int) -(ascent + 0.5f);
+                metrics.descent = (int) (descent + 0.5f);
+                metrics.leading = (int) (leading + 0.5f);
+
                 int spaceGlyph = typeface.getGlyphId(' ');
-                int replacementSize = replacement.getSize(null, spanned, runStart, runEnd, null);
+                int replacementSize = replacement.getSize(null, spanned, runStart, runEnd, metrics);
 
                 WritingDirection writingDirection = engine.getWritingDirection();
                 int[] glyphIds = new int[] { spaceGlyph };
@@ -150,7 +166,8 @@ public class ShapeResolver {
                 int[] clusterMap = new int[runEnd - runStart];
 
                 intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
-                                                typeface, typeSize, writingDirection,
+                                                writingDirection, typeface, typeSize,
+                                                -metrics.ascent, metrics.descent, metrics.leading,
                                                 glyphIds, offsets, advances, clusterMap);
             }
 
