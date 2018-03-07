@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,15 +63,15 @@ public class TypeFamily {
 
     private static int slopeGap(TypeSlope desired, TypeSlope candidate) {
         int[] gaps = {
-            // "If the value is ‘normal’, normal faces are checked first, then oblique faces, then
+            // "If the value is `normal`, normal faces are checked first, then oblique faces, then
             // italic faces."
             /*   PLAIN: */ 0, 2, 1,
 
-            // "If the value is ‘italic’, italic faces are checked first, then oblique, then normal
+            // "If the value is `italic`, italic faces are checked first, then oblique, then normal
             // faces."
             /*  ITALIC: */ 2, 0, 1,
 
-            // "If the value is ‘oblique’, oblique faces are checked first, then italic faces and
+            // "If the value is `oblique`, oblique faces are checked first, then italic faces and
             // then normal faces."
             /* OBLIQUE: */ 2, 1, 0,
         };
@@ -112,7 +112,29 @@ public class TypeFamily {
         return gaps[(row * 9) + column];
     }
 
+    /**
+     * Returns a typeface best matching the specified style.
+     *
+     * @param typeWidth The typographic width of desired typeface.
+     * @param typeWeight The typographic weight of desired typeface.
+     * @param typeSlope The typographic slope of desired typeface.
+     * @return A typeface best matching the specified style.
+     *
+     * @throws NullPointerException if <code>typeWidth</code> is <code>null</code>, or
+     *         <code>typeWeight</code> is <code>null</code>. or <code>typeSlope</code> is
+     *         <code>null</code>.
+     */
     public Typeface getTypefaceByStyle(TypeWidth typeWidth, TypeWeight typeWeight, TypeSlope typeSlope) {
+        if (typeWidth == null) {
+            throw new NullPointerException("Type width is null");
+        }
+        if (typeWeight == null) {
+            throw new NullPointerException("Type weight is null");
+        }
+        if (typeSlope == null) {
+            throw new NullPointerException("Type slope is null");
+        }
+
         // BASED ON CSS FONT MATCHING ALGORITHM.
         Iterator<Typeface> iterator = typefaces.iterator();
         if (iterator.hasNext()) {
