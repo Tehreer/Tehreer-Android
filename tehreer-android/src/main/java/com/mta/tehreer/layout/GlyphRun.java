@@ -43,9 +43,12 @@ public class GlyphRun {
     private final List<Object> spans;
     private final boolean isBackward;
     private final byte bidiLevel;
+    private final WritingDirection writingDirection;
     private final Typeface typeface;
     private final float typeSize;
-    private final WritingDirection writingDirection;
+    private final float ascent;
+    private final float descent;
+    private final float leading;
     private final IntList glyphIds;
     private final PointList glyphOffsets;
     private final FloatList glyphAdvances;
@@ -56,16 +59,20 @@ public class GlyphRun {
     private float mWidth = Float.NEGATIVE_INFINITY;
 
     GlyphRun(int charStart, int charEnd, List<Object> spans, boolean isBackward, byte bidiLevel,
-             Typeface typeface, float typeSize, WritingDirection writingDirection,
+             WritingDirection writingDirection, Typeface typeface, float typeSize,
+             float ascent, float descent, float leading,
              IntList glyphIds, PointList offsets, FloatList advances, IntList clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.spans = spans;
         this.isBackward = isBackward;
+        this.writingDirection = writingDirection;
         this.bidiLevel = bidiLevel;
         this.typeface = typeface;
         this.typeSize = typeSize;
-        this.writingDirection = writingDirection;
+        this.ascent = ascent;
+        this.descent = descent;
+        this.leading = leading;
         this.glyphIds = glyphIds;
         this.glyphOffsets = offsets;
         this.glyphAdvances = advances;
@@ -78,9 +85,12 @@ public class GlyphRun {
         this.spans = otherRun.spans;
         this.isBackward = otherRun.isBackward;
         this.bidiLevel = otherRun.bidiLevel;
+        this.writingDirection = otherRun.writingDirection;
         this.typeface = otherRun.typeface;
         this.typeSize = otherRun.typeSize;
-        this.writingDirection = otherRun.writingDirection;
+        this.ascent = otherRun.ascent;
+        this.descent = otherRun.descent;
+        this.leading = otherRun.leading;
         this.glyphIds = otherRun.glyphIds;
         this.glyphOffsets = otherRun.glyphOffsets;
         this.glyphAdvances = otherRun.glyphAdvances;
@@ -90,17 +100,15 @@ public class GlyphRun {
     }
 
     private String checkCharIndex(int charIndex) {
-        if (charIndex < charStart) {
-            return ("Char Index: " + charIndex + ", Char Start: " + charStart);
-        }
-        if (charIndex >= charEnd) {
-            return ("Char Index: " + charIndex + ", Char End: " + charEnd);
+        if (charIndex < charStart || charIndex >= charEnd) {
+            return ("Char Index: " + charIndex
+                    + ", Run Range: [" + charStart + ".." + charEnd + ")");
         }
 
         return null;
     }
 
-    private String checkRange(int glyphStart, int glyphEnd) {
+    private String checkGlyphRange(int glyphStart, int glyphEnd) {
         if (glyphStart < 0) {
             return ("Glyph Start: " + glyphStart);
         }
@@ -251,7 +259,7 @@ public class GlyphRun {
      * @return The ascent of this run.
      */
     public float getAscent() {
-        return typeface.getAscent() * (typeSize / typeface.getUnitsPerEm());
+        return ascent;
     }
 
     /**
@@ -261,7 +269,7 @@ public class GlyphRun {
      * @return The descent of this run.
      */
     public float getDescent() {
-        return typeface.getDescent() * (typeSize / typeface.getUnitsPerEm());
+        return descent;
     }
 
     /**
@@ -271,7 +279,7 @@ public class GlyphRun {
      * @return The leading of this run.
      */
     public float getLeading() {
-        return typeface.getLeading() * (typeSize / typeface.getUnitsPerEm());
+        return leading;
     }
 
     /**
@@ -498,7 +506,7 @@ public class GlyphRun {
      * @return The typographic extent for the given glyph range in this run.
      */
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
-        String rangeError = checkRange(glyphStart, glyphEnd);
+        String rangeError = checkGlyphRange(glyphStart, glyphEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
         }
@@ -529,7 +537,7 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public RectF computeBoundingBox(Renderer renderer, int glyphStart, int glyphEnd) {
-        String rangeError = checkRange(glyphStart, glyphEnd);
+        String rangeError = checkGlyphRange(glyphStart, glyphEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
         }
@@ -568,7 +576,7 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public void draw(Renderer renderer, Canvas canvas, int glyphStart, int glyphEnd) {
-        String rangeError = checkRange(glyphStart, glyphEnd);
+        String rangeError = checkGlyphRange(glyphStart, glyphEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
         }
