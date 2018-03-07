@@ -328,9 +328,9 @@ public class GlyphRun {
 
     /**
      * Returns the index after the last character of specified cluster in source string. In most
-     * cases, it would be one index after the specified one. But if the character occurs within a
-     * cluster, then an even further index would be returned; whether the run logically flows
-     * forward or backward.
+     * cases, it would be an index after the specified one. But if the character occurs within a
+     * cluster, then a farther index would be returned; whether the run logically flows forward or
+     * backward.
      *
      * @param charIndex The index of a character in source string.
      * @return The index after the last character of specified cluster in source string.
