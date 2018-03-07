@@ -55,7 +55,8 @@ class LineResolver {
 
         return new GlyphRun(charStart, charEnd, Arrays.asList(spans),
                             intrinsicRun.isBackward, intrinsicRun.bidiLevel,
-                            intrinsicRun.typeface, intrinsicRun.typeSize, intrinsicRun.writingDirection,
+                            intrinsicRun.writingDirection, intrinsicRun.typeface, intrinsicRun.typeSize,
+                            intrinsicRun.ascent, intrinsicRun.descent, intrinsicRun.leading,
                             new SafeIntList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
                             new SafePointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
                             new SafeFloatList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
