@@ -210,6 +210,28 @@ public class ComposedLine {
         return runList;
     }
 
+    public float computeCharDistance(int charIndex) {
+        if (charIndex < charStart || charIndex >= charEnd) {
+            throw new IllegalArgumentException("Char Index: " + charIndex
+                                               + ", Line Range: [" + charStart + ".." + charEnd + ")");
+        }
+
+        float distance = 0.0f;
+
+        int runCount = runList.size();
+        for (int i = 0; i < runCount; i++) {
+            GlyphRun glyphRun = runList.get(i);
+            if (charIndex >= glyphRun.getCharStart() && charIndex < glyphRun.getCharEnd()) {
+                distance += glyphRun.computeCharDistance(charIndex);
+                break;
+            }
+
+            distance += glyphRun.getWidth();
+        }
+
+        return distance;
+    }
+
     /**
      * Returns the index of character nearest to the specified distance.
      *
