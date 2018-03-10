@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
+import android.text.style.LineBackgroundSpan;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
@@ -190,6 +191,42 @@ public class ComposedFrame {
         return line;
     }
 
+    private void drawBackground(Canvas canvas) {
+        int frameLeft = 0;
+        int frameRight = (int) (getWidth() + 0.5f);
+
+        int lineCount = lineList.size();
+        for (int i = 0; i < lineCount; i++) {
+            ComposedLine composedLine = lineList.get(i);
+            Object[] lineSpans = composedLine.getSpans();
+
+            for (Object style : lineSpans) {
+                if (style instanceof LineBackgroundSpan) {
+                    LineBackgroundSpan span = (LineBackgroundSpan) style;
+
+                    Spanned sourceText = (Spanned) source;
+                    int spanStart = sourceText.getSpanStart(span);
+                    int spanEnd = sourceText.getSpanEnd(span);
+
+                    int lineStart = composedLine.getCharStart();
+                    int lineEnd = composedLine.getCharEnd();
+                    if (lineStart >= spanEnd || lineEnd <= spanStart) {
+                        continue;
+                    }
+
+                    Paint paint = lazyPaint();
+                    int lineTop = (int) (composedLine.getTop() + 0.5f);
+                    int lineBaseline = (int) (composedLine.getOriginY() + 0.5f);
+                    int lineBottom = (int) (composedLine.getTop() + composedLine.getHeight() + 0.5f);
+
+                    span.drawBackground(canvas, paint, frameLeft, frameRight,
+                                        lineTop, lineBaseline, lineBottom,
+                                        sourceText, lineStart, lineEnd, i);
+                }
+            }
+        }
+    }
+
     /**
      * Draws this frame onto the given <code>canvas</code> using the given <code>renderer</code>.
      *
@@ -200,6 +237,8 @@ public class ComposedFrame {
      */
     public void draw(Renderer renderer, Canvas canvas, float x, float y) {
         canvas.translate(x, y);
+
+        drawBackground(canvas);
 
         for (ComposedLine composedLine : lineList) {
             Object[] spans = composedLine.getSpans();
