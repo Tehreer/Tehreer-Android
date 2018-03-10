@@ -240,13 +240,16 @@ public class ComposedFrame {
 
         drawBackground(canvas);
 
-        for (ComposedLine composedLine : lineList) {
-            Object[] spans = composedLine.getSpans();
+        int lineCount = lineList.size();
+        for (int i = 0; i < lineCount; i++) {
+            ComposedLine composedLine = lineList.get(i);
+            Object[] lineSpans = composedLine.getSpans();
 
-            int left = 0;
-            int right = (int) (getWidth() + 0.5f);
+            int lineLeft = 0;
+            int lineRight = (int) (getWidth() + 0.5f);
 
-            for (Object style : spans) {
+            // Draw leading margins of this line.
+            for (Object style : lineSpans) {
                 if (style instanceof LeadingMarginSpan) {
                     LeadingMarginSpan span = (LeadingMarginSpan) style;
 
@@ -254,23 +257,24 @@ public class ComposedFrame {
                     boolean isLTR = (paragraphLevel & 1) == 0;
 
                     Paint paint = lazyPaint();
-                    int margin = (isLTR ? left : right);
-                    int dir = (isLTR ? Layout.DIR_LEFT_TO_RIGHT : Layout.DIR_RIGHT_TO_LEFT);
-                    int top = (int) (composedLine.getTop() + 0.5f);
-                    int baseline = (int) (composedLine.getOriginY() + 0.5f);
-                    int bottom = (int) (composedLine.getTop() + composedLine.getHeight() + 0.5f);
-                    Spanned text = (Spanned) source;
-                    int start = text.getSpanStart(span);
-                    int end = text.getSpanEnd(span);
-                    boolean first = composedLine.isFirst();
+                    int margin = (isLTR ? lineLeft : lineRight);
+                    int direction = (isLTR ? Layout.DIR_LEFT_TO_RIGHT : Layout.DIR_RIGHT_TO_LEFT);
+                    int lineTop = (int) (composedLine.getTop() + 0.5f);
+                    int lineBaseline = (int) (composedLine.getOriginY() + 0.5f);
+                    int lineBottom = (int) (composedLine.getTop() + composedLine.getHeight() + 0.5f);
+                    Spanned sourceText = (Spanned) source;
+                    int lineStart = composedLine.getCharStart();
+                    int lineEnd = composedLine.getCharEnd();
+                    boolean isFirst = composedLine.isFirst();
 
-                    span.drawLeadingMargin(canvas, paint, margin, dir, top, baseline, bottom,
-                                           text, start, end, first, null);
+                    span.drawLeadingMargin(canvas, paint, margin, direction,
+                                           lineTop, lineBaseline, lineBottom,
+                                           sourceText, lineStart, lineEnd, isFirst, null);
 
                     if (isLTR) {
-                        left += span.getLeadingMargin(first);
+                        lineLeft += span.getLeadingMargin(isFirst);
                     } else {
-                        right -= span.getLeadingMargin(first);
+                        lineRight -= span.getLeadingMargin(isFirst);
                     }
                 }
             }
