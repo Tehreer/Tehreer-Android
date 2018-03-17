@@ -394,9 +394,9 @@ public class GlyphRun {
     }
 
     public float computeCharDistance(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
+        if (charIndex < charStart || charIndex > charEnd) {
+            throw new IllegalArgumentException("Char Index: " + charIndex
+                                               + ", Run Range: [" + charStart + ".." + charEnd + ")");
         }
 
         int clusterStart = 0;
@@ -405,6 +405,7 @@ public class GlyphRun {
         int glyphStart = 0;
         int glyphCount = glyphIds.size();
 
+        int endOffset = charIndex - charStart;
         float distance = 0.0f;
 
         for (int i = 1; i <= charCount; i++) {
@@ -419,12 +420,12 @@ public class GlyphRun {
                 clusterAdvance += glyphAdvances.get(j);
             }
 
-            if (i >= charIndex) {
+            if (i >= endOffset) {
                 // Divide the advance evenly between cluster length.
                 int clusterLength = i - clusterStart;
                 float charAdvance = clusterAdvance / clusterLength;
 
-                int clusterOffset = i - charIndex;
+                int clusterOffset = endOffset - clusterStart;
                 float offsetAdvance = charAdvance * clusterOffset;
 
                 distance += offsetAdvance;
