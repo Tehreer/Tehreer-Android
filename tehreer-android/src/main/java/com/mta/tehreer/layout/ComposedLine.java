@@ -21,6 +21,7 @@ import android.graphics.Canvas;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -28,8 +29,8 @@ import java.util.List;
  */
 public class ComposedLine {
 
-	private final int charStart;
-	private final int charEnd;
+	private final int lineStart;
+	private final int lineEnd;
     private final byte paragraphLevel;
     private final float extent;
     private final float trailingWhitespaceExtent;
@@ -48,8 +49,8 @@ public class ComposedLine {
 	ComposedLine(int charStart, int charEnd, byte paragraphLevel,
                  float ascent, float descent, float leading, float extent,
                  float trailingWhitespaceExtent, List<GlyphRun> runList) {
-	    this.charStart = charStart;
-	    this.charEnd = charEnd;
+	    this.lineStart = charStart;
+	    this.lineEnd = charEnd;
 	    this.paragraphLevel = paragraphLevel;
 	    this.extent = extent;
 	    this.trailingWhitespaceExtent = trailingWhitespaceExtent;
@@ -66,7 +67,7 @@ public class ComposedLine {
      * @return The index to the first character of this line in source text.
      */
 	public int getCharStart() {
-		return charStart;
+		return lineStart;
 	}
 
     /**
@@ -75,7 +76,7 @@ public class ComposedLine {
      * @return The index after the last character of this line in source text.
      */
 	public int getCharEnd() {
-		return charEnd;
+		return lineEnd;
 	}
 
 	Object[] getSpans() {
@@ -223,9 +224,9 @@ public class ComposedLine {
     }
 
     public float computeCharDistance(int charIndex) {
-        if (charIndex < charStart || charIndex >= charEnd) {
+        if (charIndex < lineStart || charIndex >= lineEnd) {
             throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Line Range: [" + charStart + ".." + charEnd + ")");
+                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
         }
 
         float distance = 0.0f;
@@ -242,6 +243,68 @@ public class ComposedLine {
         }
 
         return distance;
+    }
+
+    /**
+     * Returns an array of visual edges corresponding to the specified character range.
+     * <p>
+     * The resulting array will contain pairs of leading and trailing edges sorted from left to
+     * right. There will be a separate pair for each glyph run occurred in the specified character
+     * range. Each edge will be positioned relative to the start of the line always assumed at zero.
+     * Neither edge will be lesser than zero nor greater than the width of the line.
+     *
+     * @param charStart The index to the first logical character in source text.
+     * @param charEnd The index after the last logical character in source text.
+     * @return An array of visual edges corresponding to the specified character range.
+     *
+     * @throws IllegalArgumentException if <code>charStart</code> is less than line start, or
+     *         <code>charEnd</code> is greater than line end, or <code>charStart</code> is greater
+     *         than <code>charEnd</code>.
+     */
+    public float[] computeVisualEdges(int charStart, int charEnd) {
+        if (charStart < lineStart) {
+            throw new IllegalArgumentException("Char Start: " + charStart
+                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
+        }
+        if (charEnd > lineEnd) {
+            throw new IllegalArgumentException("Char End: " + charEnd
+                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
+        }
+        if (charStart > charEnd) {
+            throw new IllegalArgumentException("Bad Range: [" + lineStart + ".." + lineEnd + ")");
+        }
+
+        int runCount = runList.size();
+
+        float[] edgeList = new float[runCount * 2];
+        int edgeIndex = 0;
+
+        for (int i = 0; i < runCount; i++) {
+            GlyphRun glyphRun = runList.get(i);
+            int runStart = glyphRun.getCharStart();
+            int runEnd = glyphRun.getCharEnd();
+
+            if (runStart < charEnd && runEnd > charStart) {
+                int selectionStart = Math.max(charStart, runStart);
+                int selectionEnd = Math.min(charEnd, runEnd);
+
+                float leadingEdge = glyphRun.computeCharDistance(selectionStart);
+                float trailingEdge = glyphRun.computeCharDistance(selectionEnd);
+
+                float relativeLeft = glyphRun.getOriginX();
+                float selectionLeft = Math.min(leadingEdge, trailingEdge) + relativeLeft;
+                float selectionRight = Math.max(leadingEdge, trailingEdge) + relativeLeft;
+
+                edgeList[edgeIndex++] = selectionLeft;
+                edgeList[edgeIndex++] = selectionRight;
+            }
+        }
+
+        if (edgeIndex < edgeList.length) {
+            edgeList = Arrays.copyOf(edgeList, edgeIndex);
+        }
+
+        return edgeList;
     }
 
     /**
