@@ -190,6 +190,18 @@ public class ComposedLine {
         return mOriginY - mAscent;
     }
 
+    float getBottom() {
+        return mOriginY + mDescent + mLeading;
+    }
+
+    float getLeft() {
+        return mOriginX;
+    }
+
+    float getRight() {
+        return mOriginX + extent;
+    }
+
     /**
      * Returns the advance sum of glyphs corresponding to the trailing whitespace characters in this
      * line.
