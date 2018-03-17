@@ -191,28 +191,18 @@ public class ComposedFrame {
 
     private void addSelectionParts(ComposedLine line, int charStart, int charEnd,
                                    float selectionTop, float selectionBottom, Path selectionPath) {
-        List<GlyphRun> runList = line.getRuns();
-        int runCount = runList.size();
+        float[] visualEdges = line.computeVisualEdges(charStart, charEnd);
+        float lineLeft = line.getLeft();
 
-        for (int i = 0; i < runCount; i++) {
-            GlyphRun glyphRun = runList.get(i);
-            int runStart = glyphRun.getCharStart();
-            int runEnd = glyphRun.getCharEnd();
+        int edgeCount = visualEdges.length;
+        int edgeIndex = 0;
 
-            if (runStart < charEnd && runEnd > charStart) {
-                int selectionStart = Math.max(charStart, runStart);
-                int selectionEnd = Math.min(charEnd, runEnd);
+        while (edgeIndex < edgeCount) {
+            float selectionLeft = visualEdges[edgeIndex++] + lineLeft;
+            float selectionRight = visualEdges[edgeIndex++] + lineLeft;
 
-                float leadingDistance = glyphRun.computeCharDistance(selectionStart);
-                float trailingDistance = glyphRun.computeCharDistance(selectionEnd);
-
-                float absoluteLeft = line.getLeft() + glyphRun.getOriginX();
-                float selectionLeft = Math.min(leadingDistance, trailingDistance) + absoluteLeft;
-                float selectionRight = Math.max(leadingDistance, trailingDistance) + absoluteLeft;
-
-                selectionPath.addRect(selectionLeft, selectionTop,
-                                      selectionRight, selectionBottom, Path.Direction.CW);
-            }
+            selectionPath.addRect(selectionLeft, selectionTop,
+                                  selectionRight, selectionBottom, Path.Direction.CW);
         }
     }
 
@@ -222,6 +212,10 @@ public class ComposedFrame {
      * @param charStart The index to the first character of selection in source text.
      * @param charEnd The index after the first character of selection in source text.
      * @return A path that contains a set of rectangles covering the specified selection range.
+     *
+     * @throws IllegalArgumentException if <code>charStart</code> is less than frame start, or
+     *         <code>charEnd</code> is greater than frame end, or <code>charStart</code> is greater
+     *         than <code>charEnd</code>.
      */
     public Path generateSelectionPath(int charStart, int charEnd) {
         if (charStart < frameStart) {
@@ -253,8 +247,10 @@ public class ComposedFrame {
             float frameLeft = 0.0f;
             float frameRight = mWidth;
 
-            // Select each intersecting part of first line.
             float firstBottom = firstLine.getBottom();
+            float lastTop = lastLine.getTop();
+
+            // Select each intersecting part of first line.
             addSelectionParts(firstLine, charStart, firstLine.getCharEnd(),
                               firstTop, firstBottom, selectionPath);
 
@@ -277,11 +273,6 @@ public class ComposedFrame {
                                       frameRight, midBottom, Path.Direction.CW);
             }
 
-            // Select each intersecting part of last line.
-            float lastTop = lastLine.getTop();
-            addSelectionParts(lastLine, lastLine.getCharStart(), charEnd,
-                              lastTop, lastBottom, selectionPath);
-
             // Select leading padding of last line.
             if ((lastLine.getParagraphLevel() & 1) == 1) {
                 selectionPath.addRect(lastLine.getRight(), lastTop,
@@ -290,6 +281,10 @@ public class ComposedFrame {
                 selectionPath.addRect(frameLeft, lastTop,
                                       lastLine.getLeft(), lastBottom, Path.Direction.CW);
             }
+
+            // Select each intersecting part of last line.
+            addSelectionParts(lastLine, lastLine.getCharStart(), charEnd,
+                              lastTop, lastBottom, selectionPath);
         }
 
         return selectionPath;
