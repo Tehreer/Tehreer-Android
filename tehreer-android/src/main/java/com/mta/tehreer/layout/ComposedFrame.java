@@ -18,6 +18,7 @@ package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
@@ -27,7 +28,6 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -37,8 +37,8 @@ import java.util.List;
 public class ComposedFrame {
 
     private final CharSequence source;
-    private final int charStart;
-    private final int charEnd;
+    private final int frameStart;
+    private final int frameEnd;
     private final List<ComposedLine> lineList;
 
     private float mOriginX;
@@ -50,8 +50,8 @@ public class ComposedFrame {
 
     ComposedFrame(CharSequence source, int charStart, int charEnd, List<ComposedLine> lineList) {
         this.source = source;
-        this.charStart = charStart;
-        this.charEnd = charEnd;
+        this.frameStart = charStart;
+        this.frameEnd = charEnd;
         this.lineList = Collections.unmodifiableList(lineList);
     }
 
@@ -76,7 +76,7 @@ public class ComposedFrame {
      * @return The index to the first character of this frame in source text.
      */
     public int getCharStart() {
-        return charStart;
+        return frameStart;
     }
 
     /**
@@ -85,7 +85,7 @@ public class ComposedFrame {
      * @return The index after the last character of this frame in source text.
      */
     public int getCharEnd() {
-        return charEnd;
+        return frameEnd;
     }
 
     /**
@@ -134,18 +134,18 @@ public class ComposedFrame {
     }
 
     /**
-     * Returns the line containing the specified character.
+     * Returns the index of line containing the specified character.
      *
-     * @param charIndex The index of character for which to return the line.
-     * @return The line containing the specified character.
+     * @param charIndex The index of character for which to return the line index.
+     * @return The index of line containing the specified character.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than frame start or
-     *         greater than or equal to frame end.
+     *         greater than frame end.
      */
-    public ComposedLine getLineForChar(int charIndex) {
-        if (charIndex < charStart || charIndex >= charEnd) {
+    public int getLineIndexForChar(int charIndex) {
+        if (charIndex < frameStart || charIndex > frameEnd) {
             throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Frame Range: [" + charStart + ".." + charEnd + ")");
+                                               + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
         }
 
         int low = 0;
@@ -160,35 +160,139 @@ public class ComposedFrame {
             } else if (charIndex < value.getCharStart()) {
                 high = mid - 1;
             } else {
-                return value;
+                return mid;
             }
         }
 
-        return null;
+        return high;
     }
 
     /**
-     * Returns a suitable line representing the specified position.
+     * Returns the index of a suitable line representing the specified position.
      *
      * @param x The x- coordinate of position.
      * @param y The y- coordinate of position.
-     * @return A suitable line representing the specified position.
+     * @return The index of a suitable line representing the specified position.
      */
-    public ComposedLine getLineForPosition(float x, float y) {
-        Iterator<ComposedLine> iterator = lineList.iterator();
-        ComposedLine line = null;
+    public int getLineIndexForPosition(float x, float y) {
+        int lineCount = lineList.size();
 
-        while (iterator.hasNext()) {
-            line = iterator.next();
-
+        for (int i = 0; i < lineCount; i++) {
+            ComposedLine line = lineList.get(i);
             float top = line.getTop();
             float bottom = top + line.getHeight();
             if (y >= top && y <= bottom) {
-                break;
+                return i;
             }
         }
 
-        return line;
+        return lineCount - 1;
+    }
+
+    private void addSelectionParts(ComposedLine line, int charStart, int charEnd,
+                                   float selectionTop, float selectionBottom, Path selectionPath) {
+        List<GlyphRun> runList = line.getRuns();
+        int runCount = runList.size();
+
+        for (int i = 0; i < runCount; i++) {
+            GlyphRun glyphRun = runList.get(i);
+            int runStart = glyphRun.getCharStart();
+            int runEnd = glyphRun.getCharEnd();
+
+            if (runStart < charEnd && runEnd > charStart) {
+                int selectionStart = Math.max(charStart, runStart);
+                int selectionEnd = Math.min(charEnd, runEnd);
+
+                float leadingDistance = glyphRun.computeCharDistance(selectionStart);
+                float trailingDistance = glyphRun.computeCharDistance(selectionEnd);
+
+                float absoluteLeft = line.getLeft() + glyphRun.getOriginX();
+                float selectionLeft = Math.min(leadingDistance, trailingDistance) + absoluteLeft;
+                float selectionRight = Math.max(leadingDistance, trailingDistance) + absoluteLeft;
+
+                selectionPath.addRect(selectionLeft, selectionTop,
+                                      selectionRight, selectionBottom, Path.Direction.CW);
+            }
+        }
+    }
+
+    /**
+     * Generates a path that contains a set of rectangles covering the specified selection range.
+     *
+     * @param charStart The index to the first character of selection in source text.
+     * @param charEnd The index after the first character of selection in source text.
+     * @return A path that contains a set of rectangles covering the specified selection range.
+     */
+    public Path generateSelectionPath(int charStart, int charEnd) {
+        if (charStart < frameStart) {
+            throw new IllegalArgumentException("Char Start: " + charStart
+                                               + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
+        }
+        if (charEnd > frameEnd) {
+            throw new IllegalArgumentException("Char End: " + charEnd
+                                                + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
+        }
+        if (charStart > charEnd) {
+            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
+        }
+
+        Path selectionPath = new Path();
+
+        int firstIndex = getLineIndexForChar(charStart);
+        int lastIndex = getLineIndexForChar(charEnd);
+
+        ComposedLine firstLine = lineList.get(firstIndex);
+        ComposedLine lastLine = lineList.get(lastIndex);
+
+        float firstTop = firstLine.getTop();
+        float lastBottom = lastLine.getBottom();
+
+        if (firstLine == lastLine) {
+            addSelectionParts(firstLine, charStart, charEnd, firstTop, lastBottom, selectionPath);
+        } else {
+            float frameLeft = 0.0f;
+            float frameRight = mWidth;
+
+            // Select each intersecting part of first line.
+            float firstBottom = firstLine.getBottom();
+            addSelectionParts(firstLine, charStart, firstLine.getCharEnd(),
+                              firstTop, firstBottom, selectionPath);
+
+            // Select trailing padding of first line.
+            if ((lastLine.getParagraphLevel() & 1) == 1) {
+                selectionPath.addRect(frameLeft, firstTop,
+                                      firstLine.getLeft(), firstBottom, Path.Direction.CW);
+            } else {
+                selectionPath.addRect(firstLine.getRight(), firstTop,
+                                      frameRight, firstBottom, Path.Direction.CW);
+            }
+
+            // Select whole part of each mid line.
+            for (int i = firstIndex + 1; i < lastIndex; i++) {
+                ComposedLine midLine = lineList.get(i);
+                float midTop = midLine.getTop();
+                float midBottom = midLine.getBottom();
+
+                selectionPath.addRect(frameLeft, midTop,
+                                      frameRight, midBottom, Path.Direction.CW);
+            }
+
+            // Select each intersecting part of last line.
+            float lastTop = lastLine.getTop();
+            addSelectionParts(lastLine, lastLine.getCharStart(), charEnd,
+                              lastTop, lastBottom, selectionPath);
+
+            // Select leading padding of last line.
+            if ((lastLine.getParagraphLevel() & 1) == 1) {
+                selectionPath.addRect(lastLine.getRight(), lastTop,
+                                      frameRight, lastBottom, Path.Direction.CW);
+            } else {
+                selectionPath.addRect(frameLeft, lastTop,
+                                      lastLine.getLeft(), lastBottom, Path.Direction.CW);
+            }
+        }
+
+        return selectionPath;
     }
 
     private void drawBackground(Canvas canvas) {
@@ -287,8 +391,8 @@ public class ComposedFrame {
 
     @Override
     public String toString() {
-        return "ComposedFrame{charStart=" + charStart
-                + ", charEnd=" + charEnd
+        return "ComposedFrame{charStart=" + getCharStart()
+                + ", charEnd=" + getCharEnd()
                 + ", originX=" + getOriginX()
                 + ", originY=" + getOriginY()
                 + ", width=" + getWidth()
