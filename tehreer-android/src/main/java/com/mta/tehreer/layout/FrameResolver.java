@@ -360,6 +360,8 @@ public class FrameResolver {
 
         FrameFiller frameFiller = new FrameFiller();
         int paragraphIndex = mParagraphs.binarySearch(charStart);
+
+        int segmentStart = charStart;
         int segmentEnd;
 
         // Iterate over all paragraphs in provided range.
@@ -368,7 +370,7 @@ public class FrameResolver {
             segmentEnd = Math.min(charEnd, paragraph.getCharEnd());
 
             // Setup the frame filler and add the lines.
-            frameFiller.charStart = charStart;
+            frameFiller.charStart = segmentStart;
             frameFiller.charEnd = segmentEnd;
             frameFiller.baseLevel = paragraph.getBaseLevel();
             frameFiller.addParagraphLines();
@@ -377,14 +379,14 @@ public class FrameResolver {
                 break;
             }
 
-            charStart = segmentEnd;
+            segmentStart = segmentEnd;
             paragraphIndex++;
-        } while (charStart < charEnd);
+        } while (segmentStart < charEnd);
 
         frameFiller.handleTruncation(charEnd);
         frameFiller.resolveAlignments();
 
-        ComposedFrame frame = new ComposedFrame(mSpanned, charStart, segmentEnd, frameFiller.frameLines);
+        ComposedFrame frame = new ComposedFrame(mSpanned, charStart, charEnd, frameFiller.frameLines);
         frame.setContainerRect(mFrameBounds.left, mFrameBounds.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
 
         return frame;
