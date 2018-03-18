@@ -38,6 +38,7 @@ FT_FILE_LIST := \
     base/ftinit.c \
     base/ftlcdfil.c \
     base/ftmm.c \
+    base/ftfntfmt.c \
     base/ftpatent.c \
     base/ftsynth.c \
     base/ftstroke.c \
