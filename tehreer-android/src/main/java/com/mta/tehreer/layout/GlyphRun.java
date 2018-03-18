@@ -393,6 +393,15 @@ public class GlyphRun {
         return Clusters.trailingGlyphIndex(clusterMap, charIndex - charStart, isBackward, glyphIds.size());
     }
 
+    /**
+     * Determines the distance of specified character from the start of the run assumed at zero.
+     *
+     * @param charIndex The index of a character in source string.
+     * @return The distance of specified character from the start of the run assumed at zero.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
+     *         than run end.
+     */
     public float computeCharDistance(int charIndex) {
         if (charIndex < charStart || charIndex > charEnd) {
             throw new IllegalArgumentException("Char Index: " + charIndex
