@@ -223,8 +223,17 @@ public class ComposedLine {
         return runList;
     }
 
+    /**
+     * Determines the distance of specified character from the start of the line assumed at zero.
+     *
+     * @param charIndex The index of character in source text.
+     * @return The distance of specified character from the start of the line assumed at zero.
+     *
+     * @throws IllegalArgumentException if <code>charIndex</code> is less than line start or greater
+     *         than line end.
+     */
     public float computeCharDistance(int charIndex) {
-        if (charIndex < lineStart || charIndex >= lineEnd) {
+        if (charIndex < lineStart || charIndex > lineEnd) {
             throw new IllegalArgumentException("Char Index: " + charIndex
                                                + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
         }
@@ -250,8 +259,7 @@ public class ComposedLine {
      * <p>
      * The resulting array will contain pairs of leading and trailing edges sorted from left to
      * right. There will be a separate pair for each glyph run occurred in the specified character
-     * range. Each edge will be positioned relative to the start of the line always assumed at zero.
-     * Neither edge will be lesser than zero nor greater than the width of the line.
+     * range. Each edge will be positioned relative to the start of the line assumed at zero.
      *
      * @param charStart The index to the first logical character in source text.
      * @param charEnd The index after the last logical character in source text.
