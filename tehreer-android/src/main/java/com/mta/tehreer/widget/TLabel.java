@@ -21,7 +21,6 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.RectF;
-import android.text.Html;
 import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -132,7 +131,13 @@ public class TLabel extends View {
             if (values.hasValue(R.styleable.TLabel_typeface)) {
                 setTypeface(values.getResourceId(R.styleable.TLabel_typeface, 0));
             }
-            setSpanned(Html.fromHtml(values.getString(R.styleable.TLabel_text)));
+
+            CharSequence text = values.getText(R.styleable.TLabel_text);
+            if (text instanceof Spanned) {
+                setSpanned((Spanned) text);
+            } else {
+                setText(text.toString());
+            }
         } finally {
             values.recycle();
         }
