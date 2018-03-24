@@ -135,7 +135,7 @@ public class TLabel extends View {
             CharSequence text = values.getText(R.styleable.TLabel_text);
             if (text instanceof Spanned) {
                 setSpanned((Spanned) text);
-            } else {
+            } else if (text != null) {
                 setText(text.toString());
             }
         } finally {
