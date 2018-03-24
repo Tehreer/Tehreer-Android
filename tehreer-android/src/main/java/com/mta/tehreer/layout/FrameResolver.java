@@ -47,6 +47,8 @@ public class FrameResolver {
     private byte[] mBreaks;
 
     private RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+    private boolean mFitsHorizontally = false;
+    private boolean mFitsVertically = false;
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
@@ -112,6 +114,48 @@ public class FrameResolver {
         }
 
         mFrameBounds.set(frameBounds);
+    }
+
+    /**
+     * Returns whether or not to tightly fit the lines horizontally in a frame. The default value is
+     * <code>false</code>.
+     *
+     * @return <code>true</code> if horizontal fitting is enabled; <code>false</code> otherwise.
+     */
+    public boolean getFitsHorizontally() {
+        return mFitsHorizontally;
+    }
+
+    /**
+     * Sets whether or not to tightly fit the lines horizontally in a frame. If enabled, the
+     * resulting frame will have a minimum width that tightly encloses all the lines of specified
+     * text. The default value is <code>false</code>.
+     *
+     * @param fitsHorizontally A boolean value specifying the horizontal fitting state.
+     */
+    public void setFitsHorizontally(boolean fitsHorizontally) {
+        mFitsHorizontally = fitsHorizontally;
+    }
+
+    /**
+     * Returns whether or not to tightly fit the lines vertically in a frame. The default value is
+     * <code>false</code>.
+     *
+     * @return <code>true</code> if vertical fitting is enabled; <code>false</code> otherwise.
+     */
+    public boolean getFitsVertically() {
+        return mFitsVertically;
+    }
+
+    /**
+     * Sets whether or not to tightly fit the lines vertically in a frame. If enabled, the resulting
+     * frame will have a minimum height that tightly encloses all the lines of specified text. The
+     * default value is <code>false</code>.
+     *
+     * @param fitsVertically A boolean value specifying the vertical fitting state.
+     */
+    public void setFitsVertically(boolean fitsVertically) {
+        mFitsVertically = fitsVertically;
     }
 
     /**
@@ -333,7 +377,6 @@ public class FrameResolver {
 
     /**
      * Creates a frame representing specified string range in source text.
-     *
      * <p>
      * The resolver keeps on filling the frame until it either runs out of text or it finds that
      * text no longer fits in frame bounds. The resulting frame consists of at least one line even
@@ -606,6 +649,8 @@ public class FrameResolver {
             // Set supporting properties of line.
             composedLine.setSpans(paragraphSpans);
             composedLine.setFirst(leadingLineCount > 0);
+            composedLine.setIntrinsicMargin(layoutWidth - lineExtent);
+            composedLine.setFlushFactor(flushFactor);
         }
 
         void handleTruncation(int frameEnd) {
@@ -636,23 +681,59 @@ public class FrameResolver {
             ComposedLine lastLine = frameLines.get(lineCount - 1);
             float occupiedHeight = lastLine.getTop() + lastLine.getHeight();
 
-            // Set the layout height if unknown.
-            if (layoutHeight == Float.POSITIVE_INFINITY) {
+            if (mFitsVertically) {
+                // Update the layout height to occupied height.
                 layoutHeight = occupiedHeight;
+            } else {
+                // Find out the additional top for vertical alignment.
+                float verticalMultiplier = getVerticalMultiplier();
+                float remainingHeight = layoutHeight - occupiedHeight;
+                float additionalTop = remainingHeight * verticalMultiplier;
+
+                // Readjust the vertical position of each line.
+                for (int i = 0; i < lineCount; i++) {
+                    ComposedLine composedLine = frameLines.get(i);
+                    float oldTop = composedLine.getOriginY();
+                    float adjustedTop = oldTop + additionalTop;
+
+                    composedLine.setOriginY(adjustedTop);
+                }
             }
 
-            // Find out the offset for vertical alignment.
-            float verticalMultiplier = getVerticalMultiplier();
-            float remainingHeight = layoutHeight - occupiedHeight;
-            float dy = remainingHeight * verticalMultiplier;
+            if (mFitsHorizontally) {
+                float occupiedWidth = Float.NEGATIVE_INFINITY;
 
-            // TODO: Find out unknown layout width.
+                // Find out the occupied width.
+                for (int i = 0; i < lineCount; i++) {
+                    ComposedLine composedLine = frameLines.get(i);
+                    float intrinsicMargin = composedLine.getIntrinsicMargin();
+                    float contentWidth = composedLine.getWidth();
+                    float marginalWidth = intrinsicMargin + contentWidth;
 
-            for (int i = 0; i < lineCount; i++) {
-                ComposedLine composedLine = frameLines.get(i);
-                float lineY = composedLine.getOriginY() + dy;
+                    if (marginalWidth > occupiedWidth) {
+                        occupiedWidth = marginalWidth;
+                    }
+                }
 
-                composedLine.setOriginY(lineY);
+                // Readjust the horizontal position of each line.
+                for (int i = 0; i < lineCount; i++) {
+                    ComposedLine composedLine = frameLines.get(i);
+                    float intrinsicMargin = composedLine.getIntrinsicMargin();
+                    float flushFactor = composedLine.getFlushFactor();
+                    float availableWidth = occupiedWidth - intrinsicMargin;
+                    float alignedLeft = composedLine.getFlushPenOffset(flushFactor, availableWidth);
+                    float marginalLeft = 0.0f;
+
+                    byte paragraphLevel = composedLine.getParagraphLevel();
+                    if ((paragraphLevel & 1) == 0) {
+                        marginalLeft = intrinsicMargin;
+                    }
+
+                    composedLine.setOriginX(marginalLeft + alignedLeft);
+                }
+
+                // Update the layout width to occupied width.
+                layoutWidth = occupiedWidth;
             }
         }
     }
