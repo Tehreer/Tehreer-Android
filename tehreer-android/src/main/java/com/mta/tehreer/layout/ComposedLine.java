@@ -38,6 +38,8 @@ public class ComposedLine {
 
     private Object[] mSpans;
     private boolean mFirst;
+    private float mIntrinsicMargin;
+    private float mFlushFactor;
 
     private float mAscent;
     private float mDescent;
@@ -93,6 +95,22 @@ public class ComposedLine {
 
     void setFirst(boolean first) {
 	    mFirst = first;
+    }
+
+    float getIntrinsicMargin() {
+	    return mIntrinsicMargin;
+    }
+
+    void setIntrinsicMargin(float intrinsicMargin) {
+	    mIntrinsicMargin = intrinsicMargin;
+    }
+
+    public float getFlushFactor() {
+        return mFlushFactor;
+    }
+
+    public void setFlushFactor(float flushFactor) {
+        mFlushFactor = flushFactor;
     }
 
     /**
