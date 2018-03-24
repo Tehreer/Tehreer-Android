@@ -159,39 +159,12 @@ public class TLabel extends View {
 
         float layoutWidth = (widthMode == MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : widthSize - horizontalPadding);
         float layoutHeight = (heightMode == MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : heightSize - verticalPadding);
+
+        mResolver.setFitsHorizontally(widthMode != MeasureSpec.EXACTLY);
+        mResolver.setFitsVertically(heightMode != MeasureSpec.EXACTLY);
         updateFrame(layoutWidth, layoutHeight);
 
-        boolean needsRelayout = false;
-        int actualWidth;
-        int actualHeight;
-
-        if (widthMode == MeasureSpec.EXACTLY) {
-            actualWidth = widthSize;
-        } else {
-            actualWidth = horizontalPadding + mTextWidth;
-
-            if (widthMode == MeasureSpec.AT_MOST && widthSize < actualWidth) {
-                actualWidth = widthSize;
-                needsRelayout = true;
-            }
-        }
-
-        if (heightMode == MeasureSpec.EXACTLY) {
-            actualHeight = heightSize;
-        } else {
-            actualHeight = verticalPadding + mTextHeight;
-
-            if (heightMode == MeasureSpec.AT_MOST && heightSize < actualHeight) {
-                actualHeight = heightSize;
-                needsRelayout = true;
-            }
-        }
-
-        if (needsRelayout) {
-            updateFrame(actualWidth - horizontalPadding, actualHeight - verticalPadding);
-        }
-
-        setMeasuredDimension(actualWidth, actualHeight);
+        setMeasuredDimension(mTextWidth + horizontalPadding, mTextHeight + verticalPadding);
     }
 
     @Override
@@ -227,8 +200,8 @@ public class TLabel extends View {
 
             mComposedFrame = mResolver.createFrame(0, mTypesetter.getSpanned().length());
 
-            mTextWidth = (int) (mComposedFrame.getWidth() + 1.0f);
-            mTextHeight = (int) (mComposedFrame.getHeight() + 1.0f);
+            mTextWidth = (int) (mComposedFrame.getWidth() + 0.5f);
+            mTextHeight = (int) (mComposedFrame.getHeight() + 0.5f);
 
             long t2 = System.nanoTime();
             Log.i("Tehreer", "Time taken to resolve frame: " + ((t2 - t1) * 1E-6));
