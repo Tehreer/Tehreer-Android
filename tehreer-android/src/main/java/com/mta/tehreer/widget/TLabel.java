@@ -117,17 +117,17 @@ public class TLabel extends View {
             }
 
             setGravity(values.getInt(R.styleable.TLabel_gravity, Gravity.TOP | Gravity.START));
-            setMaxLines(values.getInteger(R.styleable.TLabel_maxLines, 0));
-            setExtraLineSpacing(values.getFloat(R.styleable.TLabel_extraLineSpacing, 0.0f));
+            setMaxLines(values.getInt(R.styleable.TLabel_maxLines, 0));
+            setExtraLineSpacing(values.getDimension(R.styleable.TLabel_extraLineSpacing, 0.0f));
             setLineHeightMultiplier(values.getFloat(R.styleable.TLabel_lineHeightMultiplier, 0.0f));
             setShadowRadius(values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f));
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
-            setShadowColor(values.getInteger(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
+            setShadowColor(values.getColor(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
             setTruncationMode(truncationMode);
             setTruncationPlace(truncationPlace);
-            setTextColor(values.getInteger(R.styleable.TLabel_textColor, Color.BLACK));
-            setTextSize(values.getDimensionPixelSize(R.styleable.TLabel_textSize, 16));
+            setTextColor(values.getColor(R.styleable.TLabel_textColor, Color.BLACK));
+            setTextSize(values.getDimension(R.styleable.TLabel_textSize, 16));
             if (values.hasValue(R.styleable.TLabel_typeface)) {
                 setTypeface(values.getResourceId(R.styleable.TLabel_typeface, 0));
             }

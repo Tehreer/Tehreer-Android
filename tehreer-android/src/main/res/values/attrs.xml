@@ -28,7 +28,7 @@
             <flag name="center" value="0x11"/>
         </attr>
         <attr name="maxLines" format="integer" />
-        <attr name="extraLineSpacing" format="float" />
+        <attr name="extraLineSpacing" format="dimension" />
         <attr name="lineHeightMultiplier" format="float" />
         <attr name="shadowRadius" format="dimension" />
         <attr name="shadowDx" format="dimension" />
