@@ -312,13 +312,12 @@ class LineResolver {
                 int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
                 int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
 
-                boolean forward = false;
+                byte bidiLevel = intrinsicRun.bidiLevel;
+                boolean isForwardRun = ((bidiLevel & 1) == 0);
 
                 if (previousRun != null) {
-                    byte bidiLevel = intrinsicRun.bidiLevel;
-                    if (bidiLevel != previousRun.bidiLevel || (bidiLevel & 1) == 0) {
+                    if (bidiLevel != previousRun.bidiLevel || isForwardRun) {
                         insertIndex = runList.size();
-                        forward = true;
                     }
                 }
 
@@ -330,7 +329,7 @@ class LineResolver {
                     GlyphRun glyphRun = createGlyphRun(intrinsicRun, spanStart, spanEnd, spans);
                     runList.add(insertIndex, glyphRun);
 
-                    if (forward) {
+                    if (isForwardRun) {
                         insertIndex++;
                     }
 
