@@ -52,7 +52,7 @@ public class FrameResolver {
     private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private BreakMode mTruncationMode = BreakMode.LINE;
-    private TruncationPlace mTruncationPlace = TruncationPlace.END;
+    private TruncationPlace mTruncationPlace = null;
     private int mMaxLines = 0;
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
