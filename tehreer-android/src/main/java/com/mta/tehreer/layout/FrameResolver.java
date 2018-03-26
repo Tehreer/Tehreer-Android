@@ -429,7 +429,7 @@ public class FrameResolver {
         frameFiller.handleTruncation(charEnd);
         frameFiller.resolveAlignments();
 
-        ComposedFrame frame = new ComposedFrame(mSpanned, charStart, charEnd, frameFiller.frameLines);
+        ComposedFrame frame = new ComposedFrame(mSpanned, charStart, frameFiller.frameEnd(), frameFiller.frameLines);
         frame.setContainerRect(mFrameBounds.left, mFrameBounds.top, frameFiller.layoutWidth, frameFiller.layoutHeight);
 
         return frame;
@@ -466,6 +466,10 @@ public class FrameResolver {
             layoutHeight = mFrameBounds.height();
 
             maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
+        }
+
+        int frameEnd() {
+            return frameLines.get(frameLines.size() - 1).getCharEnd();
         }
 
         int binarySearch(int charIndex) {
