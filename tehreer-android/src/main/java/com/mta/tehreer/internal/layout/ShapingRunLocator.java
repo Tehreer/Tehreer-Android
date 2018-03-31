@@ -173,7 +173,7 @@ public class ShapingRunLocator {
     }
 
     private static void resolveTypeface(ShapingRun shapingRun, String familyName, TypeWidth typeWidth) {
-        TypeFamily typeFamily = TypefaceManager.getTypefaceFamily(familyName);
+        TypeFamily typeFamily = TypefaceManager.getTypeFamily(familyName);
         if (typeFamily != null) {
             shapingRun.typeface = typeFamily.getTypefaceByStyle(typeWidth, shapingRun.typeWeight, shapingRun.typeSlope);
         } else {

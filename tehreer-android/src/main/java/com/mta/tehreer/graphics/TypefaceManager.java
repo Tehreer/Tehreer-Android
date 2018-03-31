@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,7 +149,13 @@ public class TypefaceManager {
         }
     }
 
-    public static TypeFamily getTypefaceFamily(String familyName) {
+    /**
+     * Looks for a type family having specified family name.
+     *
+     * @param familyName The name of the family.
+     * @return A type family having specified family name.
+     */
+    public static TypeFamily getTypeFamily(String familyName) {
         List<Typeface> entryList = new ArrayList<>();
 
         synchronized (TypefaceManager.class) {
