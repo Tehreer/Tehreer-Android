@@ -33,11 +33,11 @@ public enum TextAlignment {
      */
     CENTER,
     /**
-     * Aligns text to the left side of the line if its paragraph level even.
+     * Aligns text to the left side of the line if its paragraph level is even.
      */
     INTRINSIC,
     /**
-     * Aligns text to the right side of the line if its paragraph level even.
+     * Aligns text to the right side of the line if its paragraph level is even.
      */
     EXTRINSIC,
 }

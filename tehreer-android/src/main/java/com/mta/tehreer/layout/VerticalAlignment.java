@@ -20,7 +20,16 @@ package com.mta.tehreer.layout;
  * Specifies the vertical content alignment.
  */
 public enum VerticalAlignment {
+    /**
+     * Aligns the content vertically at the top of the frame.
+     */
     TOP,
+    /**
+     * Aligns the content vertically in the center of the frame.
+     */
     MIDDLE,
+    /**
+     * Aligns the content vertically at the bottom of the frame.
+     */
     BOTTOM,
 }
