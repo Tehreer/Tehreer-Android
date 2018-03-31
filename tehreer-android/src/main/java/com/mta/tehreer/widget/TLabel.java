@@ -162,7 +162,7 @@ public class TLabel extends View {
 
         mResolver.setFitsHorizontally(widthMode != MeasureSpec.EXACTLY);
         mResolver.setFitsVertically(heightMode != MeasureSpec.EXACTLY);
-        updateFrame(layoutWidth, layoutHeight);
+        updateFrame(paddingLeft, paddingTop, layoutWidth, layoutHeight);
 
         setMeasuredDimension(mTextWidth + horizontalPadding, mTextHeight + verticalPadding);
     }
@@ -176,7 +176,7 @@ public class TLabel extends View {
         canvas.save();
 
         if (mComposedFrame != null) {
-            mComposedFrame.draw(mRenderer, canvas, getPaddingLeft(), getPaddingTop());
+            mComposedFrame.draw(mRenderer, canvas, mComposedFrame.getOriginX(), mComposedFrame.getOriginY());
         }
 
         canvas.restore();
@@ -185,7 +185,7 @@ public class TLabel extends View {
         Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) * 1E-6));
     }
 
-    private void updateFrame(float layoutWidth, float layoutHeight) {
+    private void updateFrame(float paddingLeft, float paddingTop, float layoutWidth, float layoutHeight) {
         mComposedFrame = null;
         mTextWidth = 0;
         mTextHeight = 0;
@@ -193,7 +193,7 @@ public class TLabel extends View {
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
 
-            mLayoutRect.set(0.0f, 0.0f, layoutWidth, layoutHeight);
+            mLayoutRect.set(paddingLeft, paddingTop, layoutWidth, layoutHeight);
 
             mResolver.setTypesetter(mTypesetter);
             mResolver.setFrameBounds(mLayoutRect);
@@ -250,8 +250,8 @@ public class TLabel extends View {
      *         character at this position.
      */
     public int hitTestPosition(float x, float y) {
-        float adjustedX = x - getPaddingLeft();
-        float adjustedY = y - getPaddingTop();
+        float adjustedX = x - mComposedFrame.getOriginX();
+        float adjustedY = y - mComposedFrame.getOriginY();
 
         int lineIndex = mComposedFrame.getLineIndexForPosition(adjustedX, adjustedY);
         ComposedLine composedLine = mComposedFrame.getLines().get(lineIndex);
