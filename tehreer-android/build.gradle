@@ -10,7 +10,7 @@ ext {
     publishedArtifactId = 'tehreer-android'
 
     libraryName = 'Tehreer-Android'
-    libraryVersion = '2.0'
+    libraryVersion = '2.1'
     libraryDescription = 'A library that gives full control over text related technologies such as bidirectional algorithm, open type shaping, text typesetting and text rendering.'
 
     siteUrl = 'https://github.com/mta452/Tehreer-Android'
@@ -38,7 +38,7 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 2
+        versionCode 3
         versionName libraryVersion
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -72,7 +72,7 @@ artifacts {
         exclude '**/internal/**'
 
         options.links("https://developer.android.com/reference/")
-        options.addStringOption("bottom", "Copyright &copy; 2017 $developerName. All rights reserved.")
+        options.addStringOption("bottom", "Copyright &copy; 2018 $developerName. All rights reserved.")
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
