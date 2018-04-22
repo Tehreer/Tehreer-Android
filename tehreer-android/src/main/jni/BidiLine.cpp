@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,11 +70,11 @@ static jobject getVisualRun(JNIEnv *env, jobject obj, jlong lineHandle, jint run
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeGetCharStart", "(J)I", (void *)getCharStart },
-    { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
-    { "nativeGetRunCount", "(J)I", (void *)getRunCount },
-    { "nativeGetVisualRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getVisualRun },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nGetCharStart", "(J)I", (void *)getCharStart },
+    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetRunCount", "(J)I", (void *)getRunCount },
+    { "nGetVisualRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getVisualRun },
 };
 
 jint register_com_mta_tehreer_unicode_BidiLine(JNIEnv *env)
