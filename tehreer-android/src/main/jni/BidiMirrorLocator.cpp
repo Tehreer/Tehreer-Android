@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,10 +79,10 @@ static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle, jlong 
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "()J", (void *)create },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeLoadLine", "(JJJ)V", (void *)loadLine },
-    { "nativeGetNextPair", "(JJ)Lcom/mta/tehreer/unicode/BidiPair;", (void *)getNextPair },
+    { "nCreate", "()J", (void *)create },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nLoadLine", "(JJJ)V", (void *)loadLine },
+    { "nGetNextPair", "(JJ)Lcom/mta/tehreer/unicode/BidiPair;", (void *)getNextPair },
 };
 
 jint register_com_mta_tehreer_unicode_BidiMirrorLocator(JNIEnv *env)
