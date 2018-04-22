@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,14 +112,14 @@ static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint ch
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeGetCharStart", "(J)I", (void *)getCharStart },
-    { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
-    { "nativeGetCharCount", "(J)I", (void *)getCharCount },
-    { "nativeGetBaseLevel", "(J)B", (void *)getBaseLevel },
-    { "nativeGetLevelsPtr", "(J)J", (void *)getLevelsPtr },
-    { "nativeGetOnwardRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getOnwardRun },
-    { "nativeCreateLine", "(JII)J", (void *)createLine },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nGetCharStart", "(J)I", (void *)getCharStart },
+    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetCharCount", "(J)I", (void *)getCharCount },
+    { "nGetBaseLevel", "(J)B", (void *)getBaseLevel },
+    { "nGetLevelsPtr", "(J)J", (void *)getLevelsPtr },
+    { "nGetOnwardRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getOnwardRun },
+    { "nCreateLine", "(JII)J", (void *)createLine },
 };
 
 jint register_com_mta_tehreer_unicode_BidiParagraph(JNIEnv *env) {
