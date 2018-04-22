@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,10 +80,10 @@ static jlong createParagraph(JNIEnv *env, jobject obj,
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "(J)J", (void *)create },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeGetParagraphBoundary", "(JII)I", (void *)getParagraphBoundary },
-    { "nativeCreateParagraph", "(JIII)J", (void *)createParagraph },
+    { "nCreate", "(J)J", (void *)create },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nGetParagraphBoundary", "(JII)I", (void *)getParagraphBoundary },
+    { "nCreateParagraph", "(JIII)J", (void *)createParagraph },
 };
 
 jint register_com_mta_tehreer_unicode_BidiAlgorithm(JNIEnv *env)
