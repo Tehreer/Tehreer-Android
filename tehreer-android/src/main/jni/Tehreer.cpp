@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_unicode_BidiBuffer(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiLine(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiMirrorLocator(env) == JNI_OK
-          && register_com_mta_tehreer_unicode_BidiParagraph(env) == JNI_OK;
+          && register_com_mta_tehreer_unicode_BidiParagraph(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_CodePoint(env) == JNI_OK;
 
     if (!result) {
         return JNI_ERR;
