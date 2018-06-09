@@ -50,7 +50,7 @@ public enum GeneralCategory {
 
     private static final GeneralCategory[] all = GeneralCategory.values();
 
-    static GeneralCategory valueOf(int nValue) {
+    static GeneralCategory valueOf(byte nValue) {
         if (nValue > 0 && nValue < all.length) {
             return all[nValue - 1];
         }
