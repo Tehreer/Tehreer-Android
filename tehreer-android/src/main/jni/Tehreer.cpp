@@ -45,7 +45,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_unicode_BidiLine(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiMirrorLocator(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiParagraph(env) == JNI_OK
-          && register_com_mta_tehreer_unicode_CodePoint(env) == JNI_OK;
+          && register_com_mta_tehreer_unicode_CodePoint(env) == JNI_OK
+          && register_com_mta_tehreer_unicode_ScriptClassifier(env) == JNI_OK;
 
     if (!result) {
         return JNI_ERR;
