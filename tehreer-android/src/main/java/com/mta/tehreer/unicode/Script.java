@@ -162,10 +162,10 @@ public enum Script {
 
     private static final Script[] all = Script.values();
 
-    static Script valueOf(byte value) {
-        int unsigned = value & 0xFF;
-        if (unsigned < all.length) {
-            return all[unsigned - 1];
+    static Script valueOf(byte nValue) {
+        int index = (nValue - 1) & 0xFF;
+        if (index < all.length) {
+            return all[index];
         }
 
         return null;
