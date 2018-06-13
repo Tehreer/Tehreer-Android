@@ -43,9 +43,10 @@ public enum BidiClass {
 
     private static final BidiClass[] all = BidiClass.values();
 
-    static BidiClass valueOf(int nValue) {
-        if (nValue > 0 && nValue < all.length) {
-            return all[nValue - 1];
+    static BidiClass valueOf(byte nValue) {
+        int index = (nValue - 1) & 0xFF;
+        if (index < all.length) {
+            return all[index];
         }
 
         return null;
