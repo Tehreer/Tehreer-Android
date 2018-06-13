@@ -51,8 +51,9 @@ public enum GeneralCategory {
     private static final GeneralCategory[] all = GeneralCategory.values();
 
     static GeneralCategory valueOf(byte nValue) {
-        if (nValue > 0 && nValue < all.length) {
-            return all[nValue - 1];
+        int index = (nValue - 1) & 0xFF;
+        if (index < all.length) {
+            return all[index];
         }
 
         return null;
