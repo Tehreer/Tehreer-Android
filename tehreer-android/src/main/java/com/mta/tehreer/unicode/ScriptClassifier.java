@@ -19,7 +19,6 @@ package com.mta.tehreer.unicode;
 import com.mta.tehreer.internal.JniBridge;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ScriptClassifier {
@@ -29,6 +28,8 @@ public class ScriptClassifier {
     }
 
     private final String text;
+    private final byte[] scripts;
+    private final int runCount;
 
     public ScriptClassifier(String text) {
         if (text == null) {
@@ -36,37 +37,33 @@ public class ScriptClassifier {
         }
 
         this.text = text;
+        this.scripts = new byte[text.length()];
+        this.runCount = nClassify(text, scripts);
     }
 
     public String getText() {
         return text;
     }
 
-    public List<ScriptRun> classifyRuns() {
-        int length = text.length();
-        if (length > 0) {
-            byte[] scripts = new byte[length];
-            int runCount = nClassify(text, scripts);
+    public List<ScriptRun> getRuns() {
+        ArrayList<ScriptRun> runList = new ArrayList<>(runCount);
+        int runStart = 0;
 
-            ArrayList<ScriptRun> runList = new ArrayList<>(runCount);
-            int runStart = 0;
-            byte current = scripts[0];
+        int length = scripts.length;
+        byte current = scripts[0];
 
-            for (int i = 1; i < length; i++) {
-                if (scripts[i] == current) {
-                    continue;
-                }
-
-                runList.add(new ScriptRun(runStart, i, Script.valueOf(current)));
-                runStart = i;
-                current = scripts[i];
+        for (int i = 1; i < length; i++) {
+            if (scripts[i] == current) {
+                continue;
             }
-            runList.add(new ScriptRun(runStart, length, Script.valueOf(current)));
 
-            return runList;
+            runList.add(new ScriptRun(runStart, i, Script.valueOf(current)));
+            runStart = i;
+            current = scripts[i];
         }
+        runList.add(new ScriptRun(runStart, length, Script.valueOf(current)));
 
-        return Collections.emptyList();
+        return runList;
     }
 
     private static native int nClassify(String text, byte[] scripts);
