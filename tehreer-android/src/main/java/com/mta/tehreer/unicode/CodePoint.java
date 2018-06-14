@@ -45,7 +45,7 @@ public class CodePoint {
 
     private static native byte nGetBidiClass(int codePoint);
     private static native byte nGetGeneralCategory(int codePoint);
-    private static native short nGetScript(int codePoint);
+    private static native byte nGetScript(int codePoint);
 
     private static native int nGetMirror(int codePoint);
 }
