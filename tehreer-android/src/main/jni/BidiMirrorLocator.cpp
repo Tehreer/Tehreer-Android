@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,27 +50,14 @@ static void loadLine(JNIEnv *env, jobject obj, jlong locatorHandle, jlong lineHa
     SBMirrorLocatorLoadLine(mirrorLocator, bidiLine, stringBuffer);
 }
 
-static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle, jlong bufferHandle)
+static jobject getNextPair(JNIEnv *env, jobject obj, jlong locatorHandle)
 {
     SBMirrorLocatorRef mirrorLocator = reinterpret_cast<SBMirrorLocatorRef>(locatorHandle);
     if (SBMirrorLocatorMoveNext(mirrorLocator)) {
-        BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
-        void *stringBuffer = static_cast<void *>(bidiBuffer->data());
-        SBUInteger stringLength = static_cast<SBUInteger>(bidiBuffer->length());
-
-        SBCodepointSequence codepointSequence;
-        codepointSequence.stringEncoding = SBStringEncodingUTF16;
-        codepointSequence.stringBuffer = stringBuffer;
-        codepointSequence.stringLength = stringLength;
-
-        SBMirrorAgentRef mirrorAgent = SBMirrorLocatorGetAgent(mirrorLocator);
-        SBUInteger index = mirrorAgent->index;
-        SBCodepoint source = SBCodepointSequenceGetCodepointAt(&codepointSequence, &index);
-        SBCodepoint mirror = mirrorAgent->mirror;
-
-        jint charIndex = static_cast<jint>(index);
-        jint actualCodePoint = static_cast<jint>(source);
-        jint pairingCodePoint = static_cast<jint>(mirror);
+        const SBMirrorAgent *mirrorAgent = SBMirrorLocatorGetAgent(mirrorLocator);
+        jint charIndex = static_cast<jint>(mirrorAgent->index);
+        jint actualCodePoint = static_cast<jint>(mirrorAgent->codepoint);
+        jint pairingCodePoint = static_cast<jint>(mirrorAgent->mirror);
 
         return JavaBridge(env).BidiPair_construct(charIndex, actualCodePoint, pairingCodePoint);
     }
@@ -82,7 +69,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
     { "nLoadLine", "(JJJ)V", (void *)loadLine },
-    { "nGetNextPair", "(JJ)Lcom/mta/tehreer/unicode/BidiPair;", (void *)getNextPair },
+    { "nGetNextPair", "(J)Lcom/mta/tehreer/unicode/BidiPair;", (void *)getNextPair },
 };
 
 jint register_com_mta_tehreer_unicode_BidiMirrorLocator(JNIEnv *env)
