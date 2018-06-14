@@ -83,9 +83,10 @@ ifeq ($(APP_OPTIM), debug)
         SBAlgorithm.c \
         SBBase.c \
         SBBidiChain.c \
+        SBBidiTypeLookup.c \
         SBBracketQueue.c \
-        SBCharTypeLookup.c \
         SBCodepointSequence.c \
+        SBGeneralCategoryLookup.c \
         SBIsolatingRun.c \
         SBLevelRun.c \
         SBLine.c \
@@ -94,6 +95,9 @@ ifeq ($(APP_OPTIM), debug)
         SBPairingLookup.c \
         SBParagraph.c \
         SBRunQueue.c \
+        SBScriptLocator.c \
+        SBScriptLookup.c \
+        SBScriptStack.c \
         SBStatusStack.c
 else
     SB_FILE_LIST := SheenBidi.c
@@ -141,7 +145,6 @@ ifeq ($(APP_OPTIM), debug)
         SFGlyphPositioning.c \
         SFGlyphSubstitution.c \
         SFTextProcessor.c \
-        SFGeneralCategoryLookup.c \
         SFJoiningTypeLookup.c
 else
     SF_FILE_LIST := SheenFigure.c
@@ -167,12 +170,14 @@ FILE_LIST := \
     BidiLine.cpp \
     BidiMirrorLocator.cpp \
     BidiParagraph.cpp \
+    CodePoint.cpp \
     FreeType.cpp \
     Glyph.cpp \
     GlyphRasterizer.cpp \
     JavaBridge.cpp \
     PatternCache.cpp \
     Raw.cpp \
+    ScriptClassifier.cpp \
     SfntTables.cpp \
     ShapingEngine.cpp \
     ShapingResult.cpp \
