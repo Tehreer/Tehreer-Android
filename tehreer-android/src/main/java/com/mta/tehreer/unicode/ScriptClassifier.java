@@ -18,7 +18,9 @@ package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.internal.JniBridge;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ScriptClassifier {
@@ -45,26 +47,52 @@ public class ScriptClassifier {
         return text;
     }
 
-    public List<ScriptRun> getRuns() {
-        ArrayList<ScriptRun> runList = new ArrayList<>(runCount);
-        int runStart = 0;
+    public List<Script> getCharScripts() {
+        return new ScriptList(scripts);
+    }
 
+    public List<ScriptRun> getScriptRuns() {
         int length = scripts.length;
-        byte current = scripts[0];
+        if (length > 0) {
+            ArrayList<ScriptRun> runList = new ArrayList<>(runCount);
+            int runStart = 0;
+            byte current = scripts[0];
 
-        for (int i = 1; i < length; i++) {
-            if (scripts[i] == current) {
-                continue;
+            for (int i = 1; i < length; i++) {
+                if (scripts[i] == current) {
+                    continue;
+                }
+
+                runList.add(new ScriptRun(runStart, i, Script.valueOf(current)));
+                runStart = i;
+                current = scripts[i];
             }
+            runList.add(new ScriptRun(runStart, length, Script.valueOf(current)));
 
-            runList.add(new ScriptRun(runStart, i, Script.valueOf(current)));
-            runStart = i;
-            current = scripts[i];
+            return runList;
         }
-        runList.add(new ScriptRun(runStart, length, Script.valueOf(current)));
 
-        return runList;
+        return Collections.emptyList();
     }
 
     private static native int nClassify(String text, byte[] scripts);
+
+    private static class ScriptList extends AbstractList<Script> {
+
+        final byte[] scripts;
+
+        ScriptList(byte[] scripts) {
+            this.scripts = scripts;
+        }
+
+        @Override
+        public Script get(int i) {
+            return Script.valueOf(scripts[i]);
+        }
+
+        @Override
+        public int size() {
+            return scripts.length;
+        }
+    }
 }
