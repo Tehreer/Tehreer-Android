@@ -63,7 +63,7 @@ static jint getMirror(JNIEnv *env, jobject obj, jint codePoint)
 static JNINativeMethod JNI_METHODS[] = {
     { "nGetBidiClass", "(I)B", (void *)getBidiClass },
     { "nGetGeneralCategory", "(I)B", (void *)getGeneralCategory },
-    { "nGetScript", "(I)S", (void *)getScript },
+    { "nGetScript", "(I)B", (void *)getScript },
     { "nGetMirror", "(I)I", (void *)getMirror },
 };
 
