@@ -38,7 +38,7 @@ static jint classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
 
     SBCodepointSequence codepointSequence;
     codepointSequence.stringEncoding = SBStringEncodingUTF16;
-    codepointSequence.stringBuffer = static_cast<void *>(charArray);
+    codepointSequence.stringBuffer = (void *)charArray;
     codepointSequence.stringLength = static_cast<SBUInteger>(charCount);
 
     SBScriptLocatorRef scriptLocator = SBScriptLocatorCreate();
@@ -61,6 +61,8 @@ static jint classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
 
     env->ReleasePrimitiveArrayCritical(scripts, scriptsPtr, 0);
     env->ReleaseStringChars(text, charArray);
+
+    return runCount;
 }
 
 static JNINativeMethod JNI_METHODS[] = {
