@@ -30,7 +30,6 @@ public class ScriptClassifier {
 
     private final String text;
     private final byte[] scripts;
-    private final int runCount;
 
     public ScriptClassifier(String text) {
         if (text == null) {
@@ -39,7 +38,7 @@ public class ScriptClassifier {
 
         this.text = text;
         this.scripts = new byte[text.length()];
-        this.runCount = nClassify(text, scripts);
+        nClassify(text, scripts);
     }
 
     public String getText() {
@@ -51,13 +50,27 @@ public class ScriptClassifier {
     }
 
     public List<ScriptRun> getScriptRuns() {
-        int length = scripts.length;
-        if (length > 0) {
-            ArrayList<ScriptRun> runList = new ArrayList<>(runCount);
-            int runStart = 0;
-            byte current = scripts[0];
+        return getScriptRuns(0, scripts.length);
+    }
 
-            for (int i = 1; i < length; i++) {
+    public List<ScriptRun> getScriptRuns(int charStart, int charEnd) {
+        if (charStart < 0) {
+            throw new IllegalArgumentException("Char Start: " + charStart);
+        }
+        if (charEnd > text.length()) {
+            throw new IllegalArgumentException("Char End: " + charEnd + ", Text Length: " + text.length());
+        }
+        if (charStart > charEnd) {
+            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
+        }
+
+        int length = charEnd - charStart;
+        if (length > 0) {
+            ArrayList<ScriptRun> runList = new ArrayList<>();
+            int runStart = 0;
+            byte current = scripts[charStart];
+
+            for (int i = charStart + 1; i < charEnd; i++) {
                 if (scripts[i] == current) {
                     continue;
                 }
@@ -66,7 +79,7 @@ public class ScriptClassifier {
                 runStart = i;
                 current = scripts[i];
             }
-            runList.add(new ScriptRun(runStart, length, Script.valueOf(current)));
+            runList.add(new ScriptRun(runStart, charEnd, Script.valueOf(current)));
 
             return runList;
         }
