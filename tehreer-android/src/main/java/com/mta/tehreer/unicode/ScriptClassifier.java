@@ -18,7 +18,6 @@ package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.internal.JniBridge;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,23 +75,4 @@ public class ScriptClassifier {
     }
 
     private static native int nClassify(String text, byte[] scripts);
-
-    private static class ScriptList extends AbstractList<Script> {
-
-        final byte[] scripts;
-
-        ScriptList(byte[] scripts) {
-            this.scripts = scripts;
-        }
-
-        @Override
-        public Script get(int i) {
-            return Script.valueOf(scripts[i]);
-        }
-
-        @Override
-        public int size() {
-            return scripts.length;
-        }
-    }
 }
