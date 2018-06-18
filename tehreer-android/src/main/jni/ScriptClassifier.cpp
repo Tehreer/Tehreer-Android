@@ -16,25 +16,24 @@
 
 extern "C" {
 #include <SBCodepointSequence.h>
+#include <SBScript.h>
 #include <SBScriptLocator.h>
 }
 
 #include <jni.h>
 
-#include "BidiBuffer.h"
 #include "JavaBridge.h"
 #include "ScriptClassifier.h"
 
 using namespace Tehreer;
 
-static jint classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
+static void classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
 {
     const jchar *charArray = env->GetStringChars(text, nullptr);
     jsize charCount = env->GetStringLength(text);
 
     void *scriptsPtr = env->GetPrimitiveArrayCritical(scripts, nullptr);
     jbyte *scriptArray = static_cast<jbyte *>(scriptsPtr);
-    jint runCount = 0;
 
     SBCodepointSequence codepointSequence;
     codepointSequence.stringEncoding = SBStringEncodingUTF16;
@@ -53,20 +52,16 @@ static jint classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
         for (SBUInteger i = start; i < limit; i++) {
             scriptArray[i] = script;
         }
-
-        runCount += 1;
     }
 
     SBScriptLocatorRelease(scriptLocator);
 
     env->ReleasePrimitiveArrayCritical(scripts, scriptsPtr, 0);
     env->ReleaseStringChars(text, charArray);
-
-    return runCount;
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nClassify", "(Ljava/lang/String;[B)I", (void *)classify },
+    { "nClassify", "(Ljava/lang/String;[B)V", (void *)classify },
 };
 
 jint register_com_mta_tehreer_unicode_ScriptClassifier(JNIEnv *env)
