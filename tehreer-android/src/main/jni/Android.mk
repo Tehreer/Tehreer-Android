@@ -177,6 +177,7 @@ FILE_LIST := \
     JavaBridge.cpp \
     PatternCache.cpp \
     Raw.cpp \
+    Script.cpp \
     ScriptClassifier.cpp \
     SfntTables.cpp \
     ShapingEngine.cpp \
