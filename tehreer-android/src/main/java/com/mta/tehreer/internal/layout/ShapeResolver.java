@@ -21,7 +21,6 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
@@ -29,6 +28,8 @@ import com.mta.tehreer.unicode.BaseDirection;
 import com.mta.tehreer.unicode.BidiAlgorithm;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
+import com.mta.tehreer.unicode.ScriptClassifier;
+import com.mta.tehreer.unicode.ScriptRun;
 
 import java.util.List;
 
@@ -36,8 +37,6 @@ public class ShapeResolver {
 
     public static void fillRuns(String text, Spanned spanned, List<Object> defaultSpans, byte[] breaks,
                                 List<BidiParagraph> paragraphs, List<IntrinsicRun> runs) {
-        // TODO: Analyze script runs.
-
         BidiAlgorithm bidiAlgorithm = null;
         ShapingEngine shapingEngine = null;
 
@@ -45,6 +44,7 @@ public class ShapeResolver {
             bidiAlgorithm = new BidiAlgorithm(text);
             shapingEngine = new ShapingEngine();
 
+            ScriptClassifier scriptClassifier = new ScriptClassifier(text);
             ShapingRunLocator locator = new ShapingRunLocator(spanned, defaultSpans);
 
             BaseDirection baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT;
@@ -57,15 +57,17 @@ public class ShapeResolver {
             while (paragraphStart != suggestedEnd) {
                 BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
                 for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
-                    int scriptTag = SfntTag.make(bidiRun.isRightToLeft() ? "arab" : "latn");
-                    WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
+                    for (ScriptRun scriptRun : scriptClassifier.getScriptRuns(bidiRun.charStart, bidiRun.charEnd)) {
+                        int scriptTag = scriptRun.script.openTypeTag();
+                        WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
 
-                    locator.reset(bidiRun.charStart, bidiRun.charEnd);
+                        locator.reset(scriptRun.charStart, scriptRun.charEnd);
 
-                    shapingEngine.setScriptTag(scriptTag);
-                    shapingEngine.setWritingDirection(writingDirection);
+                        shapingEngine.setScriptTag(scriptTag);
+                        shapingEngine.setWritingDirection(writingDirection);
 
-                    resolveTypefaces(text, spanned, runs, locator, shapingEngine, bidiRun.embeddingLevel);
+                        resolveTypefaces(text, spanned, runs, locator, shapingEngine, bidiRun.embeddingLevel);
+                    }
                 }
                 paragraphs.add(paragraph);
 
