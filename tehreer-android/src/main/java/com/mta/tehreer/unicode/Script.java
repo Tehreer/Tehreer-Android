@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.unicode;
 
+import com.mta.tehreer.internal.JniBridge;
+
 public enum Script {
     INHERITED,
     COMMON,
@@ -160,6 +162,10 @@ public enum Script {
     SOYOMBO,
     ZANABAZAR_SQUARE;
 
+    static {
+        JniBridge.loadLibrary();
+    }
+
     private static final Script[] all = Script.values();
 
     static Script valueOf(byte nValue) {
@@ -170,4 +176,14 @@ public enum Script {
 
         return null;
     }
+
+    byte value() {
+        return (byte) (ordinal() + 1);
+    }
+
+    public int openTypeTag() {
+        return nGetOpenTypeTag(value());
+    }
+
+    private static native int nGetOpenTypeTag(byte nValue);
 }
