@@ -18,9 +18,9 @@ package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.internal.JniBridge;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class ScriptClassifier {
 
@@ -49,11 +49,11 @@ public class ScriptClassifier {
         return new ScriptList(scripts);
     }
 
-    public List<ScriptRun> getScriptRuns() {
+    public Iterable<ScriptRun> getScriptRuns() {
         return getScriptRuns(0, scripts.length);
     }
 
-    public List<ScriptRun> getScriptRuns(int charStart, int charEnd) {
+    public Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
@@ -64,28 +64,67 @@ public class ScriptClassifier {
             throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
         }
 
-        int length = charEnd - charStart;
-        if (length > 0) {
-            ArrayList<ScriptRun> runList = new ArrayList<>();
-            int runStart = 0;
-            byte current = scripts[charStart];
-
-            for (int i = charStart + 1; i < charEnd; i++) {
-                if (scripts[i] == current) {
-                    continue;
-                }
-
-                runList.add(new ScriptRun(runStart, i, Script.valueOf(current)));
-                runStart = i;
-                current = scripts[i];
-            }
-            runList.add(new ScriptRun(runStart, charEnd, Script.valueOf(current)));
-
-            return runList;
-        }
-
-        return Collections.emptyList();
+        return new RunIterable(scripts, charStart, charEnd);
     }
 
-    private static native int nClassify(String text, byte[] scripts);
+    private static native void nClassify(String text, byte[] scripts);
+
+    private class RunIterator implements Iterator<ScriptRun> {
+
+        final byte[] scripts;
+        final int end;
+        int index;
+
+        RunIterator(byte[] scripts, int start, int end) {
+            this.scripts = scripts;
+            this.end = end;
+            this.index = start;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index != end;
+        }
+
+        @Override
+        public ScriptRun next() {
+            if (index == end) {
+                throw new NoSuchElementException();
+            }
+
+            byte current = scripts[index];
+            int start = index;
+
+            for (index += 1; index < end; index++) {
+                if (scripts[index] != current) {
+                    break;
+                }
+            }
+
+            return new ScriptRun(start, index, Script.valueOf(current));
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class RunIterable implements Iterable<ScriptRun> {
+
+        final byte[] scripts;
+        final int start;
+        final int end;
+
+        RunIterable(byte[] scripts, int start, int end) {
+            this.scripts = scripts;
+            this.start = start;
+            this.end = end;
+        }
+
+        @Override
+        public Iterator<ScriptRun> iterator() {
+            return new RunIterator(scripts, start, end);
+        }
+    }
 }
