@@ -28,6 +28,7 @@
 #include "GlyphRasterizer.h"
 #include "Miscellaneous.h"
 #include "Raw.h"
+#include "Script.h"
 #include "ScriptClassifier.h"
 #include "SfntTables.h"
 #include "ShapingEngine.h"
