@@ -160,7 +160,14 @@ public enum Script {
     MASARAM_GONDI,
     NUSHU,
     SOYOMBO,
-    ZANABAZAR_SQUARE;
+    ZANABAZAR_SQUARE,
+    DOGRA,
+    GUNJALA_GONDI,
+    MAKASAR,
+    MEDEFAIDRIN,
+    HANIFI_ROHINGYA,
+    SOGDIAN,
+    OLD_SOGDIAN;
 
     static {
         JniBridge.loadLibrary();
