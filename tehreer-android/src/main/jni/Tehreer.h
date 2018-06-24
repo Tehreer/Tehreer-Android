@@ -22,17 +22,16 @@
 #include "BidiLine.h"
 #include "BidiMirrorLocator.h"
 #include "BidiParagraph.h"
-#include "CodePoint.h"
 #include "FreeType.h"
 #include "Glyph.h"
 #include "GlyphRasterizer.h"
 #include "Miscellaneous.h"
 #include "Raw.h"
-#include "Script.h"
 #include "ScriptClassifier.h"
 #include "SfntTables.h"
 #include "ShapingEngine.h"
 #include "ShapingResult.h"
 #include "Typeface.h"
+#include "Unicode.h"
 
 #endif
