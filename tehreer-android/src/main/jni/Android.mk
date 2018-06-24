@@ -170,21 +170,20 @@ FILE_LIST := \
     BidiLine.cpp \
     BidiMirrorLocator.cpp \
     BidiParagraph.cpp \
-    CodePoint.cpp \
     FreeType.cpp \
     Glyph.cpp \
     GlyphRasterizer.cpp \
     JavaBridge.cpp \
     PatternCache.cpp \
     Raw.cpp \
-    Script.cpp \
     ScriptClassifier.cpp \
     SfntTables.cpp \
     ShapingEngine.cpp \
     ShapingResult.cpp \
     StreamUtils.cpp \
     Tehreer.cpp \
-    Typeface.cpp
+    Typeface.cpp \
+    Unicode.cpp
 
 LOCAL_LDLIBS := -latomic -landroid -ljnigraphics -llog
 LOCAL_STATIC_LIBRARIES := freetype sheenbidi sheenfigure
