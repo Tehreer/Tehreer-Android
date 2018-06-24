@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class BidiAlgorithm implements Disposable {
         }
 
         this.nativeBuffer = BidiBuffer.create(text);
-        this.nativeAlgorithm = nativeCreate(nativeBuffer);
+        this.nativeAlgorithm = nCreate(nativeBuffer);
         this.text = text;
     }
 
@@ -163,7 +163,7 @@ public class BidiAlgorithm implements Disposable {
             throw new IllegalArgumentException(rangeError);
         }
 
-        return nativeGetParagraphBoundary(nativeAlgorithm, charStart, charEnd);
+        return nGetParagraphBoundary(nativeAlgorithm, charStart, charEnd);
     }
 
     /**
@@ -196,8 +196,8 @@ public class BidiAlgorithm implements Disposable {
         }
 
         return new BidiParagraph(nativeBuffer,
-                                 nativeCreateParagraph(nativeAlgorithm,
-                                                       charStart, charEnd, baseDirection.value));
+                                 nCreateParagraph(nativeAlgorithm,
+                                                  charStart, charEnd, baseDirection.value));
     }
 
     /**
@@ -234,13 +234,13 @@ public class BidiAlgorithm implements Disposable {
         }
 
         return new BidiParagraph(nativeBuffer,
-                                 nativeCreateParagraph(nativeAlgorithm,
-                                                       charStart, charEnd, baseLevel));
+                                 nCreateParagraph(nativeAlgorithm,
+                                                  charStart, charEnd, baseLevel));
     }
 
     @Override
     public void dispose() {
-        nativeDispose(nativeAlgorithm);
+        nDispose(nativeAlgorithm);
         BidiBuffer.release(nativeBuffer);
     }
 
@@ -249,9 +249,9 @@ public class BidiAlgorithm implements Disposable {
         return "BidiAlgorithm{text=" + text + "}";
     }
 
-    private static native long nativeCreate(long nativeBuffer);
-    private static native void nativeDispose(long nativeAlgorithm);
+    private static native long nCreate(long nativeBuffer);
+    private static native void nDispose(long nativeAlgorithm);
 
-    private static native int nativeGetParagraphBoundary(long nativeAlgorithm, int charStart, int charEnd);
-    private static native long nativeCreateParagraph(long nativeAlgorithm, int charStart, int charEnd, int baseLevel);
+    private static native int nGetParagraphBoundary(long nativeAlgorithm, int charStart, int charEnd);
+    private static native long nCreateParagraph(long nativeAlgorithm, int charStart, int charEnd, int baseLevel);
 }
