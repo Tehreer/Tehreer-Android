@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ public class BidiParagraph implements Disposable {
      * @return The index to the first character of this paragraph in source text.
      */
     public int getCharStart() {
-		return nativeGetCharStart(nativeParagraph);
+		return nGetCharStart(nativeParagraph);
 	}
 
     /**
@@ -124,7 +124,7 @@ public class BidiParagraph implements Disposable {
      * @return The index after the last character of this paragraph in source text.
      */
 	public int getCharEnd() {
-        return nativeGetCharEnd(nativeParagraph);
+        return nGetCharEnd(nativeParagraph);
 	}
 
     /**
@@ -133,7 +133,7 @@ public class BidiParagraph implements Disposable {
      * @return The base level of this paragraph.
      */
 	public byte getBaseLevel() {
-		return nativeGetBaseLevel(nativeParagraph);
+		return nGetBaseLevel(nativeParagraph);
 	}
 
     /**
@@ -145,8 +145,8 @@ public class BidiParagraph implements Disposable {
      * @return A list containing the levels of all characters in this paragraph.
      */
 	public ByteList getCharLevels() {
-	    return new RawInt8Values(nativeGetLevelsPtr(nativeParagraph),
-                                 nativeGetCharCount(nativeParagraph));
+	    return new RawInt8Values(nGetLevelsPtr(nativeParagraph),
+                                 nGetCharCount(nativeParagraph));
 	}
 
     /**
@@ -190,12 +190,12 @@ public class BidiParagraph implements Disposable {
         }
 
         return new BidiLine(nativeBuffer,
-                            nativeCreateLine(nativeParagraph, charStart, charEnd));
+                            nCreateLine(nativeParagraph, charStart, charEnd));
     }
 
     @Override
     public void dispose() {
-        nativeDispose(nativeParagraph);
+        nDispose(nativeParagraph);
         BidiBuffer.release(nativeBuffer);
     }
 
@@ -209,24 +209,24 @@ public class BidiParagraph implements Disposable {
                 + "}";
     }
 
-	private static native void nativeDispose(long nativeParagraph);
+	private static native void nDispose(long nativeParagraph);
 
-	private static native int nativeGetCharStart(long nativeParagraph);
-	private static native int nativeGetCharEnd(long nativeParagraph);
-    private static native int nativeGetCharCount(long nativeParagraph);
+	private static native int nGetCharStart(long nativeParagraph);
+	private static native int nGetCharEnd(long nativeParagraph);
+    private static native int nGetCharCount(long nativeParagraph);
 
-	private static native byte nativeGetBaseLevel(long nativeParagraph);
-	private static native long nativeGetLevelsPtr(long nativeParagraph);
-    private static native BidiRun nativeGetOnwardRun(long nativeParagraph, int charIndex);
+	private static native byte nGetBaseLevel(long nativeParagraph);
+	private static native long nGetLevelsPtr(long nativeParagraph);
+    private static native BidiRun nGetOnwardRun(long nativeParagraph, int charIndex);
 
-	private static native long nativeCreateLine(long nativeParagraph, int charStart, int charEnd);
+	private static native long nCreateLine(long nativeParagraph, int charStart, int charEnd);
 
     private class RunIterator implements Iterator<BidiRun> {
 
         BidiRun run;
 
         RunIterator() {
-            run = nativeGetOnwardRun(nativeParagraph, getCharStart());
+            run = nGetOnwardRun(nativeParagraph, getCharStart());
         }
 
         @Override
@@ -240,7 +240,7 @@ public class BidiParagraph implements Disposable {
             if (current == null) {
                 throw new NoSuchElementException();
             }
-            run = nativeGetOnwardRun(nativeParagraph, current.charEnd);
+            run = nGetOnwardRun(nativeParagraph, current.charEnd);
 
             return current;
         }
