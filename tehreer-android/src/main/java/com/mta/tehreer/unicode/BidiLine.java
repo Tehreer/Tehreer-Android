@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class BidiLine implements Disposable {
      * @return The index to the first character of this line in source text.
      */
 	public int getCharStart() {
-		return nativeGetCharStart(nativeLine);
+		return nGetCharStart(nativeLine);
 	}
 
     /**
@@ -125,7 +125,7 @@ public class BidiLine implements Disposable {
      * @return The index after the last character of this line in source text.
      */
 	public int getCharEnd() {
-		return nativeGetCharEnd(nativeLine);
+		return nGetCharEnd(nativeLine);
 	}
 
     /**
@@ -155,7 +155,7 @@ public class BidiLine implements Disposable {
 
     @Override
     public void dispose() {
-        nativeDispose(nativeLine);
+        nDispose(nativeLine);
         BidiBuffer.release(nativeBuffer);
     }
 
@@ -168,17 +168,17 @@ public class BidiLine implements Disposable {
                 + "}";
     }
 
-	private static native void nativeDispose(long nativeLine);
+	private static native void nDispose(long nativeLine);
 
-	private static native int nativeGetCharStart(long nativeLine);
-	private static native int nativeGetCharEnd(long nativeLine);
+	private static native int nGetCharStart(long nativeLine);
+	private static native int nGetCharEnd(long nativeLine);
 
-	private static native int nativeGetRunCount(long nativeLine);
-	private static native BidiRun nativeGetVisualRun(long nativeLine, int runIndex);
+	private static native int nGetRunCount(long nativeLine);
+	private static native BidiRun nGetVisualRun(long nativeLine, int runIndex);
 
     private class RunList extends AbstractList<BidiRun> {
 
-        int size = nativeGetRunCount(nativeLine);
+        int size = nGetRunCount(nativeLine);
 
         @Override
         public int size() {
@@ -191,7 +191,7 @@ public class BidiLine implements Disposable {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
             }
 
-            return nativeGetVisualRun(nativeLine, index);
+            return nGetVisualRun(nativeLine, index);
         }
     }
 
