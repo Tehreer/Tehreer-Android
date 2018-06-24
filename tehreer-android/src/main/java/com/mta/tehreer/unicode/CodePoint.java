@@ -27,16 +27,16 @@ public class CodePoint {
     private CodePoint() {
     }
 
-    public static BidiClass getBidiClass(int codePoint) {
-        return BidiClass.valueOf(nGetBidiClass(codePoint));
+    public static int getBidiClass(int codePoint) {
+        return nGetBidiClass(codePoint);
     }
 
-    public static GeneralCategory getGeneralCategory(int codePoint) {
-        return GeneralCategory.valueOf(nGetGeneralCategory(codePoint));
+    public static int getGeneralCategory(int codePoint) {
+        return nGetGeneralCategory(codePoint);
     }
 
-    public static Script getScript(int codePoint) {
-        return Script.valueOf(nGetScript(codePoint));
+    public static int getScript(int codePoint) {
+        return nGetScript(codePoint);
     }
 
     public static int getMirror(int codePoint) {
