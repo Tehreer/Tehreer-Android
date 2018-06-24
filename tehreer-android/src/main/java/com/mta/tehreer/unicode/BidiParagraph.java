@@ -21,7 +21,7 @@ import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.collections.RawInt8Values;
+import com.mta.tehreer.internal.collections.RawInt8AsByteList;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -145,8 +145,8 @@ public class BidiParagraph implements Disposable {
      * @return A list containing the levels of all characters in this paragraph.
      */
 	public ByteList getCharLevels() {
-	    return new RawInt8Values(nGetLevelsPtr(nativeParagraph),
-                                 nGetCharCount(nativeParagraph));
+	    return new RawInt8AsByteList(nGetLevelsPtr(nativeParagraph),
+                                     nGetCharCount(nativeParagraph));
 	}
 
     /**
