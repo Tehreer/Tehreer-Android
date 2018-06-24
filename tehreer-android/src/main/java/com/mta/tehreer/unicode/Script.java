@@ -16,8 +16,6 @@
 
 package com.mta.tehreer.unicode;
 
-import com.mta.tehreer.internal.JniBridge;
-
 public final class Script {
     /**
      * Script "Inherited".
@@ -767,13 +765,7 @@ public final class Script {
     private Script() {
     }
 
-    static {
-        JniBridge.loadLibrary();
-    }
-
     public static int getOpenTypeTag(int script) {
-        return nGetOpenTypeTag((byte) script);
+        return Unicode.getScriptOpenTypeTag(script);
     }
-
-    private static native int nGetOpenTypeTag(byte nValue);
 }
