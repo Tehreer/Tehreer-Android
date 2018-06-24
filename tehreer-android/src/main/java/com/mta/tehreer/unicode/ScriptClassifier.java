@@ -19,7 +19,6 @@ package com.mta.tehreer.unicode;
 import com.mta.tehreer.internal.JniBridge;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 public class ScriptClassifier {
@@ -38,15 +37,12 @@ public class ScriptClassifier {
 
         this.text = text;
         this.scripts = new byte[text.length()];
+
         nClassify(text, scripts);
     }
 
     public String getText() {
         return text;
-    }
-
-    public List<Script> getCharScripts() {
-        return new ScriptList(scripts);
     }
 
     public Iterable<ScriptRun> getScriptRuns() {
@@ -69,7 +65,7 @@ public class ScriptClassifier {
 
     private static native void nClassify(String text, byte[] scripts);
 
-    private class RunIterator implements Iterator<ScriptRun> {
+    private static class RunIterator implements Iterator<ScriptRun> {
 
         final byte[] scripts;
         final int end;
@@ -101,7 +97,7 @@ public class ScriptClassifier {
                 }
             }
 
-            return new ScriptRun(start, index, Script.valueOf(current));
+            return new ScriptRun(start, index, current);
         }
 
         @Override
@@ -110,7 +106,7 @@ public class ScriptClassifier {
         }
     }
 
-    private class RunIterable implements Iterable<ScriptRun> {
+    private static class RunIterable implements Iterable<ScriptRun> {
 
         final byte[] scripts;
         final int start;
