@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ public class SafePointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[(index + offset) * 2 + 0];
+        return array[(index + offset) * 2];
     }
 
     @Override
@@ -51,7 +51,7 @@ public class SafePointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[(index + offset) * 2 + 1];
+        return array[((index + offset) * 2) + 1];
     }
 
     @Override
