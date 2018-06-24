@@ -17,7 +17,6 @@
 package com.mta.tehreer.unicode;
 
 public class ScriptRun {
-
     /**
      * The index to the first character of this run in source text.
      */
@@ -29,7 +28,7 @@ public class ScriptRun {
     /**
      * The resolved script of this run.
      */
-    public Script script;
+    public int script;
 
     /**
      * Constructs a script run object.
@@ -38,7 +37,7 @@ public class ScriptRun {
      * @param charEnd The index after the last character of run.
      * @param script The resolved script of run.
      */
-    public ScriptRun(int charStart, int charEnd, Script script) {
+    public ScriptRun(int charStart, int charEnd, int script) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.script = script;
@@ -72,7 +71,7 @@ public class ScriptRun {
     public int hashCode() {
         int result = charStart;
         result = 31 * result + charEnd;
-        result = 31 * result + (script != null ? script.hashCode() : 0);
+        result = 31 * result + script;
 
         return result;
     }
