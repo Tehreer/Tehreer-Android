@@ -28,24 +28,18 @@ public class CodePoint {
     }
 
     public static int getBidiClass(int codePoint) {
-        return nGetBidiClass(codePoint);
+        return Unicode.getCodePointBidiClass(codePoint);
     }
 
     public static int getGeneralCategory(int codePoint) {
-        return nGetGeneralCategory(codePoint);
+        return Unicode.getCodePointGeneralCategory(codePoint);
     }
 
     public static int getScript(int codePoint) {
-        return nGetScript(codePoint);
+        return Unicode.getCodePointScript(codePoint);
     }
 
     public static int getMirror(int codePoint) {
-        return nGetMirror(codePoint);
+        return Unicode.getCodePointMirror(codePoint);
     }
-
-    private static native byte nGetBidiClass(int codePoint);
-    private static native byte nGetGeneralCategory(int codePoint);
-    private static native byte nGetScript(int codePoint);
-
-    private static native int nGetMirror(int codePoint);
 }
