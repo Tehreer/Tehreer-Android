@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,26 +29,26 @@ class BidiMirrorLocator implements Disposable {
     long nativeBuffer;
 
 	public BidiMirrorLocator() {
-		nativeMirrorLocator = nativeCreate();
+		nativeMirrorLocator = nCreate();
 	}
 
     public void loadLine(BidiLine line) {
         nativeBuffer = line.nativeBuffer;
-        nativeLoadLine(nativeMirrorLocator, line.nativeLine, nativeBuffer);
+        nLoadLine(nativeMirrorLocator, line.nativeLine, nativeBuffer);
     }
 
     public BidiPair nextPair() {
-        return nativeGetNextPair(nativeMirrorLocator, nativeBuffer);
+        return nGetNextPair(nativeMirrorLocator);
     }
 
     @Override
     public void dispose() {
-        nativeDispose(nativeMirrorLocator);
+        nDispose(nativeMirrorLocator);
     }
 
-	private native long nativeCreate();
-	private native void nativeDispose(long nativeMirrorLocator);
+	private native long nCreate();
+	private native void nDispose(long nativeMirrorLocator);
 
-	private native void nativeLoadLine(long nativeMirrorLocator, long nativeLine, long nativeBuffer);
-	private native BidiPair nativeGetNextPair(long nativeMirrorLocator, long nativeBuffer);
+	private native void nLoadLine(long nativeMirrorLocator, long nativeLine, long nativeBuffer);
+	private native BidiPair nGetNextPair(long nativeMirrorLocator);
 }
