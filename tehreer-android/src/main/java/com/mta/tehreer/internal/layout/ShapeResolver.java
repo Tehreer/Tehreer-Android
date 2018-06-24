@@ -28,6 +28,7 @@ import com.mta.tehreer.unicode.BaseDirection;
 import com.mta.tehreer.unicode.BidiAlgorithm;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
+import com.mta.tehreer.unicode.Script;
 import com.mta.tehreer.unicode.ScriptClassifier;
 import com.mta.tehreer.unicode.ScriptRun;
 
@@ -58,7 +59,7 @@ public class ShapeResolver {
                 BidiParagraph paragraph = bidiAlgorithm.createParagraph(paragraphStart, suggestedEnd, baseDirection);
                 for (BidiRun bidiRun : paragraph.getLogicalRuns()) {
                     for (ScriptRun scriptRun : scriptClassifier.getScriptRuns(bidiRun.charStart, bidiRun.charEnd)) {
-                        int scriptTag = scriptRun.script.openTypeTag();
+                        int scriptTag = Script.getOpenTypeTag(scriptRun.script);
                         WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
 
                         locator.reset(scriptRun.charStart, scriptRun.charEnd);
