@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.ByteList;
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawInt8Values extends ByteList {
+public class RawUInt16AsIntList extends IntList {
 
     private final long pointer;
     private final int size;
 
-    public RawInt8Values(long pointer, int size) {
+    public RawUInt16AsIntList(long pointer, int size) {
         this.pointer = pointer;
         this.size = size;
     }
@@ -36,16 +36,16 @@ public class RawInt8Values extends ByteList {
     }
 
     @Override
-    public byte get(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt8FromArray(pointer, index);
+        return Raw.getUInt16FromArray(pointer, index);
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(int[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -54,15 +54,15 @@ public class RawInt8Values extends ByteList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt8Array(pointer, array, atIndex, size);
+        Raw.copyUInt16Array(pointer, array, atIndex, size);
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt8Values(pointer + fromIndex, toIndex - fromIndex);
+        return new RawUInt16AsIntList(pointer + (fromIndex * 2), toIndex - fromIndex);
     }
 }

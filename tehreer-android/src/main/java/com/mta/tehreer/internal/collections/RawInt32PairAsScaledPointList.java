@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,20 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawUInt16Values extends IntList {
+public class RawInt32PairAsScaledPointList extends PointList {
 
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawUInt16Values(long pointer, int size) {
+    public RawInt32PairAsScaledPointList(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
@@ -36,33 +38,42 @@ public class RawUInt16Values extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getUInt16FromArray(pointer, index);
+        return Raw.getInt32FromArray(pointer, index * 2) * scale;
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return Raw.getInt32FromArray(pointer, (index * 2) + 1) * scale;
+    }
+
+    @Override
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
+        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUInt16Array(pointer, array, atIndex, size);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUInt16Values(pointer + (fromIndex * 2), toIndex - fromIndex);
+        return new RawInt32PairAsScaledPointList(pointer + (fromIndex * 8), toIndex - fromIndex, scale);
     }
 }

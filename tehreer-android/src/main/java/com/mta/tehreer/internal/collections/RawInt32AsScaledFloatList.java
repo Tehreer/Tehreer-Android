@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,20 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawSizeValues extends IntList {
+public class RawInt32AsScaledFloatList extends FloatList {
 
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawSizeValues(long pointer, int size) {
+    public RawInt32AsScaledFloatList(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
@@ -36,16 +38,16 @@ public class RawSizeValues extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getSizeFromArray(pointer, index);
+        return Raw.getInt32FromArray(pointer, index) * scale;
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -54,15 +56,15 @@ public class RawSizeValues extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copySizeArray(pointer, array, atIndex, size);
+        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUInt16Values(pointer + (fromIndex * Raw.BYTES_IN_SIZE_TYPE), toIndex - fromIndex);
+        return new RawInt32AsScaledFloatList(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
     }
 }
