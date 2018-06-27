@@ -22,7 +22,10 @@ public final class Raw {
         JniBridge.loadLibrary();
     }
 
-    public static final int POINTER_SIZE = bytesInSizeType();
+    public static final int INT8_SIZE = 1;
+    public static final int INT16_SIZE = 2;
+    public static final int INT32_SIZE = 4;
+    public static final int POINTER_SIZE = sizeOfIntPtr();
 
     private static native int sizeOfIntPtr();
 
