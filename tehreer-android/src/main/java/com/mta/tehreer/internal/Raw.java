@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal;
 
-public class Raw {
+public final class Raw {
 
     static {
         JniBridge.loadLibrary();
@@ -24,17 +24,18 @@ public class Raw {
 
     public static final int POINTER_SIZE = bytesInSizeType();
 
-    private static native int bytesInSizeType();
+    private static native int sizeOfIntPtr();
 
-    public static native byte getInt8FromArray(long pointer, int index);
-    public static native int getInt32FromArray(long pointer, int index);
-    public static native int getUInt16FromArray(long pointer, int index);
-    public static native int getSizeFromArray(long pointer, int index);
+    public static native byte getInt8Value(long pointer);
+    public static native int getInt32Value(long pointer);
+    public static native int getIntPtrValue(long pointer);
+    public static native int getUInt16Value(long pointer);
 
-    public static native void copyInt8Array(long pointer, byte[] destination, int start, int length);
-    public static native void copyUInt16Array(long pointer, int[] destination, int start, int length);
-    public static native void copySizeArray(long pointer, int[] destination, int start, int length);
-    public static native void copyInt32FloatArray(long pointer, float[] destination, int start, int length, float scale);
+    public static native void copyInt8Buffer(long pointer, byte[] destination, int start, int length);
+    public static native void copyInt32Buffer(long pointer, float[] destination, int start, int length, float scale);
+    public static native void copyUInt8Buffer(long pointer, int[] destination, int start, int length);
+    public static native void copyUInt16Buffer(long pointer, int[] destination, int start, int length);
+    public static native void copyUIntPtrBuffer(long pointer, int[] destination, int start, int length);
 
     private Raw() {
     }
