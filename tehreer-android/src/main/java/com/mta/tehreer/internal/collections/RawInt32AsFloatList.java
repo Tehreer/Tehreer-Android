@@ -16,21 +16,17 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawInt32PairAsScaledPointList extends PointList {
-
-    private static final int STRUCT_SIZE = 8;
-    private static final int X_OFFSET = 0;
-    private static final int Y_OFFSET = 4;
+public class RawInt32AsFloatList extends FloatList {
 
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public RawInt32PairAsScaledPointList(long pointer, int size, float scale) {
+    public RawInt32AsFloatList(long pointer, int size, float scale) {
         this.pointer = pointer;
         this.size = size;
         this.scale = scale;
@@ -42,21 +38,12 @@ public class RawInt32PairAsScaledPointList extends PointList {
     }
 
     @Override
-    public float getX(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + X_OFFSET) * scale;
-    }
-
-    @Override
-    public float getY(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
-
-        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + Y_OFFSET) * scale;
+        return Raw.getInt32Value(pointer + (index * Raw.INT32_SIZE)) * scale;
     }
 
     @Override
@@ -65,19 +52,19 @@ public class RawInt32PairAsScaledPointList extends PointList {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
+        if (atIndex < 0 || (length - atIndex) < size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32Buffer(pointer, array, atIndex, size * 2, scale);
+        Raw.copyInt32Buffer(pointer, array, atIndex, size, scale);
     }
 
     @Override
-    public PointList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32PairAsScaledPointList(pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
+        return new RawInt32AsFloatList(pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex, scale);
     }
 }
