@@ -22,8 +22,8 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.collections.RawInt32AsScaledFloatList;
-import com.mta.tehreer.internal.collections.RawInt32PairAsScaledPointList;
+import com.mta.tehreer.internal.collections.RawInt32AsFloatList;
+import com.mta.tehreer.internal.collections.RawInt32PairAsPointList;
 import com.mta.tehreer.internal.collections.RawUInt16AsIntList;
 import com.mta.tehreer.internal.collections.RawUIntPtrAsIntList;
 
@@ -169,9 +169,9 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph offsets.
      */
     public PointList getGlyphOffsets() {
-        return new RawInt32PairAsScaledPointList(nativeGetGlyphOffsetsPtr(nativeResult),
-                                                 nativeGetGlyphCount(nativeResult),
-                                                 nativeGetSizeByEm(nativeResult));
+        return new RawInt32PairAsPointList(nativeGetGlyphOffsetsPtr(nativeResult),
+                                           nativeGetGlyphCount(nativeResult),
+                                           nativeGetSizeByEm(nativeResult));
     }
 
     /**
@@ -183,9 +183,9 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph advances.
      */
     public FloatList getGlyphAdvances() {
-        return new RawInt32AsScaledFloatList(nativeGetGlyphAdvancesPtr(nativeResult),
-                                             nativeGetGlyphCount(nativeResult),
-                                             nativeGetSizeByEm(nativeResult));
+        return new RawInt32AsFloatList(nativeGetGlyphAdvancesPtr(nativeResult),
+                                       nativeGetGlyphCount(nativeResult),
+                                       nativeGetSizeByEm(nativeResult));
     }
 
     /**
