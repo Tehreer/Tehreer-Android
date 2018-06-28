@@ -22,6 +22,10 @@ import com.mta.tehreer.internal.Raw;
 
 public class RawInt32PairAsScaledPointList extends PointList {
 
+    private static final int STRUCT_SIZE = 8;
+    private static final int X_OFFSET = 0;
+    private static final int Y_OFFSET = 4;
+
     private final long pointer;
     private final int size;
     private final float scale;
@@ -43,7 +47,7 @@ public class RawInt32PairAsScaledPointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32FromArray(pointer, index * 2) * scale;
+        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + X_OFFSET) * scale;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class RawInt32PairAsScaledPointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32FromArray(pointer, (index * 2) + 1) * scale;
+        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + Y_OFFSET) * scale;
     }
 
     @Override
@@ -65,7 +69,7 @@ public class RawInt32PairAsScaledPointList extends PointList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32FloatArray(pointer, array, atIndex, size * 2, scale);
+        Raw.copyInt32Buffer(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override
@@ -74,6 +78,6 @@ public class RawInt32PairAsScaledPointList extends PointList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32PairAsScaledPointList(pointer + (fromIndex * 8), toIndex - fromIndex, scale);
+        return new RawInt32PairAsScaledPointList(pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
     }
 }

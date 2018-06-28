@@ -43,7 +43,7 @@ public class RawInt32AsScaledFloatList extends FloatList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32FromArray(pointer, index) * scale;
+        return Raw.getInt32Value(pointer + (index * Raw.INT32_SIZE)) * scale;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class RawInt32AsScaledFloatList extends FloatList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt32FloatArray(pointer, array, atIndex, size, scale);
+        Raw.copyInt32Buffer(pointer, array, atIndex, size, scale);
     }
 
     @Override
@@ -65,6 +65,6 @@ public class RawInt32AsScaledFloatList extends FloatList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32AsScaledFloatList(pointer + (fromIndex * 4), toIndex - fromIndex, scale);
+        return new RawInt32AsScaledFloatList(pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex, scale);
     }
 }

@@ -41,7 +41,7 @@ public class RawUIntPtrAsIntList extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getSizeFromArray(pointer, index);
+        return Raw.getIntPtrValue(pointer + (index * Raw.POINTER_SIZE));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class RawUIntPtrAsIntList extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copySizeArray(pointer, array, atIndex, size);
+        Raw.copyUIntPtrBuffer(pointer, array, atIndex, size);
     }
 
     @Override

@@ -41,7 +41,7 @@ public class RawUInt16AsIntList extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getUInt16FromArray(pointer, index);
+        return Raw.getUInt16Value(pointer + (index * Raw.INT16_SIZE));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class RawUInt16AsIntList extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUInt16Array(pointer, array, atIndex, size);
+        Raw.copyUInt16Buffer(pointer, array, atIndex, size);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class RawUInt16AsIntList extends IntList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUInt16AsIntList(pointer + (fromIndex * 2), toIndex - fromIndex);
+        return new RawUInt16AsIntList(pointer + (fromIndex * Raw.INT16_SIZE), toIndex - fromIndex);
     }
 }

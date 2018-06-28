@@ -41,7 +41,7 @@ public class RawInt8AsByteList extends ByteList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt8FromArray(pointer, index);
+        return Raw.getInt8Value(pointer + (index * Raw.INT8_SIZE));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class RawInt8AsByteList extends ByteList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyInt8Array(pointer, array, atIndex, size);
+        Raw.copyInt8Buffer(pointer, array, atIndex, size);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class RawInt8AsByteList extends ByteList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt8AsByteList(pointer + fromIndex, toIndex - fromIndex);
+        return new RawInt8AsByteList(pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
     }
 }
