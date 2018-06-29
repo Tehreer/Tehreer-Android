@@ -22,6 +22,8 @@ import com.mta.tehreer.internal.Raw;
 
 public class RawUInt16AsIntList extends IntList {
 
+    private static final int UNSIGNED_MASK = 0xFFFF;
+
     private final long pointer;
     private final int size;
 
@@ -41,7 +43,7 @@ public class RawUInt16AsIntList extends IntList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getUInt16Value(pointer + (index * Raw.INT16_SIZE));
+        return Raw.getInt16Value(pointer + (index * Raw.INT16_SIZE)) & UNSIGNED_MASK;
     }
 
     @Override
