@@ -49,12 +49,12 @@ public class StructTable implements SfntTable {
 
     @Override
     public short readInt16(int offset) {
-        return (short) Raw.getUInt16Value(pointerOf(offset));
+        return Raw.getInt16Value(pointerOf(offset));
     }
 
     @Override
     public int readUInt16(int offset) {
-        return Raw.getUInt16Value(pointerOf(offset));
+        return Raw.getInt16Value(pointerOf(offset)) & 0xFFFF;
     }
 
     @Override
