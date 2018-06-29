@@ -30,9 +30,9 @@ public final class Raw {
     private static native int sizeOfIntPtr();
 
     public static native byte getInt8Value(long pointer);
+    public static native short getInt16Value(long pointer);
     public static native int getInt32Value(long pointer);
-    public static native int getIntPtrValue(long pointer);
-    public static native int getUInt16Value(long pointer);
+    public static native long getIntPtrValue(long pointer);
 
     public static native void copyInt8Buffer(long pointer, byte[] destination, int start, int length);
     public static native void copyInt32Buffer(long pointer, float[] destination, int start, int length, float scale);
