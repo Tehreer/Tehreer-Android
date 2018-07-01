@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
  * characters of a paragraph and provides the facility to query them or iterate over their runs.
  */
 public class BidiParagraph implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -145,7 +144,8 @@ public class BidiParagraph implements Disposable {
      * @return A list containing the levels of all characters in this paragraph.
      */
 	public ByteList getCharLevels() {
-	    return new RawInt8AsByteList(nGetLevelsPtr(nativeParagraph),
+	    return new RawInt8AsByteList(this,
+                                     nGetLevelsPtr(nativeParagraph),
                                      nGetCharCount(nativeParagraph));
 	}
 
