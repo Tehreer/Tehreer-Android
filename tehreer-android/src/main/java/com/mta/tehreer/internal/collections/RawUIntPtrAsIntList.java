@@ -21,13 +21,14 @@ import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
 public class RawUIntPtrAsIntList extends IntList {
-
     private static final long UNSIGNED_MASK = 0x7FFFFFFFL;
 
+    private final Object owner;
     private final long pointer;
     private final int size;
 
-    public RawUIntPtrAsIntList(long pointer, int size) {
+    public RawUIntPtrAsIntList(Object owner, long pointer, int size) {
+        this.owner = owner;
         this.pointer = pointer;
         this.size = size;
     }
@@ -65,6 +66,6 @@ public class RawUIntPtrAsIntList extends IntList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUIntPtrAsIntList(pointer + (fromIndex * Raw.POINTER_SIZE), toIndex - fromIndex);
+        return new RawUIntPtrAsIntList(owner, pointer + (fromIndex * Raw.POINTER_SIZE), toIndex - fromIndex);
     }
 }

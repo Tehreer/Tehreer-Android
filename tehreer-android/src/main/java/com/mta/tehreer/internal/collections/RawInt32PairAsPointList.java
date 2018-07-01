@@ -21,16 +21,17 @@ import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
 public class RawInt32PairAsPointList extends PointList {
-
     private static final int STRUCT_SIZE = 8;
     private static final int X_OFFSET = 0;
     private static final int Y_OFFSET = 4;
 
+    private final Object owner;
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public RawInt32PairAsPointList(long pointer, int size, float scale) {
+    public RawInt32PairAsPointList(Object owner, long pointer, int size, float scale) {
+        this.owner = owner;
         this.pointer = pointer;
         this.size = size;
         this.scale = scale;
@@ -78,6 +79,6 @@ public class RawInt32PairAsPointList extends PointList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32PairAsPointList(pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
+        return new RawInt32PairAsPointList(owner, pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
     }
 }

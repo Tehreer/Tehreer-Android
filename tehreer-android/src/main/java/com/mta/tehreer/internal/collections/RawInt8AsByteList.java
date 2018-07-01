@@ -21,11 +21,12 @@ import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
 public class RawInt8AsByteList extends ByteList {
-
+    private final Object owner;
     private final long pointer;
     private final int size;
 
-    public RawInt8AsByteList(long pointer, int size) {
+    public RawInt8AsByteList(Object owner, long pointer, int size) {
+        this.owner = owner;
         this.pointer = pointer;
         this.size = size;
     }
@@ -63,6 +64,6 @@ public class RawInt8AsByteList extends ByteList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt8AsByteList(pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
+        return new RawInt8AsByteList(owner, pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
     }
 }
