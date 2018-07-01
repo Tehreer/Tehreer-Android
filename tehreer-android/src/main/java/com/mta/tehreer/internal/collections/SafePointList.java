@@ -21,6 +21,10 @@ import com.mta.tehreer.internal.Exceptions;
 
 public class SafePointList extends PointList {
 
+    private static final int FIELD_COUNT = 2;
+    private static final int X_OFFSET = 0;
+    private static final int Y_OFFSET = 1;
+
     private final float[] array;
     private final int offset;
     private final int size;
@@ -42,7 +46,7 @@ public class SafePointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[(index + offset) * 2];
+        return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
     }
 
     @Override
@@ -51,12 +55,12 @@ public class SafePointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[((index + offset) * 2) + 1];
+        return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
     }
 
     @Override
     public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size * 2);
+        System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
     }
 
     @Override
