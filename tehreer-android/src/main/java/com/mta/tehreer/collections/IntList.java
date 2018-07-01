@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.SafeIntList;
+import com.mta.tehreer.internal.collections.ArrayIntList;
 import com.mta.tehreer.internal.Description;
 
 /**
  * Represents a primitive list of integers.
  */
 public abstract class IntList implements Primitive {
-
     /**
      * Returns an integers list whose elements are the specified array.
      *
@@ -37,7 +36,7 @@ public abstract class IntList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new SafeIntList(array, 0, array.length);
+        return new ArrayIntList(array, 0, array.length);
     }
 
     /**

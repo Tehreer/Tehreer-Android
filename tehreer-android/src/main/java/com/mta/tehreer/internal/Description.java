@@ -20,7 +20,7 @@ import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
-import com.mta.tehreer.internal.collections.SafeByteList;
+import com.mta.tehreer.internal.collections.ArrayByteList;
 
 import java.util.Iterator;
 
@@ -29,7 +29,7 @@ public class Description {
     private static final String NULL = "null";
 
     public static String forByteArray(byte[] array) {
-        return forByteList(new SafeByteList(array, 0, array.length));
+        return forByteList(new ArrayByteList(array, 0, array.length));
     }
 
     public static String forByteList(ByteList list) {

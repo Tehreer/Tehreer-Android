@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.SafePointList;
+import com.mta.tehreer.internal.collections.ArrayPointList;
 import com.mta.tehreer.internal.Description;
 
 /**
  * Represents a primitive list of points.
  */
 public abstract class PointList implements Primitive {
-
     /**
      * Returns a point list whose elements are the specified array. Even numbered array entries will
      * become the x- coordinates while odd numbered array entries will become the y- coordinates.
@@ -38,7 +37,7 @@ public abstract class PointList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new SafePointList(array, 0, array.length / 2);
+        return new ArrayPointList(array, 0, array.length / 2);
     }
 
     /**
