@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,19 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class SafeFloatList extends FloatList {
+public class ArrayPointList extends PointList {
+    private static final int FIELD_COUNT = 2;
+    private static final int X_OFFSET = 0;
+    private static final int Y_OFFSET = 1;
 
     private final float[] array;
     private final int offset;
     private final int size;
 
-    public SafeFloatList(float[] array, int offset, int size) {
+    public ArrayPointList(float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -37,25 +40,34 @@ public class SafeFloatList extends FloatList {
     }
 
     @Override
-    public float get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[index + offset];
+        return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
+    }
+
+    @Override
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
     }
 
     @Override
     public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+        System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeFloatList(array, offset + fromIndex, toIndex - fromIndex);
+        return new ArrayPointList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

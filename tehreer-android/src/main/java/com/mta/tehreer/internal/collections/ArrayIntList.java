@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,12 @@ package com.mta.tehreer.internal.collections;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class SafeIntList extends IntList {
-
+public class ArrayIntList extends IntList {
     private final int[] array;
     private final int offset;
     private final int size;
 
-    public SafeIntList(int[] array, int offset, int size) {
+    public ArrayIntList(int[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -56,6 +55,6 @@ public class SafeIntList extends IntList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeIntList(array, offset + fromIndex, toIndex - fromIndex);
+        return new ArrayIntList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

@@ -16,20 +16,15 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class SafePointList extends PointList {
-
-    private static final int FIELD_COUNT = 2;
-    private static final int X_OFFSET = 0;
-    private static final int Y_OFFSET = 1;
-
-    private final float[] array;
+public class ArrayByteList extends ByteList {
+    private final byte[] array;
     private final int offset;
     private final int size;
 
-    public SafePointList(float[] array, int offset, int size) {
+    public ArrayByteList(byte[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -41,34 +36,25 @@ public class SafePointList extends PointList {
     }
 
     @Override
-    public float getX(int index) {
+    public byte get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
+        return array[index + offset];
     }
 
     @Override
-    public float getY(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
-
-        return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
+    public void copyTo(byte[] array, int atIndex) {
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
-    }
-
-    @Override
-    public PointList subList(int fromIndex, int toIndex) {
+    public ByteList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafePointList(array, offset + fromIndex, toIndex - fromIndex);
+        return new ArrayByteList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

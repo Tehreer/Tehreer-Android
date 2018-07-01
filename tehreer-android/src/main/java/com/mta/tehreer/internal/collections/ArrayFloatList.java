@@ -16,16 +16,15 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.ByteList;
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class SafeByteList extends ByteList {
-
-    private final byte[] array;
+public class ArrayFloatList extends FloatList {
+    private final float[] array;
     private final int offset;
     private final int size;
 
-    public SafeByteList(byte[] array, int offset, int size) {
+    public ArrayFloatList(float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -37,7 +36,7 @@ public class SafeByteList extends ByteList {
     }
 
     @Override
-    public byte get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
@@ -46,16 +45,16 @@ public class SafeByteList extends ByteList {
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(float[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new SafeByteList(array, offset + fromIndex, toIndex - fromIndex);
+        return new ArrayFloatList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }
