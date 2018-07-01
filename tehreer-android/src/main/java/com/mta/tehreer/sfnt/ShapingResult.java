@@ -156,7 +156,8 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph IDs.
      */
     public IntList getGlyphIds() {
-        return new RawUInt16AsIntList(nativeGetGlyphIdsPtr(nativeResult),
+        return new RawUInt16AsIntList(this,
+                                      nativeGetGlyphIdsPtr(nativeResult),
                                       nativeGetGlyphCount(nativeResult));
     }
 
@@ -169,7 +170,8 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph offsets.
      */
     public PointList getGlyphOffsets() {
-        return new RawInt32PairAsPointList(nativeGetGlyphOffsetsPtr(nativeResult),
+        return new RawInt32PairAsPointList(this,
+                                           nativeGetGlyphOffsetsPtr(nativeResult),
                                            nativeGetGlyphCount(nativeResult),
                                            nativeGetSizeByEm(nativeResult));
     }
@@ -183,7 +185,8 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph advances.
      */
     public FloatList getGlyphAdvances() {
-        return new RawInt32AsFloatList(nativeGetGlyphAdvancesPtr(nativeResult),
+        return new RawInt32AsFloatList(this,
+                                       nativeGetGlyphAdvancesPtr(nativeResult),
                                        nativeGetGlyphCount(nativeResult),
                                        nativeGetSizeByEm(nativeResult));
     }
@@ -213,7 +216,7 @@ public class ShapingResult implements Disposable {
     public IntList getClusterMap() {
         long pointer = nativeGetClusterMapPtr(nativeResult);
         int size = (pointer != 0 ? nativeGetCharCount(nativeResult) : 0);
-        return new RawUIntPtrAsIntList(pointer, size);
+        return new RawUIntPtrAsIntList(this, pointer, size);
     }
 
 	@Override
