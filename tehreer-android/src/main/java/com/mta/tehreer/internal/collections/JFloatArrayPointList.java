@@ -18,23 +18,20 @@ package com.mta.tehreer.internal.collections;
 
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
-import com.mta.tehreer.internal.Raw;
 
-public class RawInt32PairAsPointList extends PointList {
-    private static final int STRUCT_SIZE = 8;
+public class JFloatArrayPointList extends PointList {
+    private static final int FIELD_COUNT = 2;
     private static final int X_OFFSET = 0;
-    private static final int Y_OFFSET = 4;
+    private static final int Y_OFFSET = 1;
 
-    private final Object owner;
-    private final long pointer;
+    private final float[] array;
+    private final int offset;
     private final int size;
-    private final float scale;
 
-    public RawInt32PairAsPointList(Object owner, long pointer, int size, float scale) {
-        this.owner = owner;
-        this.pointer = pointer;
+    public JFloatArrayPointList(float[] array, int offset, int size) {
+        this.array = array;
+        this.offset = offset;
         this.size = size;
-        this.scale = scale;
     }
 
     @Override
@@ -48,7 +45,7 @@ public class RawInt32PairAsPointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + X_OFFSET) * scale;
+        return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
     }
 
     @Override
@@ -57,20 +54,12 @@ public class RawInt32PairAsPointList extends PointList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + Y_OFFSET) * scale;
+        return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
     }
 
     @Override
     public void copyTo(float[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyInt32Buffer(pointer, array, atIndex, size * 2, scale);
+        System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
     }
 
     @Override
@@ -79,6 +68,6 @@ public class RawInt32PairAsPointList extends PointList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32PairAsPointList(owner, pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
+        return new JFloatArrayPointList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

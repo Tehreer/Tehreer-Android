@@ -16,21 +16,25 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawUInt16AsIntList extends IntList {
-    private static final int UNSIGNED_MASK = 0xFFFF;
+public class Int32BufferPointList extends PointList {
+    private static final int STRUCT_SIZE = 8;
+    private static final int X_OFFSET = 0;
+    private static final int Y_OFFSET = 4;
 
     private final Object owner;
     private final long pointer;
     private final int size;
+    private final float scale;
 
-    public RawUInt16AsIntList(Object owner, long pointer, int size) {
+    public Int32BufferPointList(Object owner, long pointer, int size, float scale) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
+        this.scale = scale;
     }
 
     @Override
@@ -39,33 +43,42 @@ public class RawUInt16AsIntList extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float getX(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt16Value(pointer + (index * Raw.INT16_SIZE)) & UNSIGNED_MASK;
+        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + X_OFFSET) * scale;
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public float getY(int index) {
+        if (index < 0 || index >= size) {
+            throw Exceptions.indexOutOfBounds(index, size);
+        }
+
+        return Raw.getInt32Value(pointer + (index * STRUCT_SIZE) + Y_OFFSET) * scale;
+    }
+
+    @Override
+    public void copyTo(float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
         int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
+        if (atIndex < 0 || (length - atIndex) < (size * 2)) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUInt16Buffer(pointer, array, atIndex, size);
+        Raw.copyInt32Buffer(pointer, array, atIndex, size * 2, scale);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUInt16AsIntList(owner, pointer + (fromIndex * Raw.INT16_SIZE), toIndex - fromIndex);
+        return new Int32BufferPointList(owner, pointer + (fromIndex * STRUCT_SIZE), toIndex - fromIndex, scale);
     }
 }

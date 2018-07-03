@@ -18,16 +18,15 @@ package com.mta.tehreer.internal.collections;
 
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Exceptions;
-import com.mta.tehreer.internal.Raw;
 
-public class RawInt8AsByteList extends ByteList {
-    private final Object owner;
-    private final long pointer;
+public class JByteArrayList extends ByteList {
+    private final byte[] array;
+    private final int offset;
     private final int size;
 
-    public RawInt8AsByteList(Object owner, long pointer, int size) {
-        this.owner = owner;
-        this.pointer = pointer;
+    public JByteArrayList(byte[] array, int offset, int size) {
+        this.array = array;
+        this.offset = offset;
         this.size = size;
     }
 
@@ -42,20 +41,12 @@ public class RawInt8AsByteList extends ByteList {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return Raw.getInt8Value(pointer + (index * Raw.INT8_SIZE));
+        return array[index + offset];
     }
 
     @Override
     public void copyTo(byte[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-
-        Raw.copyInt8Buffer(pointer, array, atIndex, size);
+        System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
@@ -64,6 +55,6 @@ public class RawInt8AsByteList extends ByteList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt8AsByteList(owner, pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
+        return new JByteArrayList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

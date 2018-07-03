@@ -16,15 +16,15 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.ByteList;
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class ArrayByteList extends ByteList {
-    private final byte[] array;
+public class JIntArrayList extends IntList {
+    private final int[] array;
     private final int offset;
     private final int size;
 
-    public ArrayByteList(byte[] array, int offset, int size) {
+    public JIntArrayList(int[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -36,7 +36,7 @@ public class ArrayByteList extends ByteList {
     }
 
     @Override
-    public byte get(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
@@ -45,16 +45,16 @@ public class ArrayByteList extends ByteList {
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(int[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new ArrayByteList(array, offset + fromIndex, toIndex - fromIndex);
+        return new JIntArrayList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }

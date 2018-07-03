@@ -16,17 +16,20 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
+import com.mta.tehreer.internal.Raw;
 
-public class ArrayFloatList extends FloatList {
-    private final float[] array;
-    private final int offset;
+public class UIntPtrBufferIntList extends IntList {
+    private static final long UNSIGNED_MASK = 0x7FFFFFFFL;
+
+    private final Object owner;
+    private final long pointer;
     private final int size;
 
-    public ArrayFloatList(float[] array, int offset, int size) {
-        this.array = array;
-        this.offset = offset;
+    public UIntPtrBufferIntList(Object owner, long pointer, int size) {
+        this.owner = owner;
+        this.pointer = pointer;
         this.size = size;
     }
 
@@ -36,25 +39,33 @@ public class ArrayFloatList extends FloatList {
     }
 
     @Override
-    public float get(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[index + offset];
+        return (int) (Raw.getIntPtrValue(pointer + (index * Raw.POINTER_SIZE)) & UNSIGNED_MASK);
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+    public void copyTo(int[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        Raw.copyUIntPtrBuffer(pointer, array, atIndex, size);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new ArrayFloatList(array, offset + fromIndex, toIndex - fromIndex);
+        return new UIntPtrBufferIntList(owner, pointer + (fromIndex * Raw.POINTER_SIZE), toIndex - fromIndex);
     }
 }

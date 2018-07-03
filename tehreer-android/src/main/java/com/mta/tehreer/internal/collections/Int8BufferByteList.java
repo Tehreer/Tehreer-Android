@@ -16,18 +16,16 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawUIntPtrAsIntList extends IntList {
-    private static final long UNSIGNED_MASK = 0x7FFFFFFFL;
-
+public class Int8BufferByteList extends ByteList {
     private final Object owner;
     private final long pointer;
     private final int size;
 
-    public RawUIntPtrAsIntList(Object owner, long pointer, int size) {
+    public Int8BufferByteList(Object owner, long pointer, int size) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -39,16 +37,16 @@ public class RawUIntPtrAsIntList extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public byte get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return (int) (Raw.getIntPtrValue(pointer + (index * Raw.POINTER_SIZE)) & UNSIGNED_MASK);
+        return Raw.getInt8Value(pointer + (index * Raw.INT8_SIZE));
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(byte[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -57,15 +55,15 @@ public class RawUIntPtrAsIntList extends IntList {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        Raw.copyUIntPtrBuffer(pointer, array, atIndex, size);
+        Raw.copyInt8Buffer(pointer, array, atIndex, size);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public ByteList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawUIntPtrAsIntList(owner, pointer + (fromIndex * Raw.POINTER_SIZE), toIndex - fromIndex);
+        return new Int8BufferByteList(owner, pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
     }
 }

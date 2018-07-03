@@ -20,13 +20,13 @@ import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
-public class RawInt32AsFloatList extends FloatList {
+public class Int32BufferFloatList extends FloatList {
     private final Object owner;
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public RawInt32AsFloatList(Object owner, long pointer, int size, float scale) {
+    public Int32BufferFloatList(Object owner, long pointer, int size, float scale) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -66,6 +66,6 @@ public class RawInt32AsFloatList extends FloatList {
             throw new IndexOutOfBoundsException();
         }
 
-        return new RawInt32AsFloatList(owner, pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex, scale);
+        return new Int32BufferFloatList(owner, pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex, scale);
     }
 }

@@ -16,21 +16,20 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
+import com.mta.tehreer.internal.Raw;
 
-public class ArrayPointList extends PointList {
-    private static final int FIELD_COUNT = 2;
-    private static final int X_OFFSET = 0;
-    private static final int Y_OFFSET = 1;
+public class UInt16BufferIntList extends IntList {
+    private static final int UNSIGNED_MASK = 0xFFFF;
 
-    private final float[] array;
-    private final int offset;
+    private final Object owner;
+    private final long pointer;
     private final int size;
 
-    public ArrayPointList(float[] array, int offset, int size) {
-        this.array = array;
-        this.offset = offset;
+    public UInt16BufferIntList(Object owner, long pointer, int size) {
+        this.owner = owner;
+        this.pointer = pointer;
         this.size = size;
     }
 
@@ -40,34 +39,33 @@ public class ArrayPointList extends PointList {
     }
 
     @Override
-    public float getX(int index) {
+    public int get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
 
-        return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
+        return Raw.getInt16Value(pointer + (index * Raw.INT16_SIZE)) & UNSIGNED_MASK;
     }
 
     @Override
-    public float getY(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
+    public void copyTo(int[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        int length = array.length;
+        if (atIndex < 0 || (length - atIndex) < size) {
+            throw new ArrayIndexOutOfBoundsException();
         }
 
-        return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
+        Raw.copyUInt16Buffer(pointer, array, atIndex, size);
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
-    }
-
-    @Override
-    public PointList subList(int fromIndex, int toIndex) {
+    public IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new ArrayPointList(array, offset + fromIndex, toIndex - fromIndex);
+        return new UInt16BufferIntList(owner, pointer + (fromIndex * Raw.INT16_SIZE), toIndex - fromIndex);
     }
 }

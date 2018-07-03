@@ -16,15 +16,15 @@
 
 package com.mta.tehreer.internal.collections;
 
-import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 
-public class ArrayIntList extends IntList {
-    private final int[] array;
+public class JFloatArrayList extends FloatList {
+    private final float[] array;
     private final int offset;
     private final int size;
 
-    public ArrayIntList(int[] array, int offset, int size) {
+    public JFloatArrayList(float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -36,7 +36,7 @@ public class ArrayIntList extends IntList {
     }
 
     @Override
-    public int get(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw Exceptions.indexOutOfBounds(index, size);
         }
@@ -45,16 +45,16 @@ public class ArrayIntList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(float[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
 
-        return new ArrayIntList(array, offset + fromIndex, toIndex - fromIndex);
+        return new JFloatArrayList(array, offset + fromIndex, toIndex - fromIndex);
     }
 }
