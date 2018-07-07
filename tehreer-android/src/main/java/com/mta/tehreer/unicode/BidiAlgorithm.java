@@ -17,8 +17,10 @@
 package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.Disposable;
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
+import com.mta.tehreer.internal.collections.UInt8BufferIntList;
 
 /**
  * This class implements Unicode Bidirectional Algorithm available at
@@ -30,7 +32,6 @@ import com.mta.tehreer.internal.JniBridge;
  * created, embedding levels of characters can be queried from it.
  */
 public class BidiAlgorithm implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -138,6 +139,12 @@ public class BidiAlgorithm implements Disposable {
         }
 
         return null;
+    }
+
+    public IntList getCharBidiClasses() {
+        return new UInt8BufferIntList(this,
+                                      nGetCharBidiClassesPtr(nativeAlgorithm),
+                                      text.length());
     }
 
     /**
@@ -252,6 +259,7 @@ public class BidiAlgorithm implements Disposable {
     private static native long nCreate(long nativeBuffer);
     private static native void nDispose(long nativeAlgorithm);
 
+    private static native long nGetCharBidiClassesPtr(long nativeAlgorithm);
     private static native int nGetParagraphBoundary(long nativeAlgorithm, int charStart, int charEnd);
     private static native long nCreateParagraph(long nativeAlgorithm, int charStart, int charEnd, int baseLevel);
 }
