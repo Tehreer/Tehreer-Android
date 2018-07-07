@@ -18,44 +18,42 @@ package com.mta.tehreer.unicode;
 
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 public class GeneralCategoryTest {
 
     @Test
-    public void testValueOf() {
-        assertThat(GeneralCategory.valueOf((byte) 0x00), is(nullValue()));
-        assertThat(GeneralCategory.valueOf((byte) 0x01), is(GeneralCategory.UPPERCASE_LETTER));
-        assertThat(GeneralCategory.valueOf((byte) 0x02), is(GeneralCategory.LOWERCASE_LETTER));
-        assertThat(GeneralCategory.valueOf((byte) 0x03), is(GeneralCategory.TITLECASE_LETTER));
-        assertThat(GeneralCategory.valueOf((byte) 0x04), is(GeneralCategory.MODIFIER_LETTER));
-        assertThat(GeneralCategory.valueOf((byte) 0x05), is(GeneralCategory.OTHER_LETTER));
-        assertThat(GeneralCategory.valueOf((byte) 0x06), is(GeneralCategory.NONSPACING_MARK));
-        assertThat(GeneralCategory.valueOf((byte) 0x07), is(GeneralCategory.SPACING_MARK));
-        assertThat(GeneralCategory.valueOf((byte) 0x08), is(GeneralCategory.ENCLOSING_MARK));
-        assertThat(GeneralCategory.valueOf((byte) 0x09), is(GeneralCategory.DECIMAL_NUMBER));
-        assertThat(GeneralCategory.valueOf((byte) 0x0A), is(GeneralCategory.LETTER_NUMBER));
-        assertThat(GeneralCategory.valueOf((byte) 0x0B), is(GeneralCategory.OTHER_NUMBER));
-        assertThat(GeneralCategory.valueOf((byte) 0x0C), is(GeneralCategory.CONNECTOR_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x0D), is(GeneralCategory.DASH_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x0E), is(GeneralCategory.OPEN_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x0F), is(GeneralCategory.CLOSE_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x10), is(GeneralCategory.INITIAL_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x11), is(GeneralCategory.FINAL_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x12), is(GeneralCategory.OTHER_PUNCTUATION));
-        assertThat(GeneralCategory.valueOf((byte) 0x13), is(GeneralCategory.MATH_SYMBOL));
-        assertThat(GeneralCategory.valueOf((byte) 0x14), is(GeneralCategory.CURRENCY_SYMBOL));
-        assertThat(GeneralCategory.valueOf((byte) 0x15), is(GeneralCategory.MODIFIER_SYMBOL));
-        assertThat(GeneralCategory.valueOf((byte) 0x16), is(GeneralCategory.OTHER_SYMBOL));
-        assertThat(GeneralCategory.valueOf((byte) 0x17), is(GeneralCategory.SPACE_SEPARATOR));
-        assertThat(GeneralCategory.valueOf((byte) 0x18), is(GeneralCategory.LINE_SEPARATOR));
-        assertThat(GeneralCategory.valueOf((byte) 0x19), is(GeneralCategory.PARAGRAPH_SEPARATOR));
-        assertThat(GeneralCategory.valueOf((byte) 0x1A), is(GeneralCategory.CONTROL));
-        assertThat(GeneralCategory.valueOf((byte) 0x1B), is(GeneralCategory.FORMAT));
-        assertThat(GeneralCategory.valueOf((byte) 0x1C), is(GeneralCategory.SURROGATE));
-        assertThat(GeneralCategory.valueOf((byte) 0x1D), is(GeneralCategory.PRIVATE_USE));
-        assertThat(GeneralCategory.valueOf((byte) 0x1E), is(GeneralCategory.UNASSIGNED));
+    public void testValues() {
+        assertThat(GeneralCategory.UPPERCASE_LETTER, equalTo(0x01));
+        assertThat(GeneralCategory.LOWERCASE_LETTER, equalTo(0x02));
+        assertThat(GeneralCategory.TITLECASE_LETTER, equalTo(0x03));
+        assertThat(GeneralCategory.MODIFIER_LETTER, equalTo(0x04));
+        assertThat(GeneralCategory.OTHER_LETTER, equalTo(0x05));
+        assertThat(GeneralCategory.NONSPACING_MARK, equalTo(0x06));
+        assertThat(GeneralCategory.SPACING_MARK, equalTo(0x07));
+        assertThat(GeneralCategory.ENCLOSING_MARK, equalTo(0x08));
+        assertThat(GeneralCategory.DECIMAL_NUMBER, equalTo(0x09));
+        assertThat(GeneralCategory.LETTER_NUMBER, equalTo(0x0A));
+        assertThat(GeneralCategory.OTHER_NUMBER, equalTo(0x0B));
+        assertThat(GeneralCategory.CONNECTOR_PUNCTUATION, equalTo(0x0C));
+        assertThat(GeneralCategory.DASH_PUNCTUATION, equalTo(0x0D));
+        assertThat(GeneralCategory.OPEN_PUNCTUATION, equalTo(0x0E));
+        assertThat(GeneralCategory.CLOSE_PUNCTUATION, equalTo(0x0F));
+        assertThat(GeneralCategory.INITIAL_PUNCTUATION, equalTo(0x10));
+        assertThat(GeneralCategory.FINAL_PUNCTUATION, equalTo(0x11));
+        assertThat(GeneralCategory.OTHER_PUNCTUATION, equalTo(0x12));
+        assertThat(GeneralCategory.MATH_SYMBOL, equalTo(0x13));
+        assertThat(GeneralCategory.CURRENCY_SYMBOL, equalTo(0x14));
+        assertThat(GeneralCategory.MODIFIER_SYMBOL, equalTo(0x15));
+        assertThat(GeneralCategory.OTHER_SYMBOL, equalTo(0x16));
+        assertThat(GeneralCategory.SPACE_SEPARATOR, equalTo(0x17));
+        assertThat(GeneralCategory.LINE_SEPARATOR, equalTo(0x18));
+        assertThat(GeneralCategory.PARAGRAPH_SEPARATOR, equalTo(0x19));
+        assertThat(GeneralCategory.CONTROL, equalTo(0x1A));
+        assertThat(GeneralCategory.FORMAT, equalTo(0x1B));
+        assertThat(GeneralCategory.SURROGATE, equalTo(0x1C));
+        assertThat(GeneralCategory.PRIVATE_USE, equalTo(0x1D));
+        assertThat(GeneralCategory.UNASSIGNED, equalTo(0x1E));
     }
 }
