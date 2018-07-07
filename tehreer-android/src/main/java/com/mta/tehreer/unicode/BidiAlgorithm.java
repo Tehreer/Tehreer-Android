@@ -252,7 +252,9 @@ public class BidiAlgorithm implements Disposable {
 
     @Override
     public String toString() {
-        return "BidiAlgorithm{text=" + text + "}";
+        return "BidiAlgorithm{text=" + text
+                + ", charBidiClasses=" + getCharBidiClasses().toString()
+                + "}";
     }
 
     private static native long nCreate(long nativeBuffer);
