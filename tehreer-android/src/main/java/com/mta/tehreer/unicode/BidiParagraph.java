@@ -37,8 +37,7 @@ public class BidiParagraph implements Disposable {
     }
 
     private static class Finalizable extends BidiParagraph {
-
-        private Finalizable(BidiParagraph parent) {
+        Finalizable(BidiParagraph parent) {
             super(parent);
         }
 
@@ -103,7 +102,7 @@ public class BidiParagraph implements Disposable {
 	    this.nativeParagraph = nativeParagraph;
 	}
 
-    private BidiParagraph(BidiParagraph other) {
+    BidiParagraph(BidiParagraph other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeParagraph = other.nativeParagraph;
     }
