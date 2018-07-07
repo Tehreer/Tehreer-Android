@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,12 @@ import com.mta.tehreer.Disposable;
  * The <code>ShapingEngine</code> class represents text shaping engine.
  */
 public class ShapingEngine implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
 
     private static class Finalizable extends ShapingEngine {
-
-        private Finalizable(ShapingEngine parent) {
+        Finalizable(ShapingEngine parent) {
             super(parent);
         }
 
@@ -94,7 +92,7 @@ public class ShapingEngine implements Disposable {
      * @return The default writing direction of the script identified by <code>scriptTag</code>.
      */
     public static WritingDirection getScriptDirection(int scriptTag) {
-        return WritingDirection.valueOf(nativeGetScriptDefaultDirection(scriptTag));
+        return WritingDirection.valueOf(nGetScriptDefaultDirection(scriptTag));
     }
 
     private static class Base {
@@ -109,10 +107,10 @@ public class ShapingEngine implements Disposable {
      */
     public ShapingEngine() {
         base = new Base();
-        nativeEngine = nativeCreate();
+        nativeEngine = nCreate();
     }
 
-    private ShapingEngine(ShapingEngine other) {
+    ShapingEngine(ShapingEngine other) {
         this.base = other.base;
         this.nativeEngine = other.nativeEngine;
     }
@@ -133,7 +131,7 @@ public class ShapingEngine implements Disposable {
      */
 	public void setTypeface(Typeface typeface) {
         base.typeface = typeface;
-		nativeSetTypeface(nativeEngine, typeface);
+		nSetTypeface(nativeEngine, typeface);
 	}
 
     /**
@@ -142,7 +140,7 @@ public class ShapingEngine implements Disposable {
      * @return This current type size.
      */
     public float getTypeSize() {
-        return nativeGetTypeSize(nativeEngine);
+        return nGetTypeSize(nativeEngine);
     }
 
     /**
@@ -155,7 +153,7 @@ public class ShapingEngine implements Disposable {
             throw new IllegalArgumentException("The value of font size is negative");
         }
 
-        nativeSetTypeSize(nativeEngine, typeSize);
+        nSetTypeSize(nativeEngine, typeSize);
     }
 
     /**
@@ -165,7 +163,7 @@ public class ShapingEngine implements Disposable {
      * @return The current script tag.
      */
     public int getScriptTag() {
-		return nativeGetScriptTag(nativeEngine);
+		return nGetScriptTag(nativeEngine);
 	}
 
     /**
@@ -177,7 +175,7 @@ public class ShapingEngine implements Disposable {
      * @param scriptTag The new script tag.
      */
 	public void setScriptTag(int scriptTag) {
-		nativeSetScriptTag(nativeEngine, scriptTag);
+		nSetScriptTag(nativeEngine, scriptTag);
 	}
 
     /**
@@ -187,7 +185,7 @@ public class ShapingEngine implements Disposable {
      * @return The current language tag.
      */
 	public int getLanguageTag() {
-		return nativeGetLanguageTag(nativeEngine);
+		return nGetLanguageTag(nativeEngine);
 	}
 
     /**
@@ -199,7 +197,7 @@ public class ShapingEngine implements Disposable {
      * @param languageTag The new language tag.
      */
 	public void setLanguageTag(int languageTag) {
-		nativeSetLanguageTag(nativeEngine, languageTag);
+		nSetLanguageTag(nativeEngine, languageTag);
 	}
 
     /**
@@ -209,7 +207,7 @@ public class ShapingEngine implements Disposable {
      * @return The current writing direction.
      */
     public WritingDirection getWritingDirection() {
-        return WritingDirection.valueOf(nativeGetWritingDirection(nativeEngine));
+        return WritingDirection.valueOf(nGetWritingDirection(nativeEngine));
     }
 
     /**
@@ -224,7 +222,7 @@ public class ShapingEngine implements Disposable {
      * @param writingDirection The new writing direction.
      */
     public void setWritingDirection(WritingDirection writingDirection) {
-        nativeSetWritingDirection(nativeEngine, writingDirection.value);
+        nSetWritingDirection(nativeEngine, writingDirection.value);
     }
 
     /**
@@ -234,7 +232,7 @@ public class ShapingEngine implements Disposable {
      * @return The current shaping order.
      */
     public ShapingOrder getShapingOrder() {
-        return ShapingOrder.valueOf(nativeGetShapingOrder(nativeEngine));
+        return ShapingOrder.valueOf(nGetShapingOrder(nativeEngine));
     }
 
     /**
@@ -249,7 +247,7 @@ public class ShapingEngine implements Disposable {
      * @param shapingOrder The new shaping order.
      */
     public void setShapingOrder(ShapingOrder shapingOrder) {
-        nativeSetShapingOrder(nativeEngine, shapingOrder.value);
+        nSetShapingOrder(nativeEngine, shapingOrder.value);
     }
 
     /**
@@ -291,14 +289,14 @@ public class ShapingEngine implements Disposable {
         }
 
         ShapingResult result = new ShapingResult();
-        nativeShapeText(nativeEngine, result.nativeResult, text, fromIndex, toIndex);
+        nShapeText(nativeEngine, result.nativeResult, text, fromIndex, toIndex);
 
         return result;
     }
 
 	@Override
 	public void dispose() {
-        nativeDispose(nativeEngine);
+        nDispose(nativeEngine);
     }
 
     @Override
@@ -312,27 +310,27 @@ public class ShapingEngine implements Disposable {
                 + "}";
     }
 
-    private static native int nativeGetScriptDefaultDirection(int scriptTag);
+    private static native int nGetScriptDefaultDirection(int scriptTag);
 
-	private static native long nativeCreate();
-	private static native void nativeDispose(long nativeEngine);
+	private static native long nCreate();
+	private static native void nDispose(long nativeEngine);
 
-	private static native void nativeSetTypeface(long nativeEngine, Typeface typeface);
+	private static native void nSetTypeface(long nativeEngine, Typeface typeface);
 
-    private static native float nativeGetTypeSize(long nativeEngine);
-    private static native void nativeSetTypeSize(long nativeEngine, float fontSize);
+    private static native float nGetTypeSize(long nativeEngine);
+    private static native void nSetTypeSize(long nativeEngine, float fontSize);
 
-    private static native int nativeGetScriptTag(long nativeEngine);
-	private static native void nativeSetScriptTag(long nativeEngine, int scriptTag);
+    private static native int nGetScriptTag(long nativeEngine);
+	private static native void nSetScriptTag(long nativeEngine, int scriptTag);
 
-    private static native int nativeGetLanguageTag(long nativeEngine);
-    private static native void nativeSetLanguageTag(long nativeEngine, int languageTag);
+    private static native int nGetLanguageTag(long nativeEngine);
+    private static native void nSetLanguageTag(long nativeEngine, int languageTag);
 
-    private static native int nativeGetWritingDirection(long nativeEngine);
-	private static native void nativeSetWritingDirection(long nativeEngine, int shapingDirection);
+    private static native int nGetWritingDirection(long nativeEngine);
+	private static native void nSetWritingDirection(long nativeEngine, int writingDirection);
 
-    private static native int nativeGetShapingOrder(long nativeEngine);
-    private static native void nativeSetShapingOrder(long nativeEngine, int shapingOrder);
+    private static native int nGetShapingOrder(long nativeEngine);
+    private static native void nSetShapingOrder(long nativeEngine, int shapingOrder);
 
-	private static native void nativeShapeText(long nativeEngine, long nativeResult, String text, int fromIndex, int toIndex);
+	private static native void nShapeText(long nativeEngine, long nativeResult, String text, int fromIndex, int toIndex);
 }
