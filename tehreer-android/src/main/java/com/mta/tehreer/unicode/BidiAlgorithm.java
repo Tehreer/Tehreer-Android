@@ -41,9 +41,8 @@ public class BidiAlgorithm implements Disposable {
      */
     public static final byte MAX_LEVEL = 125;
 
-    private static class Finalizable extends BidiAlgorithm {
-
-        private Finalizable(BidiAlgorithm parent) {
+    private static final class Finalizable extends BidiAlgorithm {
+        Finalizable(BidiAlgorithm parent) {
             super(parent);
         }
 
@@ -121,7 +120,7 @@ public class BidiAlgorithm implements Disposable {
         this.text = text;
     }
 
-    private BidiAlgorithm(BidiAlgorithm other) {
+    BidiAlgorithm(BidiAlgorithm other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeAlgorithm = other.nativeAlgorithm;
         this.text = other.text;
