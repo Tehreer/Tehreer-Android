@@ -33,14 +33,12 @@ import java.util.NoSuchElementException;
  * manually, if required.
  */
 public class BidiLine implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
 
     private static class Finalizable extends BidiLine {
-
-        private Finalizable(BidiLine parent) {
+        Finalizable(BidiLine parent) {
             super(parent);
         }
 
@@ -105,7 +103,7 @@ public class BidiLine implements Disposable {
 	    this.nativeLine = nativeLine;
 	}
 
-    private BidiLine(BidiLine other) {
+    BidiLine(BidiLine other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeLine = other.nativeLine;
     }
