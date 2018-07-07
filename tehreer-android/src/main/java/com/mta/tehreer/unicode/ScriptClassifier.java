@@ -16,13 +16,14 @@
 
 package com.mta.tehreer.unicode;
 
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.JniBridge;
+import com.mta.tehreer.internal.collections.JByteArrayIntList;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class ScriptClassifier {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -43,6 +44,10 @@ public class ScriptClassifier {
 
     public String getText() {
         return text;
+    }
+
+    public IntList getCharScripts() {
+        return new JByteArrayIntList(scripts, 0, scripts.length);
     }
 
     public Iterable<ScriptRun> getScriptRuns() {
