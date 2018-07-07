@@ -22,10 +22,10 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.collections.RawInt32AsFloatList;
-import com.mta.tehreer.internal.collections.RawInt32PairAsPointList;
-import com.mta.tehreer.internal.collections.RawUInt16AsIntList;
-import com.mta.tehreer.internal.collections.RawUIntPtrAsIntList;
+import com.mta.tehreer.internal.collections.Int32BufferFloatList;
+import com.mta.tehreer.internal.collections.Int32BufferPointList;
+import com.mta.tehreer.internal.collections.UInt16BufferIntList;
+import com.mta.tehreer.internal.collections.UIntPtrBufferIntList;
 
 /**
  * A <code>ShapingResult</code> object is a container for the results of text shaping. It is
@@ -156,9 +156,9 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph IDs.
      */
     public IntList getGlyphIds() {
-        return new RawUInt16AsIntList(this,
-                                      nativeGetGlyphIdsPtr(nativeResult),
-                                      nativeGetGlyphCount(nativeResult));
+        return new UInt16BufferIntList(this,
+                                       nativeGetGlyphIdsPtr(nativeResult),
+                                       nativeGetGlyphCount(nativeResult));
     }
 
     /**
@@ -170,10 +170,10 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph offsets.
      */
     public PointList getGlyphOffsets() {
-        return new RawInt32PairAsPointList(this,
-                                           nativeGetGlyphOffsetsPtr(nativeResult),
-                                           nativeGetGlyphCount(nativeResult),
-                                           nativeGetSizeByEm(nativeResult));
+        return new Int32BufferPointList(this,
+                                        nativeGetGlyphOffsetsPtr(nativeResult),
+                                        nativeGetGlyphCount(nativeResult),
+                                        nativeGetSizeByEm(nativeResult));
     }
 
     /**
@@ -185,10 +185,10 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph advances.
      */
     public FloatList getGlyphAdvances() {
-        return new RawInt32AsFloatList(this,
-                                       nativeGetGlyphAdvancesPtr(nativeResult),
-                                       nativeGetGlyphCount(nativeResult),
-                                       nativeGetSizeByEm(nativeResult));
+        return new Int32BufferFloatList(this,
+                                        nativeGetGlyphAdvancesPtr(nativeResult),
+                                        nativeGetGlyphCount(nativeResult),
+                                        nativeGetSizeByEm(nativeResult));
     }
 
     /**
@@ -216,7 +216,7 @@ public class ShapingResult implements Disposable {
     public IntList getClusterMap() {
         long pointer = nativeGetClusterMapPtr(nativeResult);
         int size = (pointer != 0 ? nativeGetCharCount(nativeResult) : 0);
-        return new RawUIntPtrAsIntList(this, pointer, size);
+        return new UIntPtrBufferIntList(this, pointer, size);
     }
 
 	@Override

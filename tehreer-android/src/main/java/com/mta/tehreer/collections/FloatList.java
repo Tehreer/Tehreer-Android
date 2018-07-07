@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.ArrayFloatList;
+import com.mta.tehreer.internal.collections.JFloatArrayList;
 import com.mta.tehreer.internal.Description;
 
 /**
@@ -36,7 +36,7 @@ public abstract class FloatList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new ArrayFloatList(array, 0, array.length);
+        return new JFloatArrayList(array, 0, array.length);
     }
 
     /**

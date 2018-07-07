@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
-import com.mta.tehreer.internal.collections.ArrayByteList;
+import com.mta.tehreer.internal.collections.JByteArrayList;
 
 import java.util.Iterator;
 
@@ -29,7 +29,7 @@ public class Description {
     private static final String NULL = "null";
 
     public static String forByteArray(byte[] array) {
-        return forByteList(new ArrayByteList(array, 0, array.length));
+        return forByteList(new JByteArrayList(array, 0, array.length));
     }
 
     public static String forByteList(ByteList list) {

@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.ArrayPointList;
+import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 import com.mta.tehreer.internal.Description;
 
 /**
@@ -37,7 +37,7 @@ public abstract class PointList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new ArrayPointList(array, 0, array.length / 2);
+        return new JFloatArrayPointList(array, 0, array.length / 2);
     }
 
     /**

@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.ArrayIntList;
+import com.mta.tehreer.internal.collections.JIntArrayList;
 import com.mta.tehreer.internal.Description;
 
 /**
@@ -36,7 +36,7 @@ public abstract class IntList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new ArrayIntList(array, 0, array.length);
+        return new JIntArrayList(array, 0, array.length);
     }
 
     /**

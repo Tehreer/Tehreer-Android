@@ -18,9 +18,9 @@ package com.mta.tehreer.layout;
 
 import android.text.Spanned;
 
-import com.mta.tehreer.internal.collections.SafeFloatList;
-import com.mta.tehreer.internal.collections.SafeIntList;
-import com.mta.tehreer.internal.collections.SafePointList;
+import com.mta.tehreer.internal.collections.JFloatArrayList;
+import com.mta.tehreer.internal.collections.JFloatArrayPointList;
+import com.mta.tehreer.internal.collections.JIntArrayList;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 
 class LineResolver {
-
     private Spanned mSpanned;
     private ParagraphCollection mBidiParagraphs;
     private RunCollection mIntrinsicRuns;
@@ -57,9 +56,9 @@ class LineResolver {
                             intrinsicRun.isBackward, intrinsicRun.bidiLevel,
                             intrinsicRun.writingDirection, intrinsicRun.typeface, intrinsicRun.typeSize,
                             intrinsicRun.ascent, intrinsicRun.descent, intrinsicRun.leading,
-                            new SafeIntList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
-                            new SafePointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
-                            new SafeFloatList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
+                            new JIntArrayList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
+                            new JFloatArrayPointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
+                            new JFloatArrayList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
                             new ClusterMap(intrinsicRun.clusterMap,
                                            charStart - intrinsicRun.charStart,
                                            charEnd - charStart, glyphOffset));

@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.ArrayByteList;
+import com.mta.tehreer.internal.collections.JByteArrayList;
 import com.mta.tehreer.internal.Description;
 
 /**
@@ -36,7 +36,7 @@ public abstract class ByteList implements Primitive {
             throw new NullPointerException("Array is null");
         }
 
-        return new ArrayByteList(array, 0, array.length);
+        return new JByteArrayList(array, 0, array.length);
     }
 
     /**
