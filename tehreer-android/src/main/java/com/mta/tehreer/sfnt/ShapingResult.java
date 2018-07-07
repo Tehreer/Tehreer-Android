@@ -33,14 +33,12 @@ import com.mta.tehreer.internal.collections.UIntPtrBufferIntList;
  * characters, their glyphs, offsets, and advances.
  */
 public class ShapingResult implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
 
-    private static class Finalizable extends ShapingResult {
-
-        private Finalizable(ShapingResult parent) {
+    private static final class Finalizable extends ShapingResult {
+        Finalizable(ShapingResult parent) {
             super(parent);
         }
 
@@ -101,10 +99,10 @@ public class ShapingResult implements Disposable {
      * Constructs a shaping result object.
      */
 	ShapingResult() {
-	    nativeResult = nativeCreate();
+	    nativeResult = nCreate();
 	}
 
-    private ShapingResult(ShapingResult other) {
+    ShapingResult(ShapingResult other) {
         this.nativeResult = other.nativeResult;
     }
 
@@ -115,7 +113,7 @@ public class ShapingResult implements Disposable {
      * @return <code>true</code> if the text flows backward, <code>false</code> otherwise.
      */
 	public boolean isBackward() {
-	    return nativeIsBackward(nativeResult);
+	    return nIsBackward(nativeResult);
 	}
 
     /**
@@ -125,7 +123,7 @@ public class ShapingResult implements Disposable {
      * @return The index to the first character in source text.
      */
 	public int getCharStart() {
-        return nativeGetCharStart(nativeResult);
+        return nGetCharStart(nativeResult);
     }
 
     /**
@@ -135,7 +133,7 @@ public class ShapingResult implements Disposable {
      * @return The index after the last character in source text.
      */
     public int getCharEnd() {
-        return nativeGetCharEnd(nativeResult);
+        return nGetCharEnd(nativeResult);
     }
 
     /**
@@ -144,7 +142,7 @@ public class ShapingResult implements Disposable {
      * @return The number of glyphs in this <code>ShapingResult</code> object.
      */
 	public int getGlyphCount() {
-		return nativeGetGlyphCount(nativeResult);
+		return nGetGlyphCount(nativeResult);
 	}
 
     /**
@@ -157,8 +155,8 @@ public class ShapingResult implements Disposable {
      */
     public IntList getGlyphIds() {
         return new UInt16BufferIntList(this,
-                                       nativeGetGlyphIdsPtr(nativeResult),
-                                       nativeGetGlyphCount(nativeResult));
+                                       nGetGlyphIdsPtr(nativeResult),
+                                       nGetGlyphCount(nativeResult));
     }
 
     /**
@@ -171,9 +169,9 @@ public class ShapingResult implements Disposable {
      */
     public PointList getGlyphOffsets() {
         return new Int32BufferPointList(this,
-                                        nativeGetGlyphOffsetsPtr(nativeResult),
-                                        nativeGetGlyphCount(nativeResult),
-                                        nativeGetSizeByEm(nativeResult));
+                                        nGetGlyphOffsetsPtr(nativeResult),
+                                        nGetGlyphCount(nativeResult),
+                                        nGetSizeByEm(nativeResult));
     }
 
     /**
@@ -186,9 +184,9 @@ public class ShapingResult implements Disposable {
      */
     public FloatList getGlyphAdvances() {
         return new Int32BufferFloatList(this,
-                                        nativeGetGlyphAdvancesPtr(nativeResult),
-                                        nativeGetGlyphCount(nativeResult),
-                                        nativeGetSizeByEm(nativeResult));
+                                        nGetGlyphAdvancesPtr(nativeResult),
+                                        nGetGlyphCount(nativeResult),
+                                        nGetSizeByEm(nativeResult));
     }
 
     /**
@@ -214,14 +212,14 @@ public class ShapingResult implements Disposable {
      *         glyph.
      */
     public IntList getClusterMap() {
-        long pointer = nativeGetClusterMapPtr(nativeResult);
-        int size = (pointer != 0 ? nativeGetCharCount(nativeResult) : 0);
+        long pointer = nGetClusterMapPtr(nativeResult);
+        int size = (pointer != 0 ? nGetCharCount(nativeResult) : 0);
         return new UIntPtrBufferIntList(this, pointer, size);
     }
 
 	@Override
 	public void dispose() {
-        nativeDispose(nativeResult);
+        nDispose(nativeResult);
     }
 
     @Override
@@ -237,18 +235,18 @@ public class ShapingResult implements Disposable {
                 + "}";
     }
 
-	private static native long nativeCreate();
-	private static native void nativeDispose(long nativeResult);
+	private static native long nCreate();
+	private static native void nDispose(long nativeResult);
 
-	private static native boolean nativeIsBackward(long nativeResult);
-    private static native float nativeGetSizeByEm(long nativeResult);
-	private static native int nativeGetCharStart(long nativeResult);
-	private static native int nativeGetCharEnd(long nativeResult);
-    private static native int nativeGetCharCount(long nativeResult);
-	private static native int nativeGetGlyphCount(long nativeResult);
+	private static native boolean nIsBackward(long nativeResult);
+    private static native float nGetSizeByEm(long nativeResult);
+	private static native int nGetCharStart(long nativeResult);
+	private static native int nGetCharEnd(long nativeResult);
+    private static native int nGetCharCount(long nativeResult);
+	private static native int nGetGlyphCount(long nativeResult);
 
-    private static native long nativeGetGlyphIdsPtr(long nativeResult);
-    private static native long nativeGetGlyphOffsetsPtr(long nativeResult);
-    private static native long nativeGetGlyphAdvancesPtr(long nativeResult);
-    private static native long nativeGetClusterMapPtr(long nativeResult);
+    private static native long nGetGlyphIdsPtr(long nativeResult);
+    private static native long nGetGlyphOffsetsPtr(long nativeResult);
+    private static native long nGetGlyphAdvancesPtr(long nativeResult);
+    private static native long nGetClusterMapPtr(long nativeResult);
 }
