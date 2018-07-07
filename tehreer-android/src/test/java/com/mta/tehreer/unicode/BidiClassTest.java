@@ -18,37 +18,35 @@ package com.mta.tehreer.unicode;
 
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 public class BidiClassTest {
 
     @Test
-    public void testValueOf() {
-        assertThat(BidiClass.valueOf((byte) 0x00), is(nullValue()));
-        assertThat(BidiClass.valueOf((byte) 0x01), is(BidiClass.LEFT_TO_RIGHT));
-        assertThat(BidiClass.valueOf((byte) 0x02), is(BidiClass.RIGHT_TO_LEFT));
-        assertThat(BidiClass.valueOf((byte) 0x03), is(BidiClass.RIGHT_TO_LEFT_ARABIC));
-        assertThat(BidiClass.valueOf((byte) 0x04), is(BidiClass.BOUNDARY_NEUTRAL));
-        assertThat(BidiClass.valueOf((byte) 0x05), is(BidiClass.NON_SPACING_MARK));
-        assertThat(BidiClass.valueOf((byte) 0x06), is(BidiClass.ARABIC_NUMBER));
-        assertThat(BidiClass.valueOf((byte) 0x07), is(BidiClass.EUROPEAN_NUMBER));
-        assertThat(BidiClass.valueOf((byte) 0x08), is(BidiClass.EUROPEAN_NUMBER_TERMINATOR));
-        assertThat(BidiClass.valueOf((byte) 0x09), is(BidiClass.EUROPEAN_NUMBER_SEPARATOR));
-        assertThat(BidiClass.valueOf((byte) 0x0A), is(BidiClass.COMMON_NUMBER_SEPARATOR));
-        assertThat(BidiClass.valueOf((byte) 0x0B), is(BidiClass.WHITE_SPACE));
-        assertThat(BidiClass.valueOf((byte) 0x0C), is(BidiClass.SEGMENT_SEPARATOR));
-        assertThat(BidiClass.valueOf((byte) 0x0D), is(BidiClass.PARAGRAPH_SEPARATOR));
-        assertThat(BidiClass.valueOf((byte) 0x0E), is(BidiClass.OTHER_NEUTRAL));
-        assertThat(BidiClass.valueOf((byte) 0x0F), is(BidiClass.LEFT_TO_RIGHT_ISOLATE));
-        assertThat(BidiClass.valueOf((byte) 0x10), is(BidiClass.RIGHT_TO_LEFT_ISOLATE));
-        assertThat(BidiClass.valueOf((byte) 0x11), is(BidiClass.FIRST_STRONG_ISOLATE));
-        assertThat(BidiClass.valueOf((byte) 0x12), is(BidiClass.POP_DIRECTIONAL_ISOLATE));
-        assertThat(BidiClass.valueOf((byte) 0x13), is(BidiClass.LEFT_TO_RIGHT_EMBEDDING));
-        assertThat(BidiClass.valueOf((byte) 0x14), is(BidiClass.RIGHT_TO_LEFT_EMBEDDING));
-        assertThat(BidiClass.valueOf((byte) 0x15), is(BidiClass.LEFT_TO_RIGHT_OVERRIDE));
-        assertThat(BidiClass.valueOf((byte) 0x16), is(BidiClass.RIGHT_TO_LEFT_OVERRIDE));
-        assertThat(BidiClass.valueOf((byte) 0x17), is(BidiClass.POP_DIRECTIONAL_FORMATTING));
+    public void testValues() {
+        assertThat(BidiClass.LEFT_TO_RIGHT, equalTo(0x01));
+        assertThat(BidiClass.RIGHT_TO_LEFT, equalTo(0x02));
+        assertThat(BidiClass.ARABIC_LETTER, equalTo(0x03));
+        assertThat(BidiClass.BOUNDARY_NEUTRAL, equalTo(0x04));
+        assertThat(BidiClass.NONSPACING_MARK, equalTo(0x05));
+        assertThat(BidiClass.ARABIC_NUMBER, equalTo(0x06));
+        assertThat(BidiClass.EUROPEAN_NUMBER, equalTo(0x07));
+        assertThat(BidiClass.EUROPEAN_TERMINATOR, equalTo(0x08));
+        assertThat(BidiClass.EUROPEAN_SEPARATOR, equalTo(0x09));
+        assertThat(BidiClass.COMMON_SEPARATOR, equalTo(0x0A));
+        assertThat(BidiClass.WHITE_SPACE, equalTo(0x0B));
+        assertThat(BidiClass.SEGMENT_SEPARATOR, equalTo(0x0C));
+        assertThat(BidiClass.PARAGRAPH_SEPARATOR, equalTo(0x0D));
+        assertThat(BidiClass.OTHER_NEUTRAL, equalTo(0x0E));
+        assertThat(BidiClass.LEFT_TO_RIGHT_ISOLATE, equalTo(0x0F));
+        assertThat(BidiClass.RIGHT_TO_LEFT_ISOLATE, equalTo(0x10));
+        assertThat(BidiClass.FIRST_STRONG_ISOLATE, equalTo(0x11));
+        assertThat(BidiClass.POP_DIRECTIONAL_ISOLATE, equalTo(0x12));
+        assertThat(BidiClass.LEFT_TO_RIGHT_EMBEDDING, equalTo(0x13));
+        assertThat(BidiClass.RIGHT_TO_LEFT_EMBEDDING, equalTo(0x14));
+        assertThat(BidiClass.LEFT_TO_RIGHT_OVERRIDE, equalTo(0x15));
+        assertThat(BidiClass.RIGHT_TO_LEFT_OVERRIDE, equalTo(0x16));
+        assertThat(BidiClass.POP_DIRECTIONAL_FORMAT, equalTo(0x17));
     }
 }
