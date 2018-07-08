@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ extern "C" {
 #include <SFScheme.h>
 }
 
-#include <cstring>
 #include <jni.h>
 #include <map>
 
@@ -220,21 +219,21 @@ static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong albumH
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "()J", (void *)create },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeGetScriptDefaultDirection", "(I)I", (void *)getScriptDefaultDirection },
-    { "nativeSetTypeface", "(JLcom/mta/tehreer/graphics/Typeface;)V", (void *)setTypeface },
-    { "nativeGetTypeSize", "(J)F", (void *)getTypeSize },
-    { "nativeSetTypeSize", "(JF)V", (void *)setTypeSize },
-    { "nativeGetScriptTag", "(J)I", (void *)getScriptTag },
-    { "nativeSetScriptTag", "(JI)V", (void *)setScriptTag },
-    { "nativeGetLanguageTag", "(J)I", (void *)getLanguageTag },
-    { "nativeSetLanguageTag", "(JI)V", (void *)setLanguageTag },
-    { "nativeGetWritingDirection", "(J)I", (void *)getWritingDirection },
-    { "nativeSetWritingDirection", "(JI)V", (void *)setWritingDirection },
-    { "nativeGetShapingOrder", "(J)I", (void *)getShapingOrder },
-    { "nativeSetShapingOrder", "(JI)V", (void *)setShapingOrder },
-    { "nativeShapeText", "(JJLjava/lang/String;II)V", (void *)shapeText },
+    { "nCreate", "()J", (void *)create },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nGetScriptDefaultDirection", "(I)I", (void *)getScriptDefaultDirection },
+    { "nSetTypeface", "(JLcom/mta/tehreer/graphics/Typeface;)V", (void *)setTypeface },
+    { "nGetTypeSize", "(J)F", (void *)getTypeSize },
+    { "nSetTypeSize", "(JF)V", (void *)setTypeSize },
+    { "nGetScriptTag", "(J)I", (void *)getScriptTag },
+    { "nSetScriptTag", "(JI)V", (void *)setScriptTag },
+    { "nGetLanguageTag", "(J)I", (void *)getLanguageTag },
+    { "nSetLanguageTag", "(JI)V", (void *)setLanguageTag },
+    { "nGetWritingDirection", "(J)I", (void *)getWritingDirection },
+    { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
+    { "nGetShapingOrder", "(J)I", (void *)getShapingOrder },
+    { "nSetShapingOrder", "(JI)V", (void *)setShapingOrder },
+    { "nShapeText", "(JJLjava/lang/String;II)V", (void *)shapeText },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingEngine(JNIEnv *env)
