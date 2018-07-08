@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,18 +143,18 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "()J", (void *)create },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeIsBackward", "(J)Z", (void *)isBackward },
-    { "nativeGetSizeByEm", "(J)F", (void *)getSizeByEm },
-    { "nativeGetCharStart", "(J)I", (void *)getCharStart },
-    { "nativeGetCharEnd", "(J)I", (void *)getCharEnd },
-    { "nativeGetCharCount", "(J)I", (void *)getCharCount },
-    { "nativeGetGlyphCount", "(J)I", (void *)getGlyphCount },
-    { "nativeGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
-    { "nativeGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
-    { "nativeGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
-    { "nativeGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
+    { "nCreate", "()J", (void *)create },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nIsBackward", "(J)Z", (void *)isBackward },
+    { "nGetSizeByEm", "(J)F", (void *)getSizeByEm },
+    { "nGetCharStart", "(J)I", (void *)getCharStart },
+    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetCharCount", "(J)I", (void *)getCharCount },
+    { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
+    { "nGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
+    { "nGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
+    { "nGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
+    { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)
