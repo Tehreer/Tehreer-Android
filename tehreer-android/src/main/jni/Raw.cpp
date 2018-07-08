@@ -36,6 +36,14 @@ static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer)
     return value;
 }
 
+static jshort getInt16Value(JNIEnv *env, jobject obj, jlong pointer)
+{
+    int16_t *buffer = reinterpret_cast<int16_t *>(pointer);
+    jshort value = static_cast<jshort>(*buffer);
+
+    return value;
+}
+
 static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer)
 {
     int32_t *buffer = reinterpret_cast<int32_t *>(pointer);
@@ -44,18 +52,10 @@ static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer)
     return value;
 }
 
-static jint getUInt16Value(JNIEnv *env, jobject obj, jlong pointer)
-{
-    uint16_t *buffer = reinterpret_cast<uint16_t *>(pointer);
-    jint value = static_cast<jint>(*buffer);
-
-    return value;
-}
-
-static jint getIntPtrValue(JNIEnv *env, jobject obj, jlong pointer)
+static jlong getIntPtrValue(JNIEnv *env, jobject obj, jlong pointer)
 {
     size_t *buffer = reinterpret_cast<size_t *>(pointer);
-    jint value = static_cast<jint>(*buffer);
+    jlong value = static_cast<jlong>(*buffer);
 
     return value;
 }
@@ -108,9 +108,9 @@ static void copyInt32Buffer(JNIEnv *env, jobject obj, jlong pointer, jfloatArray
 static JNINativeMethod JNI_METHODS[] = {
     { "sizeOfIntPtr", "()I", (void *)sizeOfIntPtr },
     { "getInt8Value", "(J)B", (void *)getInt8Value },
+    { "getInt16Value", "(J)S", (void *)getInt16Value },
     { "getInt32Value", "(J)I", (void *)getInt32Value },
-    { "getUInt16Value", "(J)I", (void *)getUInt16Value },
-    { "getIntPtrValue", "(J)I", (void *)getIntPtrValue },
+    { "getIntPtrValue", "(J)J", (void *)getIntPtrValue },
     { "copyInt8Buffer", "(J[BII)V", (void *)copyInt8Buffer },
     { "copyUInt16Buffer", "(J[III)V", (void *)copyUInt16Buffer },
     { "copyUIntPtrBuffer", "(J[III)V", (void *)copyUIntPtrBuffer },
