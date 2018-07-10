@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -629,22 +629,22 @@ static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
-    { "nativeCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
-    { "nativeCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeGetTableData", "(JI)[B", (void *)getTableData },
-    { "nativeGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
-    { "nativeGetAscent", "(J)I", (void *)getAscent },
-    { "nativeGetDescent", "(J)I", (void *)getDescent },
-    { "nativeGetLeading", "(J)I", (void *)getLeading },
-    { "nativeGetGlyphCount", "(J)I", (void *)getGlyphCount },
-    { "nativeGetGlyphId", "(JI)I", (void *)getGlyphId },
-    { "nativeGetGlyphAdvance", "(JIFZ)F", (void *)getGlyphAdvance },
-    { "nativeGetGlyphPath", "(JIF[F)Landroid/graphics/Path;", (void *)getGlyphPath },
-    { "nativeGetBoundingBox", "(JLandroid/graphics/Rect;)V", (void *)getBoundingBox },
-    { "nativeGetUnderlinePosition", "(J)I", (void *)getUnderlinePosition },
-    { "nativeGetUnderlineThickness", "(J)I", (void *)getUnderlineThickness },
+    { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
+    { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
+    { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nGetTableData", "(JI)[B", (void *)getTableData },
+    { "nGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
+    { "nGetAscent", "(J)I", (void *)getAscent },
+    { "nGetDescent", "(J)I", (void *)getDescent },
+    { "nGetLeading", "(J)I", (void *)getLeading },
+    { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
+    { "nGetGlyphId", "(JI)I", (void *)getGlyphId },
+    { "nGetGlyphAdvance", "(JIFZ)F", (void *)getGlyphAdvance },
+    { "nGetGlyphPath", "(JIF[F)Landroid/graphics/Path;", (void *)getGlyphPath },
+    { "nGetBoundingBox", "(JLandroid/graphics/Rect;)V", (void *)getBoundingBox },
+    { "nGetUnderlinePosition", "(J)I", (void *)getUnderlinePosition },
+    { "nGetUnderlineThickness", "(J)I", (void *)getUnderlineThickness },
 };
 
 jint register_com_mta_tehreer_graphics_Typeface(JNIEnv *env)
