@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import java.io.InputStream;
  * to specify how text appears when drawn (and measured).
  */
 public class Typeface {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -76,7 +75,7 @@ public class Typeface {
             throw new NullPointerException("File path is null");
         }
 
-        long nativeTypeface = nativeCreateWithAsset(assetManager, filePath);
+        long nativeTypeface = nCreateWithAsset(assetManager, filePath);
         if (nativeTypeface == 0) {
             throw new RuntimeException("Could not create typeface from specified asset");
         }
@@ -98,7 +97,7 @@ public class Typeface {
             throw new NullPointerException("File is null");
         }
 
-        long nativeTypeface = nativeCreateWithFile(file.getAbsolutePath());
+        long nativeTypeface = nCreateWithFile(file.getAbsolutePath());
         if (nativeTypeface == 0) {
             throw new RuntimeException("Could not create typeface from specified file");
         }
@@ -120,7 +119,7 @@ public class Typeface {
             throw new NullPointerException("Stream is null");
         }
 
-        long nativeTypeface = nativeCreateFromStream(stream);
+        long nativeTypeface = nCreateFromStream(stream);
         if (nativeTypeface == 0) {
             throw new RuntimeException("Could not create typeface from specified stream");
         }
@@ -199,7 +198,7 @@ public class Typeface {
      *         table exists.
      */
     public byte[] getTableData(int tableTag) {
-        return nativeGetTableData(nativeTypeface, tableTag);
+        return nGetTableData(nativeTypeface, tableTag);
     }
 
     /**
@@ -208,7 +207,7 @@ public class Typeface {
      * @return The number of font units per EM square for this typeface.
      */
 	public int getUnitsPerEm() {
-		return nativeGetUnitsPerEm(nativeTypeface);
+		return nGetUnitsPerEm(nativeTypeface);
 	}
 
     /**
@@ -217,7 +216,7 @@ public class Typeface {
      * @return The typographic ascender of this typeface expressed in font units.
      */
 	public int getAscent() {
-		return nativeGetAscent(nativeTypeface);
+		return nGetAscent(nativeTypeface);
 	}
 
     /**
@@ -226,7 +225,7 @@ public class Typeface {
      * @return The typographic descender of this typeface expressed in font units.
      */
 	public int getDescent() {
-		return nativeGetDescent(nativeTypeface);
+		return nGetDescent(nativeTypeface);
 	}
 
     /**
@@ -235,7 +234,7 @@ public class Typeface {
      * @return The typographic leading of this typeface expressed in font units.
      */
     public int getLeading() {
-        return nativeGetLeading(nativeTypeface);
+        return nGetLeading(nativeTypeface);
     }
 
     /**
@@ -244,7 +243,7 @@ public class Typeface {
      * @return The number of glyphs in this typeface.
      */
 	public int getGlyphCount() {
-        return nativeGetGlyphCount(nativeTypeface);
+        return nGetGlyphCount(nativeTypeface);
     }
 
     /**
@@ -254,7 +253,7 @@ public class Typeface {
      * @return The glyph id for the specified code point.
      */
     public int getGlyphId(int codePoint) {
-        return nativeGetGlyphId(nativeTypeface, codePoint);
+        return nGetGlyphId(nativeTypeface, codePoint);
     }
 
     /**
@@ -266,7 +265,7 @@ public class Typeface {
      * @return The advance for the specified glyph.
      */
     public float getGlyphAdvance(int glyphId, float typeSize, boolean vertical) {
-        return nativeGetGlyphAdvance(nativeTypeface, glyphId, typeSize, vertical);
+        return nGetGlyphAdvance(nativeTypeface, glyphId, typeSize, vertical);
     }
 
     /**
@@ -285,7 +284,7 @@ public class Typeface {
             matrix.getValues(values);
         }
 
-        return nativeGetGlyphPath(nativeTypeface, glyphId, typeSize, values);
+        return nGetGlyphPath(nativeTypeface, glyphId, typeSize, values);
     }
 
     /**
@@ -296,7 +295,7 @@ public class Typeface {
      */
 	public Rect getBoundingBox() {
 	    Rect boundingBox = new Rect();
-	    nativeGetBoundingBox(nativeTypeface, boundingBox);
+	    nGetBoundingBox(nativeTypeface, boundingBox);
 
 	    return boundingBox;
 	}
@@ -307,7 +306,7 @@ public class Typeface {
      * @return The position, in font units, of the underline for this typeface.
      */
 	public int getUnderlinePosition() {
-	    return nativeGetUnderlinePosition(nativeTypeface);
+	    return nGetUnderlinePosition(nativeTypeface);
 	}
 
     /**
@@ -316,11 +315,11 @@ public class Typeface {
      * @return The thickness, in font units, of the underline for this typeface.
      */
 	public int getUnderlineThickness() {
-	    return nativeGetUnderlineThickness(nativeTypeface);
+	    return nGetUnderlineThickness(nativeTypeface);
 	}
 
     void dispose() {
-        nativeDispose(nativeTypeface);
+        nDispose(nativeTypeface);
     }
 
     @Override
@@ -342,25 +341,25 @@ public class Typeface {
                 + "}";
     }
 
-    private static native long nativeCreateWithAsset(AssetManager assetManager, String path);
-    private static native long nativeCreateWithFile(String path);
-    private static native long nativeCreateFromStream(InputStream stream);
-	private static native void nativeDispose(long nativeTypeface);
+    private static native long nCreateWithAsset(AssetManager assetManager, String path);
+    private static native long nCreateWithFile(String path);
+    private static native long nCreateFromStream(InputStream stream);
+	private static native void nDispose(long nativeTypeface);
 
-    private static native byte[] nativeGetTableData(long nativeTypeface, int tableTag);
+    private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
 
-	private static native int nativeGetUnitsPerEm(long nativeTypeface);
-	private static native int nativeGetAscent(long nativeTypeface);
-	private static native int nativeGetDescent(long nativeTypeface);
-    private static native int nativeGetLeading(long nativeTypeface);
+	private static native int nGetUnitsPerEm(long nativeTypeface);
+	private static native int nGetAscent(long nativeTypeface);
+	private static native int nGetDescent(long nativeTypeface);
+    private static native int nGetLeading(long nativeTypeface);
 
-	private static native int nativeGetGlyphCount(long nativeTypeface);
-    private static native int nativeGetGlyphId(long nativeTypeface, int codePoint);
-    private static native float nativeGetGlyphAdvance(long nativeTypeface, int glyphId, float typeSize, boolean vertical);
-    private static native Path nativeGetGlyphPath(long nativeTypeface, int glyphId, float typeSize, float[] matrix);
+	private static native int nGetGlyphCount(long nativeTypeface);
+    private static native int nGetGlyphId(long nativeTypeface, int codePoint);
+    private static native float nGetGlyphAdvance(long nativeTypeface, int glyphId, float typeSize, boolean vertical);
+    private static native Path nGetGlyphPath(long nativeTypeface, int glyphId, float typeSize, float[] matrix);
 
-	private static native void nativeGetBoundingBox(long nativeTypeface, Rect boundingBox);
+	private static native void nGetBoundingBox(long nativeTypeface, Rect boundingBox);
 
-	private static native int nativeGetUnderlinePosition(long nativeTypeface);
-	private static native int nativeGetUnderlineThickness(long nativeTypeface);
+	private static native int nGetUnderlinePosition(long nativeTypeface);
+	private static native int nGetUnderlineThickness(long nativeTypeface);
 }
