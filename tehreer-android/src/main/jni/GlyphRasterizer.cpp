@@ -70,7 +70,7 @@ void GlyphRasterizer::unsafeActivate(FT_Face ftFace)
     FT_Set_Transform(ftFace, &m_transform, nullptr);
 }
 
-jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge &bridge, const FT_Bitmap *bitmap)
+jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge bridge, const FT_Bitmap *bitmap)
 {
     char pixelMode = bitmap->pixel_mode;
     jobject glyphBitmap = nullptr;
@@ -93,7 +93,7 @@ jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge &bridge, const FT_B
     return glyphBitmap;
 }
 
-void GlyphRasterizer::loadBitmap(const JavaBridge &bridge, jobject glyph)
+void GlyphRasterizer::loadBitmap(const JavaBridge bridge, jobject glyph)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
     jobject glyphBitmap = nullptr;
@@ -121,7 +121,7 @@ void GlyphRasterizer::loadBitmap(const JavaBridge &bridge, jobject glyph)
     bridge.Glyph_ownBitmap(glyph, glyphBitmap, leftSideBearing, topSideBearing);
 }
 
-void GlyphRasterizer::loadOutline(const JavaBridge &bridge, jobject glyph)
+void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
 
@@ -141,7 +141,7 @@ void GlyphRasterizer::loadOutline(const JavaBridge &bridge, jobject glyph)
     bridge.Glyph_ownOutline(glyph, outline ? reinterpret_cast<jlong>(outline) : 0);
 }
 
-void GlyphRasterizer::loadPath(const JavaBridge &bridge, jobject glyph)
+void GlyphRasterizer::loadPath(const JavaBridge bridge, jobject glyph)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
 
@@ -157,7 +157,7 @@ void GlyphRasterizer::loadPath(const JavaBridge &bridge, jobject glyph)
     bridge.Glyph_ownPath(glyph, glyphPath);
 }
 
-jobject GlyphRasterizer::strokeGlyph(const JavaBridge &bridge, jobject glyph, FT_Fixed lineRadius,
+jobject GlyphRasterizer::strokeGlyph(const JavaBridge bridge, jobject glyph, FT_Fixed lineRadius,
     FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));

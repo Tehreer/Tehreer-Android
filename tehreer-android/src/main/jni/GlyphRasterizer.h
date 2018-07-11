@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ public:
 
     Typeface &typeface() { return m_typeface; }
 
-    void loadBitmap(const JavaBridge &bridge, jobject glyph);
-    void loadOutline(const JavaBridge &bridge, jobject glyph);
-    void loadPath(const JavaBridge &bridge, jobject glyph);
+    void loadBitmap(const JavaBridge bridge, jobject glyph);
+    void loadOutline(const JavaBridge bridge, jobject glyph);
+    void loadPath(const JavaBridge bridge, jobject glyph);
 
-    jobject strokeGlyph(const JavaBridge &bridge, jobject glyph, FT_Fixed lineRadius,
+    jobject strokeGlyph(const JavaBridge bridge, jobject glyph, FT_Fixed lineRadius,
         FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
 
 private:
@@ -52,7 +52,7 @@ private:
     FT_Matrix m_transform;
 
     void unsafeActivate(FT_Face ftFace);
-    jobject unsafeCreateBitmap(const JavaBridge &bridge, const FT_Bitmap *bitmap);
+    jobject unsafeCreateBitmap(const JavaBridge bridge, const FT_Bitmap *bitmap);
 };
 
 }
