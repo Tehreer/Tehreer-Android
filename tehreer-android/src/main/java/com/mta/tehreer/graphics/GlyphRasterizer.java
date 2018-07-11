@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
 
 class GlyphRasterizer implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -38,41 +37,41 @@ class GlyphRasterizer implements Disposable {
 	long nativeRasterizer;
 
 	GlyphRasterizer(GlyphStrike strike) {
-	    nativeRasterizer = nativeCreate(strike.typeface.nativeTypeface,
-                                        strike.pixelWidth, strike.pixelHeight,
-                                        0x10000, -strike.skewX, 0, 0x10000);
+	    nativeRasterizer = nCreate(strike.typeface.nativeTypeface,
+                                   strike.pixelWidth, strike.pixelHeight,
+                                   0x10000, -strike.skewX, 0, 0x10000);
 	}
 
 	void loadBitmap(Glyph glyph) {
-	    nativeLoadBitmap(nativeRasterizer, glyph);
+	    nLoadBitmap(nativeRasterizer, glyph);
 	}
 
     void loadOutline(Glyph glyph) {
-        nativeLoadOutline(nativeRasterizer, glyph);
+        nLoadOutline(nativeRasterizer, glyph);
     }
 
     void loadPath(Glyph glyph) {
-        nativeLoadPath(nativeRasterizer, glyph);
+        nLoadPath(nativeRasterizer, glyph);
     }
 
     Glyph strokeGlyph(Glyph glyph, int lineRadius,
                       int lineCap, int lineJoin, int miterLimit) {
-        return nativeStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
+        return nStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
     }
 
     @Override
     public void dispose() {
-        nativeDispose(nativeRasterizer);
+        nDispose(nativeRasterizer);
     }
 
-	private static native long nativeCreate(long nativeTypeface, int pixelWidth, int pixelHeight,
+	private static native long nCreate(long nativeTypeface, int pixelWidth, int pixelHeight,
                                             int transformXX, int transformXY, int transformYX, int transformYY);
-    private static native void nativeDispose(long nativeRasterizer);
+    private static native void nDispose(long nativeRasterizer);
 
-    private static native void nativeLoadBitmap(long nativeRasterizer, Glyph glyph);
-    private static native void nativeLoadOutline(long nativeRasterizer, Glyph glyph);
-    private static native void nativeLoadPath(long nativeRasterizer, Glyph glyph);
+    private static native void nLoadBitmap(long nativeRasterizer, Glyph glyph);
+    private static native void nLoadOutline(long nativeRasterizer, Glyph glyph);
+    private static native void nLoadPath(long nativeRasterizer, Glyph glyph);
 
-    private static native Glyph nativeStrokeGlyph(long nativeRasterizer, Glyph glyph, int lineRadius,
+    private static native Glyph nStrokeGlyph(long nativeRasterizer, Glyph glyph, int lineRadius,
                                                   int lineCap, int lineJoin, int miterLimit);
 }
