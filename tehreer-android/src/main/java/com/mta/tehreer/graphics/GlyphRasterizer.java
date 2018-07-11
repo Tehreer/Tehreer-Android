@@ -19,7 +19,7 @@ package com.mta.tehreer.graphics;
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
 
-class GlyphRasterizer implements Disposable {
+final class GlyphRasterizer implements Disposable {
     static {
         JniBridge.loadLibrary();
     }
@@ -73,5 +73,5 @@ class GlyphRasterizer implements Disposable {
     private static native void nLoadPath(long nativeRasterizer, Glyph glyph);
 
     private static native Glyph nStrokeGlyph(long nativeRasterizer, Glyph glyph, int lineRadius,
-                                                  int lineCap, int lineJoin, int miterLimit);
+                                             int lineCap, int lineJoin, int miterLimit);
 }
