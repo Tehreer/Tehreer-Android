@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -250,12 +250,12 @@ static jobject strokeGlyph(JNIEnv *env, jobject obj, jlong rasterizerHandle, job
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeCreate", "(JIIIIII)J", (void *)create },
-    { "nativeDispose", "(J)V", (void *)dispose },
-    { "nativeLoadBitmap", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadBitmap },
-    { "nativeLoadOutline", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadOutline },
-    { "nativeLoadPath", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadPath },
-    { "nativeStrokeGlyph", "(JLcom/mta/tehreer/graphics/Glyph;IIII)Lcom/mta/tehreer/graphics/Glyph;", (void *)strokeGlyph },
+    { "nCreate", "(JIIIIII)J", (void *)create },
+    { "nDispose", "(J)V", (void *)dispose },
+    { "nLoadBitmap", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadBitmap },
+    { "nLoadOutline", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadOutline },
+    { "nLoadPath", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadPath },
+    { "nStrokeGlyph", "(JLcom/mta/tehreer/graphics/Glyph;IIII)Lcom/mta/tehreer/graphics/Glyph;", (void *)strokeGlyph },
 };
 
 jint register_com_mta_tehreer_graphics_GlyphRasterizer(JNIEnv *env)
