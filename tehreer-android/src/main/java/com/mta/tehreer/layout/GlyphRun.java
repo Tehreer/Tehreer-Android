@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import java.util.List;
  * and direction.
  */
 public class GlyphRun {
-
     private final int charStart;
     private final int charEnd;
     private final List<Object> spans;
@@ -302,7 +301,7 @@ public class GlyphRun {
      * @return The typographic height of this run.
      */
     public float getHeight() {
-        return (getAscent() + getDescent() + getLeading());
+        return (ascent + descent + leading);
     }
 
     /**
@@ -606,9 +605,9 @@ public class GlyphRun {
 	    renderer.setTypeSize(typeSize);
         renderer.setWritingDirection(writingDirection);
 
-        return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
-                                           getGlyphOffsets().subList(glyphStart, glyphEnd),
-                                           getGlyphAdvances().subList(glyphStart, glyphEnd));
+        return renderer.computeBoundingBox(glyphIds.subList(glyphStart, glyphEnd),
+                                           glyphOffsets.subList(glyphStart, glyphEnd),
+                                           glyphAdvances.subList(glyphStart, glyphEnd));
 	}
 
     /**
@@ -661,12 +660,12 @@ public class GlyphRun {
 
         if (replacement == null) {
             renderer.drawGlyphs(canvas,
-                                getGlyphIds().subList(glyphStart, glyphEnd),
-                                getGlyphOffsets().subList(glyphStart, glyphEnd),
-                                getGlyphAdvances().subList(glyphStart, glyphEnd));
+                                glyphIds.subList(glyphStart, glyphEnd),
+                                glyphOffsets.subList(glyphStart, glyphEnd),
+                                glyphAdvances.subList(glyphStart, glyphEnd));
         } else {
-            int top = (int) -(getAscent() + 0.5f);
-            int bottom = (int) (getDescent() + 0.5f);
+            int top = (int) -(ascent + 0.5f);
+            int bottom = (int) (descent + 0.5f);
 
             replacement.draw(canvas,
                              null, charStart, charEnd,
@@ -678,20 +677,20 @@ public class GlyphRun {
 
     @Override
     public String toString() {
-        return "GlyphRun{charStart=" + getCharStart()
-                + ", charEnd=" + getCharEnd()
-                + ", bidiLevel=" + getBidiLevel()
-                + ", writingDirection=" + getWritingDirection().toString()
+        return "GlyphRun{charStart=" + charStart
+                + ", charEnd=" + charEnd
+                + ", bidiLevel=" + bidiLevel
+                + ", writingDirection=" + writingDirection.toString()
                 + ", glyphCount=" + getGlyphCount()
-                + ", glyphIds=" + getGlyphIds().toString()
-                + ", glyphOffsets=" + getGlyphOffsets().toString()
-                + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", clusterMap=" + getClusterMap().toString()
-                + ", originX=" + getOriginX()
-                + ", originY=" + getOriginY()
-                + ", ascent=" + getAscent()
-                + ", descent=" + getDescent()
-                + ", leading=" + getLeading()
+                + ", glyphIds=" + glyphIds.toString()
+                + ", glyphOffsets=" + glyphOffsets.toString()
+                + ", glyphAdvances=" + glyphAdvances.toString()
+                + ", clusterMap=" + clusterMap.toString()
+                + ", originX=" + originX
+                + ", originY=" + originY
+                + ", ascent=" + ascent
+                + ", descent=" + descent
+                + ", leading=" + leading
                 + ", width=" + getWidth()
                 + ", height=" + getHeight()
                 + "}";
