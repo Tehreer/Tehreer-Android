@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -602,12 +602,14 @@ public class Renderer {
         int size = glyphIds.size();
 
         for (int i = 0; i < size; i++) {
-            int pos = (!reverseMode ? i : (size - i) - 1);
+            int glyphId = glyphIds.get(i);
+            float xOffset = offsets.getX(i);
+            float yOffset = offsets.getY(i);
+            float advance = advances.get(i);
 
-            int glyphId = glyphIds.get(pos);
-            float xOffset = offsets.getX(pos);
-            float yOffset = offsets.getY(pos);
-            float advance = advances.get(pos);
+            if (reverseMode) {
+                penX -= advance;
+            }
 
             Glyph maskGlyph = (!strokeMode
                                ? cache.getMaskGlyph(mGlyphStrike, glyphId)
@@ -621,7 +623,9 @@ public class Renderer {
                 canvas.drawBitmap(maskBitmap, left, top, mPaint);
             }
 
-            penX += advance;
+            if (!reverseMode) {
+                penX += advance;
+            }
         }
     }
 
