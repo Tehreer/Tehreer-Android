@@ -436,51 +436,7 @@ public class GlyphRun {
                                                + ", Run Range: [" + charStart + ".." + charEnd + ")");
         }
 
-        int clusterStart = 0;
-        int charCount = clusterMap.size();
-
-        int glyphStart = 0;
-        int glyphCount = glyphIds.size();
-
-        int endOffset = charIndex - charStart;
-        float distance = 0.0f;
-
-        for (int i = 1; i <= charCount; i++) {
-            int glyphIndex = (i < charCount ? clusterMap.get(i) : glyphCount);
-            if (glyphIndex == glyphStart) {
-                continue;
-            }
-
-            // Find the advance of current cluster.
-            float clusterAdvance = 0.0f;
-            for (int j = glyphStart; j < glyphIndex; j++) {
-                clusterAdvance += glyphAdvances.get(j);
-            }
-
-            if (i >= endOffset) {
-                // Divide the advance evenly between cluster length.
-                int clusterLength = i - clusterStart;
-                float charAdvance = clusterAdvance / clusterLength;
-
-                int clusterOffset = endOffset - clusterStart;
-                float offsetAdvance = charAdvance * clusterOffset;
-
-                distance += offsetAdvance;
-                break;
-            }
-
-            distance += clusterAdvance;
-
-            clusterStart = i;
-            glyphStart = glyphIndex;
-        }
-
-        if (writingDirection == WritingDirection.RIGHT_TO_LEFT) {
-            // Reverse the distance in case of right to left direction.
-            distance = getWidth() - distance;
-        }
-
-        return distance;
+        return getCaretEdge(charIndex);
     }
 
     /**
