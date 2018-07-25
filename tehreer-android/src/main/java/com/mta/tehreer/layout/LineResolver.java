@@ -18,6 +18,7 @@ package com.mta.tehreer.layout;
 
 import android.text.Spanned;
 
+import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.collections.JFloatArrayList;
 import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 import com.mta.tehreer.internal.collections.JIntArrayList;
@@ -26,6 +27,7 @@ import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
+import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.unicode.BidiRun;
 
@@ -48,20 +50,34 @@ class LineResolver {
         mIntrinsicRuns = runs;
     }
 
-    static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd, Object[] spans) {
-        int glyphOffset = intrinsicRun.charGlyphStart(charStart);
-        int glyphCount = intrinsicRun.charGlyphEnd(charEnd - 1) - glyphOffset;
+    static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int spanStart, int spanEnd, Object[] spans) {
+        IntList clusterMap = IntList.of(intrinsicRun.clusterMap);
+        boolean isBackward = intrinsicRun.isBackward;
+        int totalGlyphs = intrinsicRun.glyphCount();
 
-        return new GlyphRun(charStart, charEnd, Arrays.asList(spans),
+        int firstIndex = spanStart - intrinsicRun.charStart;
+        int lastIndex = spanEnd - intrinsicRun.charStart - 1;
+
+        int clusterStart = Clusters.actualClusterStart(clusterMap, firstIndex) + intrinsicRun.charStart;
+        int clusterEnd = Clusters.actualClusterEnd(clusterMap, lastIndex) + intrinsicRun.charStart;
+        int leadingIndex = Clusters.leadingGlyphIndex(clusterMap, firstIndex, isBackward, totalGlyphs);
+        int trailingIndex = Clusters.trailingGlyphIndex(clusterMap, lastIndex, isBackward, totalGlyphs);
+
+        int glyphOffset = Math.min(leadingIndex, trailingIndex);
+        int glyphCount = Math.max(leadingIndex, trailingIndex) - glyphOffset + 1;
+
+        int charOffset = clusterStart - intrinsicRun.charStart;
+        int charCount = clusterEnd - clusterStart;
+
+        return new GlyphRun(spanStart, spanEnd, spanStart - clusterStart, clusterEnd - spanEnd, Arrays.asList(spans),
                             intrinsicRun.isBackward, intrinsicRun.bidiLevel,
                             intrinsicRun.writingDirection, intrinsicRun.typeface, intrinsicRun.typeSize,
                             intrinsicRun.ascent, intrinsicRun.descent, intrinsicRun.leading,
                             new JIntArrayList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
                             new JFloatArrayPointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
                             new JFloatArrayList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
-                            new ClusterMap(intrinsicRun.clusterMap,
-                                           charStart - intrinsicRun.charStart,
-                                           charEnd - charStart, glyphOffset));
+                            new ClusterMap(intrinsicRun.clusterMap, charOffset, charCount, glyphOffset),
+                            intrinsicRun.caretEdges(charOffset, charCount));
     }
 
     static ComposedLine createComposedLine(CharSequence text, int charStart, int charEnd,
@@ -86,14 +102,17 @@ class LineResolver {
             int runCharStart = glyphRun.getCharStart();
             int runCharEnd = glyphRun.getCharEnd();
             int runGlyphCount = glyphRun.getGlyphCount();
-            float runExtent = glyphRun.computeTypographicExtent(0, runGlyphCount);
+            float runExtent = glyphRun.getWidth();
 
             if (trailingWhitespaceStart >= runCharStart && trailingWhitespaceStart < runCharEnd) {
-                int whitespaceGlyphStart = glyphRun.getLeadingGlyphIndex(trailingWhitespaceStart);
-                int whitespaceGlyphEnd = glyphRun.getTrailingGlyphIndex(runCharEnd - 1);
-                float whitespaceExtent = glyphRun.computeTypographicExtent(whitespaceGlyphStart, whitespaceGlyphEnd);
+                int wsLeadingIndex = glyphRun.getLeadingGlyphIndex(trailingWhitespaceStart);
+                int wsTrailingIndex = glyphRun.getTrailingGlyphIndex(runCharEnd - 1);
 
-                trailingWhitespaceExtent += whitespaceExtent;
+                int wsGlyphStart = Math.min(wsLeadingIndex, wsTrailingIndex);
+                int wsGlyphEnd = Math.max(wsLeadingIndex, wsTrailingIndex) + 1;
+                float wsExtent = glyphRun.computeTypographicExtent(wsGlyphStart, wsGlyphEnd);
+
+                trailingWhitespaceExtent += wsExtent;
             }
 
             lineAscent = Math.max(lineAscent, runAscent);
