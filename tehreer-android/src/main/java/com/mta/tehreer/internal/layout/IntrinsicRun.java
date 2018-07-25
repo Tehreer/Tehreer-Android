@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public class IntrinsicRun {
     public final float[] glyphOffsets;
     public final float[] glyphAdvances;
     public final int[] clusterMap;
+    private float[] charExtents;
 
     public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
                         WritingDirection writingDirection, Typeface typeface, float typeSize,
@@ -54,6 +55,56 @@ public class IntrinsicRun {
         this.glyphOffsets = offsets;
         this.glyphAdvances = advances;
         this.clusterMap = clusterMap;
+        this.charExtents = buildCharExtents();
+    }
+
+    private float[] buildCharExtents() {
+        int length = charEnd - charStart;
+        float[] array = new float[length];
+        float distance = 0.0f;
+
+        int clusterStart = 0;
+        int glyphStart = clusterMap[0];
+
+        for (int i = 0; i <= length; i++) {
+            int glyphIndex = (i < length ? clusterMap[i] : !isBackward ? glyphIds.length : 0);
+            if (glyphIndex == glyphStart) {
+                continue;
+            }
+
+            if (glyphStart > glyphIndex) {
+                int tempIndex = glyphIndex;
+                glyphIndex = glyphStart;
+                glyphStart = tempIndex;
+            }
+
+            // Find the advance of current cluster.
+            float clusterAdvance = 0.0f;
+            for (int j = glyphStart; j < glyphIndex; j++) {
+                clusterAdvance += glyphAdvances[j];
+            }
+
+            // Divide the advance evenly between cluster length.
+            int clusterLength = i - clusterStart;
+            float charAdvance = clusterAdvance / clusterLength;
+
+            for (int j = clusterStart; j < i; j++) {
+                distance += charAdvance;
+                array[j] = distance;
+            }
+
+            clusterStart = i;
+            glyphStart = glyphIndex;
+        }
+
+        return array;
+    }
+
+    public CaretEdgeList caretEdges(int offset, int size) {
+        boolean reversed = (!isBackward && writingDirection == WritingDirection.RIGHT_TO_LEFT)
+                         | (isBackward && writingDirection == WritingDirection.LEFT_TO_RIGHT);
+
+        return new CaretEdgeList(charExtents, offset, size, reversed);
     }
 
     public int glyphCount() {
