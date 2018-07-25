@@ -28,6 +28,7 @@ import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.CaretEdgeList;
+import com.mta.tehreer.internal.layout.ClusterRange;
 import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
 
@@ -58,13 +59,6 @@ public class GlyphRun {
     private final CaretEdgeList caretEdges;
     private float originX;
     private float originY;
-
-    private static class ClusterInfo {
-        int clusterStart;
-        int clusterEnd;
-        int glyphStart;
-        int glyphEnd;
-    }
 
     GlyphRun(int charStart, int charEnd, int startAddedLength, int endAddedLength,
              List<Object> spans, boolean isBackward, byte bidiLevel,
@@ -645,24 +639,24 @@ public class GlyphRun {
                                            glyphAdvances.subList(glyphStart, glyphEnd));
 	}
 
-    private ClusterInfo getClusterInfo(int charIndex, ClusterInfo exclusion) {
-	    int clusterStart = getActualClusterStart(charIndex);
-	    int clusterEnd = getActualClusterEnd(charIndex);
+    private ClusterRange getClusterRange(int charIndex, ClusterRange exclusion) {
+	    int actualStart = getActualClusterStart(charIndex);
+	    int actualEnd = getActualClusterEnd(charIndex);
 
 	    int leadingIndex = getLeadingGlyphIndex(charIndex);
 	    int trailingIndex = getTrailingGlyphIndex(charIndex);
 
-        ClusterInfo clusterInfo = new ClusterInfo();
-        clusterInfo.clusterStart = clusterStart;
-        clusterInfo.clusterEnd = clusterEnd;
-        clusterInfo.glyphStart = Math.min(leadingIndex, trailingIndex);
-        clusterInfo.glyphEnd = Math.max(leadingIndex, trailingIndex) + 1;
+        ClusterRange clusterRange = new ClusterRange();
+        clusterRange.actualStart = actualStart;
+        clusterRange.actualEnd = actualEnd;
+        clusterRange.glyphStart = Math.min(leadingIndex, trailingIndex);
+        clusterRange.glyphEnd = Math.max(leadingIndex, trailingIndex) + 1;
 
         if (exclusion != null) {
-            clusterInfo.glyphStart = Math.max(clusterInfo.glyphStart, exclusion.glyphEnd);
+            clusterRange.glyphStart = Math.max(clusterRange.glyphStart, exclusion.glyphEnd);
         }
-        if (clusterInfo.glyphStart < clusterInfo.glyphEnd) {
-            return clusterInfo;
+        if (clusterRange.glyphStart < clusterRange.glyphEnd) {
+            return clusterRange;
         }
 
         return null;
@@ -689,34 +683,34 @@ public class GlyphRun {
         return caretEdge;
     }
 
-    private void drawEdgeCluster(Renderer renderer, Canvas canvas, ClusterInfo clusterInfo) {
+    private void drawEdgeCluster(Renderer renderer, Canvas canvas, ClusterRange cluster) {
         float clipLeft = Float.NEGATIVE_INFINITY;
         float clipRight = Float.POSITIVE_INFINITY;
 
         if (!caretEdges.reversed()) {
-            if (clusterInfo.clusterStart < charStart) {
+            if (cluster.actualStart < charStart) {
                 clipLeft = getCaretEdge(charStart);
             }
-            if (clusterInfo.clusterEnd > charEnd) {
+            if (cluster.actualEnd > charEnd) {
                 clipRight = getCaretEdge(charEnd);
             }
         } else {
-            if (clusterInfo.clusterStart < charStart) {
+            if (cluster.actualStart < charStart) {
                 clipRight = getCaretEdge(charStart);
             }
-            if (clusterInfo.clusterEnd > charEnd) {
+            if (cluster.actualEnd > charEnd) {
                 clipLeft = getCaretEdge(charEnd);
             }
         }
 
         canvas.save();
         canvas.clipRect(clipLeft, Float.NEGATIVE_INFINITY, clipRight, Float.POSITIVE_INFINITY);
-        canvas.translate(getCaretEdge(clusterInfo.clusterStart), 0.0f);
+        canvas.translate(getCaretEdge(cluster.actualStart), 0.0f);
 
         renderer.drawGlyphs(canvas,
-                            glyphIds.subList(clusterInfo.glyphStart, clusterInfo.glyphEnd),
-                            glyphOffsets.subList(clusterInfo.glyphStart, clusterInfo.glyphEnd),
-                            glyphAdvances.subList(clusterInfo.glyphStart, clusterInfo.glyphEnd));
+                            glyphIds.subList(cluster.glyphStart, cluster.glyphEnd),
+                            glyphOffsets.subList(cluster.glyphStart, cluster.glyphEnd),
+                            glyphAdvances.subList(cluster.glyphStart, cluster.glyphEnd));
 
         canvas.restore();
     }
@@ -748,14 +742,14 @@ public class GlyphRun {
         }
 
         if (replacement == null) {
-            ClusterInfo firstCluster = null;
-            ClusterInfo lastCluster = null;
+            ClusterRange firstCluster = null;
+            ClusterRange lastCluster = null;
 
             if (startAddedLength > 0) {
-                firstCluster = getClusterInfo(charStart, null);
+                firstCluster = getClusterRange(charStart, null);
             }
             if (endAddedLength > 0) {
-                lastCluster = getClusterInfo(charEnd - 1, firstCluster);
+                lastCluster = getClusterRange(charEnd - 1, firstCluster);
             }
 
             int glyphStart = 0;
@@ -765,8 +759,8 @@ public class GlyphRun {
 
             if (firstCluster != null) {
                 drawEdgeCluster(renderer, canvas, firstCluster);
+                chunkStart = firstCluster.actualEnd;
                 glyphStart = firstCluster.glyphEnd;
-                chunkStart = firstCluster.clusterEnd;
             }
             if (lastCluster != null) {
                 glyphEnd = lastCluster.glyphStart;
