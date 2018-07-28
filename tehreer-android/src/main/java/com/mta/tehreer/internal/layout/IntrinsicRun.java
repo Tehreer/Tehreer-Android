@@ -20,7 +20,6 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 public class IntrinsicRun {
-
     public final int charStart;
     public final int charEnd;
     public final boolean isBackward;
@@ -35,7 +34,7 @@ public class IntrinsicRun {
     public final float[] glyphOffsets;
     public final float[] glyphAdvances;
     public final int[] clusterMap;
-    private float[] charExtents;
+    public final float[] charExtents;
 
     public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
                         WritingDirection writingDirection, Typeface typeface, float typeSize,
