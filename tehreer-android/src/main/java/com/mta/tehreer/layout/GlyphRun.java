@@ -469,64 +469,31 @@ public class GlyphRun {
      * @see #computeTypographicExtent(int, int)
      */
     public int computeNearestCharIndex(float distance) {
-        if (writingDirection == WritingDirection.RIGHT_TO_LEFT) {
-            // Reverse the distance in case of right to left direction.
-            distance = getWidth() - distance;
-        }
+        int addedStart = charStart - startAddedLength;
+        boolean reversed = caretEdges.reversed();
 
-        int clusterStart = 0;
-        int charCount = clusterMap.size();
+        int leadingCharIndex = -1;
+        int trailingCharIndex = -1;
 
-        int glyphStart = 0;
-        int glyphCount = glyphIds.size();
+        float leadingCaretEdge = 0.0f;
+        float trailingCaretEdge = 0.0f;
 
-        int leadingCharIndex = charStart;
-        int trailingCharIndex = charEnd;
+        int index = (reversed ? charEnd : charStart);
+        int next = (reversed ? -1 : 1);
 
-        float computedAdvance = 0.0f;
-        float leadingEdgeAdvance = 0.0f;
+        while (index <= charEnd && index >= charStart) {
+            float caretEdge = caretEdges.get(index - addedStart);
 
-        for (int i = 1; i <= charCount; i++) {
-            int glyphIndex = (i < charCount ? clusterMap.get(i) : glyphCount);
-            if (glyphIndex == glyphStart) {
-                continue;
-            }
-
-            // Find the advance of current cluster.
-            float clusterAdvance = 0.0f;
-            for (int j = glyphStart; j < glyphIndex; j++) {
-                clusterAdvance += glyphAdvances.get(j);
-            }
-
-            // Divide the advance evenly between cluster length.
-            int clusterLength = i - clusterStart;
-            float charAdvance = clusterAdvance / clusterLength;
-
-            boolean trailingCharFound = false;
-
-            // Compare individual code points with input distance.
-            for (int j = 0; j < clusterLength; j++) {
-                // TODO: Iterate on code points rather than UTF-16 code units of java string.
-
-                if (computedAdvance <= distance) {
-                    leadingCharIndex = charStart + clusterStart + j;
-                    leadingEdgeAdvance = computedAdvance;
-                } else {
-                    trailingCharIndex = charStart + clusterStart + j;
-                    trailingCharFound = true;
-                    break;
-                }
-
-                computedAdvance += charAdvance;
-            }
-
-            // Break the outer loop if trailing char has been found.
-            if (trailingCharFound) {
+            if (caretEdge <= distance) {
+                leadingCharIndex = index;
+                leadingCaretEdge = caretEdge;
+            } else {
+                trailingCharIndex = index;
+                trailingCaretEdge = caretEdge;
                 break;
             }
 
-            clusterStart = i;
-            glyphStart = glyphIndex;
+            index += next;
         }
 
         if (leadingCharIndex == -1) {
@@ -539,7 +506,7 @@ public class GlyphRun {
             return charEnd;
         }
 
-        if (distance <= (leadingEdgeAdvance + computedAdvance) / 2.0) {
+        if (distance <= (leadingCaretEdge + trailingCaretEdge) / 2.0f) {
             // Input distance is closer to first edge.
             return leadingCharIndex;
         }
