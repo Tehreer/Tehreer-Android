@@ -99,11 +99,9 @@ public class IntrinsicRun {
         return array;
     }
 
-    public CaretEdgeList caretEdges(int offset, int size) {
-        boolean reversed = (!isBackward && writingDirection == WritingDirection.RIGHT_TO_LEFT)
-                         | (isBackward && writingDirection == WritingDirection.LEFT_TO_RIGHT);
-
-        return new CaretEdgeList(charExtents, offset, size, reversed);
+    public boolean isOpposite() {
+        return (!isBackward && writingDirection == WritingDirection.RIGHT_TO_LEFT)
+             | (isBackward && writingDirection == WritingDirection.LEFT_TO_RIGHT);
     }
 
     public int glyphCount() {
