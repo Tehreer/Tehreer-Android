@@ -23,6 +23,7 @@ import com.mta.tehreer.internal.collections.JFloatArrayList;
 import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 import com.mta.tehreer.internal.collections.JIntArrayList;
 import com.mta.tehreer.internal.layout.BreakResolver;
+import com.mta.tehreer.internal.layout.CaretEdgeList;
 import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
@@ -53,31 +54,35 @@ class LineResolver {
     static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int spanStart, int spanEnd, Object[] spans) {
         IntList clusterMap = IntList.of(intrinsicRun.clusterMap);
         boolean isBackward = intrinsicRun.isBackward;
+        int intrinsicStart = intrinsicRun.charStart;
         int totalGlyphs = intrinsicRun.glyphCount();
 
-        int firstIndex = spanStart - intrinsicRun.charStart;
-        int lastIndex = spanEnd - intrinsicRun.charStart - 1;
+        int firstIndex = spanStart - intrinsicStart;
+        int lastIndex = spanEnd - intrinsicStart - 1;
 
-        int clusterStart = Clusters.actualClusterStart(clusterMap, firstIndex) + intrinsicRun.charStart;
-        int clusterEnd = Clusters.actualClusterEnd(clusterMap, lastIndex) + intrinsicRun.charStart;
+        int clusterStart = Clusters.actualClusterStart(clusterMap, firstIndex) + intrinsicStart;
+        int clusterEnd = Clusters.actualClusterEnd(clusterMap, lastIndex) + intrinsicStart;
+        int startExtra = spanStart - clusterStart;
+        int endExtra = clusterEnd - spanEnd;
+
         int leadingIndex = Clusters.leadingGlyphIndex(clusterMap, firstIndex, isBackward, totalGlyphs);
         int trailingIndex = Clusters.trailingGlyphIndex(clusterMap, lastIndex, isBackward, totalGlyphs);
-
         int glyphOffset = Math.min(leadingIndex, trailingIndex);
         int glyphCount = Math.max(leadingIndex, trailingIndex) - glyphOffset + 1;
 
-        int charOffset = clusterStart - intrinsicRun.charStart;
-        int charCount = clusterEnd - clusterStart;
+        int chunkOffset = clusterStart - intrinsicStart;
+        int chunkLength = clusterEnd - clusterStart;
 
-        return new GlyphRun(spanStart, spanEnd, spanStart - clusterStart, clusterEnd - spanEnd, Arrays.asList(spans),
+        return new GlyphRun(spanStart, spanEnd, startExtra, endExtra, Arrays.asList(spans),
                             intrinsicRun.isBackward, intrinsicRun.bidiLevel,
                             intrinsicRun.writingDirection, intrinsicRun.typeface, intrinsicRun.typeSize,
                             intrinsicRun.ascent, intrinsicRun.descent, intrinsicRun.leading,
                             new JIntArrayList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
                             new JFloatArrayPointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
                             new JFloatArrayList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
-                            new ClusterMap(intrinsicRun.clusterMap, charOffset, charCount, glyphOffset),
-                            intrinsicRun.caretEdges(charOffset, charCount));
+                            new ClusterMap(intrinsicRun.clusterMap, chunkOffset, chunkLength, glyphOffset),
+                            new CaretEdgeList(intrinsicRun.charExtents, chunkOffset, chunkLength,
+                                              startExtra, endExtra, intrinsicRun.isOpposite()));
     }
 
     static ComposedLine createComposedLine(CharSequence text, int charStart, int charEnd,
