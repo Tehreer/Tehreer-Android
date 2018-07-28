@@ -421,6 +421,13 @@ public class GlyphRun {
         return Clusters.trailingGlyphIndex(clusterMap, arrayIndex, isBackward, glyphIds.size());
     }
 
+    private float getCaretEdge(int charIndex) {
+        int addedStart = charStart - startAddedLength;
+        int arrayIndex = charIndex - addedStart;
+
+        return caretEdges.get(arrayIndex);
+    }
+
     /**
      * Determines the distance of specified character from the start of the run assumed at zero.
      *
@@ -616,27 +623,6 @@ public class GlyphRun {
         }
 
         return null;
-    }
-
-    private float getCaretEdge(int charIndex) {
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
-        float caretEdge = caretEdges.get(arrayIndex);
-
-        if (!caretEdges.reversed()) {
-            if (startAddedLength > 0) {
-                caretEdge -= caretEdges.distance(0, startAddedLength);
-            }
-        } else {
-            if (endAddedLength > 0) {
-                int fromIndex = charEnd - addedStart;
-                int toIndex = fromIndex + endAddedLength;
-
-                caretEdge -= caretEdges.distance(fromIndex, toIndex);
-            }
-        }
-
-        return caretEdge;
     }
 
     private void drawEdgeCluster(Renderer renderer, Canvas canvas, ClusterRange cluster) {
