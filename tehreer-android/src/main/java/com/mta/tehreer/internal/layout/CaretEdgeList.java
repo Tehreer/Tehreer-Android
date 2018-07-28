@@ -24,21 +24,23 @@ public final class CaretEdgeList extends FloatList {
     private final int beforeOffset;
     private final int edgeCount;
     private final boolean reversed;
-    private final float extraDistance;
-    public final float coveredDistance;
+    private final float pivotDistance;
 
-    public CaretEdgeList(float[] extents, int offset, int size, boolean reversed) {
+    public CaretEdgeList(float[] extents, int offset, int size, int startExtra, int endExtra, boolean reversed) {
+        int pivotIndex = (reversed ? size - endExtra : startExtra) + offset - 1;
         this.extentArray = extents;
         this.beforeOffset = offset - 1;
         this.edgeCount = size + 1;
         this.reversed = reversed;
-        this.extraDistance = (offset == 0 ? 0.0f : extentArray[beforeOffset]);
-        this.coveredDistance = extentArray[beforeOffset + size] - extraDistance;
+        this.pivotDistance = (pivotIndex == -1 ? 0.0f : extentArray[pivotIndex]);
     }
 
     public float distance(int fromIndex, int toIndex) {
-        float firstEdge = (fromIndex == 0 ? 0.0f : extentArray[fromIndex + beforeOffset] - extraDistance);
-        float lastEdge = (toIndex == 0 ? 0.0f : extentArray[toIndex + beforeOffset] - extraDistance);
+        int relativeFromIndex = fromIndex + beforeOffset;
+        int relativeToIndex = toIndex + beforeOffset;
+
+        float firstEdge = (relativeFromIndex == -1 ? 0.0f : extentArray[relativeFromIndex]);
+        float lastEdge = (relativeToIndex == -1 ? 0.0f : extentArray[relativeToIndex]);
 
         return lastEdge - firstEdge;
     }
@@ -58,12 +60,10 @@ public final class CaretEdgeList extends FloatList {
             throw Exceptions.indexOutOfBounds(index, edgeCount);
         }
 
-        float caretEdge = (index == 0 ? 0.0f : (extentArray[index + beforeOffset] - extraDistance));
-        if (reversed) {
-            caretEdge = coveredDistance - caretEdge;
-        }
+        int relativeIndex = index + beforeOffset;
+        float relativeExtent = (relativeIndex == -1 ? 0.0f : extentArray[relativeIndex]);
 
-        return caretEdge;
+        return (reversed ? pivotDistance - relativeExtent : relativeExtent - pivotDistance);
     }
 
     @Override
