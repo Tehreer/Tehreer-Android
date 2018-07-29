@@ -17,6 +17,7 @@
 package com.mta.tehreer.internal.layout;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 public class IntrinsicRun {
@@ -108,28 +109,17 @@ public class IntrinsicRun {
         return glyphIds.length;
     }
 
-    public int charGlyphStart(int charIndex) {
-        return clusterMap[charIndex - charStart];
+    public void loadGlyphRange(int startIndex, int endIndex, int[] glyphRange) {
+        Clusters.loadGlyphRange(clusterMap, startIndex - charStart, endIndex - charStart,
+                                isBackward, glyphIds.length, glyphRange);
     }
 
-    public int charGlyphEnd(int charIndex) {
-        int glyphEnd;
+    public int clusterStart(int charIndex) {
+        return Clusters.actualClusterStart(clusterMap, charIndex - charStart) + charStart;
+    }
 
-        if (!isBackward) {
-            int charNext = charIndex + 1;
-
-            glyphEnd = (charNext < charEnd
-                        ? clusterMap[charNext - charStart]
-                        : glyphCount());
-        } else {
-            int charPrevious = charIndex - 1;
-
-            glyphEnd = (charPrevious > charStart
-                        ? clusterMap[charPrevious - charStart]
-                        : glyphCount());
-        }
-
-        return glyphEnd;
+    public int clusterEnd(int charIndex) {
+        return Clusters.actualClusterEnd(clusterMap, charIndex - charStart) + charStart;
     }
 
     public float measureGlyphs(int glyphStart, int glyphEnd) {
