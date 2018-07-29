@@ -34,56 +34,43 @@ import com.mta.tehreer.sfnt.WritingDirection;
  * glyph paths, measure their bounding boxes and draw them on a <code>Canvas</code> object.
  */
 public class Renderer {
-
     private static final String TAG = Renderer.class.getSimpleName();
 
-    private GlyphStrike mGlyphStrike;
+    private GlyphStrike mGlyphStrike = new GlyphStrike();
     private int mGlyphLineRadius;
     private int mGlyphLineCap;
     private int mGlyphLineJoin;
     private int mGlyphMiterLimit;
 
-    private Paint mPaint;
-    private boolean mShouldRender;
-    private boolean mShadowLayerSynced;
+    private Paint mPaint = new Paint();
+    private boolean mShouldRender = false;
+    private boolean mShadowLayerSynced = true;
 
-    private int mFillColor;
-    private RenderingStyle mRenderingStyle;
-    private WritingDirection mWritingDirection;
-    private Typeface mTypeface;
-    private float mTypeSize;
-    private float mSlantAngle;
-    private float mScaleX;
-    private float mScaleY;
-    private int mStrokeColor;
+    private int mFillColor = Color.BLACK;
+    private RenderingStyle mRenderingStyle = RenderingStyle.FILL;
+    private WritingDirection mWritingDirection = WritingDirection.LEFT_TO_RIGHT;
+    private Typeface mTypeface = null;
+    private float mTypeSize = 16.0f;
+    private float mSlantAngle = 0.0f;
+    private float mScaleX = 1.0f;
+    private float mScaleY = 1.0f;
+    private int mStrokeColor = Color.BLACK;
     private float mStrokeWidth;
     private StrokeCap mStrokeCap;
     private StrokeJoin mStrokeJoin;
     private float mStrokeMiter;
-    private float mShadowRadius;
-    private float mShadowDx;
-    private float mShadowDy;
-    private int mShadowColor;
+    private float mShadowRadius = 0.0f;
+    private float mShadowDx = 0.0f;
+    private float mShadowDy = 0.0f;
+    private int mShadowColor = Color.TRANSPARENT;
 
     /**
      * Constructs a renderer object.
      */
     public Renderer() {
-        mGlyphStrike = new GlyphStrike();
-        mPaint = new Paint();
-        mShadowRadius = 0.0f;
-        mShadowDx = 0.0f;
-        mShadowDy = 0.0f;
-        mShadowColor = Color.TRANSPARENT;
+        updatePixelSizes();
+        updateTransform();
 
-        setFillColor(Color.BLACK);
-        setRenderingStyle(RenderingStyle.FILL);
-        setWritingDirection(WritingDirection.LEFT_TO_RIGHT);
-        setTypeSize(16.0f);
-        setSlantAngle(0.0f);
-        setScaleX(1.0f);
-        setScaleY(1.0f);
-        setStrokeColor(Color.BLACK);
         setStrokeWidth(1.0f);
         setStrokeCap(StrokeCap.BUTT);
         setStrokeJoin(StrokeJoin.ROUND);
