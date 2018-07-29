@@ -19,6 +19,17 @@ package com.mta.tehreer.internal.util;
 import com.mta.tehreer.collections.IntList;
 
 public final class Clusters {
+    public static void loadGlyphRange(int[] clusterMap, int startIndex, int endIndex,
+                                      boolean isBackward, int glyphCount, int[] glyphRange) {
+        if (!isBackward) {
+            glyphRange[0] = clusterMap[startIndex];
+            glyphRange[1] = forwardGlyphIndex(clusterMap, endIndex - 1, glyphCount) + 1;
+        } else {
+            glyphRange[0] = clusterMap[endIndex - 1];
+            glyphRange[1] = backwardGlyphIndex(clusterMap, startIndex, glyphCount) + 1;
+        }
+    }
+
     public static int leadingGlyphIndex(IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
             return clusterMap.get(arrayIndex);
