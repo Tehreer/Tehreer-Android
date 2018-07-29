@@ -18,7 +18,6 @@ package com.mta.tehreer.layout;
 
 import android.text.Spanned;
 
-import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.collections.JFloatArrayList;
 import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 import com.mta.tehreer.internal.collections.JIntArrayList;
@@ -28,7 +27,6 @@ import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
-import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.unicode.BidiRun;
 
@@ -52,25 +50,19 @@ class LineResolver {
     }
 
     static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int spanStart, int spanEnd, Object[] spans) {
-        IntList clusterMap = IntList.of(intrinsicRun.clusterMap);
-        boolean isBackward = intrinsicRun.isBackward;
-        int intrinsicStart = intrinsicRun.charStart;
-        int totalGlyphs = intrinsicRun.glyphCount();
+        int clusterStart = intrinsicRun.clusterStart(spanStart);
+        int clusterEnd = intrinsicRun.clusterEnd(spanEnd - 1);
 
-        int firstIndex = spanStart - intrinsicStart;
-        int lastIndex = spanEnd - intrinsicStart - 1;
-
-        int clusterStart = Clusters.actualClusterStart(clusterMap, firstIndex) + intrinsicStart;
-        int clusterEnd = Clusters.actualClusterEnd(clusterMap, lastIndex) + intrinsicStart;
         int startExtra = spanStart - clusterStart;
         int endExtra = clusterEnd - spanEnd;
 
-        int leadingIndex = Clusters.leadingGlyphIndex(clusterMap, firstIndex, isBackward, totalGlyphs);
-        int trailingIndex = Clusters.trailingGlyphIndex(clusterMap, lastIndex, isBackward, totalGlyphs);
-        int glyphOffset = Math.min(leadingIndex, trailingIndex);
-        int glyphCount = Math.max(leadingIndex, trailingIndex) - glyphOffset + 1;
+        int[] glyphRange = new int[2];
+        intrinsicRun.loadGlyphRange(spanStart, spanEnd, glyphRange);
 
-        int chunkOffset = clusterStart - intrinsicStart;
+        int glyphOffset = glyphRange[0];
+        int glyphCount = glyphRange[1] - glyphOffset;
+
+        int chunkOffset = clusterStart - intrinsicRun.charStart;
         int chunkLength = clusterEnd - clusterStart;
 
         return new GlyphRun(spanStart, spanEnd, startExtra, endExtra, Arrays.asList(spans),
