@@ -19,7 +19,6 @@ package com.mta.tehreer.internal.layout;
 import java.util.ArrayList;
 
 public class RunCollection extends ArrayList<IntrinsicRun> {
-
     public int binarySearch(int charIndex) {
         int low = 0;
         int high = size() - 1;
@@ -45,16 +44,14 @@ public class RunCollection extends ArrayList<IntrinsicRun> {
 
         if (charEnd > charStart) {
             int runIndex = binarySearch(charStart);
+            int[] glyphRange = new int[2];
 
             do {
                 IntrinsicRun intrinsicRun = get(runIndex);
-                int glyphStart = intrinsicRun.charGlyphStart(charStart);
-                int glyphEnd;
-
                 int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
-                glyphEnd = intrinsicRun.charGlyphEnd(segmentEnd - 1);
 
-                extent += intrinsicRun.measureGlyphs(glyphStart, glyphEnd);
+                intrinsicRun.loadGlyphRange(charStart, segmentEnd, glyphRange);
+                extent += intrinsicRun.measureGlyphs(glyphRange[0], glyphRange[1]);
 
                 charStart = segmentEnd;
                 runIndex++;
