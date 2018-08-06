@@ -23,6 +23,8 @@ public final class Memory {
         TestJNI.loadLibrary();
     }
 
+    public static native int pointerSize();
+
     public static native long allocate(long capacity);
     public static native void dispose(long pointer);
 

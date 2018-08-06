@@ -23,6 +23,11 @@
 
 using namespace Tehreer;
 
+static jint pointerSize(JNIEnv *env, jobject obj)
+{
+    return (jint)sizeof(size_t);
+}
+
 static jlong allocate(JNIEnv *env, jobject obj, jlong capacity)
 {
     return (jlong)malloc((size_t)capacity);
@@ -39,6 +44,7 @@ static jobject buffer(JNIEnv *env, jobject obj, jlong pointer, jlong capacity)
 }
 
 static JNINativeMethod JNI_METHODS[] = {
+    { "pointerSize", "()I", (void *)pointerSize },
     { "allocate", "(J)J", (void *)allocate },
     { "dispose", "(J)V", (void *)dispose },
     { "buffer", "(JJ)Ljava/nio/ByteBuffer;", (void *)buffer },
