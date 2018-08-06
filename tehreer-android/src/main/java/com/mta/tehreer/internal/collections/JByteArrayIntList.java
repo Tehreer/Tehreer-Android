@@ -46,8 +46,12 @@ public class JByteArrayIntList extends IntList {
 
     @Override
     public void copyTo(int[] array, int atIndex) {
+        if (array == null) {
+            throw new NullPointerException();
+        }
+
         for (int i = 0; i < size; i++) {
-            array[atIndex + i] = this.array[i];
+            array[atIndex + i] = this.array[i + offset];
         }
     }
 
