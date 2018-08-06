@@ -49,6 +49,16 @@ android {
         }
     }
 
+    sourceSets {
+        androidTest {
+            externalNativeBuild {
+                ndkBuild {
+                    path 'src/androidTest/jni/Android.mk'
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
