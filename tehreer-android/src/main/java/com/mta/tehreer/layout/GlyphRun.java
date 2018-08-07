@@ -155,10 +155,30 @@ public class GlyphRun {
         return charEnd;
     }
 
+    /**
+     * Returns the extra excluded length at the start of cluster map. If first cluster of this run
+     * begins within the excluded range, then its rendering will be clipped from start. The amount
+     * of clipping would be equal to the perceived trailing caret position of last excluded
+     * character.
+     *
+     * @return The extra excluded length at the start of cluster map.
+     *
+     * @see #getClusterMap()
+     */
     public int getStartExtraLength() {
         return startExtraLength;
     }
 
+    /**
+     * Returns the extra excluded length at the end of cluster map. If last cluster of this run
+     * finishes within the excluded range, then its rendering will be clipped from end. The amount
+     * of clipping would be equal to the perceived leading caret position of first excluded
+     * character.
+     *
+     * @return The extra excluded length at the end of cluster map.
+     *
+     * @see #getClusterMap()
+     */
     public int getEndExtraLength() {
         return endExtraLength;
     }
