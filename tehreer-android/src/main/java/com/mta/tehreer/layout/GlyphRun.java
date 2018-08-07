@@ -41,8 +41,8 @@ import java.util.List;
 public class GlyphRun {
     private final int charStart;
     private final int charEnd;
-    private final int startAddedLength;
-    private final int endAddedLength;
+    private final int startExtraLength;
+    private final int endExtraLength;
     private final List<Object> spans;
     private final boolean isBackward;
     private final byte bidiLevel;
@@ -60,7 +60,7 @@ public class GlyphRun {
     private float originX;
     private float originY;
 
-    GlyphRun(int charStart, int charEnd, int startAddedLength, int endAddedLength,
+    GlyphRun(int charStart, int charEnd, int startExtraLength, int endExtraLength,
              List<Object> spans, boolean isBackward, byte bidiLevel,
              WritingDirection writingDirection, Typeface typeface, float typeSize,
              float ascent, float descent, float leading,
@@ -68,8 +68,8 @@ public class GlyphRun {
              CaretEdgeList caretEdges) {
         this.charStart = charStart;
         this.charEnd = charEnd;
-        this.startAddedLength = startAddedLength;
-        this.endAddedLength = endAddedLength;
+        this.startExtraLength = startExtraLength;
+        this.endExtraLength = endExtraLength;
         this.spans = spans;
         this.isBackward = isBackward;
         this.writingDirection = writingDirection;
@@ -89,8 +89,8 @@ public class GlyphRun {
     GlyphRun(GlyphRun otherRun) {
         this.charStart = otherRun.charStart;
         this.charEnd = otherRun.charEnd;
-        this.startAddedLength = otherRun.startAddedLength;
-        this.endAddedLength = otherRun.endAddedLength;
+        this.startExtraLength = otherRun.startExtraLength;
+        this.endExtraLength = otherRun.endExtraLength;
         this.spans = otherRun.spans;
         this.isBackward = otherRun.isBackward;
         this.bidiLevel = otherRun.bidiLevel;
@@ -155,12 +155,12 @@ public class GlyphRun {
         return charEnd;
     }
 
-    public int getStartAddedLength() {
-        return startAddedLength;
+    public int getStartExtraLength() {
+        return startExtraLength;
     }
 
-    public int getEndAddedLength() {
-        return endAddedLength;
+    public int getEndExtraLength() {
+        return endExtraLength;
     }
 
     /**
@@ -306,7 +306,7 @@ public class GlyphRun {
      * @return The typographic width of this run.
      */
     public float getWidth() {
-        int visibleOffset = startAddedLength;
+        int visibleOffset = startExtraLength;
         int visibleLength = charEnd - charStart;
 
         return caretEdges.distance(visibleOffset, visibleOffset + visibleLength);
@@ -339,10 +339,10 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
+        int extraStart = charStart - startExtraLength;
+        int arrayIndex = charIndex - extraStart;
 
-        return Clusters.actualClusterStart(clusterMap, arrayIndex) + addedStart;
+        return Clusters.actualClusterStart(clusterMap, arrayIndex) + extraStart;
     }
 
     /**
@@ -363,10 +363,10 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
+        int extraStart = charStart - startExtraLength;
+        int arrayIndex = charIndex - extraStart;
 
-        return Clusters.actualClusterEnd(clusterMap, arrayIndex) + addedStart;
+        return Clusters.actualClusterEnd(clusterMap, arrayIndex) + extraStart;
     }
 
     /**
@@ -389,8 +389,8 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
+        int extraStart = charStart - startExtraLength;
+        int arrayIndex = charIndex - extraStart;
 
         return Clusters.leadingGlyphIndex(clusterMap, arrayIndex, isBackward, glyphIds.size());
     }
@@ -415,15 +415,15 @@ public class GlyphRun {
             throw new IllegalArgumentException(indexError);
         }
 
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
+        int extraStart = charStart - startExtraLength;
+        int arrayIndex = charIndex - extraStart;
 
         return Clusters.trailingGlyphIndex(clusterMap, arrayIndex, isBackward, glyphIds.size());
     }
 
     private float getCaretEdge(int charIndex) {
-        int addedStart = charStart - startAddedLength;
-        int arrayIndex = charIndex - addedStart;
+        int extraStart = charStart - startExtraLength;
+        int arrayIndex = charIndex - extraStart;
 
         return caretEdges.get(arrayIndex);
     }
@@ -469,7 +469,7 @@ public class GlyphRun {
      * @see #computeTypographicExtent(int, int)
      */
     public int computeNearestCharIndex(float distance) {
-        int addedStart = charStart - startAddedLength;
+        int extraStart = charStart - startExtraLength;
         boolean reversed = caretEdges.reversed();
 
         int leadingCharIndex = -1;
@@ -482,7 +482,7 @@ public class GlyphRun {
         int next = (reversed ? -1 : 1);
 
         while (index <= charEnd && index >= charStart) {
-            float caretEdge = caretEdges.get(index - addedStart);
+            float caretEdge = caretEdges.get(index - extraStart);
 
             if (caretEdge <= distance) {
                 leadingCharIndex = index;
@@ -654,10 +654,10 @@ public class GlyphRun {
             ClusterRange firstCluster = null;
             ClusterRange lastCluster = null;
 
-            if (startAddedLength > 0) {
+            if (startExtraLength > 0) {
                 firstCluster = getClusterRange(charStart, null);
             }
-            if (endAddedLength > 0) {
+            if (endExtraLength > 0) {
                 lastCluster = getClusterRange(charEnd - 1, firstCluster);
             }
 
