@@ -156,12 +156,17 @@ public class GlyphRun {
     }
 
     /**
-     * Returns the extra excluded length at the start of cluster map. If first cluster of this run
-     * begins within the excluded range, then its rendering will be clipped from start. The amount
-     * of clipping would be equal to the perceived trailing caret position of last excluded
-     * character.
+     * Returns the extra excluded length at the start of the cluster map. If the first cluster of
+     * this run begins within the extra range, then its rendering will be clipped from the start.
+     * The amount of clipping would be equal to the perceived trailing caret position of last
+     * excluded character.
+     * <p>
+     * For example, consider three characters `f`, `i` and another `i` form a cluster having a
+     * single ligature, `fii` and the run starts from the second `i` with `f` and `i` being extra
+     * characters. In this case, the ligature would be divided into three equal parts and the first
+     * two parts would be clipped.
      *
-     * @return The extra excluded length at the start of cluster map.
+     * @return The extra excluded length at the start of the cluster map.
      *
      * @see #getClusterMap()
      */
@@ -170,12 +175,17 @@ public class GlyphRun {
     }
 
     /**
-     * Returns the extra excluded length at the end of cluster map. If last cluster of this run
-     * finishes within the excluded range, then its rendering will be clipped from end. The amount
-     * of clipping would be equal to the perceived leading caret position of first excluded
+     * Returns the extra excluded length at the end of the cluster map. If the last cluster of this
+     * run finishes within the excluded range, then its rendering will be clipped from the end. The
+     * amount of clipping would be equal to the perceived leading caret position of first excluded
      * character.
+     * <p>
+     * For example, consider three characters `f`, `i` and another `i` form a cluster having a
+     * single ligature, `fii` and the run consists of just `f` with both `i` being extra characters.
+     * In this case, the ligature would be divided into three equal parts and the last two parts
+     * would be clipped.
      *
-     * @return The extra excluded length at the end of cluster map.
+     * @return The extra excluded length at the end of the cluster map.
      *
      * @see #getClusterMap()
      */
