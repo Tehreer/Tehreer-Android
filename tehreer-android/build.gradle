@@ -43,17 +43,18 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
-    externalNativeBuild {
-        ndkBuild {
-            path 'src/main/jni/Android.mk'
-        }
-    }
-
     sourceSets {
         androidTest {
             externalNativeBuild {
                 ndkBuild {
                     path 'src/androidTest/jni/Android.mk'
+                }
+            }
+        }
+        main {
+            externalNativeBuild {
+                ndkBuild {
+                    path 'src/main/jni/Android.mk'
                 }
             }
         }
