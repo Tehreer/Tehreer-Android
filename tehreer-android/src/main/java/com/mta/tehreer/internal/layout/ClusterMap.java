@@ -49,13 +49,12 @@ public class ClusterMap extends IntList {
 
     @Override
     public void copyTo(int[] array, int atIndex) {
-        System.arraycopy(this.array, offset, array, atIndex, size);
+        if (array == null) {
+            throw new NullPointerException();
+        }
 
-        if (difference != 0) {
-            int length = size();
-            for (int i = atIndex; i < length; i++) {
-                array[i] -= difference;
-            }
+        for (int i = 0; i < size; i++) {
+            array[i + atIndex] = this.array[i + offset] - difference;
         }
     }
 
