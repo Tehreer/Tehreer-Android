@@ -18,15 +18,13 @@ package com.mta.tehreer.graphics;
 
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class TypeSlopeTest {
-
     @Test
     public void testOrdinals() {
-        assertThat(TypeSlope.PLAIN.ordinal(), is(0));
-        assertThat(TypeSlope.ITALIC.ordinal(), is(1));
-        assertThat(TypeSlope.OBLIQUE.ordinal(), is(2));
+        assertEquals(TypeSlope.PLAIN.ordinal(), 0);
+        assertEquals(TypeSlope.ITALIC.ordinal(), 1);
+        assertEquals(TypeSlope.OBLIQUE.ordinal(), 2);
     }
 }
