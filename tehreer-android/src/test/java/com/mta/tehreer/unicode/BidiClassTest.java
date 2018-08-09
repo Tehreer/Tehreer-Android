@@ -18,35 +18,33 @@ package com.mta.tehreer.unicode;
 
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class BidiClassTest {
-
     @Test
     public void testValues() {
-        assertThat(BidiClass.LEFT_TO_RIGHT, equalTo(0x01));
-        assertThat(BidiClass.RIGHT_TO_LEFT, equalTo(0x02));
-        assertThat(BidiClass.ARABIC_LETTER, equalTo(0x03));
-        assertThat(BidiClass.BOUNDARY_NEUTRAL, equalTo(0x04));
-        assertThat(BidiClass.NONSPACING_MARK, equalTo(0x05));
-        assertThat(BidiClass.ARABIC_NUMBER, equalTo(0x06));
-        assertThat(BidiClass.EUROPEAN_NUMBER, equalTo(0x07));
-        assertThat(BidiClass.EUROPEAN_TERMINATOR, equalTo(0x08));
-        assertThat(BidiClass.EUROPEAN_SEPARATOR, equalTo(0x09));
-        assertThat(BidiClass.COMMON_SEPARATOR, equalTo(0x0A));
-        assertThat(BidiClass.WHITE_SPACE, equalTo(0x0B));
-        assertThat(BidiClass.SEGMENT_SEPARATOR, equalTo(0x0C));
-        assertThat(BidiClass.PARAGRAPH_SEPARATOR, equalTo(0x0D));
-        assertThat(BidiClass.OTHER_NEUTRAL, equalTo(0x0E));
-        assertThat(BidiClass.LEFT_TO_RIGHT_ISOLATE, equalTo(0x0F));
-        assertThat(BidiClass.RIGHT_TO_LEFT_ISOLATE, equalTo(0x10));
-        assertThat(BidiClass.FIRST_STRONG_ISOLATE, equalTo(0x11));
-        assertThat(BidiClass.POP_DIRECTIONAL_ISOLATE, equalTo(0x12));
-        assertThat(BidiClass.LEFT_TO_RIGHT_EMBEDDING, equalTo(0x13));
-        assertThat(BidiClass.RIGHT_TO_LEFT_EMBEDDING, equalTo(0x14));
-        assertThat(BidiClass.LEFT_TO_RIGHT_OVERRIDE, equalTo(0x15));
-        assertThat(BidiClass.RIGHT_TO_LEFT_OVERRIDE, equalTo(0x16));
-        assertThat(BidiClass.POP_DIRECTIONAL_FORMAT, equalTo(0x17));
+        assertEquals(BidiClass.LEFT_TO_RIGHT, 0x01);
+        assertEquals(BidiClass.RIGHT_TO_LEFT, 0x02);
+        assertEquals(BidiClass.ARABIC_LETTER, 0x03);
+        assertEquals(BidiClass.BOUNDARY_NEUTRAL, 0x04);
+        assertEquals(BidiClass.NONSPACING_MARK, 0x05);
+        assertEquals(BidiClass.ARABIC_NUMBER, 0x06);
+        assertEquals(BidiClass.EUROPEAN_NUMBER, 0x07);
+        assertEquals(BidiClass.EUROPEAN_TERMINATOR, 0x08);
+        assertEquals(BidiClass.EUROPEAN_SEPARATOR, 0x09);
+        assertEquals(BidiClass.COMMON_SEPARATOR, 0x0A);
+        assertEquals(BidiClass.WHITE_SPACE, 0x0B);
+        assertEquals(BidiClass.SEGMENT_SEPARATOR, 0x0C);
+        assertEquals(BidiClass.PARAGRAPH_SEPARATOR, 0x0D);
+        assertEquals(BidiClass.OTHER_NEUTRAL, 0x0E);
+        assertEquals(BidiClass.LEFT_TO_RIGHT_ISOLATE, 0x0F);
+        assertEquals(BidiClass.RIGHT_TO_LEFT_ISOLATE, 0x10);
+        assertEquals(BidiClass.FIRST_STRONG_ISOLATE, 0x11);
+        assertEquals(BidiClass.POP_DIRECTIONAL_ISOLATE, 0x12);
+        assertEquals(BidiClass.LEFT_TO_RIGHT_EMBEDDING, 0x13);
+        assertEquals(BidiClass.RIGHT_TO_LEFT_EMBEDDING, 0x14);
+        assertEquals(BidiClass.LEFT_TO_RIGHT_OVERRIDE, 0x15);
+        assertEquals(BidiClass.RIGHT_TO_LEFT_OVERRIDE, 0x16);
+        assertEquals(BidiClass.POP_DIRECTIONAL_FORMAT, 0x17);
     }
 }
