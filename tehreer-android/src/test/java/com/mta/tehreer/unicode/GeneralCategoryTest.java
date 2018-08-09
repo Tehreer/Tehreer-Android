@@ -18,42 +18,40 @@ package com.mta.tehreer.unicode;
 
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class GeneralCategoryTest {
-
     @Test
     public void testValues() {
-        assertThat(GeneralCategory.UPPERCASE_LETTER, equalTo(0x01));
-        assertThat(GeneralCategory.LOWERCASE_LETTER, equalTo(0x02));
-        assertThat(GeneralCategory.TITLECASE_LETTER, equalTo(0x03));
-        assertThat(GeneralCategory.MODIFIER_LETTER, equalTo(0x04));
-        assertThat(GeneralCategory.OTHER_LETTER, equalTo(0x05));
-        assertThat(GeneralCategory.NONSPACING_MARK, equalTo(0x06));
-        assertThat(GeneralCategory.SPACING_MARK, equalTo(0x07));
-        assertThat(GeneralCategory.ENCLOSING_MARK, equalTo(0x08));
-        assertThat(GeneralCategory.DECIMAL_NUMBER, equalTo(0x09));
-        assertThat(GeneralCategory.LETTER_NUMBER, equalTo(0x0A));
-        assertThat(GeneralCategory.OTHER_NUMBER, equalTo(0x0B));
-        assertThat(GeneralCategory.CONNECTOR_PUNCTUATION, equalTo(0x0C));
-        assertThat(GeneralCategory.DASH_PUNCTUATION, equalTo(0x0D));
-        assertThat(GeneralCategory.OPEN_PUNCTUATION, equalTo(0x0E));
-        assertThat(GeneralCategory.CLOSE_PUNCTUATION, equalTo(0x0F));
-        assertThat(GeneralCategory.INITIAL_PUNCTUATION, equalTo(0x10));
-        assertThat(GeneralCategory.FINAL_PUNCTUATION, equalTo(0x11));
-        assertThat(GeneralCategory.OTHER_PUNCTUATION, equalTo(0x12));
-        assertThat(GeneralCategory.MATH_SYMBOL, equalTo(0x13));
-        assertThat(GeneralCategory.CURRENCY_SYMBOL, equalTo(0x14));
-        assertThat(GeneralCategory.MODIFIER_SYMBOL, equalTo(0x15));
-        assertThat(GeneralCategory.OTHER_SYMBOL, equalTo(0x16));
-        assertThat(GeneralCategory.SPACE_SEPARATOR, equalTo(0x17));
-        assertThat(GeneralCategory.LINE_SEPARATOR, equalTo(0x18));
-        assertThat(GeneralCategory.PARAGRAPH_SEPARATOR, equalTo(0x19));
-        assertThat(GeneralCategory.CONTROL, equalTo(0x1A));
-        assertThat(GeneralCategory.FORMAT, equalTo(0x1B));
-        assertThat(GeneralCategory.SURROGATE, equalTo(0x1C));
-        assertThat(GeneralCategory.PRIVATE_USE, equalTo(0x1D));
-        assertThat(GeneralCategory.UNASSIGNED, equalTo(0x1E));
+        assertEquals(GeneralCategory.UPPERCASE_LETTER, 0x01);
+        assertEquals(GeneralCategory.LOWERCASE_LETTER, 0x02);
+        assertEquals(GeneralCategory.TITLECASE_LETTER, 0x03);
+        assertEquals(GeneralCategory.MODIFIER_LETTER, 0x04);
+        assertEquals(GeneralCategory.OTHER_LETTER, 0x05);
+        assertEquals(GeneralCategory.NONSPACING_MARK, 0x06);
+        assertEquals(GeneralCategory.SPACING_MARK, 0x07);
+        assertEquals(GeneralCategory.ENCLOSING_MARK, 0x08);
+        assertEquals(GeneralCategory.DECIMAL_NUMBER, 0x09);
+        assertEquals(GeneralCategory.LETTER_NUMBER, 0x0A);
+        assertEquals(GeneralCategory.OTHER_NUMBER, 0x0B);
+        assertEquals(GeneralCategory.CONNECTOR_PUNCTUATION, 0x0C);
+        assertEquals(GeneralCategory.DASH_PUNCTUATION, 0x0D);
+        assertEquals(GeneralCategory.OPEN_PUNCTUATION, 0x0E);
+        assertEquals(GeneralCategory.CLOSE_PUNCTUATION, 0x0F);
+        assertEquals(GeneralCategory.INITIAL_PUNCTUATION, 0x10);
+        assertEquals(GeneralCategory.FINAL_PUNCTUATION, 0x11);
+        assertEquals(GeneralCategory.OTHER_PUNCTUATION, 0x12);
+        assertEquals(GeneralCategory.MATH_SYMBOL, 0x13);
+        assertEquals(GeneralCategory.CURRENCY_SYMBOL, 0x14);
+        assertEquals(GeneralCategory.MODIFIER_SYMBOL, 0x15);
+        assertEquals(GeneralCategory.OTHER_SYMBOL, 0x16);
+        assertEquals(GeneralCategory.SPACE_SEPARATOR, 0x17);
+        assertEquals(GeneralCategory.LINE_SEPARATOR, 0x18);
+        assertEquals(GeneralCategory.PARAGRAPH_SEPARATOR, 0x19);
+        assertEquals(GeneralCategory.CONTROL, 0x1A);
+        assertEquals(GeneralCategory.FORMAT, 0x1B);
+        assertEquals(GeneralCategory.SURROGATE, 0x1C);
+        assertEquals(GeneralCategory.PRIVATE_USE, 0x1D);
+        assertEquals(GeneralCategory.UNASSIGNED, 0x1E);
     }
 }
