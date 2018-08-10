@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public abstract class IntListTestSuite {
     protected IntList actual;
@@ -48,6 +49,22 @@ public abstract class IntListTestSuite {
         for (int i = 0; i < length; i++) {
             assertEquals(actual.get(i), expected[i]);
         }
+    }
+
+    @Test
+    public void testGetAtMinusOne() {
+        try {
+            actual.get(-1);
+            fail();
+        } catch (IndexOutOfBoundsException ignored) { }
+    }
+
+    @Test
+    public void testGetAtLength() {
+        try {
+            actual.get(expected.length);
+            fail();
+        } catch (IndexOutOfBoundsException ignored) { }
     }
 
     @Test
@@ -90,13 +107,38 @@ public abstract class IntListTestSuite {
         assertArrayEquals(copiedChunk, expected);
     }
 
+    @Test
+    public void testCopyToNullArray() {
+        try {
+            actual.copyTo(null, 0);
+            fail();
+        } catch (NullPointerException ignored) { }
+    }
+
+    @Test
+    public void testCopyToSmallArray() {
+        if (expected.length == 0) {
+            return;
+        }
+
+        try {
+            int[] array = new int[expected.length / 2];
+            actual.copyTo(array, 0);
+            fail();
+        } catch (ArrayIndexOutOfBoundsException ignored) { }
+    }
+
     private static void testSubList(IntList subList, int[] expected) {
         SubListTestSuite suite = new SubListTestSuite(subList, expected);
         suite.testSize();
         suite.testElements();
+        suite.testGetAtMinusOne();
+        suite.testGetAtLength();
         suite.testCopyFull();
         suite.testCopyAtStart();
         suite.testCopyAtEnd();
+        suite.testCopyToNullArray();
+        suite.testCopyToSmallArray();
         suite.testToArray();
         suite.testEquals();
     }
