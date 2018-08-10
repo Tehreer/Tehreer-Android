@@ -18,34 +18,32 @@ package com.mta.tehreer.graphics;
 
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public class TypeWidthTest {
-
     @Test
     public void testOrdinals() {
-        assertThat(TypeWidth.ULTRA_CONDENSED.ordinal(), is(0));
-        assertThat(TypeWidth.EXTRA_CONDENSED.ordinal(), is(1));
-        assertThat(TypeWidth.CONDENSED.ordinal(), is(2));
-        assertThat(TypeWidth.SEMI_CONDENSED.ordinal(), is(3));
-        assertThat(TypeWidth.NORMAL.ordinal(), is(4));
-        assertThat(TypeWidth.SEMI_EXPANDED.ordinal(), is(5));
-        assertThat(TypeWidth.EXPANDED.ordinal(), is(6));
-        assertThat(TypeWidth.EXTRA_EXPANDED.ordinal(), is(7));
-        assertThat(TypeWidth.ULTRA_EXPANDED.ordinal(), is(8));
+        assertEquals(TypeWidth.ULTRA_CONDENSED.ordinal(), 0);
+        assertEquals(TypeWidth.EXTRA_CONDENSED.ordinal(), 1);
+        assertEquals(TypeWidth.CONDENSED.ordinal(), 2);
+        assertEquals(TypeWidth.SEMI_CONDENSED.ordinal(), 3);
+        assertEquals(TypeWidth.NORMAL.ordinal(), 4);
+        assertEquals(TypeWidth.SEMI_EXPANDED.ordinal(), 5);
+        assertEquals(TypeWidth.EXPANDED.ordinal(), 6);
+        assertEquals(TypeWidth.EXTRA_EXPANDED.ordinal(), 7);
+        assertEquals(TypeWidth.ULTRA_EXPANDED.ordinal(), 8);
     }
 
     @Test
     public void testValues() {
-        assertThat(TypeWidth.ULTRA_CONDENSED.value, is(1));
-        assertThat(TypeWidth.EXTRA_CONDENSED.value, is(2));
-        assertThat(TypeWidth.CONDENSED.value, is(3));
-        assertThat(TypeWidth.SEMI_CONDENSED.value, is(4));
-        assertThat(TypeWidth.NORMAL.value, is(5));
-        assertThat(TypeWidth.SEMI_EXPANDED.value, is(6));
-        assertThat(TypeWidth.EXPANDED.value, is(7));
-        assertThat(TypeWidth.EXTRA_EXPANDED.value, is(8));
-        assertThat(TypeWidth.ULTRA_EXPANDED.value, is(9));
+        assertEquals(TypeWidth.ULTRA_CONDENSED.value, 1);
+        assertEquals(TypeWidth.EXTRA_CONDENSED.value, 2);
+        assertEquals(TypeWidth.CONDENSED.value, 3);
+        assertEquals(TypeWidth.SEMI_CONDENSED.value, 4);
+        assertEquals(TypeWidth.NORMAL.value, 5);
+        assertEquals(TypeWidth.SEMI_EXPANDED.value, 6);
+        assertEquals(TypeWidth.EXPANDED.value, 7);
+        assertEquals(TypeWidth.EXTRA_EXPANDED.value, 8);
+        assertEquals(TypeWidth.ULTRA_EXPANDED.value, 9);
     }
 }
