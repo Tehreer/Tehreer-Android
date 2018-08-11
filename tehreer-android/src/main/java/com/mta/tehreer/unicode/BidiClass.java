@@ -16,6 +16,13 @@
 
 package com.mta.tehreer.unicode;
 
+/**
+ * Represents the bidirectional class of a character in Unicode specification. The constants
+ * correspond to the values defined in
+ * <a href="https://unicode.org/reports/tr44/#Bidi_Class_Values">
+ *     Unicode Standard Annex #44: Bidirectional Class Values
+ * </a>.
+ */
 public final class BidiClass {
     /**
      * Bidi Class: "Left_To_Right".
