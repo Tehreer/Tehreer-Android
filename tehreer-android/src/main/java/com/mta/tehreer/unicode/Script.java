@@ -16,6 +16,13 @@
 
 package com.mta.tehreer.unicode;
 
+/**
+ * Represents the script of a character in Unicode specification. The constants correspond to the
+ * script property values defined in
+ * <a href="https://www.unicode.org/reports/tr24/#Data_File_PVA">
+ *     Unicode Standard Annex #24: PropertyValueAliases.txt
+ * </a>.
+ */
 public final class Script {
     /**
      * Script "Inherited".
