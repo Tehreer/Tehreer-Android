@@ -16,6 +16,13 @@
 
 package com.mta.tehreer.unicode;
 
+/**
+ * Represents the general category of a character in Unicode specification. The constants correspond
+ * to the values defined in
+ * <a href="https://unicode.org/reports/tr44/#General_Category_Values">
+ *     Unicode Standard Annex #44: General Category Values
+ * </a>.
+ */
 public final class GeneralCategory {
     /**
      * General Category "Uppercase_Letter".
