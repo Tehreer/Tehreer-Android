@@ -31,6 +31,13 @@ public class ScriptClassifier {
     private final String text;
     private final byte[] scripts;
 
+    /**
+     * Constructs a script classifier object for the specified text.
+     *
+     * @param text The text whose script classification is desired.
+     *
+     * @throw NullPointerException if <code>text</code> is null.
+     */
     public ScriptClassifier(String text) {
         if (text == null) {
             throw new NullPointerException("Text is null");
@@ -42,18 +49,41 @@ public class ScriptClassifier {
         nClassify(text, scripts);
     }
 
+    /**
+     * Returns the text that the script classifier object was created for.
+     *
+     * @return The text that the script classifier object was created for.
+     */
     public String getText() {
         return text;
     }
 
+    /**
+     * Returns a list containing the resolved scripts of all characters in source text. The valid
+     * script values are available in {@link Script} class as static constants.
+     *
+     * @return A list containing the resolved scripts of all characters in source text.
+     */
     public IntList getCharScripts() {
         return new JByteArrayIntList(scripts, 0, scripts.length);
     }
 
+    /**
+     * Returns an iterable of resolved script runs in source text.
+     *
+     * @return An iterable of resolved script runs in source text.
+     */
     public Iterable<ScriptRun> getScriptRuns() {
         return getScriptRuns(0, scripts.length);
     }
 
+    /**
+     * Returns an iterable of resolved script runs within the specified range of source text.
+     *
+     * @param charStart The index to the first character in source text.
+     * @param charEnd The index after the last character in source text.
+     * @return An iterable of script runs within the specified range of source text.
+     */
     public Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
@@ -71,7 +101,6 @@ public class ScriptClassifier {
     private static native void nClassify(String text, byte[] scripts);
 
     private static class RunIterator implements Iterator<ScriptRun> {
-
         final byte[] scripts;
         final int end;
         int index;
@@ -112,7 +141,6 @@ public class ScriptClassifier {
     }
 
     private static class RunIterable implements Iterable<ScriptRun> {
-
         final byte[] scripts;
         final int start;
         final int end;
