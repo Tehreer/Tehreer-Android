@@ -23,6 +23,10 @@ import com.mta.tehreer.internal.collections.JByteArrayIntList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * This class implements UAX #24 available at
+ * <a href="http://www.unicode.org/reports/tr24">http://www.unicode.org/reports/tr24</a>.
+ */
 public class ScriptClassifier {
     static {
         JniBridge.loadLibrary();
