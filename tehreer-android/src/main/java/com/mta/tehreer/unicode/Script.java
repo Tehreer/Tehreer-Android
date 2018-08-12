@@ -772,6 +772,25 @@ public final class Script {
     private Script() {
     }
 
+    /**
+     * Returns the OpenType tag of specified script as an integer in big endian byte order. The
+     * association between Unicode Script property and OpenType script tags is taken from the
+     * specification:
+     * <a href="https://docs.microsoft.com/en-us/typography/opentype/spec/scripttags">
+     *     https://docs.microsoft.com/en-us/typography/opentype/spec/scripttags
+     * </a>.
+     *
+     * If more than one tag is associated with a script, then the latest one is returned. For
+     * example, Devanagari script has two tags, `deva` and `dev2`. So in this case, `dev2` will be
+     * returned.
+     *
+     * If no tag is associated with a script, then `DFLT` is returned.
+     *
+     * @param script
+     *      The script whose OpenType tag is returned.
+     * @return
+     *      The OpenType tag of specified script as an integer in big endian byte order.
+     */
     public static int getOpenTypeTag(int script) {
         return Unicode.getScriptOpenTypeTag(script);
     }
