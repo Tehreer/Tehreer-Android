@@ -19,7 +19,6 @@ package com.mta.tehreer.unicode;
 import com.mta.tehreer.internal.JniBridge;
 
 public class CodePoint {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -27,18 +26,43 @@ public class CodePoint {
     private CodePoint() {
     }
 
+    /**
+     * Returns the bidirectional class of the specified code point.
+     *
+     * @param codePoint The code point whose bidirectional class is returned.
+     * @return The bidirectional class of the specified code point.
+     */
     public static int getBidiClass(int codePoint) {
         return Unicode.getCodePointBidiClass(codePoint);
     }
 
+    /**
+     * Returns the general category of the specified code point.
+     *
+     * @param codePoint The code point whose general category is returned.
+     * @return The general category of the specified code point.
+     */
     public static int getGeneralCategory(int codePoint) {
         return Unicode.getCodePointGeneralCategory(codePoint);
     }
 
+    /**
+     * Returns the script of the specified code point.
+     *
+     * @param codePoint The code point whose script is returned.
+     * @return The script of the specified code point.
+     */
     public static int getScript(int codePoint) {
         return Unicode.getCodePointScript(codePoint);
     }
 
+    /**
+     * Returns the mirror of the specified code point. If the specified code point does not have a
+     * mirror, then zero is returned.
+     *
+     * @param codePoint The code point whose mirror is returned.
+     * @return The mirror of the specified code point if available, zero otherwise.
+     */
     public static int getMirror(int codePoint) {
         return Unicode.getCodePointMirror(codePoint);
     }
