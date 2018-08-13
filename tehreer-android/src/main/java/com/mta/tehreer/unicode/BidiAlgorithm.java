@@ -140,6 +140,12 @@ public class BidiAlgorithm implements Disposable {
         return null;
     }
 
+    /**
+     * Returns a list containing the bidi classes of all characters in source text. The valid bidi
+     * class values are available in {@link BidiClass} as static constants.
+     *
+     * @return A list containing the bidi classes of all characters in source text.
+     */
     public IntList getCharBidiClasses() {
         return new UInt8BufferIntList(this,
                                       nGetCharBidiClassesPtr(nativeAlgorithm),
