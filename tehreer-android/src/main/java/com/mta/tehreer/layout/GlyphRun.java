@@ -400,11 +400,11 @@ public class GlyphRun {
     }
 
     /**
-     * Returns the index of leading glyph related to specified cluster. The trailing glyph will
-     * always come after the leading glyph of a cluster, even if the run logically flows backward.
+     * Returns the index of leading glyph related to the specified cluster. It will come after the
+     * trailing glyph, if the characters of this run logically flow backward.
      *
      * @param charIndex The index of a character in source string.
-     * @return The index of leading glyph related to specified cluster.
+     * @return The index of leading glyph related to the specified cluster.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
      *         than or equal to run end.
@@ -426,11 +426,11 @@ public class GlyphRun {
     }
 
     /**
-     * Returns the index of trailing glyph related to specified cluster. The leading glyph will
-     * always come before the trailing glyph of a cluster, even if the run logically flows backward.
+     * Returns the index of trailing glyph related to the specified cluster. It will come before
+     * the leading glyph, if the characters of this run logically flow backward.
      *
      * @param charIndex The index of a character in source string.
-     * @return The index of trailing glyph related to specified cluster.
+     * @return The index of trailing glyph related to the specified cluster.
      *
      * @throws IllegalArgumentException if <code>charIndex</code> is less than run start or greater
      *         than or equal to run end.
