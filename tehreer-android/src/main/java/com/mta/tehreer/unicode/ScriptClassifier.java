@@ -40,7 +40,7 @@ public class ScriptClassifier {
      *
      * @param text The text whose script classification is desired.
      *
-     * @throw NullPointerException if <code>text</code> is null.
+     * @throws NullPointerException if <code>text</code> is null.
      */
     public ScriptClassifier(String text) {
         if (text == null) {
