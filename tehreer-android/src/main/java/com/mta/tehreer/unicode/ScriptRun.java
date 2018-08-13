@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.unicode;
 
+/**
+ * A <code>ScriptRun</code> object represents a sequence of characters which have the same script.
+ */
 public class ScriptRun {
     /**
      * The index to the first character of this run in source text.
