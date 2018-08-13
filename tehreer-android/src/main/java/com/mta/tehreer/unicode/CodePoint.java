@@ -18,6 +18,9 @@ package com.mta.tehreer.unicode;
 
 import com.mta.tehreer.internal.JniBridge;
 
+/**
+ * Provides static utility methods for unicode code points.
+ */
 public class CodePoint {
     static {
         JniBridge.loadLibrary();
