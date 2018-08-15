@@ -21,6 +21,7 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
@@ -61,6 +62,16 @@ public class ShapeResolver {
                     for (ScriptRun scriptRun : scriptClassifier.getScriptRuns(bidiRun.charStart, bidiRun.charEnd)) {
                         int scriptTag = Script.getOpenTypeTag(scriptRun.script);
                         WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
+
+                        boolean isOddLevel = ((bidiRun.embeddingLevel & 1) == 1);
+                        boolean isBackward = (isOddLevel && writingDirection == WritingDirection.LEFT_TO_RIGHT)
+                                           | (!isOddLevel && writingDirection == WritingDirection.RIGHT_TO_LEFT);
+
+                        // FIXME: Add support for backward mode and disable overriding.
+                        if (isBackward) {
+                            scriptTag = SfntTag.make(isOddLevel ? "arab" : "latn");
+                            writingDirection = (isOddLevel ? WritingDirection.RIGHT_TO_LEFT : WritingDirection.LEFT_TO_RIGHT);
+                        }
 
                         locator.reset(scriptRun.charStart, scriptRun.charEnd);
 
