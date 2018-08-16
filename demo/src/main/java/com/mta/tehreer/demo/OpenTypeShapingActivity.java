@@ -33,7 +33,6 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.SfntTag;
 
 public class OpenTypeShapingActivity extends AppCompatActivity {
-
     private EditText mTypeSizeField;
     private EditText mScriptTagField;
     private EditText mLanguageTagField;
@@ -50,7 +49,7 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
+        Spinner typefaceSpinner = findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
@@ -65,10 +64,10 @@ public class OpenTypeShapingActivity extends AppCompatActivity {
         typefaceSpinner.setAdapter(new TypefaceAdapter(this));
         typefaceSpinner.setSelection(0);
 
-        mTypeSizeField = (EditText) findViewById(R.id.field_type_size);
-        mScriptTagField = (EditText) findViewById(R.id.field_script_tag);
-        mLanguageTagField = (EditText) findViewById(R.id.field_language_tag);
-        mTextField = (EditText) findViewById(R.id.field_text);
+        mTypeSizeField = findViewById(R.id.field_type_size);
+        mScriptTagField = findViewById(R.id.field_script_tag);
+        mLanguageTagField = findViewById(R.id.field_language_tag);
+        mTextField = findViewById(R.id.field_text);
     }
 
     @Override

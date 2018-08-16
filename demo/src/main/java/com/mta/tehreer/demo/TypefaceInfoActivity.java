@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TypefaceInfoActivity extends AppCompatActivity {
-
     private static final int WINDOWS_PLATFORM = 3;
 
     private static final int COPYRIGHT = 0;
@@ -75,7 +74,7 @@ public class TypefaceInfoActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
+        Spinner typefaceSpinner = findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
@@ -115,7 +114,7 @@ public class TypefaceInfoActivity extends AppCompatActivity {
     }
 
     private void configureName(int layoutResId, NameTable nameTable, int nameId) {
-        LinearLayout nameLayout = (LinearLayout) findViewById(layoutResId);
+        LinearLayout nameLayout = findViewById(layoutResId);
         List<String> nameList = getNames(nameTable, nameId, WINDOWS_PLATFORM);
 
         if (nameList.size() > 0) {
@@ -173,7 +172,7 @@ public class TypefaceInfoActivity extends AppCompatActivity {
             configureName(R.id.layout_dark_background_palette, nameTable, DARK_BACKGROUND_PALETTE);
             configureName(R.id.layout_variations_postscript_name_prefix, nameTable, VARIATIONS_POST_SCRIPT_NAME_PREFIX);
 
-            ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view_font_info);
+            ScrollView scrollView = findViewById(R.id.scroll_view_font_info);
             scrollView.invalidate();
             scrollView.scrollTo(0, 0);
         }

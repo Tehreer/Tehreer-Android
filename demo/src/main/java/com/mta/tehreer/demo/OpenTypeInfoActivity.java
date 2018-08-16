@@ -58,35 +58,32 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         final ViewGroup glyphDetail;
 
         ClusterHolder(View layout) {
-            charDetail = (ViewGroup) layout.findViewById(R.id.layout_char_detail);
-            glyphDetail = (ViewGroup) layout.findViewById(R.id.layout_glyph_detail);
+            charDetail = layout.findViewById(R.id.layout_char_detail);
+            glyphDetail = layout.findViewById(R.id.layout_glyph_detail);
         }
     }
 
     private static class CharHolder {
-
         final TextView character;
 
         CharHolder(View layout) {
-            character = (TextView) layout.findViewById(R.id.text_view_character);
+            character = layout.findViewById(R.id.text_view_character);
         }
     }
 
     private static class GlyphHolder {
-
         final TextView glyphId;
         final TextView offset;
         final TextView advance;
 
         GlyphHolder(View layout) {
-            glyphId = (TextView) layout.findViewById(R.id.text_view_glyph_id);
-            offset = (TextView) layout.findViewById(R.id.text_view_offset);
-            advance = (TextView) layout.findViewById(R.id.text_view_advance);
+            glyphId = layout.findViewById(R.id.text_view_glyph_id);
+            offset = layout.findViewById(R.id.text_view_offset);
+            advance = layout.findViewById(R.id.text_view_advance);
         }
     }
 
     private static class GlyphSpan extends ReplacementSpan {
-
         static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
         static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
         static final int PADDING = 4;
@@ -324,7 +321,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         }
         initials[++cluster] = length;
 
-        ListView infoListView = (ListView) findViewById(R.id.list_view_info);
+        ListView infoListView = findViewById(R.id.list_view_info);
         infoListView.setAdapter(new ClusterAdapter(this, renderer, sourceText, shapingResult,
                                                    IntList.of(initials).subList(0, cluster + 1)));
     }

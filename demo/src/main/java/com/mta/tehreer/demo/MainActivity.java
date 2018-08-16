@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button bidiAlgorithmButton = (Button) findViewById(R.id.button_bidi_algorithm);
+        Button bidiAlgorithmButton = findViewById(R.id.button_bidi_algorithm);
         bidiAlgorithmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button typefaceInfoButton = (Button) findViewById(R.id.button_typeface_info);
+        Button typefaceInfoButton = findViewById(R.id.button_typeface_info);
         typefaceInfoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button typefaceGlyphsButton = (Button) findViewById(R.id.button_typeface_glyphs);
+        Button typefaceGlyphsButton = findViewById(R.id.button_typeface_glyphs);
         typefaceGlyphsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button opentypeShapingButton = (Button) findViewById(R.id.button_opentype_shaping);
+        Button opentypeShapingButton = findViewById(R.id.button_opentype_shaping);
         opentypeShapingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button labelWidgetButton = (Button) findViewById(R.id.button_label_widget);
+        Button labelWidgetButton = findViewById(R.id.button_label_widget);
         labelWidgetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button openSourceLicensesButton = (Button) findViewById(R.id.button_open_source_licenses);
+        Button openSourceLicensesButton = findViewById(R.id.button_open_source_licenses);
         openSourceLicensesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

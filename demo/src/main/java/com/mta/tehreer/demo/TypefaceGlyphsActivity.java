@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,23 +44,20 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 
 public class TypefaceGlyphsActivity extends AppCompatActivity {
-
     private GridView mGlyphsGridView;
     private Typeface mTypeface;
 
     private static class GlyphHolder {
-
         final ImageView glyphShape;
         final TextView glyphId;
 
         GlyphHolder(View layout) {
-            glyphShape = (ImageView) layout.findViewById(R.id.image_view_glyph_shape);
-            glyphId = (TextView) layout.findViewById(R.id.text_view_glyph_id);
+            glyphShape = layout.findViewById(R.id.image_view_glyph_shape);
+            glyphId = layout.findViewById(R.id.text_view_glyph_id);
         }
     }
 
     private static class GlyphAdapter extends BaseAdapter {
-
         final Context context;
         final Renderer renderer;
 
@@ -106,7 +103,6 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
     }
 
     private static class GlyphDrawable extends Drawable {
-
         static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
         static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
 
@@ -167,7 +163,7 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mGlyphsGridView = (GridView) findViewById(R.id.grid_view_glyphs);
+        mGlyphsGridView = findViewById(R.id.grid_view_glyphs);
         mGlyphsGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -176,7 +172,7 @@ public class TypefaceGlyphsActivity extends AppCompatActivity {
             }
         });
 
-        Spinner typefaceSpinner = (Spinner) findViewById(R.id.spinner_typeface);
+        Spinner typefaceSpinner = findViewById(R.id.spinner_typeface);
         typefaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override

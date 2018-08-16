@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class BidiAlgorithmActivity extends AppCompatActivity {
-
     private EditText mBidiEditText;
 
     @Override
@@ -40,7 +39,7 @@ public class BidiAlgorithmActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mBidiEditText = (EditText) findViewById(R.id.bidi_edit_text);
+        mBidiEditText = findViewById(R.id.bidi_edit_text);
         mBidiEditText.setSelection(mBidiEditText.getText().length());
     }
 

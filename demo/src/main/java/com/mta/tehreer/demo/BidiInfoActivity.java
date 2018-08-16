@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
 
 public class BidiInfoActivity extends AppCompatActivity {
-
     public static final String BIDI_TEXT = "bidi_text";
 
     private static final char LRI = '\u2066';
@@ -67,7 +66,7 @@ public class BidiInfoActivity extends AppCompatActivity {
         SpannableStringBuilder builder = new SpannableStringBuilder();
         writeBidiText(builder);
 
-        TextView bidiTextView = (TextView) findViewById(R.id.text_view_bidi);
+        TextView bidiTextView = findViewById(R.id.text_view_bidi);
         bidiTextView.setMovementMethod(ScrollingMovementMethod.getInstance());
         bidiTextView.setText(builder);
     }
