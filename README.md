@@ -18,7 +18,7 @@ It is a wrapper over mature C libraries, [FreeType](https://www.freetype.org), [
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-compile 'com.github.mta452:tehreer-android:2.1'
+compile 'com.github.mta452:tehreer-android:2.2'
 ```
 
 ## Proguard
@@ -39,7 +39,7 @@ The [Javadocs](https://mta452.github.io/Tehreer-Android/apidocs/) are available 
 
 ## License
 ```
-Copyright (C) 2018 Muhammad Tayyab Akram
+Copyright (C) 2016-2018 Muhammad Tayyab Akram
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
