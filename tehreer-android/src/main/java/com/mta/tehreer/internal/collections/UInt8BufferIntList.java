@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
@@ -23,11 +26,11 @@ import com.mta.tehreer.internal.Raw;
 public class UInt8BufferIntList extends IntList {
     private static final int UNSIGNED_MASK = 0xFF;
 
-    private final Object owner;
+    private final @Nullable Object owner;
     private final long pointer;
     private final int size;
 
-    public UInt8BufferIntList(Object owner, long pointer, int size) {
+    public UInt8BufferIntList(@Nullable Object owner, long pointer, int size) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -48,7 +51,7 @@ public class UInt8BufferIntList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(@NonNull int[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -61,7 +64,7 @@ public class UInt8BufferIntList extends IntList {
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public @NonNull IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

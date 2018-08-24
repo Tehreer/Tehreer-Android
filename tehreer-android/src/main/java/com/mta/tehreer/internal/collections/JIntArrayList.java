@@ -16,15 +16,17 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 
 public class JIntArrayList extends IntList {
-    private final int[] array;
+    private final @NonNull int[] array;
     private final int offset;
     private final int size;
 
-    public JIntArrayList(int[] array, int offset, int size) {
+    public JIntArrayList(@NonNull int[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -45,12 +47,12 @@ public class JIntArrayList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(@NonNull int[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public @NonNull IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

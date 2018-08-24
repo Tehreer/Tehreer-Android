@@ -16,15 +16,17 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 
 public class JFloatArrayList extends FloatList {
-    private final float[] array;
+    private final @NonNull float[] array;
     private final int offset;
     private final int size;
 
-    public JFloatArrayList(float[] array, int offset, int size) {
+    public JFloatArrayList(@NonNull float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -45,12 +47,12 @@ public class JFloatArrayList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(@NonNull float[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public @NonNull FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

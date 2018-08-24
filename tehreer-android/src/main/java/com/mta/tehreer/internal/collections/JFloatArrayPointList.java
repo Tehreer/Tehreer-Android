@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
 
@@ -24,11 +26,11 @@ public class JFloatArrayPointList extends PointList {
     private static final int X_OFFSET = 0;
     private static final int Y_OFFSET = 1;
 
-    private final float[] array;
+    private final @NonNull float[] array;
     private final int offset;
     private final int size;
 
-    public JFloatArrayPointList(float[] array, int offset, int size) {
+    public JFloatArrayPointList(@NonNull float[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -58,12 +60,12 @@ public class JFloatArrayPointList extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(@NonNull float[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size * FIELD_COUNT);
     }
 
     @Override
-    public PointList subList(int fromIndex, int toIndex) {
+    public @NonNull PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

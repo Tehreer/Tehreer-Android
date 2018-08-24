@@ -16,15 +16,17 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Exceptions;
 
 public class JByteArrayIntList extends IntList {
-    private final byte[] array;
+    private final @NonNull byte[] array;
     private final int offset;
     private final int size;
 
-    public JByteArrayIntList(byte[] array, int offset, int size) {
+    public JByteArrayIntList(@NonNull byte[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -45,7 +47,7 @@ public class JByteArrayIntList extends IntList {
     }
 
     @Override
-    public void copyTo(int[] array, int atIndex) {
+    public void copyTo(@NonNull int[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -56,7 +58,7 @@ public class JByteArrayIntList extends IntList {
     }
 
     @Override
-    public IntList subList(int fromIndex, int toIndex) {
+    public @NonNull IntList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

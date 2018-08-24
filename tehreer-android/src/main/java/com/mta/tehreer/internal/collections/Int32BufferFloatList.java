@@ -16,17 +16,20 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
 public class Int32BufferFloatList extends FloatList {
-    private final Object owner;
+    private final @Nullable Object owner;
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public Int32BufferFloatList(Object owner, long pointer, int size, float scale) {
+    public Int32BufferFloatList(@Nullable Object owner, long pointer, int size, float scale) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -48,7 +51,7 @@ public class Int32BufferFloatList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(@NonNull float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -61,7 +64,7 @@ public class Int32BufferFloatList extends FloatList {
     }
 
     @Override
-    public FloatList subList(int fromIndex, int toIndex) {
+    public @NonNull FloatList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

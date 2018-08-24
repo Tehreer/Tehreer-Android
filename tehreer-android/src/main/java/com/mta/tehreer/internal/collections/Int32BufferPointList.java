@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
@@ -25,12 +28,12 @@ public class Int32BufferPointList extends PointList {
     private static final int X_OFFSET = 0;
     private static final int Y_OFFSET = 4;
 
-    private final Object owner;
+    private final @Nullable Object owner;
     private final long pointer;
     private final int size;
     private final float scale;
 
-    public Int32BufferPointList(Object owner, long pointer, int size, float scale) {
+    public Int32BufferPointList(@Nullable Object owner, long pointer, int size, float scale) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -61,7 +64,7 @@ public class Int32BufferPointList extends PointList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(@NonNull float[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -74,7 +77,7 @@ public class Int32BufferPointList extends PointList {
     }
 
     @Override
-    public PointList subList(int fromIndex, int toIndex) {
+    public @NonNull PointList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

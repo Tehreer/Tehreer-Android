@@ -16,15 +16,17 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Exceptions;
 
 public class JByteArrayList extends ByteList {
-    private final byte[] array;
+    private final @NonNull byte[] array;
     private final int offset;
     private final int size;
 
-    public JByteArrayList(byte[] array, int offset, int size) {
+    public JByteArrayList(@NonNull byte[] array, int offset, int size) {
         this.array = array;
         this.offset = offset;
         this.size = size;
@@ -45,12 +47,12 @@ public class JByteArrayList extends ByteList {
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(@NonNull byte[] array, int atIndex) {
         System.arraycopy(this.array, offset, array, atIndex, size);
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public @NonNull ByteList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }

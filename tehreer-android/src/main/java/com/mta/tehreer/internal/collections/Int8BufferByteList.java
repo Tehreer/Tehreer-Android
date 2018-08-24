@@ -16,16 +16,19 @@
 
 package com.mta.tehreer.internal.collections;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
 
 public class Int8BufferByteList extends ByteList {
-    private final Object owner;
+    private final @Nullable Object owner;
     private final long pointer;
     private final int size;
 
-    public Int8BufferByteList(Object owner, long pointer, int size) {
+    public Int8BufferByteList(@Nullable Object owner, long pointer, int size) {
         this.owner = owner;
         this.pointer = pointer;
         this.size = size;
@@ -46,7 +49,7 @@ public class Int8BufferByteList extends ByteList {
     }
 
     @Override
-    public void copyTo(byte[] array, int atIndex) {
+    public void copyTo(@NonNull byte[] array, int atIndex) {
         if (array == null) {
             throw new NullPointerException();
         }
@@ -59,7 +62,7 @@ public class Int8BufferByteList extends ByteList {
     }
 
     @Override
-    public ByteList subList(int fromIndex, int toIndex) {
+    public @NonNull ByteList subList(int fromIndex, int toIndex) {
         if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
             throw new IndexOutOfBoundsException();
         }
