@@ -16,8 +16,11 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.JIntArrayList;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.internal.Description;
+import com.mta.tehreer.internal.collections.JIntArrayList;
 
 /**
  * Represents a primitive list of integers.
@@ -31,7 +34,7 @@ public abstract class IntList implements Primitive {
      *
      * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
-    public static IntList of(int[] array) {
+    public static @NonNull IntList of(@NonNull int[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");
         }
@@ -68,7 +71,7 @@ public abstract class IntList implements Primitive {
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>atIndex &lt; 0
      *         || (array.length - atIndex) &lt; size()</code>).
      */
-    public abstract void copyTo(int[] array, int atIndex);
+    public abstract void copyTo(@NonNull int[] array, int atIndex);
 
     /**
      * Returns a view of the portion of this list between the specified <code>fromIndex</code>,
@@ -81,7 +84,7 @@ public abstract class IntList implements Primitive {
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>fromIndex &lt; 0
      *         || toIndex &gt; size() || fromIndex &gt; toIndex</code>).
      */
-    public abstract IntList subList(int fromIndex, int toIndex);
+    public abstract @NonNull IntList subList(int fromIndex, int toIndex);
 
     /**
      * Returns a new array containing all of the integers in this list in proper sequence (from
@@ -89,7 +92,7 @@ public abstract class IntList implements Primitive {
      *
      * @return A new array containing all of the integers in this list in proper sequence.
      */
-    public int[] toArray() {
+    public @NonNull int[] toArray() {
         int[] array = new int[size()];
         copyTo(array, 0);
 
@@ -97,7 +100,7 @@ public abstract class IntList implements Primitive {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) {
             return true;
         }

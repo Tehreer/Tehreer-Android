@@ -16,8 +16,12 @@
 
 package com.mta.tehreer.collections;
 
-import com.mta.tehreer.internal.collections.JFloatArrayPointList;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.Size;
+
 import com.mta.tehreer.internal.Description;
+import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 
 /**
  * Represents a primitive list of points.
@@ -32,7 +36,7 @@ public abstract class PointList implements Primitive {
      *
      * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
-    public static PointList of(float[] array) {
+    public static @NonNull PointList of(@NonNull @Size(multiple = 2) float[] array) {
         if (array == null) {
             throw new NullPointerException("Array is null");
         }
@@ -81,7 +85,7 @@ public abstract class PointList implements Primitive {
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>atIndex &lt; 0
      *         || (array.length - atIndex) &lt; size() * 2</code>).
      */
-    public abstract void copyTo(float[] array, int atIndex);
+    public abstract void copyTo(@NonNull float[] array, int atIndex);
 
     /**
      * Returns a view of the portion of this list between the specified <code>fromIndex</code>,
@@ -94,7 +98,7 @@ public abstract class PointList implements Primitive {
      * @throws IndexOutOfBoundsException for an illegal endpoint index value (<code>fromIndex &lt; 0
      *         || toIndex &gt; size() || fromIndex &gt; toIndex</code>).
      */
-    public abstract PointList subList(int fromIndex, int toIndex);
+    public abstract @NonNull PointList subList(int fromIndex, int toIndex);
 
     /**
      * Returns a new array containing all of the elements in this list in proper sequence (from
@@ -103,7 +107,7 @@ public abstract class PointList implements Primitive {
      *
      * @return A new array containing all of the elements in this list in proper sequence.
      */
-    public float[] toArray() {
+    public @NonNull @Size(multiple = 2) float[] toArray() {
         float[] array = new float[size() * 2];
         copyTo(array, 0);
 
@@ -111,7 +115,7 @@ public abstract class PointList implements Primitive {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this) {
             return true;
         }
