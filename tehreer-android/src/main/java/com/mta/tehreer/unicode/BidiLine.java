@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.Description;
@@ -37,8 +39,8 @@ public class BidiLine implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    private static class Finalizable extends BidiLine {
-        Finalizable(BidiLine parent) {
+    private static final class Finalizable extends BidiLine {
+        Finalizable(@NonNull BidiLine parent) {
             super(parent);
         }
 
@@ -71,7 +73,7 @@ public class BidiLine implements Disposable {
      *
      * @return The finalizable instance of the passed-in bidi line object.
      */
-    public static BidiLine finalizable(BidiLine bidiLine) {
+    public static @NonNull BidiLine finalizable(@NonNull BidiLine bidiLine) {
         if (bidiLine.getClass() == BidiLine.class) {
             return new Finalizable(bidiLine);
         }
@@ -91,7 +93,7 @@ public class BidiLine implements Disposable {
      * @return <code>true</code> if the passed-in bidi line objcet is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(BidiLine bidiLine) {
+    public static boolean isFinalizable(@NonNull BidiLine bidiLine) {
         return (bidiLine.getClass() == Finalizable.class);
     }
 
@@ -103,7 +105,7 @@ public class BidiLine implements Disposable {
 	    this.nativeLine = nativeLine;
 	}
 
-    BidiLine(BidiLine other) {
+    BidiLine(@NonNull BidiLine other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeLine = other.nativeLine;
     }
@@ -134,7 +136,7 @@ public class BidiLine implements Disposable {
      *
      * @return An unmodifiable list of visually ordered runs in this line.
      */
-    public List<BidiRun> getVisualRuns() {
+    public @NonNull List<BidiRun> getVisualRuns() {
         return new RunList();
     }
 
@@ -147,7 +149,7 @@ public class BidiLine implements Disposable {
      *
      * @return An iterable of mirroring pairs in this line.
      */
-    public Iterable<BidiPair> getMirroringPairs() {
+    public @NonNull Iterable<BidiPair> getMirroringPairs() {
         return new MirrorIterable();
     }
 
@@ -175,7 +177,6 @@ public class BidiLine implements Disposable {
 	private static native BidiRun nGetVisualRun(long nativeLine, int runIndex);
 
     private class RunList extends AbstractList<BidiRun> {
-
         int size = nGetRunCount(nativeLine);
 
         @Override
@@ -184,7 +185,7 @@ public class BidiLine implements Disposable {
         }
 
         @Override
-        public BidiRun get(int index) {
+        public @NonNull BidiRun get(int index) {
             if (index < 0 || index >= size) {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
             }
@@ -194,7 +195,6 @@ public class BidiLine implements Disposable {
     }
 
     private class MirrorIterator implements Iterator<BidiPair> {
-
         BidiMirrorLocator locator;
         BidiPair pair;
 
@@ -211,7 +211,7 @@ public class BidiLine implements Disposable {
         }
 
         @Override
-        public BidiPair next() {
+        public @NonNull BidiPair next() {
             BidiPair current = pair;
             if (current == null) {
                 throw new NoSuchElementException();
@@ -237,9 +237,8 @@ public class BidiLine implements Disposable {
     }
 
     private class MirrorIterable implements Iterable<BidiPair> {
-
         @Override
-        public Iterator<BidiPair> iterator() {
+        public @NonNull Iterator<BidiPair> iterator() {
             return new MirrorIterator();
         }
     }

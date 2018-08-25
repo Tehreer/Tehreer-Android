@@ -16,11 +16,12 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
 
 class BidiMirrorLocator implements Disposable {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -32,12 +33,12 @@ class BidiMirrorLocator implements Disposable {
 		nativeMirrorLocator = nCreate();
 	}
 
-    public void loadLine(BidiLine line) {
+    public void loadLine(@NonNull BidiLine line) {
         nativeBuffer = line.nativeBuffer;
         nLoadLine(nativeMirrorLocator, line.nativeLine, nativeBuffer);
     }
 
-    public BidiPair nextPair() {
+    public @NonNull BidiPair nextPair() {
         return nGetNextPair(nativeMirrorLocator);
     }
 

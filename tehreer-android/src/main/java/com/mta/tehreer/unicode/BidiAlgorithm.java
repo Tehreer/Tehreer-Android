@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.Constants;
@@ -42,7 +44,7 @@ public class BidiAlgorithm implements Disposable {
     public static final byte MAX_LEVEL = 125;
 
     private static final class Finalizable extends BidiAlgorithm {
-        Finalizable(BidiAlgorithm parent) {
+        Finalizable(@NonNull BidiAlgorithm parent) {
             super(parent);
         }
 
@@ -75,7 +77,7 @@ public class BidiAlgorithm implements Disposable {
      *
      * @return The finalizable instance of the passed-in bidi algorithm object.
      */
-    public static BidiAlgorithm finalizable(BidiAlgorithm bidiAlgorithm) {
+    public static @NonNull BidiAlgorithm finalizable(@NonNull BidiAlgorithm bidiAlgorithm) {
         if (bidiAlgorithm.getClass() == BidiAlgorithm.class) {
             return new Finalizable(bidiAlgorithm);
         }
@@ -95,7 +97,7 @@ public class BidiAlgorithm implements Disposable {
      * @return <code>true</code> if the passed-in bidi algorithm object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(BidiAlgorithm bidiAlgorithm) {
+    public static boolean isFinalizable(@NonNull BidiAlgorithm bidiAlgorithm) {
         return (bidiAlgorithm.getClass() == Finalizable.class);
     }
 
@@ -110,7 +112,7 @@ public class BidiAlgorithm implements Disposable {
      *
      * @throws IllegalArgumentException if <code>text</code> is <code>null</code> or empty.
      */
-    public BidiAlgorithm(String text) {
+    public BidiAlgorithm(@NonNull String text) {
         if (text == null || text.length() == 0) {
             throw new IllegalArgumentException("Text is null or empty");
         }
@@ -120,7 +122,7 @@ public class BidiAlgorithm implements Disposable {
         this.text = text;
     }
 
-    BidiAlgorithm(BidiAlgorithm other) {
+    BidiAlgorithm(@NonNull BidiAlgorithm other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeAlgorithm = other.nativeAlgorithm;
         this.text = other.text;
@@ -146,7 +148,7 @@ public class BidiAlgorithm implements Disposable {
      *
      * @return A list containing the bidi classes of all characters in source text.
      */
-    public IntList getCharBidiClasses() {
+    public @NonNull IntList getCharBidiClasses() {
         return new UInt8BufferIntList(this,
                                       nGetCharBidiClassesPtr(nativeAlgorithm),
                                       text.length());
@@ -198,7 +200,7 @@ public class BidiAlgorithm implements Disposable {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
      * @throws NullPointerException if <code>baseDirection</code> is <code>null</code>.
      */
-    public BidiParagraph createParagraph(int charStart, int charEnd, BaseDirection baseDirection) {
+    public @NonNull BidiParagraph createParagraph(int charStart, int charEnd, @NonNull BaseDirection baseDirection) {
         if (baseDirection == null) {
             throw new NullPointerException("Base direction is null");
         }
@@ -236,7 +238,7 @@ public class BidiAlgorithm implements Disposable {
      *           <li><code>baseLevel</code> is greater than {@link #MAX_LEVEL}</li>
      *         </ul>
      */
-    public BidiParagraph createParagraph(int charStart, int charEnd, byte baseLevel) {
+    public @NonNull BidiParagraph createParagraph(int charStart, int charEnd, byte baseLevel) {
         String rangeError = checkRange(charStart, charEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);

@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.Constants;
@@ -36,8 +38,8 @@ public class BidiParagraph implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    private static class Finalizable extends BidiParagraph {
-        Finalizable(BidiParagraph parent) {
+    private static final class Finalizable extends BidiParagraph {
+        Finalizable(@NonNull BidiParagraph parent) {
             super(parent);
         }
 
@@ -70,7 +72,7 @@ public class BidiParagraph implements Disposable {
      *
      * @return The finalizable instance of the passed-in bidi paragraph object.
      */
-    public static BidiParagraph finalizable(BidiParagraph bidiParagraph) {
+    public static @NonNull BidiParagraph finalizable(@NonNull BidiParagraph bidiParagraph) {
         if (bidiParagraph.getClass() == BidiParagraph.class) {
             return new Finalizable(bidiParagraph);
         }
@@ -90,7 +92,7 @@ public class BidiParagraph implements Disposable {
      * @return <code>true</code> if the passed-in bidi paragraph object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(BidiParagraph bidiParagraph) {
+    public static boolean isFinalizable(@NonNull BidiParagraph bidiParagraph) {
         return (bidiParagraph.getClass() == Finalizable.class);
     }
 
@@ -102,7 +104,7 @@ public class BidiParagraph implements Disposable {
 	    this.nativeParagraph = nativeParagraph;
 	}
 
-    BidiParagraph(BidiParagraph other) {
+    BidiParagraph(@NonNull BidiParagraph other) {
         this.nativeBuffer = other.nativeBuffer;
         this.nativeParagraph = other.nativeParagraph;
     }
@@ -142,7 +144,7 @@ public class BidiParagraph implements Disposable {
      *
      * @return A list containing the levels of all characters in this paragraph.
      */
-	public ByteList getCharLevels() {
+	public @NonNull ByteList getCharLevels() {
 	    return new Int8BufferByteList(this,
                                       nGetLevelsPtr(nativeParagraph),
                                       nGetCharCount(nativeParagraph));
@@ -156,7 +158,7 @@ public class BidiParagraph implements Disposable {
      *
      * @return An iterable of logically ordered runs in this paragraph.
      */
-    public Iterable<BidiRun> getLogicalRuns() {
+    public @NonNull Iterable<BidiRun> getLogicalRuns() {
         return new RunIterable();
     }
 
@@ -172,7 +174,7 @@ public class BidiParagraph implements Disposable {
      *         <code>charEnd</code> is greater than paragraph end, or <code>charStart</code> is
      *         greater than or equal to <code>charEnd</code>.
      */
-	public BidiLine createLine(int charStart, int charEnd) {
+	public @NonNull BidiLine createLine(int charStart, int charEnd) {
         int paragraphStart = getCharStart();
         int paragraphEnd = getCharEnd();
 
@@ -221,7 +223,6 @@ public class BidiParagraph implements Disposable {
 	private static native long nCreateLine(long nativeParagraph, int charStart, int charEnd);
 
     private class RunIterator implements Iterator<BidiRun> {
-
         BidiRun run;
 
         RunIterator() {
@@ -234,7 +235,7 @@ public class BidiParagraph implements Disposable {
         }
 
         @Override
-        public BidiRun next() {
+        public @NonNull BidiRun next() {
             BidiRun current = run;
             if (current == null) {
                 throw new NoSuchElementException();
@@ -251,9 +252,8 @@ public class BidiParagraph implements Disposable {
     }
 
     private class RunIterable implements Iterable<BidiRun> {
-
         @Override
-        public Iterator<BidiRun> iterator() {
+        public @NonNull Iterator<BidiRun> iterator() {
             return new RunIterator();
         }
     }

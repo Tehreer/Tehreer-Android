@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.collections.JByteArrayIntList;
@@ -32,8 +34,8 @@ public class ScriptClassifier {
         JniBridge.loadLibrary();
     }
 
-    private final String text;
-    private final byte[] scripts;
+    private final @NonNull String text;
+    private final @NonNull byte[] scripts;
 
     /**
      * Constructs a script classifier object for the specified text.
@@ -42,7 +44,7 @@ public class ScriptClassifier {
      *
      * @throws NullPointerException if <code>text</code> is null.
      */
-    public ScriptClassifier(String text) {
+    public ScriptClassifier(@NonNull String text) {
         if (text == null) {
             throw new NullPointerException("Text is null");
         }
@@ -58,7 +60,7 @@ public class ScriptClassifier {
      *
      * @return The text that the script classifier object was created for.
      */
-    public String getText() {
+    public @NonNull String getText() {
         return text;
     }
 
@@ -68,7 +70,7 @@ public class ScriptClassifier {
      *
      * @return A list containing the resolved scripts of all characters in source text.
      */
-    public IntList getCharScripts() {
+    public @NonNull IntList getCharScripts() {
         return new JByteArrayIntList(scripts, 0, scripts.length);
     }
 
@@ -77,7 +79,7 @@ public class ScriptClassifier {
      *
      * @return An iterable of resolved script runs in source text.
      */
-    public Iterable<ScriptRun> getScriptRuns() {
+    public @NonNull Iterable<ScriptRun> getScriptRuns() {
         return getScriptRuns(0, scripts.length);
     }
 
@@ -88,7 +90,7 @@ public class ScriptClassifier {
      * @param charEnd The index after the last character in source text.
      * @return An iterable of script runs within the specified range of source text.
      */
-    public Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
+    public @NonNull Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
@@ -121,7 +123,7 @@ public class ScriptClassifier {
         }
 
         @Override
-        public ScriptRun next() {
+        public @NonNull ScriptRun next() {
             if (index == end) {
                 throw new NoSuchElementException();
             }
@@ -156,7 +158,7 @@ public class ScriptClassifier {
         }
 
         @Override
-        public Iterator<ScriptRun> iterator() {
+        public @NonNull Iterator<ScriptRun> iterator() {
             return new RunIterator(scripts, start, end);
         }
     }
