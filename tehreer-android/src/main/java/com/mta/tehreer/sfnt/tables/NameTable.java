@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package com.mta.tehreer.sfnt.tables;
 
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Description;
@@ -32,8 +34,7 @@ import java.util.Locale;
  * Represents an OpenType `name' table.
  */
 public class NameTable {
-
-    private final Typeface typeface;
+    private final @NonNull Typeface typeface;
 
     /**
      * Constructs an <code>NameTable</code> object from the specified typeface.
@@ -44,7 +45,7 @@ public class NameTable {
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `name' table.
      */
-    public NameTable(Typeface typeface) {
+    public NameTable(@NonNull Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -70,7 +71,7 @@ public class NameTable {
      * @throws IndexOutOfBoundsException if <code>index</code> is negative, or <code>index</code> is
      *         is greater than or equal to {@link #recordCount()}.
      */
-    public Record recordAt(int index) {
+    public @NonNull Record recordAt(int index) {
         if (index < 0 || index >= recordCount()) {
             throw new IndexOutOfBoundsException("Index: " + index);
         }
@@ -82,7 +83,6 @@ public class NameTable {
      * Represents a single record of OpenType `name' table.
      */
     public static class Record {
-
         /**
          * The name id of this record.
          */
@@ -134,7 +134,7 @@ public class NameTable {
          *
          * @return The relevant locale for this record.
          */
-        public Locale locale() {
+        public @NonNull Locale locale() {
             String[] values = SfntTables.getNameLocale(platformId, languageId);
             String language = values[0];
             String region = values[1];
@@ -176,7 +176,7 @@ public class NameTable {
          *
          * @return The suitable charset for this record, or <code>null</code>.
          */
-        public Charset charset() {
+        public @Nullable Charset charset() {
             Charset charset = null;
 
             try {
@@ -196,7 +196,7 @@ public class NameTable {
          *
          * @return The decoded string for this record, or <code>null</code>.
          */
-        public String string() {
+        public @Nullable String string() {
             Charset charset = charset();
             if (charset != null && bytes != null) {
                 return new String(bytes, charset);
@@ -206,7 +206,7 @@ public class NameTable {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this != obj) {
                 if (obj == null || getClass() != obj.getClass()) {
                     return false;

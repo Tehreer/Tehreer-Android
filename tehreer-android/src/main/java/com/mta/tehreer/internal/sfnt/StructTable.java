@@ -16,21 +16,23 @@
 
 package com.mta.tehreer.internal.sfnt;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.internal.Raw;
 
 public class StructTable implements SfntTable {
-
     /**
      * Represents the source from which the struct pointer was obtained. Keep the source in memory
      * so that it does not accidentally get disposed by the GC when in use.
      */
-    private final Object source;
+    private final @Nullable Object source;
     /**
      * Represents the pointer to a native struct modeling an open type table.
      */
     protected final long pointer;
 
-    public StructTable(Object source, long pointer) {
+    public StructTable(@Nullable Object source, long pointer) {
         this.source = source;
         this.pointer = pointer;
     }
@@ -40,7 +42,7 @@ public class StructTable implements SfntTable {
     }
 
     @Override
-    public byte[] readBytes(int offset, int count) {
+    public @NonNull byte[] readBytes(int offset, int count) {
         byte[] array = new byte[count];
         Raw.copyInt8Buffer(pointerOf(offset), array, 0, count);
 

@@ -16,10 +16,12 @@
 
 package com.mta.tehreer.sfnt;
 
+import android.support.annotation.NonNull;
+
+import com.mta.tehreer.Disposable;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.Disposable;
 
 /**
  * The <code>ShapingEngine</code> class represents text shaping engine.
@@ -29,8 +31,8 @@ public class ShapingEngine implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    private static class Finalizable extends ShapingEngine {
-        Finalizable(ShapingEngine parent) {
+    private static final class Finalizable extends ShapingEngine {
+        Finalizable(@NonNull ShapingEngine parent) {
             super(parent);
         }
 
@@ -62,7 +64,7 @@ public class ShapingEngine implements Disposable {
      * @param shapingEngine The shaping engine object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in shaping engine object.
      */
-    public static ShapingEngine finalizable(ShapingEngine shapingEngine) {
+    public static @NonNull ShapingEngine finalizable(@NonNull ShapingEngine shapingEngine) {
         if (shapingEngine.getClass() == ShapingEngine.class) {
             return new Finalizable(shapingEngine);
         }
@@ -81,7 +83,7 @@ public class ShapingEngine implements Disposable {
      * @return <code>true</code> if the passed-in shaping engine object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(ShapingEngine shapingEngine) {
+    public static boolean isFinalizable(@NonNull ShapingEngine shapingEngine) {
         return (shapingEngine.getClass() == Finalizable.class);
     }
 
@@ -110,7 +112,7 @@ public class ShapingEngine implements Disposable {
         nativeEngine = nCreate();
     }
 
-    ShapingEngine(ShapingEngine other) {
+    ShapingEngine(@NonNull ShapingEngine other) {
         this.base = other.base;
         this.nativeEngine = other.nativeEngine;
     }
@@ -206,7 +208,7 @@ public class ShapingEngine implements Disposable {
      *
      * @return The current writing direction.
      */
-    public WritingDirection getWritingDirection() {
+    public @NonNull WritingDirection getWritingDirection() {
         return WritingDirection.valueOf(nGetWritingDirection(nativeEngine));
     }
 
@@ -221,7 +223,7 @@ public class ShapingEngine implements Disposable {
      *
      * @param writingDirection The new writing direction.
      */
-    public void setWritingDirection(WritingDirection writingDirection) {
+    public void setWritingDirection(@NonNull WritingDirection writingDirection) {
         nSetWritingDirection(nativeEngine, writingDirection.value);
     }
 
@@ -231,7 +233,7 @@ public class ShapingEngine implements Disposable {
      *
      * @return The current shaping order.
      */
-    public ShapingOrder getShapingOrder() {
+    public @NonNull ShapingOrder getShapingOrder() {
         return ShapingOrder.valueOf(nGetShapingOrder(nativeEngine));
     }
 
@@ -246,7 +248,7 @@ public class ShapingEngine implements Disposable {
      *
      * @param shapingOrder The new shaping order.
      */
-    public void setShapingOrder(ShapingOrder shapingOrder) {
+    public void setShapingOrder(@NonNull ShapingOrder shapingOrder) {
         nSetShapingOrder(nativeEngine, shapingOrder.value);
     }
 
@@ -269,7 +271,7 @@ public class ShapingEngine implements Disposable {
      *         <code>toIndex</code> is greater than <code>text.length()</code>, or
      *         <code>fromIndex</code> is greater than <code>toIndex</code>
      */
-    public ShapingResult shapeText(String text, int fromIndex, int toIndex) {
+    public @NonNull ShapingResult shapeText(@NonNull String text, int fromIndex, int toIndex) {
         if (base.typeface == null) {
             throw new IllegalStateException("Typeface has not been set");
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package com.mta.tehreer.internal.sfnt;
 
+import android.support.annotation.NonNull;
+
 public class DataTable implements SfntTable {
+    private final @NonNull byte[] data;
 
-    private final byte[] data;
-
-    public DataTable(byte[] data) {
+    public DataTable(@NonNull byte[] data) {
         this.data = data;
     }
 
     @Override
-    public byte[] readBytes(int offset, int count) {
+    public @NonNull byte[] readBytes(int offset, int count) {
         byte[] array = new byte[count];
         System.arraycopy(data, offset, array, 0, count);
 

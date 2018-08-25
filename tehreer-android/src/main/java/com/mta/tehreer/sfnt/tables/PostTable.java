@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.sfnt.tables;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
 import com.mta.tehreer.internal.sfnt.StructTable;
@@ -24,7 +26,6 @@ import com.mta.tehreer.internal.sfnt.StructTable;
  * Represents an OpenType `post' table.
  */
 public class PostTable {
-
     private static final int VERSION = 0;
     private static final int ITALIC_ANGLE = 4;
     private static final int UNDERLINE_POSITION = 8;
@@ -35,8 +36,8 @@ public class PostTable {
     private static final int MIN_MEM_TYPE_1 = 24;
     private static final int MAX_MEM_TYPE_1 = 28;
 
-    private final Typeface typeface;
-    private final SfntTable table;
+    private final @NonNull Typeface typeface;
+    private final @NonNull SfntTable table;
 
     /**
      * Constructs a <code>PostTable</code> object from the specified typeface.
@@ -47,7 +48,7 @@ public class PostTable {
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `post' table.
      */
-    public PostTable(Typeface typeface) {
+    public PostTable(@NonNull Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

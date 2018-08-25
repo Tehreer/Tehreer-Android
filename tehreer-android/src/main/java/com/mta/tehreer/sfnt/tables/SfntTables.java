@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 
 package com.mta.tehreer.sfnt.tables;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.JniBridge;
 
 class SfntTables {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -34,10 +35,10 @@ class SfntTables {
     static native String[] getNameLocale(int platformId, int languageId);
     static native String getNameCharset(int platformId, int encodingId);
 
-    static native int getNameCount(Typeface typeface);
-    static native NameTable.Record getNameRecord(Typeface typeface, int index);
+    static native int getNameCount(@NonNull Typeface typeface);
+    static native NameTable.Record getNameRecord(@NonNull Typeface typeface, int index);
 
-    static native String getGlyphName(Typeface typeface, int index);
+    static native String getGlyphName(@NonNull Typeface typeface, int index);
 
-    static native long getTablePointer(Typeface typeface, int table);
+    static native long getTablePointer(@NonNull Typeface typeface, int table);
 }

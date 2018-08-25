@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 
 package com.mta.tehreer.sfnt;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
+
 /**
  * Provides static utility methods related to SFNT tags.
  */
 public class SfntTag {
-
 	private static void verifyChar(char val, String message) {
 		if (!(val >= ' ' && val <= '~')) {
 			throw new IllegalArgumentException(message);
@@ -40,7 +42,7 @@ public class SfntTag {
      * @throws IllegalArgumentException if <code>tagStr</code> is not four characters long, or any
      *         character is not a printing character represented by ASCII values 32-126.
      */
-	public static int make(String tagStr) {
+	public static int make(@NonNull @Size(4) String tagStr) {
 		if (tagStr.length() != 4) {
 			throw new IllegalArgumentException("The length of tag string is not equal to four");
 		}

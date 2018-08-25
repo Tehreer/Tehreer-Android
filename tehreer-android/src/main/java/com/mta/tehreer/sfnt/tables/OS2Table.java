@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.sfnt.tables;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
 import com.mta.tehreer.internal.sfnt.StructTable;
@@ -24,7 +26,6 @@ import com.mta.tehreer.internal.sfnt.StructTable;
  * Represents an OpenType `OS/2' table.
  */
 public class OS2Table {
-
     private static final int VERSION = 0;
     private static final int X_AVG_CHAR_WIDTH = 2;
     private static final int US_WEIGHT_CLASS = 4;
@@ -67,7 +68,6 @@ public class OS2Table {
     private static final int US_UPPER_OPTICAL_POINT_SIZE = 98;
 
     private static class OS2StructTable extends StructTable {
-
         OS2StructTable(Object source, long pointer) {
             super(source, pointer);
         }
@@ -85,7 +85,7 @@ public class OS2Table {
         }
     }
 
-    private final SfntTable table;
+    private final @NonNull SfntTable table;
 
     /**
      * Constructs an <code>OS2Table</code> object from the specified typeface.
@@ -96,7 +96,7 @@ public class OS2Table {
      * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
      * @throws RuntimeException if <code>typeface</code> does not contain `OS/2' table.
      */
-    public OS2Table(Typeface typeface) {
+    public OS2Table(@NonNull Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }

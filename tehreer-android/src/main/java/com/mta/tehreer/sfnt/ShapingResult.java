@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.sfnt;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -38,7 +40,7 @@ public class ShapingResult implements Disposable {
     }
 
     private static final class Finalizable extends ShapingResult {
-        Finalizable(ShapingResult parent) {
+        Finalizable(@NonNull ShapingResult parent) {
             super(parent);
         }
 
@@ -70,7 +72,7 @@ public class ShapingResult implements Disposable {
      * @param shapingResult The shaping result object to wrap into a finalizable instance.
      * @return The finalizable instance of the passed-in shaping result object.
      */
-    public static ShapingResult finalizable(ShapingResult shapingResult) {
+    public static @NonNull ShapingResult finalizable(@NonNull ShapingResult shapingResult) {
         if (shapingResult.getClass() == ShapingResult.class) {
             return new Finalizable(shapingResult);
         }
@@ -89,7 +91,7 @@ public class ShapingResult implements Disposable {
      * @return <code>true</code> if the passed-in shaping result object is finalizable,
      *         <code>false</code> otherwise.
      */
-    public static boolean isFinalizable(ShapingResult shapingResult) {
+    public static boolean isFinalizable(@NonNull ShapingResult shapingResult) {
         return (shapingResult.getClass() == Finalizable.class);
     }
 
@@ -102,7 +104,7 @@ public class ShapingResult implements Disposable {
 	    nativeResult = nCreate();
 	}
 
-    ShapingResult(ShapingResult other) {
+    ShapingResult(@NonNull ShapingResult other) {
         this.nativeResult = other.nativeResult;
     }
 
@@ -153,7 +155,7 @@ public class ShapingResult implements Disposable {
      *
      * @return A list of glyph IDs.
      */
-    public IntList getGlyphIds() {
+    public @NonNull IntList getGlyphIds() {
         return new UInt16BufferIntList(this,
                                        nGetGlyphIdsPtr(nativeResult),
                                        nGetGlyphCount(nativeResult));
@@ -167,7 +169,7 @@ public class ShapingResult implements Disposable {
      *
      * @return A list of glyph offsets.
      */
-    public PointList getGlyphOffsets() {
+    public @NonNull PointList getGlyphOffsets() {
         return new Int32BufferPointList(this,
                                         nGetGlyphOffsetsPtr(nativeResult),
                                         nGetGlyphCount(nativeResult),
@@ -182,7 +184,7 @@ public class ShapingResult implements Disposable {
      *
      * @return A list of glyph advances.
      */
-    public FloatList getGlyphAdvances() {
+    public @NonNull FloatList getGlyphAdvances() {
         return new Int32BufferFloatList(this,
                                         nGetGlyphAdvancesPtr(nativeResult),
                                         nGetGlyphCount(nativeResult),
@@ -211,7 +213,7 @@ public class ShapingResult implements Disposable {
      * @return A list of indexes, mapping each shaped character in source string to corresponding
      *         glyph.
      */
-    public IntList getClusterMap() {
+    public @NonNull IntList getClusterMap() {
         long pointer = nGetClusterMapPtr(nativeResult);
         int size = (pointer != 0 ? nGetCharCount(nativeResult) : 0);
         return new UIntPtrBufferIntList(this, pointer, size);
