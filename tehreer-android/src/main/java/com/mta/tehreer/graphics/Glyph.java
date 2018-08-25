@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package com.mta.tehreer.graphics;
 
 import android.graphics.Bitmap;
 import android.graphics.Path;
+import android.support.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Sustain;
 
 class Glyph {
-
     static {
         JniBridge.loadLibrary();
     }
@@ -34,8 +34,8 @@ class Glyph {
     private long nativeOutline;
     private int mLeftSideBearing;
     private int mTopSideBearing;
-    private Bitmap mBitmap;
-    private Path mPath;
+    private @Nullable Bitmap mBitmap;
+    private @Nullable Path mPath;
 
     public Glyph(int glyphId) {
         this.glyphId = glyphId;
@@ -61,11 +61,11 @@ class Glyph {
         return mTopSideBearing + (mBitmap != null ? mBitmap.getHeight() : 0);
     }
 
-    public Bitmap bitmap() {
+    public @Nullable Bitmap bitmap() {
         return mBitmap;
     }
 
-    public Path path() {
+    public @Nullable Path path() {
         return mPath;
     }
 

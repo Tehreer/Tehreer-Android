@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.graphics;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
 
@@ -36,26 +38,26 @@ final class GlyphRasterizer implements Disposable {
 
 	long nativeRasterizer;
 
-	GlyphRasterizer(GlyphStrike strike) {
+	GlyphRasterizer(@NonNull GlyphStrike strike) {
 	    nativeRasterizer = nCreate(strike.typeface.nativeTypeface,
                                    strike.pixelWidth, strike.pixelHeight,
                                    0x10000, -strike.skewX, 0, 0x10000);
 	}
 
-	void loadBitmap(Glyph glyph) {
+	void loadBitmap(@NonNull Glyph glyph) {
 	    nLoadBitmap(nativeRasterizer, glyph);
 	}
 
-    void loadOutline(Glyph glyph) {
+    void loadOutline(@NonNull Glyph glyph) {
         nLoadOutline(nativeRasterizer, glyph);
     }
 
-    void loadPath(Glyph glyph) {
+    void loadPath(@NonNull Glyph glyph) {
         nLoadPath(nativeRasterizer, glyph);
     }
 
-    Glyph strokeGlyph(Glyph glyph, int lineRadius,
-                      int lineCap, int lineJoin, int miterLimit) {
+    @NonNull Glyph strokeGlyph(@NonNull Glyph glyph, int lineRadius,
+                               int lineCap, int lineJoin, int miterLimit) {
         return nStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
     }
 
@@ -65,13 +67,13 @@ final class GlyphRasterizer implements Disposable {
     }
 
 	private static native long nCreate(long nativeTypeface, int pixelWidth, int pixelHeight,
-                                            int transformXX, int transformXY, int transformYX, int transformYY);
+                                       int transformXX, int transformXY, int transformYX, int transformYY);
     private static native void nDispose(long nativeRasterizer);
 
-    private static native void nLoadBitmap(long nativeRasterizer, Glyph glyph);
-    private static native void nLoadOutline(long nativeRasterizer, Glyph glyph);
-    private static native void nLoadPath(long nativeRasterizer, Glyph glyph);
+    private static native void nLoadBitmap(long nativeRasterizer, @NonNull Glyph glyph);
+    private static native void nLoadOutline(long nativeRasterizer, @NonNull Glyph glyph);
+    private static native void nLoadPath(long nativeRasterizer, @NonNull Glyph glyph);
 
-    private static native Glyph nStrokeGlyph(long nativeRasterizer, Glyph glyph, int lineRadius,
-                                             int lineCap, int lineJoin, int miterLimit);
+    private static native Glyph nStrokeGlyph(long nativeRasterizer, @NonNull Glyph glyph,
+                                             int lineRadius, int lineCap, int lineJoin, int miterLimit);
 }

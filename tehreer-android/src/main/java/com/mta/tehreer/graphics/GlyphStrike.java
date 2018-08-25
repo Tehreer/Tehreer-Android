@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 final class GlyphStrike implements Cloneable {
     public Typeface typeface;
     public int pixelWidth;      // 26.6 fixed-point value.
@@ -23,7 +26,7 @@ final class GlyphStrike implements Cloneable {
     public int skewX;           // 16.16 fixed-point value.
 
     @Override
-    public GlyphStrike clone() {
+    public @NonNull GlyphStrike clone() {
         try {
             return (GlyphStrike) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -32,7 +35,7 @@ final class GlyphStrike implements Cloneable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this != obj) {
             if (obj == null || !(obj instanceof GlyphStrike)) {
                 return false;

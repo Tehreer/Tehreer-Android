@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.mta.tehreer.graphics;
 
 import android.graphics.Bitmap;
 import android.graphics.Path;
+import android.support.annotation.NonNull;
 
 import com.mta.tehreer.internal.util.LruCache;
 
@@ -25,9 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class GlyphCache extends LruCache {
-
     private static class Segment extends LruCache.Segment<Integer, Glyph> {
-
         //
         // HashMap:
         //  - 1 pointer for map entry
@@ -49,15 +48,15 @@ class GlyphCache extends LruCache {
         //
         private static final int ESTIMATED_OVERHEAD = 64;
 
-        public final GlyphRasterizer rasterizer;
+        public final @NonNull GlyphRasterizer rasterizer;
 
-        public Segment(LruCache cache, GlyphRasterizer rasterizer) {
+        public Segment(@NonNull LruCache cache, @NonNull GlyphRasterizer rasterizer) {
             super(cache);
             this.rasterizer = rasterizer;
         }
 
         @Override
-        protected int sizeOf(Integer key, Glyph value) {
+        protected int sizeOf(@NonNull Integer key, @NonNull Glyph value) {
             Bitmap maskBitmap = value.bitmap();
             int innerSize = 0;
 
@@ -70,8 +69,7 @@ class GlyphCache extends LruCache {
     }
 
     private static class Holder {
-
-        private static final GlyphCache INSTANCE;
+        private static final @NonNull GlyphCache INSTANCE;
 
         static {
             int maxSize = (int) (Runtime.getRuntime().maxMemory() / 8);
@@ -79,11 +77,11 @@ class GlyphCache extends LruCache {
         }
     }
 
-    public static GlyphCache getInstance() {
+    public static @NonNull GlyphCache getInstance() {
         return Holder.INSTANCE;
     }
 
-    private HashMap<GlyphStrike, Segment> segments = new HashMap<>();
+    private @NonNull HashMap<GlyphStrike, Segment> segments = new HashMap<>();
 
     public GlyphCache(int capacity) {
         super(capacity);
@@ -100,7 +98,7 @@ class GlyphCache extends LruCache {
         segments.clear();
     }
 
-    private Segment unsafeGetSegment(GlyphStrike strike) {
+    private @NonNull Segment unsafeGetSegment(@NonNull GlyphStrike strike) {
         Segment segment = segments.get(strike);
         if (segment == null) {
             GlyphRasterizer rasterizer = new GlyphRasterizer(strike);
@@ -111,7 +109,7 @@ class GlyphCache extends LruCache {
         return segment;
     }
 
-    public Glyph unsafeGetGlyph(Segment segment, int glyphId) {
+    public @NonNull Glyph unsafeGetGlyph(@NonNull Segment segment, int glyphId) {
         Glyph glyph = segment.get(glyphId);
         if (glyph == null) {
             glyph = new Glyph(glyphId);
@@ -121,7 +119,7 @@ class GlyphCache extends LruCache {
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public Glyph getMaskGlyph(GlyphStrike strike, int glyphId) {
+    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
@@ -143,8 +141,8 @@ class GlyphCache extends LruCache {
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public Glyph getMaskGlyph(GlyphStrike strike, int glyphId, int lineRadius,
-                              int lineCap, int lineJoin, int miterLimit) {
+    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId, int lineRadius,
+                                       int lineCap, int lineJoin, int miterLimit) {
         final Segment segment;
         final Glyph glyph;
 
@@ -166,7 +164,7 @@ class GlyphCache extends LruCache {
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public Path getGlyphPath(GlyphStrike strike, int glyphId) {
+    public @NonNull Path getGlyphPath(@NonNull GlyphStrike strike, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 

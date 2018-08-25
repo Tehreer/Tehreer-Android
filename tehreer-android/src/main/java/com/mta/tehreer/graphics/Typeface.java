@@ -20,6 +20,8 @@ import android.content.res.AssetManager;
 import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Sustain;
@@ -39,7 +41,6 @@ public class Typeface {
     }
 
     private class Finalizable {
-
         @Override
         protected void finalize() throws Throwable {
             try {
@@ -52,9 +53,9 @@ public class Typeface {
 
     @Sustain
     long nativeTypeface;
-    private final Finalizable finalizable = new Finalizable();
+    private final @NonNull Finalizable finalizable = new Finalizable();
     private TypefaceDescription description;
-    Object tag;
+    @Nullable Object tag;
 
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
@@ -67,7 +68,7 @@ public class Typeface {
      * @throws NullPointerException if <code>assetManager</code> or <code>filePath</code> is null.
      * @throws RuntimeException if an error occurred while initialization.
      */
-    public Typeface(AssetManager assetManager, String filePath) {
+    public Typeface(@NonNull AssetManager assetManager, @NonNull String filePath) {
         if (assetManager == null) {
             throw new NullPointerException("Asset manager is null");
         }
@@ -92,7 +93,7 @@ public class Typeface {
      * @throws NullPointerException if <code>file</code> is null.
      * @throws RuntimeException if an error occurred while initialization.
      */
-    public Typeface(File file) {
+    public Typeface(@NonNull File file) {
         if (file == null) {
             throw new NullPointerException("File is null");
         }
@@ -114,7 +115,7 @@ public class Typeface {
      * @throws NullPointerException if <code>stream</code> is null.
      * @throws RuntimeException if an error occurred while initialization.
      */
-    public Typeface(InputStream stream) {
+    public Typeface(@NonNull InputStream stream) {
         if (stream == null) {
             throw new NullPointerException("Stream is null");
         }
@@ -165,7 +166,7 @@ public class Typeface {
      *
      * @return The typographic weight of this typeface.
      */
-    public TypeWeight getWeight() {
+    public @NonNull TypeWeight getWeight() {
         return description.weight;
     }
 
@@ -175,7 +176,7 @@ public class Typeface {
      *
      * @return The typographic width of this typeface.
      */
-    public TypeWidth getWidth() {
+    public @NonNull TypeWidth getWidth() {
         return description.width;
     }
 
@@ -185,7 +186,7 @@ public class Typeface {
      *
      * @return The typographic slope of this typeface.
      */
-    public TypeSlope getSlope() {
+    public @NonNull TypeSlope getSlope() {
         return description.slope;
     }
 
@@ -197,7 +198,7 @@ public class Typeface {
      * @return An array of bytes containing the data of the table, or <code>null</code> if no such
      *         table exists.
      */
-    public byte[] getTableData(int tableTag) {
+    public @Nullable byte[] getTableData(int tableTag) {
         return nGetTableData(nativeTypeface, tableTag);
     }
 
@@ -277,7 +278,7 @@ public class Typeface {
      *               is required.
      * @return The path for the specified glyph.
      */
-    public Path getGlyphPath(int glyphId, float typeSize, Matrix matrix) {
+    public @NonNull Path getGlyphPath(int glyphId, float typeSize, @Nullable Matrix matrix) {
         float[] values = null;
         if (matrix != null) {
             values = new float[9];
@@ -293,7 +294,7 @@ public class Typeface {
      *
      * @return The font bounding box expressed in font units.
      */
-	public Rect getBoundingBox() {
+    public @NonNull Rect getBoundingBox() {
 	    Rect boundingBox = new Rect();
 	    nGetBoundingBox(nativeTypeface, boundingBox);
 

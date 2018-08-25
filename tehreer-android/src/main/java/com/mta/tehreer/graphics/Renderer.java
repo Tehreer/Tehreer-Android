@@ -22,6 +22,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.mta.tehreer.collections.FloatList;
@@ -36,25 +38,25 @@ import com.mta.tehreer.sfnt.WritingDirection;
 public class Renderer {
     private static final String TAG = Renderer.class.getSimpleName();
 
-    private GlyphStrike mGlyphStrike = new GlyphStrike();
+    private @NonNull GlyphStrike mGlyphStrike = new GlyphStrike();
     private int mGlyphLineRadius;
     private int mGlyphLineCap;
     private int mGlyphLineJoin;
     private int mGlyphMiterLimit;
 
-    private Paint mPaint = new Paint();
+    private @NonNull Paint mPaint = new Paint();
     private boolean mShouldRender = false;
     private boolean mShadowLayerSynced = true;
 
-    private int mFillColor = Color.BLACK;
-    private RenderingStyle mRenderingStyle = RenderingStyle.FILL;
-    private WritingDirection mWritingDirection = WritingDirection.LEFT_TO_RIGHT;
+    private @ColorInt int mFillColor = Color.BLACK;
+    private @NonNull RenderingStyle mRenderingStyle = RenderingStyle.FILL;
+    private @NonNull WritingDirection mWritingDirection = WritingDirection.LEFT_TO_RIGHT;
     private Typeface mTypeface = null;
     private float mTypeSize = 16.0f;
     private float mSlantAngle = 0.0f;
     private float mScaleX = 1.0f;
     private float mScaleY = 1.0f;
-    private int mStrokeColor = Color.BLACK;
+    private @ColorInt int mStrokeColor = Color.BLACK;
     private float mStrokeWidth;
     private StrokeCap mStrokeCap;
     private StrokeJoin mStrokeJoin;
@@ -62,7 +64,7 @@ public class Renderer {
     private float mShadowRadius = 0.0f;
     private float mShadowDx = 0.0f;
     private float mShadowDy = 0.0f;
-    private int mShadowColor = Color.TRANSPARENT;
+    private @ColorInt int mShadowColor = Color.TRANSPARENT;
 
     /**
      * Constructs a renderer object.
@@ -103,7 +105,7 @@ public class Renderer {
      *
      * @return The fill color of this renderer expressed as ARGB integer.
      */
-    public int getFillColor() {
+    public @ColorInt int getFillColor() {
         return mFillColor;
     }
 
@@ -112,7 +114,7 @@ public class Renderer {
      *
      * @param fillColor The 32-bit value of color expressed as ARGB.
      */
-    public void setFillColor(int fillColor) {
+    public void setFillColor(@ColorInt int fillColor) {
         mFillColor = fillColor;
     }
 
@@ -122,7 +124,7 @@ public class Renderer {
      *
      * @return The style setting of this renderer.
      */
-    public RenderingStyle getRenderingStyle() {
+    public @NonNull RenderingStyle getRenderingStyle() {
         return mRenderingStyle;
     }
 
@@ -134,7 +136,7 @@ public class Renderer {
      *
      * @throws NullPointerException if <code>renderingStyle</code> is null.
      */
-    public void setRenderingStyle(RenderingStyle renderingStyle) {
+    public void setRenderingStyle(@NonNull RenderingStyle renderingStyle) {
         if (renderingStyle == null) {
             throw new NullPointerException("Rendering style is null");
         }
@@ -148,7 +150,7 @@ public class Renderer {
      *
      * @return The current writing direction.
      */
-    public WritingDirection getWritingDirection() {
+    public @NonNull WritingDirection getWritingDirection() {
         return mWritingDirection;
     }
 
@@ -158,7 +160,7 @@ public class Renderer {
      *
      * @param writingDirection The new writing direction.
      */
-    public void setWritingDirection(WritingDirection writingDirection) {
+    public void setWritingDirection(@NonNull WritingDirection writingDirection) {
         if (writingDirection == null) {
             throw new NullPointerException("Writing direction is null");
         }
@@ -285,7 +287,7 @@ public class Renderer {
      *
      * @return The stroke color of this renderer expressed as ARGB integer.
      */
-    public int getStrokeColor() {
+    public @ColorInt int getStrokeColor() {
         return mStrokeColor;
     }
 
@@ -294,7 +296,7 @@ public class Renderer {
      *
      * @param strokeColor The 32-bit value of color expressed as ARGB.
      */
-    public void setStrokeColor(int strokeColor) {
+    public void setStrokeColor(@ColorInt int strokeColor) {
         mStrokeColor = strokeColor;
     }
 
@@ -327,7 +329,7 @@ public class Renderer {
      *
      * @return The stroke cap style of this renderer.
      */
-    public StrokeCap getStrokeCap() {
+    public @NonNull StrokeCap getStrokeCap() {
         return mStrokeCap;
     }
 
@@ -339,7 +341,7 @@ public class Renderer {
      *
      * @throws NullPointerException if <code>strokeCap</code> is null.
      */
-    public void setStrokeCap(StrokeCap strokeCap) {
+    public void setStrokeCap(@NonNull StrokeCap strokeCap) {
         if (strokeCap == null) {
             throw new NullPointerException("Stroke cap is null");
         }
@@ -353,7 +355,7 @@ public class Renderer {
      *
      * @return The stroke join type of this renderer.
      */
-    public StrokeJoin getStrokeJoin() {
+    public @NonNull StrokeJoin getStrokeJoin() {
         return mStrokeJoin;
     }
 
@@ -364,7 +366,7 @@ public class Renderer {
      *
      * @throws NullPointerException if <code>strokeJoin</code> is null.
      */
-    public void setStrokeJoin(StrokeJoin strokeJoin) {
+    public void setStrokeJoin(@NonNull StrokeJoin strokeJoin) {
         if (strokeJoin == null) {
             throw new NullPointerException("Stroke join is null");
         }
@@ -469,7 +471,7 @@ public class Renderer {
      *
      * @return The shadow color of this renderer expressed as ARGB integer.
      */
-    public int getShadowColor() {
+    public @ColorInt int getShadowColor() {
         return mShadowColor;
     }
 
@@ -478,12 +480,12 @@ public class Renderer {
      *
      * @param shadowColor The 32-bit value of color expressed as ARGB.
      */
-    public void setShadowColor(int shadowColor) {
+    public void setShadowColor(@ColorInt int shadowColor) {
         mShadowColor = shadowColor;
         mShadowLayerSynced = false;
     }
 
-    private Path getGlyphPath(int glyphId) {
+    private @NonNull Path getGlyphPath(int glyphId) {
         return GlyphCache.getInstance().getGlyphPath(mGlyphStrike, glyphId);
     }
 
@@ -493,7 +495,7 @@ public class Renderer {
      * @param glyphId The ID of glyph whose path is generated.
      * @return The path of the glyph specified by <code>glyphId</code>.
      */
-    public Path generatePath(int glyphId) {
+    public @NonNull Path generatePath(int glyphId) {
         Path glyphPath = new Path();
         glyphPath.addPath(getGlyphPath(glyphId));
 
@@ -508,7 +510,8 @@ public class Renderer {
      * @param advances The list containing the glyph advances.
      * @return The cumulative path of specified glyphs.
      */
-    public Path generatePath(IntList glyphIds, PointList offsets, FloatList advances) {
+    public @NonNull Path generatePath(@NonNull IntList glyphIds,
+                                      @NonNull PointList offsets, @NonNull FloatList advances) {
         Path cumulativePath = new Path();
         float penX = 0.0f;
 
@@ -529,7 +532,7 @@ public class Renderer {
         return cumulativePath;
     }
 
-    private void getBoundingBox(int glyphId, RectF boundingBox) {
+    private void getBoundingBox(int glyphId, @NonNull RectF boundingBox) {
         Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId);
         boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
                         glyph.rightSideBearing(), glyph.bottomSideBearing());
@@ -541,7 +544,7 @@ public class Renderer {
      * @param glyphId The ID of glyph whose bounding box is calculated.
      * @return A rectangle that tightly encloses the path of the specified glyph.
      */
-    public RectF computeBoundingBox(int glyphId) {
+    public @NonNull RectF computeBoundingBox(int glyphId) {
         RectF boundingBox = new RectF();
         getBoundingBox(glyphId, boundingBox);
 
@@ -556,7 +559,8 @@ public class Renderer {
      * @param advances The list containing the glyph advances.
      * @return A rectangle that tightly encloses the paths of specified glyphs.
      */
-    public RectF computeBoundingBox(IntList glyphIds, PointList offsets, FloatList advances) {
+    public @NonNull RectF computeBoundingBox(@NonNull IntList glyphIds,
+                                             @NonNull PointList offsets, @NonNull FloatList advances) {
         RectF glyphBBox = new RectF();
         RectF cumulativeBBox = new RectF();
         float penX = 0.0f;
@@ -579,8 +583,8 @@ public class Renderer {
         return cumulativeBBox;
     }
 
-    private void drawGlyphs(Canvas canvas,
-                            IntList glyphIds, PointList offsets, FloatList advances,
+    private void drawGlyphs(@NonNull Canvas canvas,
+                            @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances,
                             boolean strokeMode) {
         GlyphCache cache = GlyphCache.getInstance();
         boolean reverseMode = (mWritingDirection == WritingDirection.RIGHT_TO_LEFT);
@@ -625,8 +629,8 @@ public class Renderer {
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
      */
-    public void drawGlyphs(Canvas canvas,
-                           IntList glyphIds, PointList offsets, FloatList advances) {
+    public void drawGlyphs(@NonNull Canvas canvas,
+                           @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances) {
         if (mShouldRender) {
             syncShadowLayer();
 

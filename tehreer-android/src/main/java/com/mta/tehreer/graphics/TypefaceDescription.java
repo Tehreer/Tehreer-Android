@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.sfnt.tables.HeadTable;
 import com.mta.tehreer.sfnt.tables.NameTable;
 import com.mta.tehreer.sfnt.tables.OS2Table;
@@ -23,7 +26,6 @@ import com.mta.tehreer.sfnt.tables.OS2Table;
 import java.util.Locale;
 
 class TypefaceDescription {
-
     private static final int PLATFORM_MACINTOSH = 1;
     private static final int PLATFORM_WINDOWS = 3;
 
@@ -47,11 +49,11 @@ class TypefaceDescription {
     final String familyName;
     final String styleName;
     final String fullName;
-    final TypeWeight weight;
-    final TypeWidth width;
-    final TypeSlope slope;
+    final @NonNull TypeWeight weight;
+    final @NonNull TypeWidth width;
+    final @NonNull TypeSlope slope;
 
-    private static String getEnglishName(NameTable nameTable, int nameId) {
+    private static @Nullable String getEnglishName(@Nullable NameTable nameTable, int nameId) {
         if (nameTable != null) {
             int recordCount = nameTable.recordCount();
             NameTable.Record candidate = null;
@@ -82,17 +84,15 @@ class TypefaceDescription {
         return null;
     }
 
-    private static String getFamilyName(NameTable nameTable, OS2Table os2Table) {
+    private static @Nullable String getFamilyName(@Nullable NameTable nameTable, @Nullable OS2Table os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
             familyName = getEnglishName(nameTable, NAME_WWS_FAMILY);
         }
-
         if (familyName == null) {
             familyName = getEnglishName(nameTable, NAME_TYPOGRAPHIC_FAMILY);
         }
-
         if (familyName == null) {
             familyName = getEnglishName(nameTable, NAME_FONT_FAMILY);
         }
@@ -100,17 +100,15 @@ class TypefaceDescription {
         return familyName;
     }
 
-    private static String getStyleName(NameTable nameTable, OS2Table os2Table) {
+    private static @Nullable String getStyleName(@Nullable NameTable nameTable, @Nullable OS2Table os2Table) {
         String familyName = null;
 
         if (os2Table != null && (os2Table.fsSelection() & FS_SELECTION_WWS) == 0) {
             familyName = getEnglishName(nameTable, NAME_WWS_SUBFAMILY);
         }
-
         if (familyName == null) {
             familyName = getEnglishName(nameTable, NAME_TYPOGRAPHIC_SUBFAMILY);
         }
-
         if (familyName == null) {
             familyName = getEnglishName(nameTable, NAME_FONT_SUBFAMILY);
         }
@@ -118,11 +116,11 @@ class TypefaceDescription {
         return familyName;
     }
 
-    private static String getFullName(NameTable nameTable) {
+    private static @Nullable String getFullName(@Nullable NameTable nameTable) {
         return getEnglishName(nameTable, NAME_FULL);
     }
 
-    static TypefaceDescription deduce(Typeface typeface) {
+    static @NonNull TypefaceDescription deduce(@NonNull Typeface typeface) {
         HeadTable headTable = null;
         OS2Table os2Table = null;
         NameTable nameTable = null;
@@ -179,12 +177,11 @@ class TypefaceDescription {
             }
         }
 
-        return new TypefaceDescription(familyName, styleName, fullName,
-                                       weight, width, slope);
+        return new TypefaceDescription(familyName, styleName, fullName, weight, width, slope);
     }
 
     private TypefaceDescription(String familyName, String styleName, String fullName,
-                        TypeWeight weight, TypeWidth width, TypeSlope slope) {
+                                TypeWeight weight, TypeWidth width, TypeSlope slope) {
         this.familyName = familyName;
         this.styleName = styleName;
         this.fullName = fullName;

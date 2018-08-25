@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,7 +31,6 @@ import java.util.TreeMap;
  * The <code>TypefaceManager</code> class provides management activities related to typefaces.
  */
 public class TypefaceManager {
-
     private static class TypefaceComparator implements Comparator<Typeface> {
         @Override
         public int compare(Typeface obj1, Typeface obj2) {
@@ -41,8 +43,8 @@ public class TypefaceManager {
         }
     }
 
-    private static final HashMap<Object, Typeface> tags = new HashMap<>();
-    private static final ArrayList<Typeface> typefaces = new ArrayList<>();
+    private static final @NonNull HashMap<Object, Typeface> tags = new HashMap<>();
+    private static final @NonNull ArrayList<Typeface> typefaces = new ArrayList<>();
     private static boolean sorted;
 
     private TypefaceManager() {
@@ -58,7 +60,7 @@ public class TypefaceManager {
      * @throws IllegalArgumentException if <code>typeface</code> is already registered, or
      *         <code>tag</code> is already taken.
      */
-    public static void registerTypeface(Typeface typeface, Object tag) {
+    public static void registerTypeface(@NonNull Typeface typeface, @Nullable Object tag) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -89,7 +91,7 @@ public class TypefaceManager {
      * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
-    public static void unregisterTypeface(Typeface typeface) {
+    public static void unregisterTypeface(@NonNull Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -115,7 +117,7 @@ public class TypefaceManager {
      *
      * @throws NullPointerException if <code>tag</code> is null.
      */
-    public static Typeface getTypeface(Object tag) {
+    public static @Nullable Typeface getTypeface(@NonNull Object tag) {
         if (tag == null) {
             throw new NullPointerException("Tag is null");
         }
@@ -135,7 +137,7 @@ public class TypefaceManager {
      * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
-    public static Object getTypefaceTag(Typeface typeface) {
+    public static @Nullable Object getTypefaceTag(@NonNull Typeface typeface) {
         if (typeface == null) {
             throw new NullPointerException("Typeface is null");
         }
@@ -155,7 +157,7 @@ public class TypefaceManager {
      * @param familyName The name of the family.
      * @return A type family having specified family name.
      */
-    public static TypeFamily getTypeFamily(String familyName) {
+    public static @Nullable TypeFamily getTypeFamily(@NonNull String familyName) {
         List<Typeface> entryList = new ArrayList<>();
 
         synchronized (TypefaceManager.class) {
@@ -184,7 +186,7 @@ public class TypefaceManager {
      * @return The typeface having specified full name, or <code>null</code> if no such typeface is
      *         registered.
      */
-    public static Typeface getTypefaceByName(String fullName) {
+    public static @Nullable Typeface getTypefaceByName(@NonNull String fullName) {
         synchronized (TypefaceManager.class) {
             for (Typeface typeface : typefaces) {
                 if (typeface.getFullName().equalsIgnoreCase(fullName)) {
@@ -201,7 +203,7 @@ public class TypefaceManager {
      *
      * @return A list of available type families.
      */
-    public static List<TypeFamily> getAvailableFamilies() {
+    public static @NonNull List<TypeFamily> getAvailableFamilies() {
         Map<String, List<Typeface>> familyMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         synchronized (TypefaceManager.class) {
@@ -236,7 +238,7 @@ public class TypefaceManager {
      *
      * @return A list of available typefaces.
      */
-    public static List<Typeface> getAvailableTypefaces() {
+    public static @NonNull List<Typeface> getAvailableTypefaces() {
         synchronized (TypefaceManager.class) {
             sortTypefaces();
 

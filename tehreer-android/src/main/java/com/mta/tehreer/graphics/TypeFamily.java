@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.graphics;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -24,9 +27,8 @@ import java.util.List;
  * A <code>TypeFamily</code> object represents a collection of typefaces that relate to each other.
  */
 public class TypeFamily {
-
-    private final String familyName;
-    private final List<Typeface> typefaces;
+    private final @NonNull String familyName;
+    private final @NonNull List<Typeface> typefaces;
 
     /**
      * Constructs a type family object.
@@ -34,7 +36,7 @@ public class TypeFamily {
      * @param familyName The name of family.
      * @param typefaces The list of typefaces belonging to family.
      */
-    public TypeFamily(String familyName, List<Typeface> typefaces) {
+    public TypeFamily(@NonNull String familyName, @NonNull List<Typeface> typefaces) {
         this.familyName = familyName;
         this.typefaces = (typefaces != null ? typefaces : Collections.<Typeface>emptyList());
     }
@@ -44,7 +46,7 @@ public class TypeFamily {
      *
      * @return The name of this family.
      */
-    public String getFamilyName() {
+    public @NonNull String getFamilyName() {
         return familyName;
     }
 
@@ -53,15 +55,15 @@ public class TypeFamily {
      *
      * @return The list of typefaces belonging to this family.
      */
-    public List<Typeface> getTypefaces() {
+    public @NonNull List<Typeface> getTypefaces() {
         return typefaces;
     }
 
-    private static int widthGap(TypeWidth desired, TypeWidth candidate) {
+    private static int widthGap(@NonNull TypeWidth desired, @NonNull TypeWidth candidate) {
         return Math.abs(desired.ordinal() - candidate.ordinal());
     }
 
-    private static int slopeGap(TypeSlope desired, TypeSlope candidate) {
+    private static int slopeGap(@NonNull TypeSlope desired, @NonNull TypeSlope candidate) {
         int[] gaps = {
             // "If the value is `normal`, normal faces are checked first, then oblique faces, then
             // italic faces."
@@ -81,7 +83,7 @@ public class TypeFamily {
         return gaps[(row * 3) + column];
     }
 
-    private static int weightGap(TypeWeight desired, TypeWeight candidate) {
+    private static int weightGap(@NonNull TypeWeight desired, @NonNull TypeWeight candidate) {
         int[] gaps = {
             // "If the desired weight is less than 400, weights below the desired weight are checked
             // in descending order followed by weights above the desired weight in ascending order
@@ -124,7 +126,7 @@ public class TypeFamily {
      *         <code>typeWeight</code> is <code>null</code>. or <code>typeSlope</code> is
      *         <code>null</code>.
      */
-    public Typeface getTypefaceByStyle(TypeWidth typeWidth, TypeWeight typeWeight, TypeSlope typeSlope) {
+    public @NonNull Typeface getTypefaceByStyle(@NonNull TypeWidth typeWidth, @NonNull TypeWeight typeWeight, @NonNull TypeSlope typeSlope) {
         if (typeWidth == null) {
             throw new NullPointerException("Type width is null");
         }
@@ -171,7 +173,7 @@ public class TypeFamily {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this != obj) {
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
