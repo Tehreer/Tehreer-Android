@@ -17,6 +17,7 @@
 package com.mta.tehreer.internal.layout;
 
 import android.graphics.Paint;
+import android.support.annotation.NonNull;
 import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
@@ -36,9 +37,9 @@ import com.mta.tehreer.unicode.ScriptRun;
 import java.util.List;
 
 public class ShapeResolver {
-
-    public static void fillRuns(String text, Spanned spanned, List<Object> defaultSpans, byte[] breaks,
-                                List<BidiParagraph> paragraphs, List<IntrinsicRun> runs) {
+    public static void fillRuns(@NonNull String text, @NonNull Spanned spanned,
+                                @NonNull List<Object> defaultSpans, @NonNull byte[] breaks,
+                                @NonNull List<BidiParagraph> paragraphs, @NonNull List<IntrinsicRun> runs) {
         BidiAlgorithm bidiAlgorithm = null;
         ShapingEngine shapingEngine = null;
 
@@ -98,8 +99,10 @@ public class ShapeResolver {
         }
     }
 
-    private static void resolveTypefaces(String text, Spanned spanned, List<IntrinsicRun> runs,
-                                         ShapingRunLocator locator, ShapingEngine engine, byte bidiLevel) {
+    private static void resolveTypefaces(@NonNull String text, @NonNull Spanned spanned,
+                                         @NonNull List<IntrinsicRun> runs,
+                                         @NonNull ShapingRunLocator locator,
+                                         @NonNull ShapingEngine engine, byte bidiLevel) {
         Paint.FontMetricsInt metrics = null;
 
         while (locator.moveNext()) {

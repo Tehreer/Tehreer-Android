@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Spanned;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.MetricAffectingSpan;
@@ -39,9 +41,8 @@ import com.mta.tehreer.layout.style.TypeSizeSpan;
 import java.util.List;
 
 public class ShapingRunLocator {
-
-    private final Spanned spanned;
-    private final ShapingRun initial;
+    private final @NonNull Spanned spanned;
+    private final @NonNull ShapingRun initial;
 
     private int mLimit;
     private ShapingRun mCurrent;
@@ -61,12 +62,12 @@ public class ShapingRunLocator {
         float baselineShift;
     }
 
-    public ShapingRunLocator(Spanned spanned, List<Object> defaultSpans) {
+    public ShapingRunLocator(@NonNull Spanned spanned, @NonNull List<Object> defaultSpans) {
         this.spanned = spanned;
         this.initial = resolveInitial(defaultSpans.toArray());
     }
 
-    private static ShapingRun resolveInitial(Object[] spans) {
+    private static @NonNull ShapingRun resolveInitial(@NonNull Object[] spans) {
         ShapingRun shapingRun = new ShapingRun();
         shapingRun.typeWeight = TypeWeight.REGULAR;
         shapingRun.typeSlope = TypeSlope.PLAIN;
@@ -78,7 +79,7 @@ public class ShapingRunLocator {
         return shapingRun;
     }
 
-    private ShapingRun resolveRun(int runStart) {
+    private @Nullable ShapingRun resolveRun(int runStart) {
         if (runStart < mLimit) {
             int runEnd = spanned.nextSpanTransition(runStart, mLimit, MetricAffectingSpan.class);
             MetricAffectingSpan[] spans = spanned.getSpans(runStart, runEnd, MetricAffectingSpan.class);
@@ -100,7 +101,7 @@ public class ShapingRunLocator {
         return null;
     }
 
-    private static void resolveSpans(ShapingRun shapingRun, Object[] spans) {
+    private static void resolveSpans(@NonNull ShapingRun shapingRun, @NonNull Object[] spans) {
         for (Object span : spans) {
             if (span instanceof com.mta.tehreer.layout.style.TypefaceSpan) {
                 com.mta.tehreer.layout.style.TypefaceSpan typefaceSpan = (com.mta.tehreer.layout.style.TypefaceSpan) span;
@@ -151,7 +152,7 @@ public class ShapingRunLocator {
         }
     }
 
-    private static void resolveStyle(ShapingRun shapingRun, int newStyle) {
+    private static void resolveStyle(@NonNull ShapingRun shapingRun, int newStyle) {
         switch (newStyle) {
         case android.graphics.Typeface.NORMAL:
             shapingRun.typeWeight = TypeWeight.REGULAR;
@@ -172,7 +173,8 @@ public class ShapingRunLocator {
         }
     }
 
-    private static void resolveTypeface(ShapingRun shapingRun, String familyName, TypeWidth typeWidth) {
+    private static void resolveTypeface(@NonNull ShapingRun shapingRun,
+                                        @NonNull String familyName, @NonNull TypeWidth typeWidth) {
         TypeFamily typeFamily = TypefaceManager.getTypeFamily(familyName);
         if (typeFamily != null) {
             shapingRun.typeface = typeFamily.getTypefaceByStyle(typeWidth, shapingRun.typeWeight, shapingRun.typeSlope);
@@ -181,14 +183,14 @@ public class ShapingRunLocator {
         }
     }
 
-    private static void updateTypeface(ShapingRun shapingRun) {
+    private static void updateTypeface(@NonNull ShapingRun shapingRun) {
         Typeface typeface = shapingRun.typeface;
         if (typeface != null) {
             resolveTypeface(shapingRun, typeface.getFamilyName(), typeface.getWidth());
         }
     }
 
-    private static void resolveBaselineShift(ShapingRun shapingRun, float multiplier) {
+    private static void resolveBaselineShift(@NonNull ShapingRun shapingRun, float multiplier) {
         Typeface typeface = shapingRun.typeface;
         if (typeface != null) {
             float sizeByEm = shapingRun.typeSize / typeface.getUnitsPerEm();

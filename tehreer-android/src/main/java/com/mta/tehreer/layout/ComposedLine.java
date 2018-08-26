@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;
@@ -28,13 +30,12 @@ import java.util.List;
  * Represents a line of text consisting of an array of <code>GlyphRun</code> objects in visual order.
  */
 public class ComposedLine {
-
 	private final int lineStart;
 	private final int lineEnd;
     private final byte paragraphLevel;
     private final float extent;
     private final float trailingWhitespaceExtent;
-	private final List<GlyphRun> runList;
+	private final @NonNull List<GlyphRun> runList;
 
     private Object[] mSpans;
     private boolean mFirst;
@@ -50,7 +51,7 @@ public class ComposedLine {
 
 	ComposedLine(int charStart, int charEnd, byte paragraphLevel,
                  float ascent, float descent, float leading, float extent,
-                 float trailingWhitespaceExtent, List<GlyphRun> runList) {
+                 float trailingWhitespaceExtent, @NonNull List<GlyphRun> runList) {
 	    this.lineStart = charStart;
 	    this.lineEnd = charEnd;
 	    this.paragraphLevel = paragraphLevel;
@@ -237,7 +238,7 @@ public class ComposedLine {
      *
      * @return An unmodifiable list that contains all the runs of this line.
      */
-    public List<GlyphRun> getRuns() {
+    public @NonNull List<GlyphRun> getRuns() {
         return runList;
     }
 
@@ -287,7 +288,7 @@ public class ComposedLine {
      *         <code>charEnd</code> is greater than line end, or <code>charStart</code> is greater
      *         than <code>charEnd</code>.
      */
-    public float[] computeVisualEdges(int charStart, int charEnd) {
+    public @NonNull @Size(multiple = 2) float[] computeVisualEdges(int charStart, int charEnd) {
         if (charStart < lineStart) {
             throw new IllegalArgumentException("Char Start: " + charStart
                                                + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
@@ -381,7 +382,7 @@ public class ComposedLine {
      * @param x The x- position at which to draw this line.
      * @param y The y- position at which to draw this line.
      */
-    public void draw(Renderer renderer, Canvas canvas, float x, float y) {
+    public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas, float x, float y) {
         for (GlyphRun glyphRun : runList) {
             float translateX = x + glyphRun.getOriginX();
             float translateY = y + glyphRun.getOriginY();

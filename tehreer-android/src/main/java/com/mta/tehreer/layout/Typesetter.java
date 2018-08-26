@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.RectF;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.SpannableString;
 import android.text.Spanned;
 
@@ -38,7 +40,6 @@ import java.util.List;
  * breaking, and do other contextual analysis based on the characters in the string.
  */
 public class Typesetter {
-
     private String mText;
     private Spanned mSpanned;
     private byte[] mBreakRecord;
@@ -55,7 +56,7 @@ public class Typesetter {
      * @throws NullPointerException if <code>text</code> is null, or <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>text</code> is empty.
      */
-	public Typesetter(String text, Typeface typeface, float typeSize) {
+	public Typesetter(@NonNull String text, @NonNull Typeface typeface, float typeSize) {
         if (text == null) {
             throw new NullPointerException("Text is null");
         }
@@ -81,11 +82,11 @@ public class Typesetter {
      * @throws NullPointerException if <code>spanned</code> is null.
      * @throws IllegalArgumentException if <code>spanned</code> is empty.
      */
-    public Typesetter(Spanned spanned) {
+    public Typesetter(@NonNull Spanned spanned) {
         this(spanned, null);
     }
 
-    public Typesetter(Spanned spanned, List<Object> defaultSpans) {
+    public Typesetter(@NonNull Spanned spanned, @Nullable List<Object> defaultSpans) {
         if (spanned == null) {
             throw new NullPointerException("Spanned text is null");
         }
@@ -96,7 +97,7 @@ public class Typesetter {
         init(StringUtils.copyString(spanned), spanned, defaultSpans);
     }
 
-    private void init(String text, Spanned spanned, List<Object> defaultSpans) {
+    private void init(@NonNull String text, @NonNull Spanned spanned, @Nullable List<Object> defaultSpans) {
         mText = text;
         mSpanned = spanned;
         mBreakRecord = new byte[text.length()];
@@ -163,7 +164,8 @@ public class Typesetter {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-    public int suggestForwardBreak(int charStart, int charEnd, float breakWidth, BreakMode breakMode) {
+    public int suggestForwardBreak(int charStart, int charEnd,
+                                   float breakWidth, @NonNull BreakMode breakMode) {
         if (breakMode == null) {
             throw new NullPointerException("Break mode is null");
         }
@@ -201,7 +203,8 @@ public class Typesetter {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-    public int suggestBackwardBreak(int charStart, int charEnd, float breakWidth, BreakMode breakMode) {
+    public int suggestBackwardBreak(int charStart, int charEnd,
+                                    float breakWidth, @NonNull BreakMode breakMode) {
         if (breakMode == null) {
             throw new NullPointerException("Break mode is null");
         }
@@ -234,7 +237,7 @@ public class Typesetter {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
-	public ComposedLine createSimpleLine(int charStart, int charEnd) {
+	public @NonNull ComposedLine createSimpleLine(int charStart, int charEnd) {
         String rangeError = checkRange(charStart, charEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
@@ -266,8 +269,9 @@ public class Typesetter {
      *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
      *         </ul>
      */
-    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            BreakMode breakMode, TruncationPlace truncationPlace) {
+    public @NonNull ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                                     @NonNull BreakMode breakMode,
+                                                     @NonNull TruncationPlace truncationPlace) {
         if (breakMode == null) {
             throw new NullPointerException("Break mode is null");
         }
@@ -306,9 +310,10 @@ public class Typesetter {
      *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
      *         </ul>
      */
-    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            BreakMode breakMode, TruncationPlace truncationPlace,
-                                            String truncationToken) {
+    public @NonNull ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                                     @NonNull BreakMode breakMode,
+                                                     @NonNull TruncationPlace truncationPlace,
+                                                     @NonNull String truncationToken) {
         if (breakMode == null) {
             throw new NullPointerException("Break mode is null");
         }
@@ -353,9 +358,10 @@ public class Typesetter {
      *             <li><code>charStart</code> is greater than or equal to <code>charEnd</code></li>
      *         </ul>
      */
-    public ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
-                                            BreakMode breakMode, TruncationPlace truncationPlace,
-                                            ComposedLine truncationToken) {
+    public @NonNull ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
+                                                     @NonNull BreakMode breakMode,
+                                                     @NonNull TruncationPlace truncationPlace,
+                                                     @NonNull ComposedLine truncationToken) {
         if (breakMode == null) {
             throw new NullPointerException("Break mode is null");
         }
@@ -387,7 +393,9 @@ public class Typesetter {
      * @param textAlignment The horizontal text alignment of the lines in frame.
      * @return The new frame object.
      */
-    public ComposedFrame createFrame(int charStart, int charEnd, RectF frameRect, TextAlignment textAlignment) {
+    public @NonNull ComposedFrame createFrame(int charStart, int charEnd,
+                                              @NonNull RectF frameRect,
+                                              @NonNull TextAlignment textAlignment) {
         if (frameRect == null) {
             throw new NullPointerException("Frame rect is null");
         }

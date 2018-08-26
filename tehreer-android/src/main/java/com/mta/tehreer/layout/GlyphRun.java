@@ -18,6 +18,8 @@ package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ReplacementSpan;
 import android.text.style.ScaleXSpan;
@@ -43,29 +45,30 @@ public class GlyphRun {
     private final int charEnd;
     private final int startExtraLength;
     private final int endExtraLength;
-    private final List<Object> spans;
+    private final @NonNull List<Object> spans;
     private final boolean isBackward;
     private final byte bidiLevel;
-    private final WritingDirection writingDirection;
-    private final Typeface typeface;
+    private final @NonNull WritingDirection writingDirection;
+    private final @NonNull Typeface typeface;
     private final float typeSize;
     private final float ascent;
     private final float descent;
     private final float leading;
-    private final IntList glyphIds;
-    private final PointList glyphOffsets;
-    private final FloatList glyphAdvances;
-    private final IntList clusterMap;
-    private final CaretEdgeList caretEdges;
+    private final @NonNull IntList glyphIds;
+    private final @NonNull PointList glyphOffsets;
+    private final @NonNull FloatList glyphAdvances;
+    private final @NonNull IntList clusterMap;
+    private final @NonNull CaretEdgeList caretEdges;
     private float originX;
     private float originY;
 
     GlyphRun(int charStart, int charEnd, int startExtraLength, int endExtraLength,
-             List<Object> spans, boolean isBackward, byte bidiLevel,
-             WritingDirection writingDirection, Typeface typeface, float typeSize,
+             @NonNull List<Object> spans, boolean isBackward, byte bidiLevel,
+             @NonNull WritingDirection writingDirection,
+             @NonNull Typeface typeface, float typeSize,
              float ascent, float descent, float leading,
-             IntList glyphIds, PointList offsets, FloatList advances, IntList clusterMap,
-             CaretEdgeList caretEdges) {
+             @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances,
+             @NonNull IntList clusterMap, @NonNull CaretEdgeList caretEdges) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.startExtraLength = startExtraLength;
@@ -86,7 +89,7 @@ public class GlyphRun {
         this.caretEdges = caretEdges;
     }
 
-    GlyphRun(GlyphRun otherRun) {
+    GlyphRun(@NonNull GlyphRun otherRun) {
         this.charStart = otherRun.charStart;
         this.charEnd = otherRun.charEnd;
         this.startExtraLength = otherRun.startExtraLength;
@@ -133,7 +136,7 @@ public class GlyphRun {
         return null;
     }
 
-    List<Object> getSpans() {
+    @NonNull List<Object> getSpans() {
 	    return spans;
     }
 
@@ -207,7 +210,7 @@ public class GlyphRun {
      *
      * @return The typeface of this run.
      */
-    public Typeface getTypeface() {
+    public @NonNull Typeface getTypeface() {
         return typeface;
     }
 
@@ -225,7 +228,7 @@ public class GlyphRun {
      *
      * @return The writing direction of this run.
      */
-    public WritingDirection getWritingDirection() {
+    public @NonNull WritingDirection getWritingDirection() {
         return writingDirection;
     }
 
@@ -243,7 +246,7 @@ public class GlyphRun {
      *
      * @return A list of glyph IDs in this run.
      */
-    public IntList getGlyphIds() {
+    public @NonNull IntList getGlyphIds() {
         return glyphIds;
     }
 
@@ -252,7 +255,7 @@ public class GlyphRun {
      *
      * @return A list of glyph offsets in this run.
      */
-    public PointList getGlyphOffsets() {
+    public @NonNull PointList getGlyphOffsets() {
         return glyphOffsets;
     }
 
@@ -261,7 +264,7 @@ public class GlyphRun {
      *
      * @return A list of glyph advances in this run.
      */
-    public FloatList getGlyphAdvances() {
+    public @NonNull FloatList getGlyphAdvances() {
         return glyphAdvances;
     }
 
@@ -270,7 +273,7 @@ public class GlyphRun {
      *
      * @return A list of indexes, mapping each character in this run to corresponding glyph.
      */
-    public IntList getClusterMap() {
+    public @NonNull IntList getClusterMap() {
         return clusterMap;
     }
 
@@ -584,7 +587,7 @@ public class GlyphRun {
      *         <code>glyphEnd</code> is greater than total number of glyphs in the run, or
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
-	public RectF computeBoundingBox(Renderer renderer, int glyphStart, int glyphEnd) {
+	public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer, int glyphStart, int glyphEnd) {
         String rangeError = checkGlyphRange(glyphStart, glyphEnd);
         if (rangeError != null) {
             throw new IllegalArgumentException(rangeError);
@@ -599,7 +602,7 @@ public class GlyphRun {
                                            glyphAdvances.subList(glyphStart, glyphEnd));
 	}
 
-    private ClusterRange getClusterRange(int charIndex, ClusterRange exclusion) {
+    private ClusterRange getClusterRange(int charIndex, @Nullable ClusterRange exclusion) {
 	    int actualStart = getActualClusterStart(charIndex);
 	    int actualEnd = getActualClusterEnd(charIndex);
 
@@ -622,7 +625,7 @@ public class GlyphRun {
         return null;
     }
 
-    private void drawEdgeCluster(Renderer renderer, Canvas canvas, ClusterRange cluster) {
+    private void drawEdgeCluster(@NonNull Renderer renderer, @NonNull Canvas canvas, @NonNull ClusterRange cluster) {
         float clipLeft = Float.NEGATIVE_INFINITY;
         float clipRight = Float.POSITIVE_INFINITY;
 
@@ -661,7 +664,7 @@ public class GlyphRun {
      * @param renderer The renderer to use for drawing this run.
      * @param canvas The canvas onto which to draw this run.
      */
-	public void draw(Renderer renderer, Canvas canvas) {
+	public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas) {
 	    renderer.setTypeface(typeface);
         renderer.setTypeSize(typeSize);
         renderer.setScaleX(1.0f);

@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.layout;
 
+import android.support.annotation.NonNull;
 import android.text.Spanned;
 
 import com.mta.tehreer.internal.collections.JFloatArrayList;
@@ -49,7 +50,8 @@ class LineResolver {
         mIntrinsicRuns = runs;
     }
 
-    static GlyphRun createGlyphRun(IntrinsicRun intrinsicRun, int spanStart, int spanEnd, Object[] spans) {
+    static GlyphRun createGlyphRun(@NonNull IntrinsicRun intrinsicRun, int spanStart, int spanEnd,
+                                   @NonNull Object[] spans) {
         int clusterStart = intrinsicRun.clusterStart(spanStart);
         int clusterEnd = intrinsicRun.clusterEnd(spanEnd - 1);
 
@@ -77,8 +79,8 @@ class LineResolver {
                                               startExtra, endExtra, intrinsicRun.isOpposite()));
     }
 
-    static ComposedLine createComposedLine(CharSequence text, int charStart, int charEnd,
-                                           List<GlyphRun> runList, byte paragraphLevel) {
+    static @NonNull ComposedLine createComposedLine(@NonNull CharSequence text, int charStart, int charEnd,
+                                                    @NonNull List<GlyphRun> runList, byte paragraphLevel) {
         float lineAscent = 0.0f;
         float lineDescent = 0.0f;
         float lineLeading = 0.0f;
@@ -123,12 +125,11 @@ class LineResolver {
                                 trailingWhitespaceExtent, Collections.unmodifiableList(runList));
     }
 
-    ComposedLine createSimpleLine(int start, int end) {
+    @NonNull ComposedLine createSimpleLine(int start, int end) {
         final List<GlyphRun> runList = new ArrayList<>();
         mBidiParagraphs.forEachLineRun(start, end, new ParagraphCollection.RunConsumer() {
-
             @Override
-            public void accept(BidiRun bidiRun) {
+            public void accept(@NonNull BidiRun bidiRun) {
                 int visualStart = bidiRun.charStart;
                 int visualEnd = bidiRun.charEnd;
 
@@ -140,8 +141,11 @@ class LineResolver {
                                   mBidiParagraphs.charLevel(start));
     }
 
-    ComposedLine createCompactLine(int start, int end, float extent, byte[] breaks, BreakMode mode,
-                                   TruncationPlace place, ComposedLine token) {
+    @NonNull ComposedLine createCompactLine(int start, int end, float extent,
+                                            @NonNull byte[] breaks,
+                                            @NonNull BreakMode mode,
+                                            @NonNull TruncationPlace place,
+                                            @NonNull ComposedLine token) {
         float tokenlessWidth = extent - token.getWidth();
 
         switch (place) {
@@ -159,7 +163,6 @@ class LineResolver {
     }
 
     private class TruncationHandler implements ParagraphCollection.RunConsumer {
-
         final int charStart;
         final int charEnd;
         final int skipStart;
@@ -178,7 +181,7 @@ class LineResolver {
         }
 
         @Override
-        public void accept(BidiRun bidiRun) {
+        public void accept(@NonNull BidiRun bidiRun) {
             int visualStart = bidiRun.charStart;
             int visualEnd = bidiRun.charEnd;
 
@@ -226,8 +229,10 @@ class LineResolver {
         }
     }
 
-    private ComposedLine createStartTruncatedLine(int start, int end, float tokenlessWidth,
-                                                  byte[] breaks, BreakMode mode, ComposedLine token) {
+    private @NonNull ComposedLine createStartTruncatedLine(int start, int end, float tokenlessWidth,
+                                                           @NonNull byte[] breaks,
+                                                           @NonNull BreakMode mode,
+                                                           @NonNull ComposedLine token) {
         int truncatedStart = BreakResolver.suggestBackwardBreak(mSpanned, mIntrinsicRuns, breaks, start, end, tokenlessWidth, mode);
         if (truncatedStart > start) {
             ArrayList<GlyphRun> runList = new ArrayList<>();
@@ -248,8 +253,10 @@ class LineResolver {
         return createSimpleLine(truncatedStart, end);
     }
 
-    private ComposedLine createMiddleTruncatedLine(int start, int end, float tokenlessWidth,
-                                                   byte[] breaks, BreakMode mode, ComposedLine token) {
+    private @NonNull ComposedLine createMiddleTruncatedLine(int start, int end, float tokenlessWidth,
+                                                            @NonNull byte[] breaks,
+                                                            @NonNull BreakMode mode,
+                                                            @NonNull ComposedLine token) {
         float halfWidth = tokenlessWidth / 2.0f;
         int firstMidEnd = BreakResolver.suggestForwardBreak(mSpanned, mIntrinsicRuns, breaks, start, end, halfWidth, mode);
         int secondMidStart = BreakResolver.suggestBackwardBreak(mSpanned, mIntrinsicRuns, breaks, start, end, halfWidth, mode);
@@ -277,8 +284,10 @@ class LineResolver {
         return createSimpleLine(start, end);
     }
 
-    private ComposedLine createEndTruncatedLine(int start, int end, float tokenlessWidth,
-                                                byte[] breaks, BreakMode mode, ComposedLine token) {
+    private @NonNull ComposedLine createEndTruncatedLine(int start, int end, float tokenlessWidth,
+                                                         @NonNull byte[] breaks,
+                                                         @NonNull BreakMode mode,
+                                                         @NonNull ComposedLine token) {
         int truncatedEnd = BreakResolver.suggestForwardBreak(mSpanned, mIntrinsicRuns, breaks, start, end, tokenlessWidth, mode);
         if (truncatedEnd < end) {
             // Exclude trailing whitespaces as truncation token replaces them.
@@ -302,7 +311,7 @@ class LineResolver {
         return createSimpleLine(start, truncatedEnd);
     }
 
-    private void addTokenRuns(ComposedLine token, List<GlyphRun> runList, int insertIndex) {
+    private void addTokenRuns(@NonNull ComposedLine token, @NonNull List<GlyphRun> runList, int insertIndex) {
         for (GlyphRun truncationRun : token.getRuns()) {
             GlyphRun modifiedRun = new GlyphRun(truncationRun);
             runList.add(insertIndex, modifiedRun);
@@ -311,7 +320,7 @@ class LineResolver {
         }
     }
 
-    private void addVisualRuns(int visualStart, int visualEnd, List<GlyphRun> runList) {
+    private void addVisualRuns(int visualStart, int visualEnd, @NonNull List<GlyphRun> runList) {
         if (visualStart < visualEnd) {
             // ASSUMPTIONS:
             //      - Visual range may fall in one or more glyph runs.

@@ -16,15 +16,19 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.layout.ComposedLine;
 import com.mta.tehreer.layout.TruncationPlace;
 import com.mta.tehreer.layout.Typesetter;
 
 public class TokenResolver {
-
-    public static ComposedLine createToken(RunCollection runs, int charStart, int charEnd,
-                                           TruncationPlace truncationPlace, String tokenStr) {
+    public static @NonNull ComposedLine createToken(@NonNull RunCollection runs,
+                                                    int charStart, int charEnd,
+                                                    @NonNull TruncationPlace truncationPlace,
+                                                    @Nullable String tokenStr) {
         int truncationIndex = 0;
 
         switch (truncationPlace) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package com.mta.tehreer.layout;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
@@ -35,7 +37,6 @@ import java.util.List;
  * from text-framing process performed by a typesetter object.
  */
 public class ComposedFrame {
-
     private final CharSequence source;
     private final int frameStart;
     private final int frameEnd;
@@ -46,9 +47,9 @@ public class ComposedFrame {
     private float mWidth;
     private float mHeight;
 
-    private Paint paint;
+    private @Nullable Paint paint;
 
-    ComposedFrame(CharSequence source, int charStart, int charEnd, List<ComposedLine> lineList) {
+    ComposedFrame(CharSequence source, int charStart, int charEnd, @NonNull List<ComposedLine> lineList) {
         this.source = source;
         this.frameStart = charStart;
         this.frameEnd = charEnd;
@@ -62,7 +63,7 @@ public class ComposedFrame {
         mHeight = height;
     }
 
-    private Paint lazyPaint() {
+    private @NonNull Paint lazyPaint() {
         if (paint == null) {
             paint = new Paint();
         }
@@ -129,7 +130,7 @@ public class ComposedFrame {
      *
      * @return An unmodifiable list that contains all the lines of this frame.
      */
-    public List<ComposedLine> getLines() {
+    public @NonNull List<ComposedLine> getLines() {
         return lineList;
     }
 
@@ -189,8 +190,8 @@ public class ComposedFrame {
         return lineCount - 1;
     }
 
-    private void addSelectionParts(ComposedLine line, int charStart, int charEnd,
-                                   float selectionTop, float selectionBottom, Path selectionPath) {
+    private void addSelectionParts(@NonNull ComposedLine line, int charStart, int charEnd,
+                                   float selectionTop, float selectionBottom, @NonNull Path selectionPath) {
         float[] visualEdges = line.computeVisualEdges(charStart, charEnd);
         float lineLeft = line.getLeft();
 
@@ -217,7 +218,7 @@ public class ComposedFrame {
      *         <code>charEnd</code> is greater than frame end, or <code>charStart</code> is greater
      *         than <code>charEnd</code>.
      */
-    public Path generateSelectionPath(int charStart, int charEnd) {
+    public @NonNull Path generateSelectionPath(int charStart, int charEnd) {
         if (charStart < frameStart) {
             throw new IllegalArgumentException("Char Start: " + charStart
                                                + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
@@ -290,7 +291,7 @@ public class ComposedFrame {
         return selectionPath;
     }
 
-    private void drawBackground(Canvas canvas) {
+    private void drawBackground(@NonNull Canvas canvas) {
         int frameLeft = 0;
         int frameRight = (int) (getWidth() + 0.5f);
 
@@ -334,7 +335,7 @@ public class ComposedFrame {
      * @param x The x- position at which to draw this frame.
      * @param y The y- position at which to draw this frame.
      */
-    public void draw(Renderer renderer, Canvas canvas, float x, float y) {
+    public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas, float x, float y) {
         canvas.translate(x, y);
 
         drawBackground(canvas);

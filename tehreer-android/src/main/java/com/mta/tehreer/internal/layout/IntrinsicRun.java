@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Size;
+
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
@@ -25,22 +28,25 @@ public class IntrinsicRun {
     public final int charEnd;
     public final boolean isBackward;
     public final byte bidiLevel;
-    public final WritingDirection writingDirection;
-    public final Typeface typeface;
+    public final @NonNull WritingDirection writingDirection;
+    public final @NonNull Typeface typeface;
     public final float typeSize;
     public final float ascent;
     public final float descent;
     public final float leading;
-    public final int[] glyphIds;
-    public final float[] glyphOffsets;
-    public final float[] glyphAdvances;
-    public final int[] clusterMap;
-    public final float[] charExtents;
+    public final @NonNull int[] glyphIds;
+    public final @NonNull float[] glyphOffsets;
+    public final @NonNull float[] glyphAdvances;
+    public final @NonNull int[] clusterMap;
+    public final @NonNull float[] charExtents;
 
     public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
-                        WritingDirection writingDirection, Typeface typeface, float typeSize,
+                        @NonNull WritingDirection writingDirection,
+                        @NonNull Typeface typeface, float typeSize,
                         float ascent, float descent, float leading,
-                        int[] glyphIds, float[] offsets, float[] advances, int[] clusterMap) {
+                        @NonNull int[] glyphIds,
+                        @NonNull float[] offsets, @NonNull float[] advances,
+                        @NonNull int[] clusterMap) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.isBackward = isBackward;
@@ -58,7 +64,7 @@ public class IntrinsicRun {
         this.charExtents = buildCharExtents();
     }
 
-    private float[] buildCharExtents() {
+    private @NonNull float[] buildCharExtents() {
         int length = charEnd - charStart;
         float[] array = new float[length];
         float distance = 0.0f;
@@ -109,7 +115,7 @@ public class IntrinsicRun {
         return glyphIds.length;
     }
 
-    public void loadGlyphRange(int startIndex, int endIndex, int[] glyphRange) {
+    public void loadGlyphRange(int startIndex, int endIndex, @NonNull @Size(2) int[] glyphRange) {
         Clusters.loadGlyphRange(clusterMap, startIndex - charStart, endIndex - charStart,
                                 isBackward, glyphIds.length, glyphRange);
     }

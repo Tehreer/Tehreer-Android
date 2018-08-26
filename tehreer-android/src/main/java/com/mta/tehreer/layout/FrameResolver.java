@@ -18,6 +18,8 @@ package com.mta.tehreer.layout;
 
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.AlignmentSpan;
@@ -38,21 +40,20 @@ import java.util.List;
  * This class resolves text frames by using a typesetter object.
  */
 public class FrameResolver {
-
-    private LineResolver mLineResolver = new LineResolver();
+    private @NonNull LineResolver mLineResolver = new LineResolver();
     private Typesetter mTypesetter;
     private Spanned mSpanned;
     private ParagraphCollection mParagraphs;
     private RunCollection mRuns;
     private byte[] mBreaks;
 
-    private RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+    private @NonNull RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private boolean mFitsHorizontally = false;
     private boolean mFitsVertically = false;
-    private TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
-    private VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
-    private BreakMode mTruncationMode = BreakMode.LINE;
-    private TruncationPlace mTruncationPlace = null;
+    private @NonNull TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
+    private @NonNull VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
+    private @NonNull BreakMode mTruncationMode = BreakMode.LINE;
+    private @Nullable TruncationPlace mTruncationPlace = null;
     private int mMaxLines = 0;
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
@@ -77,7 +78,7 @@ public class FrameResolver {
      *
      * @param typesetter A typesetter object.
      */
-    public void setTypesetter(Typesetter typesetter) {
+    public void setTypesetter(@NonNull Typesetter typesetter) {
         if (typesetter == null) {
             throw new NullPointerException("Typesetter is null");
         }
@@ -96,7 +97,7 @@ public class FrameResolver {
      *
      * @return The current frame rectangle.
      */
-    public RectF getFrameBounds() {
+    public @NonNull RectF getFrameBounds() {
         return new RectF(mFrameBounds);
     }
 
@@ -108,7 +109,7 @@ public class FrameResolver {
      *
      * @throws NullPointerException if <code>frameBounds</code> is null.
      */
-    public void setFrameBounds(RectF frameBounds) {
+    public void setFrameBounds(@NonNull RectF frameBounds) {
         if (frameBounds == null) {
             throw new NullPointerException("Frame bounds rectangle is null");
         }
@@ -164,7 +165,7 @@ public class FrameResolver {
      *
      * @return The current text alignment.
      */
-    public TextAlignment getTextAlignment() {
+    public @NonNull TextAlignment getTextAlignment() {
         return mTextAlignment;
     }
 
@@ -174,7 +175,7 @@ public class FrameResolver {
      *
      * @param textAlignment A value of {@link TextAlignment}.
      */
-    public void setTextAlignment(TextAlignment textAlignment) {
+    public void setTextAlignment(@NonNull TextAlignment textAlignment) {
         if (textAlignment == null) {
             throw new NullPointerException("Text alignment is null");
         }
@@ -188,7 +189,7 @@ public class FrameResolver {
      *
      * @return The current vertical alignment.
      */
-    public VerticalAlignment getVerticalAlignment() {
+    public @NonNull VerticalAlignment getVerticalAlignment() {
         return mVerticalAlignment;
     }
 
@@ -200,7 +201,7 @@ public class FrameResolver {
      *
      * @throws NullPointerException if <code>verticalAlignment</code> is null.
      */
-    public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
+    public void setVerticalAlignment(@NonNull VerticalAlignment verticalAlignment) {
         if (verticalAlignment == null) {
             throw new NullPointerException("Vertical alignment is null");
         }
@@ -214,7 +215,7 @@ public class FrameResolver {
      *
      * @return The current truncation mode.
      */
-    public BreakMode getTruncationMode() {
+    public @NonNull BreakMode getTruncationMode() {
         return mTruncationMode;
     }
 
@@ -226,7 +227,7 @@ public class FrameResolver {
      *
      * @throws NullPointerException if <code>truncationMode</code> is null.
      */
-    public void setTruncationMode(BreakMode truncationMode) {
+    public void setTruncationMode(@NonNull BreakMode truncationMode) {
         if (truncationMode == null) {
             throw new NullPointerException("Truncation mode is null");
         }
@@ -339,7 +340,7 @@ public class FrameResolver {
         }
     }
 
-    private float getFlushFactor(Layout.Alignment layoutAlignment, byte paragraphLevel) {
+    private float getFlushFactor(@Nullable Layout.Alignment layoutAlignment, byte paragraphLevel) {
         boolean isLTR = ((paragraphLevel & 1) == 0);
 
         if (layoutAlignment != null) {
@@ -390,7 +391,7 @@ public class FrameResolver {
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
      */
-    public ComposedFrame createFrame(int charStart, int charEnd) {
+    public @NonNull ComposedFrame createFrame(int charStart, int charEnd) {
         if (charStart < 0) {
             throw new IllegalArgumentException("Char Start: " + charStart);
         }
@@ -436,7 +437,6 @@ public class FrameResolver {
     }
 
     private class FrameFiller {
-
         final List<ComposedLine> frameLines = new ArrayList<>();
         float layoutWidth;
         float layoutHeight;
@@ -602,7 +602,7 @@ public class FrameResolver {
             }
         }
 
-        void prepareLine(ComposedLine composedLine, float flushFactor) {
+        void prepareLine(@NonNull ComposedLine composedLine, float flushFactor) {
             // Resolve line height spans.
             int chooseHeightCount = pickHeightSpans.length;
             for (int i = 0; i < chooseHeightCount; i++) {

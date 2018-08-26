@@ -16,13 +16,14 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.BreakMode;
 
 import java.text.BreakIterator;
 
 public class BreakResolver {
-
     public static final byte LINE = 1 << 0;
     public static final byte CHARACTER = 1 << 2;
     public static final byte PARAGRAPH = 1 << 4;
@@ -31,7 +32,7 @@ public class BreakResolver {
         return (byte) (forward ? type : type << 1);
     }
 
-    private static void fillBreaks(String text, byte[] breaks, byte type) {
+    private static void fillBreaks(@NonNull String text, @NonNull byte[] breaks, byte type) {
         BreakIterator iterator;
 
         switch (type) {
@@ -63,13 +64,14 @@ public class BreakResolver {
         }
     }
 
-    public static void fillBreaks(String text, byte[] breaks) {
+    public static void fillBreaks(@NonNull String text, @NonNull byte[] breaks) {
         BreakResolver.fillBreaks(text, breaks, BreakResolver.LINE);
         BreakResolver.fillBreaks(text, breaks, BreakResolver.CHARACTER);
     }
 
-    private static int findForwardBreak(CharSequence text, RunCollection runs, byte[] breaks,
-                                        byte type, int start, int end, float extent) {
+    private static int findForwardBreak(@NonNull CharSequence text, @NonNull RunCollection runs,
+                                        @NonNull byte[] breaks, byte type,
+                                        int start, int end, float extent) {
         int forwardBreak = start;
         int charIndex = start;
         float measurement = 0.0f;
@@ -116,8 +118,9 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    private static int findBackwardBreak(CharSequence text, RunCollection runs, byte[] breaks,
-                                         byte type, int start, int end, float extent) {
+    private static int findBackwardBreak(@NonNull CharSequence text, @NonNull RunCollection runs,
+                                         @NonNull byte[] breaks, byte type,
+                                         int start, int end, float extent) {
         int backwardBreak = end;
         int charIndex = end - 1;
         float measurement = 0.0f;
@@ -160,7 +163,8 @@ public class BreakResolver {
         return backwardBreak;
     }
 
-    public static int suggestForwardCharBreak(CharSequence text, RunCollection runs, byte[] breaks,
+    public static int suggestForwardCharBreak(@NonNull CharSequence text,
+                                              @NonNull RunCollection runs, @NonNull byte[] breaks,
                                               int charStart, int charEnd, float extent) {
         int forwardBreak = findForwardBreak(text, runs, breaks, CHARACTER, charStart, charEnd, extent);
 
@@ -182,7 +186,8 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    public static int suggestBackwardCharBreak(CharSequence text, RunCollection runs, byte[] breaks,
+    public static int suggestBackwardCharBreak(@NonNull CharSequence text,
+                                               @NonNull RunCollection runs, @NonNull byte[] breaks,
                                                int start, int end, float extent) {
         int backwardBreak = findBackwardBreak(text, runs, breaks, CHARACTER, start, end, extent);
 
@@ -204,7 +209,8 @@ public class BreakResolver {
         return backwardBreak;
     }
 
-    public static int suggestForwardLineBreak(CharSequence text, RunCollection runs, byte[] breaks,
+    public static int suggestForwardLineBreak(@NonNull CharSequence text,
+                                              @NonNull RunCollection runs, @NonNull byte[] breaks,
                                               int start, int end, float extent) {
         int forwardBreak = findForwardBreak(text, runs, breaks, LINE, start, end, extent);
 
@@ -216,7 +222,8 @@ public class BreakResolver {
         return forwardBreak;
     }
 
-    public static int suggestBackwardLineBreak(CharSequence text, RunCollection runs, byte[] breaks,
+    public static int suggestBackwardLineBreak(@NonNull CharSequence text,
+                                               @NonNull RunCollection runs, @NonNull byte[] breaks,
                                                int start, int end, float extent) {
         int backwardBreak = findBackwardBreak(text, runs, breaks, LINE, start, end, extent);
 
@@ -228,8 +235,9 @@ public class BreakResolver {
         return backwardBreak;
     }
 
-    public static int suggestForwardBreak(CharSequence text, RunCollection runs, byte[] breaks,
-                                          int start, int end, float extent, BreakMode mode) {
+    public static int suggestForwardBreak(@NonNull CharSequence text,
+                                          @NonNull RunCollection runs, @NonNull byte[] breaks,
+                                          int start, int end, float extent, @NonNull BreakMode mode) {
         switch (mode) {
         case CHARACTER:
             return BreakResolver.suggestForwardCharBreak(text, runs, breaks, start, end, extent);
@@ -241,8 +249,9 @@ public class BreakResolver {
         return -1;
     }
 
-    public static int suggestBackwardBreak(CharSequence text, RunCollection runs, byte[] breaks,
-                                           int start, int end, float extent, BreakMode mode) {
+    public static int suggestBackwardBreak(@NonNull CharSequence text,
+                                           @NonNull RunCollection runs, @NonNull byte[] breaks,
+                                           int start, int end, float extent, @NonNull BreakMode mode) {
         switch (mode) {
         case CHARACTER:
             return BreakResolver.suggestBackwardCharBreak(text, runs, breaks, start, end, extent);

@@ -16,17 +16,20 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 
 public final class CaretEdgeList extends FloatList {
-    private final float[] extentArray;
+    private final @NonNull float[] extentArray;
     private final int beforeOffset;
     private final int edgeCount;
     private final boolean reversed;
     private final float pivotDistance;
 
-    public CaretEdgeList(float[] extents, int offset, int size, int startExtra, int endExtra, boolean reversed) {
+    public CaretEdgeList(@NonNull float[] extents, int offset, int size,
+                         int startExtra, int endExtra, boolean reversed) {
         int pivotIndex = (reversed ? size - endExtra : startExtra) + offset - 1;
         this.extentArray = extents;
         this.beforeOffset = offset - 1;
@@ -67,7 +70,7 @@ public final class CaretEdgeList extends FloatList {
     }
 
     @Override
-    public void copyTo(float[] array, int atIndex) {
+    public void copyTo(@NonNull float[] array, int atIndex) {
         throw new UnsupportedOperationException();
     }
 

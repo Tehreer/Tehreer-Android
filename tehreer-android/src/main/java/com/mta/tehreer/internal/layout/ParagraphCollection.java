@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.internal.layout;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.unicode.BidiLine;
 import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.unicode.BidiRun;
@@ -24,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParagraphCollection extends ArrayList<BidiParagraph> {
-
     public int binarySearch(int charIndex) {
         int low = 0;
         int high = size() - 1;
@@ -53,10 +54,10 @@ public class ParagraphCollection extends ArrayList<BidiParagraph> {
     }
 
     public interface RunConsumer {
-        void accept(BidiRun bidiRun);
+        void accept(@NonNull BidiRun bidiRun);
     }
 
-    public void forEachLineRun(int lineStart, int lineEnd, RunConsumer runConsumer) {
+    public void forEachLineRun(int lineStart, int lineEnd, @NonNull RunConsumer runConsumer) {
         int paragraphIndex = binarySearch(lineStart);
         int feasibleStart;
         int feasibleEnd;
