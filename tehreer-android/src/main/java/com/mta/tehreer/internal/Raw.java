@@ -16,8 +16,9 @@
 
 package com.mta.tehreer.internal;
 
-public final class Raw {
+import android.support.annotation.NonNull;
 
+public final class Raw {
     static {
         JniBridge.loadLibrary();
     }
@@ -34,11 +35,11 @@ public final class Raw {
     public static native int getInt32Value(long pointer);
     public static native long getIntPtrValue(long pointer);
 
-    public static native void copyInt8Buffer(long pointer, byte[] destination, int start, int length);
-    public static native void copyInt32Buffer(long pointer, float[] destination, int start, int length, float scale);
-    public static native void copyUInt8Buffer(long pointer, int[] destination, int start, int length);
-    public static native void copyUInt16Buffer(long pointer, int[] destination, int start, int length);
-    public static native void copyUIntPtrBuffer(long pointer, int[] destination, int start, int length);
+    public static native void copyInt8Buffer(long pointer, @NonNull byte[] destination, int start, int length);
+    public static native void copyInt32Buffer(long pointer, @NonNull float[] destination, int start, int length, float scale);
+    public static native void copyUInt8Buffer(long pointer, @NonNull int[] destination, int start, int length);
+    public static native void copyUInt16Buffer(long pointer, @NonNull int[] destination, int start, int length);
+    public static native void copyUIntPtrBuffer(long pointer, @NonNull int[] destination, int start, int length);
 
     private Raw() {
     }
