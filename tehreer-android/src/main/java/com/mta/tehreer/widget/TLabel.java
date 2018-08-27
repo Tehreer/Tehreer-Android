@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.RectF;
+import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -49,44 +52,43 @@ import java.util.List;
  * Displays read-only text to the user.
  */
 public class TLabel extends View {
-
-    private Renderer mRenderer = new Renderer();
-    private FrameResolver mResolver = new FrameResolver();
+    private @NonNull Renderer mRenderer = new Renderer();
+    private @NonNull FrameResolver mResolver = new FrameResolver();
 
     private int mGravity = Gravity.TOP | Gravity.START;
 
-    private String mText = null;
-    private Spanned mSpanned = null;
-    private Typesetter mTypesetter = null;
+    private @Nullable String mText = null;
+    private @Nullable Spanned mSpanned = null;
+    private @Nullable Typesetter mTypesetter = null;
 
     private int mTextWidth = 0;
     private int mTextHeight = 0;
 
-    private RectF mLayoutRect = new RectF();
-    private ComposedFrame mComposedFrame = null;
+    private @NonNull RectF mLayoutRect = new RectF();
+    private @Nullable ComposedFrame mComposedFrame = null;
 
     public TLabel(Context context) {
         super(context);
         setup(context, null, 0);
     }
 
-    public TLabel(Context context, AttributeSet attrs) {
+    public TLabel(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         setup(context, attrs, 0);
     }
 
-    public TLabel(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TLabel(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setup(context, attrs, defStyleAttr);
     }
 
-    private void setup(Context context, AttributeSet attrs, int defStyleAttr) {
+    private void setup(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         if (attrs != null) {
             setupAttributes(context, attrs, defStyleAttr);
         }
     }
 
-    private void setupAttributes(Context context, AttributeSet attrs, int defStyleAttr) {
+    private void setupAttributes(Context context, @NonNull AttributeSet attrs, int defStyleAttr) {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
@@ -431,7 +433,7 @@ public class TLabel extends View {
         updateTypesetter();
     }
 
-    private void setTypeface(Object tag) {
+    private void setTypeface(@NonNull Object tag) {
         setTypeface(TypefaceManager.getTypeface(tag));
     }
 
@@ -487,7 +489,7 @@ public class TLabel extends View {
      *
      * @return The color being used for displaying text.
      */
-    public int getTextColor() {
+    public @ColorInt int getTextColor() {
         return mRenderer.getFillColor();
     }
 
@@ -496,7 +498,7 @@ public class TLabel extends View {
      *
      * @param textColor The color to use for displaying text.
      */
-    public void setTextColor(int textColor) {
+    public void setTextColor(@ColorInt int textColor) {
         mRenderer.setFillColor(textColor);
         invalidate();
     }
@@ -684,7 +686,7 @@ public class TLabel extends View {
      *
      * @return The color of the shadow.
      */
-    public int getShadowColor() {
+    public @ColorInt int getShadowColor() {
         return mRenderer.getShadowColor();
     }
 
@@ -693,7 +695,7 @@ public class TLabel extends View {
      *
      * @param shadowColor The color the shadow.
      */
-    public void setShadowColor(int shadowColor) {
+    public void setShadowColor(@ColorInt int shadowColor) {
         mRenderer.setShadowColor(shadowColor);
         invalidate();
     }
