@@ -16,13 +16,14 @@
 
 package com.mta.tehreer.internal.util;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.HashMap;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class LruCache {
-
     private static class Node<K, V> {
-
         public final Segment<K, V> segment;
         public final K key;
         public V value;
@@ -37,11 +38,9 @@ public abstract class LruCache {
     }
 
     private static class List {
-
-        Node header;
+        final @NonNull Node header = new Node(null, null, null);
 
         public List() {
-            header = new Node(null, null, null);
             header.previous = header.next = header;
         }
 
@@ -49,19 +48,19 @@ public abstract class LruCache {
             return header.previous;
         }
 
-        public void makeFirst(Node node) {
+        public void makeFirst(@NonNull Node node) {
             remove(node);
             addFirst(node);
         }
 
-        public void addFirst(Node node) {
+        public void addFirst(@NonNull Node node) {
             node.previous = header;
             node.next = header.next;
             header.next.previous = node;
             header.next = node;
         }
 
-        public void remove(Node node) {
+        public void remove(@NonNull Node node) {
             node.previous.next = node.next;
             node.next.previous = node.previous;
             node.next = node.previous = null;
@@ -73,24 +72,22 @@ public abstract class LruCache {
     }
 
     protected static class Segment<K, V> {
+        protected final @NonNull LruCache cache;
+        private final @NonNull HashMap<K, Node<K, V>> map = new HashMap<>();
 
-        protected final LruCache cache;
-        private HashMap<K, Node<K, V>> map;
-
-        public Segment(LruCache cache) {
+        public Segment(@NonNull LruCache cache) {
             if (cache == null) {
                 throw new NullPointerException();
             }
 
             this.cache = cache;
-            this.map = new HashMap<>();
         }
 
-        protected int sizeOf(K key, V value) {
+        protected int sizeOf(@NonNull K key, @NonNull V value) {
             return 1;
         }
 
-        public final V get(K key) {
+        public final @Nullable V get(@NonNull K key) {
             synchronized (cache) {
                 Node<K, V> node = map.get(key);
                 if (node != null) {
@@ -102,7 +99,7 @@ public abstract class LruCache {
             return null;
         }
 
-        public final void put(K key, V value) {
+        public final void put(@NonNull K key, @NonNull V value) {
             synchronized (cache) {
                 Node<K, V> newNode = new Node<>(this, key, value);
                 Node<K, V> oldNode = map.put(key, newNode);
@@ -117,7 +114,7 @@ public abstract class LruCache {
             cache.trimToSize(cache.capacity);
         }
 
-        public final void remove(K key) {
+        public final void remove(@NonNull K key) {
             synchronized (cache) {
                 Node<K, V> node = map.remove(key);
                 if (node != null) {
@@ -128,7 +125,7 @@ public abstract class LruCache {
         }
     }
 
-    private List list;
+    private final @NonNull List list;
     private int capacity;
     private int size;
 

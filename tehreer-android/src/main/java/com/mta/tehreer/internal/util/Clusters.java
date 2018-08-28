@@ -16,11 +16,13 @@
 
 package com.mta.tehreer.internal.util;
 
+import android.support.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntList;
 
 public final class Clusters {
-    public static void loadGlyphRange(int[] clusterMap, int startIndex, int endIndex,
-                                      boolean isBackward, int glyphCount, int[] glyphRange) {
+    public static void loadGlyphRange(@NonNull int[] clusterMap, int startIndex, int endIndex,
+                                      boolean isBackward, int glyphCount, @NonNull int[] glyphRange) {
         if (!isBackward) {
             glyphRange[0] = clusterMap[startIndex];
             glyphRange[1] = forwardGlyphIndex(clusterMap, endIndex - 1, glyphCount) + 1;
@@ -30,7 +32,7 @@ public final class Clusters {
         }
     }
 
-    public static int leadingGlyphIndex(IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
+    public static int leadingGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
             return clusterMap.get(arrayIndex);
         }
@@ -38,7 +40,7 @@ public final class Clusters {
         return backwardGlyphIndex(clusterMap, arrayIndex, glyphCount);
     }
 
-    public static int trailingGlyphIndex(IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
+    public static int trailingGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
             return forwardGlyphIndex(clusterMap, arrayIndex, glyphCount);
         }
@@ -46,7 +48,7 @@ public final class Clusters {
         return clusterMap.get(arrayIndex);
     }
 
-    private static int forwardGlyphIndex(int[] clusterMap, int arrayIndex, int glyphCount) {
+    private static int forwardGlyphIndex(@NonNull int[] clusterMap, int arrayIndex, int glyphCount) {
         int common = clusterMap[arrayIndex];
         int length = clusterMap.length;
 
@@ -60,7 +62,7 @@ public final class Clusters {
         return glyphCount - 1;
     }
 
-    private static int forwardGlyphIndex(IntList clusterMap, int arrayIndex, int glyphCount) {
+    private static int forwardGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, int glyphCount) {
         int common = clusterMap.get(arrayIndex);
         int length = clusterMap.size();
 
@@ -74,7 +76,7 @@ public final class Clusters {
         return glyphCount - 1;
     }
 
-    private static int backwardGlyphIndex(int[] clusterMap, int arrayIndex, int glyphCount) {
+    private static int backwardGlyphIndex(@NonNull int[] clusterMap, int arrayIndex, int glyphCount) {
         int common = clusterMap[arrayIndex];
 
         for (int i = arrayIndex - 1; i >= 0; i--) {
@@ -87,7 +89,7 @@ public final class Clusters {
         return glyphCount - 1;
     }
 
-    private static int backwardGlyphIndex(IntList clusterMap, int arrayIndex, int glyphCount) {
+    private static int backwardGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, int glyphCount) {
         int common = clusterMap.get(arrayIndex);
 
         for (int i = arrayIndex - 1; i >= 0; i--) {
@@ -100,7 +102,7 @@ public final class Clusters {
         return glyphCount - 1;
     }
 
-    public static int actualClusterStart(int[] clusterMap, int arrayIndex) {
+    public static int actualClusterStart(@NonNull int[] clusterMap, int arrayIndex) {
         int common = clusterMap[arrayIndex];
 
         for (int i = arrayIndex - 1; i >= 0; i--) {
@@ -113,7 +115,7 @@ public final class Clusters {
         return 0;
     }
 
-    public static int actualClusterStart(IntList clusterMap, int arrayIndex) {
+    public static int actualClusterStart(@NonNull IntList clusterMap, int arrayIndex) {
         int common = clusterMap.get(arrayIndex);
 
         for (int i = arrayIndex - 1; i >= 0; i--) {
@@ -126,7 +128,7 @@ public final class Clusters {
         return 0;
     }
 
-    public static int actualClusterEnd(int[] clusterMap, int arrayIndex) {
+    public static int actualClusterEnd(@NonNull int[] clusterMap, int arrayIndex) {
         int common = clusterMap[arrayIndex];
         int length = clusterMap.length;
 
@@ -140,7 +142,7 @@ public final class Clusters {
         return length;
     }
 
-    public static int actualClusterEnd(IntList clusterMap, int arrayIndex) {
+    public static int actualClusterEnd(@NonNull IntList clusterMap, int arrayIndex) {
         int common = clusterMap.get(arrayIndex);
         int length = clusterMap.size();
 

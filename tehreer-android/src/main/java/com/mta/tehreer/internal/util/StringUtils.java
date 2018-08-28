@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package com.mta.tehreer.internal.util;
 
+import android.support.annotation.NonNull;
 import android.text.GetChars;
 
 public class StringUtils {
-
-    public static String copyString(CharSequence charSequence) {
+    public static @NonNull String copyString(@NonNull CharSequence charSequence) {
         int length = charSequence.length();
         char[] chars = new char[length];
 
@@ -35,7 +35,7 @@ public class StringUtils {
         return new String(chars);
     }
 
-    public static int getLeadingWhitespaceEnd(CharSequence charSequence, int charStart, int charEnd) {
+    public static int getLeadingWhitespaceEnd(@NonNull CharSequence charSequence, int charStart, int charEnd) {
         for (int i = charStart; i < charEnd; i++) {
             if (!Character.isWhitespace(charSequence.charAt(i))) {
                 return i;
@@ -45,7 +45,7 @@ public class StringUtils {
         return charEnd;
     }
 
-    public static int getTrailingWhitespaceStart(CharSequence charSequence, int charStart, int charEnd) {
+    public static int getTrailingWhitespaceStart(@NonNull CharSequence charSequence, int charStart, int charEnd) {
         for (int i = charEnd - 1; i >= charStart; i--) {
             if (!Character.isWhitespace(charSequence.charAt(i))) {
                 return i + 1;

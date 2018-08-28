@@ -16,6 +16,9 @@
 
 package com.mta.tehreer.internal;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -25,14 +28,13 @@ import com.mta.tehreer.internal.collections.JByteArrayList;
 import java.util.Iterator;
 
 public class Description {
-
     private static final String NULL = "null";
 
-    public static String forByteArray(byte[] array) {
+    public static @NonNull String forByteArray(@NonNull byte[] array) {
         return forByteList(new JByteArrayList(array, 0, array.length));
     }
 
-    public static String forByteList(ByteList list) {
+    public static @NonNull String forByteList(@Nullable ByteList list) {
         if (list != null) {
             Description description = new Description();
             description.begin();
@@ -48,7 +50,7 @@ public class Description {
         return NULL;
     }
 
-    public static String forIntList(IntList list) {
+    public static @NonNull String forIntList(@Nullable IntList list) {
         if (list != null) {
             Description description = new Description();
             description.begin();
@@ -64,7 +66,7 @@ public class Description {
         return NULL;
     }
 
-    public static String forFloatList(FloatList list) {
+    public static @NonNull String forFloatList(@Nullable FloatList list) {
         if (list != null) {
             Description description = new Description();
             description.begin();
@@ -80,7 +82,7 @@ public class Description {
         return NULL;
     }
 
-    public static String forPointList(PointList list) {
+    public static @NonNull String forPointList(@Nullable PointList list) {
         if (list != null) {
             Description description = new Description();
             description.begin();
@@ -97,7 +99,7 @@ public class Description {
         return NULL;
     }
 
-    public static <T> String forIterator(Iterator<T> iterator) {
+    public static @NonNull <T> String forIterator(@Nullable Iterator<T> iterator) {
         if (iterator != null) {
             Description description = new Description();
             description.begin();
@@ -113,11 +115,11 @@ public class Description {
         return NULL;
     }
 
-    public static <T> String forIterable(Iterable<T> iterable) {
+    public static @NonNull <T> String forIterable(@NonNull Iterable<T> iterable) {
         return forIterator(iterable.iterator());
     }
 
-    private final StringBuilder builder = new StringBuilder();
+    private final @NonNull StringBuilder builder = new StringBuilder();
     private boolean begun = false;
 
     private Description() {
