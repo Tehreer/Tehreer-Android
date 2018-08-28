@@ -56,6 +56,39 @@ public final class Clusters {
         }
     }
 
+    private static void loadBackwardExtents(@NonNull int[] clusterMap, @NonNull int[] glyphIds,
+                                            @NonNull float[] glyphAdvances, boolean isRTL,
+                                            @NonNull float[] charExtents) {
+        int clusterEnd = clusterMap.length;
+        int glyphStart = clusterMap[clusterEnd - 1];
+        float distance = 0.0f;
+
+        for (int i = clusterEnd; i >= 0; i--) {
+            int glyphIndex = (i > 0 ? clusterMap[i - 1] : glyphIds.length);
+            if (glyphIndex == glyphStart) {
+                continue;
+            }
+
+            // Find the advance of current cluster.
+            float clusterAdvance = 0.0f;
+            for (int j = glyphStart; j < glyphIndex; j++) {
+                clusterAdvance += glyphAdvances[j];
+            }
+
+            // Divide the advance evenly between cluster length.
+            int clusterLength = clusterEnd - i;
+            float charAdvance = clusterAdvance / clusterLength;
+
+            for (int j = clusterEnd; j > i; j--) {
+                distance += (isRTL ? -charAdvance : charAdvance);
+                charExtents[j - 1] = distance;
+            }
+
+            clusterEnd = i;
+            glyphStart = glyphIndex;
+        }
+    }
+
     public static void loadGlyphRange(@NonNull int[] clusterMap, int startIndex, int endIndex,
                                       boolean isBackward, int glyphCount, @NonNull int[] glyphRange) {
         if (!isBackward) {
