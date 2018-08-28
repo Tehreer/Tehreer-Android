@@ -21,6 +21,41 @@ import android.support.annotation.NonNull;
 import com.mta.tehreer.collections.IntList;
 
 public final class Clusters {
+    private static void loadForwardExtents(@NonNull int[] clusterMap, @NonNull int[] glyphIds,
+                                           @NonNull float[] glyphAdvances, boolean isRTL,
+                                           @NonNull float[] charExtents) {
+        int clusterStart = 0;
+        int runLength = clusterMap.length;
+
+        int glyphStart = clusterMap[0];
+        float distance = 0.0f;
+
+        for (int i = 0; i <= runLength; i++) {
+            int glyphIndex = (i < runLength ? clusterMap[i] : glyphIds.length);
+            if (glyphIndex == glyphStart) {
+                continue;
+            }
+
+            // Find the advance of current cluster.
+            float clusterAdvance = 0.0f;
+            for (int j = glyphStart; j < glyphIndex; j++) {
+                clusterAdvance += glyphAdvances[j];
+            }
+
+            // Divide the advance evenly between cluster length.
+            int clusterLength = i - clusterStart;
+            float charAdvance = clusterAdvance / clusterLength;
+
+            for (int j = clusterStart; j < i; j++) {
+                distance += (isRTL ? -charAdvance : charAdvance);
+                charExtents[j] = distance;
+            }
+
+            clusterStart = i;
+            glyphStart = glyphIndex;
+        }
+    }
+
     public static void loadGlyphRange(@NonNull int[] clusterMap, int startIndex, int endIndex,
                                       boolean isBackward, int glyphCount, @NonNull int[] glyphRange) {
         if (!isBackward) {
