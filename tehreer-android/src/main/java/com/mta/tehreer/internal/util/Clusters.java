@@ -19,8 +19,22 @@ package com.mta.tehreer.internal.util;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.sfnt.WritingDirection;
 
 public final class Clusters {
+    public static void loadCharExtents(@NonNull int[] clusterMap, boolean isBackward,
+                                       @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
+                                       @NonNull WritingDirection writingDirection,
+                                       @NonNull float[] charExtents) {
+        boolean isRTL = writingDirection == WritingDirection.RIGHT_TO_LEFT;
+
+        if (!isBackward) {
+            loadForwardExtents(clusterMap, glyphIds, glyphAdvances, isRTL, charExtents);
+        } else {
+            loadBackwardExtents(clusterMap, glyphIds, glyphAdvances, isRTL, charExtents);
+        }
+    }
+
     private static void loadForwardExtents(@NonNull int[] clusterMap, @NonNull int[] glyphIds,
                                            @NonNull float[] glyphAdvances, boolean isRTL,
                                            @NonNull float[] charExtents) {
