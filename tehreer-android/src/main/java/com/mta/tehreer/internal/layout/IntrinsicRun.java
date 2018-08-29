@@ -61,54 +61,12 @@ public class IntrinsicRun {
         this.glyphOffsets = offsets;
         this.glyphAdvances = advances;
         this.clusterMap = clusterMap;
-        this.charExtents = buildCharExtents();
+        this.charExtents = new float[clusterMap.length];
+        Clusters.loadCharExtents(clusterMap, isBackward, glyphIds, advances, writingDirection, charExtents);
     }
 
-    private @NonNull float[] buildCharExtents() {
-        int length = charEnd - charStart;
-        float[] array = new float[length];
-        float distance = 0.0f;
-
-        int clusterStart = 0;
-        int glyphStart = clusterMap[0];
-
-        for (int i = 0; i <= length; i++) {
-            int glyphIndex = (i < length ? clusterMap[i] : !isBackward ? glyphIds.length : 0);
-            if (glyphIndex == glyphStart) {
-                continue;
-            }
-
-            if (glyphStart > glyphIndex) {
-                int tempIndex = glyphIndex;
-                glyphIndex = glyphStart;
-                glyphStart = tempIndex;
-            }
-
-            // Find the advance of current cluster.
-            float clusterAdvance = 0.0f;
-            for (int j = glyphStart; j < glyphIndex; j++) {
-                clusterAdvance += glyphAdvances[j];
-            }
-
-            // Divide the advance evenly between cluster length.
-            int clusterLength = i - clusterStart;
-            float charAdvance = clusterAdvance / clusterLength;
-
-            for (int j = clusterStart; j < i; j++) {
-                distance += charAdvance;
-                array[j] = distance;
-            }
-
-            clusterStart = i;
-            glyphStart = glyphIndex;
-        }
-
-        return array;
-    }
-
-    public boolean isOpposite() {
-        return (!isBackward && writingDirection == WritingDirection.RIGHT_TO_LEFT)
-             | (isBackward && writingDirection == WritingDirection.LEFT_TO_RIGHT);
+    public boolean isRTL() {
+        return writingDirection == WritingDirection.RIGHT_TO_LEFT;
     }
 
     public int glyphCount() {
