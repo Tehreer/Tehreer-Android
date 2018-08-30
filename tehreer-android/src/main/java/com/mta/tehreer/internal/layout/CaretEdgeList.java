@@ -23,33 +23,33 @@ import com.mta.tehreer.internal.Exceptions;
 
 public final class CaretEdgeList extends FloatList {
     private final @NonNull float[] extentArray;
-    private final int beforeOffset;
+    private final int offset;
     private final int edgeCount;
-    private final boolean reversed;
     private final float pivotDistance;
 
     public CaretEdgeList(@NonNull float[] extents, int offset, int size,
-                         int startExtra, int endExtra, boolean reversed) {
-        int pivotIndex = (reversed ? size - endExtra : startExtra) + offset - 1;
+                         int startExtra, int endExtra, boolean isBackward, boolean isRTL) {
+        boolean isOpposite = (isBackward ^ isRTL);
         this.extentArray = extents;
-        this.beforeOffset = offset - 1;
+        this.offset = offset + (isBackward ? 0 : -1);
         this.edgeCount = size + 1;
-        this.reversed = reversed;
-        this.pivotDistance = (pivotIndex == -1 ? 0.0f : extentArray[pivotIndex]);
+        this.pivotDistance = edgeAt(isOpposite ? size - endExtra : startExtra);
     }
 
-    public float distance(int fromIndex, int toIndex) {
-        int relativeFromIndex = fromIndex + beforeOffset;
-        int relativeToIndex = toIndex + beforeOffset;
+    private float edgeAt(int index) {
+        int relativeIndex = index + offset;
+        if (relativeIndex == -1 || relativeIndex == extentArray.length) {
+            return 0.0f;
+        }
 
-        float firstEdge = (relativeFromIndex == -1 ? 0.0f : extentArray[relativeFromIndex]);
-        float lastEdge = (relativeToIndex == -1 ? 0.0f : extentArray[relativeToIndex]);
-
-        return lastEdge - firstEdge;
+        return extentArray[relativeIndex];
     }
 
-    public boolean reversed() {
-        return reversed;
+    public float distance(int fromIndex, int toIndex, boolean isOpposite) {
+        float firstEdge = edgeAt(fromIndex);
+        float lastEdge = edgeAt(toIndex);
+
+        return (isOpposite ? firstEdge - lastEdge : lastEdge - firstEdge);
     }
 
     @Override
@@ -63,10 +63,7 @@ public final class CaretEdgeList extends FloatList {
             throw Exceptions.indexOutOfBounds(index, edgeCount);
         }
 
-        int relativeIndex = index + beforeOffset;
-        float relativeExtent = (relativeIndex == -1 ? 0.0f : extentArray[relativeIndex]);
-
-        return (reversed ? pivotDistance - relativeExtent : relativeExtent - pivotDistance);
+        return edgeAt(index) - pivotDistance;
     }
 
     @Override
