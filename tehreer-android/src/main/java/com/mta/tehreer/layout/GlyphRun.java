@@ -232,6 +232,10 @@ public class GlyphRun {
         return writingDirection;
     }
 
+    private boolean isOpposite() {
+        return isBackward ^ (writingDirection == WritingDirection.RIGHT_TO_LEFT);
+    }
+
     /**
      * Returns the number of glyphs in this run.
      *
