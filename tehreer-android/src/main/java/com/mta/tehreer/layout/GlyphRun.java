@@ -465,6 +465,10 @@ public class GlyphRun {
         return caretEdges.get(arrayIndex);
     }
 
+    private float getLeadingEdge(int startIndex, int endIndex) {
+        return getCaretEdge(!isBackward ? startIndex : endIndex);
+    }
+
     /**
      * Determines the distance of specified character from the start of the run assumed at zero.
      *
