@@ -602,24 +602,28 @@ public class GlyphRun {
                                            glyphAdvances.subList(glyphStart, glyphEnd));
 	}
 
-    private ClusterRange getClusterRange(int charIndex, @Nullable ClusterRange exclusion) {
+    private @Nullable ClusterRange getClusterRange(int charIndex, @Nullable ClusterRange exclusion) {
 	    int actualStart = getActualClusterStart(charIndex);
 	    int actualEnd = getActualClusterEnd(charIndex);
 
 	    int leadingIndex = getLeadingGlyphIndex(charIndex);
 	    int trailingIndex = getTrailingGlyphIndex(charIndex);
 
-        ClusterRange clusterRange = new ClusterRange();
-        clusterRange.actualStart = actualStart;
-        clusterRange.actualEnd = actualEnd;
-        clusterRange.glyphStart = Math.min(leadingIndex, trailingIndex);
-        clusterRange.glyphEnd = Math.max(leadingIndex, trailingIndex) + 1;
+        ClusterRange cluster = new ClusterRange();
+        cluster.actualStart = actualStart;
+        cluster.actualEnd = actualEnd;
+        cluster.glyphStart = Math.min(leadingIndex, trailingIndex);
+        cluster.glyphEnd = Math.max(leadingIndex, trailingIndex) + 1;
 
         if (exclusion != null) {
-            clusterRange.glyphStart = Math.max(clusterRange.glyphStart, exclusion.glyphEnd);
+            int minStart = Math.min(exclusion.glyphStart, cluster.glyphEnd);
+            int maxEnd = Math.max(cluster.glyphStart, exclusion.glyphEnd);
+
+            cluster.glyphStart = (!isBackward ? maxEnd : cluster.glyphStart);
+            cluster.glyphEnd = (isBackward ? minStart : cluster.glyphEnd);
         }
-        if (clusterRange.glyphStart < clusterRange.glyphEnd) {
-            return clusterRange;
+        if (cluster.glyphStart < cluster.glyphEnd) {
+            return cluster;
         }
 
         return null;
