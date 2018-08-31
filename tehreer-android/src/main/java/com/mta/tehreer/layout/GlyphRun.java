@@ -705,18 +705,27 @@ public class GlyphRun {
             int glyphEnd = glyphIds.size();
 
             int chunkStart = charStart;
+            int chunkEnd = charEnd;
 
             if (firstCluster != null) {
                 drawEdgeCluster(renderer, canvas, firstCluster);
+
+                // Exclude first cluster characters.
                 chunkStart = firstCluster.actualEnd;
-                glyphStart = firstCluster.glyphEnd;
+                // Exclude first cluster glyphs.
+                glyphStart = (!isBackward ? firstCluster.glyphEnd : glyphStart);
+                glyphEnd = (isBackward ? firstCluster.glyphStart : glyphEnd);
             }
             if (lastCluster != null) {
-                glyphEnd = lastCluster.glyphStart;
+                // Exclude last cluster characters.
+                chunkEnd = lastCluster.actualStart;
+                // Exclude last cluster glyphs.
+                glyphEnd = (!isBackward ? lastCluster.glyphStart : glyphEnd);
+                glyphStart = (isBackward ? lastCluster.glyphEnd : glyphStart);
             }
 
             canvas.save();
-            canvas.translate(getCaretEdge(chunkStart), 0.0f);
+            canvas.translate(getLeadingEdge(chunkStart, chunkEnd), 0.0f);
 
             renderer.drawGlyphs(canvas,
                                 glyphIds.subList(glyphStart, glyphEnd),
