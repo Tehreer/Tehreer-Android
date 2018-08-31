@@ -346,7 +346,7 @@ public class GlyphRun {
         int visibleOffset = startExtraLength;
         int visibleLength = charEnd - charStart;
 
-        return caretEdges.distance(visibleOffset, visibleOffset + visibleLength);
+        return caretEdges.distance(visibleOffset, visibleOffset + visibleLength, isOpposite());
     }
 
     /**
