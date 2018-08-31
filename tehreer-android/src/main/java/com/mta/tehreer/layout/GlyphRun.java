@@ -511,7 +511,7 @@ public class GlyphRun {
      */
     public int computeNearestCharIndex(float distance) {
         int extraStart = charStart - startExtraLength;
-        boolean reversed = caretEdges.reversed();
+        boolean isOpposite = isOpposite();
 
         int leadingCharIndex = -1;
         int trailingCharIndex = -1;
@@ -519,8 +519,8 @@ public class GlyphRun {
         float leadingCaretEdge = 0.0f;
         float trailingCaretEdge = 0.0f;
 
-        int index = (reversed ? charEnd : charStart);
-        int next = (reversed ? -1 : 1);
+        int index = (isOpposite ? charEnd : charStart);
+        int next = (isOpposite ? -1 : 1);
 
         while (index <= charEnd && index >= charStart) {
             float caretEdge = caretEdges.get(index - extraStart);
