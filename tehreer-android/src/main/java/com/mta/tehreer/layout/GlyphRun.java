@@ -638,28 +638,23 @@ public class GlyphRun {
     }
 
     private void drawEdgeCluster(@NonNull Renderer renderer, @NonNull Canvas canvas, @NonNull ClusterRange cluster) {
-        float clipLeft = Float.NEGATIVE_INFINITY;
-        float clipRight = Float.POSITIVE_INFINITY;
+	    final boolean startClipped = (cluster.actualStart < charStart);
+	    final boolean endClipped = (cluster.actualEnd > charEnd);
 
-        if (!caretEdges.reversed()) {
-            if (cluster.actualStart < charStart) {
-                clipLeft = getCaretEdge(charStart);
-            }
-            if (cluster.actualEnd > charEnd) {
-                clipRight = getCaretEdge(charEnd);
-            }
+        final float clipLeft;
+        final float clipRight;
+
+        if (!isOpposite()) {
+            clipLeft = (startClipped ? getCaretEdge(charStart) : Float.NEGATIVE_INFINITY);
+            clipRight = (endClipped ? getCaretEdge(charEnd) : Float.POSITIVE_INFINITY);
         } else {
-            if (cluster.actualStart < charStart) {
-                clipRight = getCaretEdge(charStart);
-            }
-            if (cluster.actualEnd > charEnd) {
-                clipLeft = getCaretEdge(charEnd);
-            }
+            clipRight = (startClipped ? getCaretEdge(charStart) : Float.POSITIVE_INFINITY);
+            clipLeft = (endClipped ? getCaretEdge(charEnd) : Float.NEGATIVE_INFINITY);
         }
 
         canvas.save();
         canvas.clipRect(clipLeft, Float.NEGATIVE_INFINITY, clipRight, Float.POSITIVE_INFINITY);
-        canvas.translate(getCaretEdge(cluster.actualStart), 0.0f);
+        canvas.translate(getLeadingEdge(cluster.actualStart, cluster.actualEnd), 0.0f);
 
         renderer.drawGlyphs(canvas,
                             glyphIds.subList(cluster.glyphStart, cluster.glyphEnd),
