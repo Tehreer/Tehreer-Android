@@ -76,7 +76,7 @@ class LineResolver {
                             new JFloatArrayList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
                             new ClusterMap(intrinsicRun.clusterMap, chunkOffset, chunkLength, glyphOffset),
                             new CaretEdgeList(intrinsicRun.charExtents, chunkOffset, chunkLength,
-                                              startExtra, endExtra, intrinsicRun.isOpposite()));
+                                              startExtra, endExtra, intrinsicRun.isBackward, intrinsicRun.isRTL()));
     }
 
     static @NonNull ComposedLine createComposedLine(@NonNull CharSequence text, int charStart, int charEnd,
