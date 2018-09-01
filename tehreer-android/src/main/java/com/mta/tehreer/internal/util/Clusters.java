@@ -19,24 +19,21 @@ package com.mta.tehreer.internal.util;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
-import com.mta.tehreer.sfnt.WritingDirection;
 
 public final class Clusters {
-    public static void loadCharExtents(@NonNull int[] clusterMap, boolean isBackward,
+    public static void loadCharExtents(@NonNull int[] clusterMap,
+                                       boolean isBackward, boolean visuallyRTL,
                                        @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
-                                       @NonNull WritingDirection writingDirection,
                                        @NonNull float[] charExtents) {
-        boolean isRTL = writingDirection == WritingDirection.RIGHT_TO_LEFT;
-
         if (!isBackward) {
-            loadForwardExtents(clusterMap, glyphIds, glyphAdvances, isRTL, charExtents);
+            loadForwardExtents(clusterMap, visuallyRTL, glyphIds, glyphAdvances, charExtents);
         } else {
-            loadBackwardExtents(clusterMap, glyphIds, glyphAdvances, isRTL, charExtents);
+            loadBackwardExtents(clusterMap, visuallyRTL, glyphIds, glyphAdvances, charExtents);
         }
     }
 
-    private static void loadForwardExtents(@NonNull int[] clusterMap, @NonNull int[] glyphIds,
-                                           @NonNull float[] glyphAdvances, boolean isRTL,
+    private static void loadForwardExtents(@NonNull int[] clusterMap, boolean visuallyRTL,
+                                           @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
                                            @NonNull float[] charExtents) {
         int clusterStart = 0;
         int runLength = clusterMap.length;
@@ -61,7 +58,7 @@ public final class Clusters {
             float charAdvance = clusterAdvance / clusterLength;
 
             for (int j = clusterStart; j < i; j++) {
-                distance += (isRTL ? -charAdvance : charAdvance);
+                distance += (visuallyRTL ? -charAdvance : charAdvance);
                 charExtents[j] = distance;
             }
 
@@ -70,8 +67,8 @@ public final class Clusters {
         }
     }
 
-    private static void loadBackwardExtents(@NonNull int[] clusterMap, @NonNull int[] glyphIds,
-                                            @NonNull float[] glyphAdvances, boolean isRTL,
+    private static void loadBackwardExtents(@NonNull int[] clusterMap, boolean visuallyRTL,
+                                            @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
                                             @NonNull float[] charExtents) {
         int clusterEnd = clusterMap.length;
         int glyphStart = clusterMap[clusterEnd - 1];
@@ -94,7 +91,7 @@ public final class Clusters {
             float charAdvance = clusterAdvance / clusterLength;
 
             for (int j = clusterEnd; j > i; j--) {
-                distance += (isRTL ? -charAdvance : charAdvance);
+                distance += (visuallyRTL ? charAdvance : -charAdvance);
                 charExtents[j - 1] = distance;
             }
 
