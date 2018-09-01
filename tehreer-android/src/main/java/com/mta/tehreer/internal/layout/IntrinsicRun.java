@@ -86,16 +86,6 @@ public class IntrinsicRun {
         return Clusters.actualClusterEnd(clusterMap, charIndex - charStart) + charStart;
     }
 
-    public float measureGlyphs(int glyphStart, int glyphEnd) {
-        float size = 0.0f;
-
-        for (int i = glyphStart; i < glyphEnd; i++) {
-            size += glyphAdvances[i];
-        }
-
-        return size;
-    }
-
     public float measureChars(int fromIndex, int toIndex) {
         CaretEdgeList caretEdges = new CaretEdgeList(charExtents, isBackward);
         return caretEdges.distance(fromIndex - charStart, toIndex - charStart, isVisuallyRTL());
