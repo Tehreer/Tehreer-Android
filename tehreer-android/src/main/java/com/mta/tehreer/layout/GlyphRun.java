@@ -487,6 +487,14 @@ public class GlyphRun {
         return getCaretEdge(charIndex);
     }
 
+    float computeRangeDistance(int fromIndex, int toIndex) {
+        int extraStart = charStart - startExtraLength;
+        fromIndex -= extraStart;
+        toIndex -= extraStart;
+
+        return caretEdges.distance(fromIndex, toIndex, isVisuallyRTL());
+    }
+
     /**
      * Determines the index of character nearest to the specified distance.
      * <p>
