@@ -62,11 +62,11 @@ public class IntrinsicRun {
         this.glyphAdvances = advances;
         this.clusterMap = clusterMap;
         this.charExtents = new float[clusterMap.length];
-        Clusters.loadCharExtents(clusterMap, isBackward, glyphIds, advances, writingDirection, charExtents);
+        Clusters.loadCharExtents(clusterMap, isBackward, isVisuallyRTL(), glyphIds, advances, charExtents);
     }
 
-    public boolean isRTL() {
-        return writingDirection == WritingDirection.RIGHT_TO_LEFT;
+    public boolean isVisuallyRTL() {
+        return (bidiLevel & 1) == 1;
     }
 
     public int glyphCount() {
