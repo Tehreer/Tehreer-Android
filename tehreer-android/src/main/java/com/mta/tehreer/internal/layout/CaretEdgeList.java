@@ -27,6 +27,10 @@ public final class CaretEdgeList extends FloatList {
     private final int edgeCount;
     private final float pivotDistance;
 
+    public CaretEdgeList(@NonNull float[] charExtents, boolean backward) {
+        this(charExtents, 0, charExtents.length, 0, 0, backward, false);
+    }
+
     public CaretEdgeList(@NonNull float[] charExtents, int chunkOffset, int chunkLength,
                          int startExtra, int endExtra, boolean backward, boolean visuallyRTL) {
         this.extentArray = charExtents;
