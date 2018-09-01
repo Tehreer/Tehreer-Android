@@ -232,8 +232,8 @@ public class GlyphRun {
         return writingDirection;
     }
 
-    private boolean isOpposite() {
-        return isBackward ^ (writingDirection == WritingDirection.RIGHT_TO_LEFT);
+    private boolean isVisuallyRTL() {
+        return (bidiLevel & 1) == 1;
     }
 
     /**
@@ -346,7 +346,7 @@ public class GlyphRun {
         int visibleOffset = startExtraLength;
         int visibleLength = charEnd - charStart;
 
-        return caretEdges.distance(visibleOffset, visibleOffset + visibleLength, isOpposite());
+        return caretEdges.distance(visibleOffset, visibleOffset + visibleLength, isVisuallyRTL());
     }
 
     /**
@@ -511,7 +511,7 @@ public class GlyphRun {
      */
     public int computeNearestCharIndex(float distance) {
         int extraStart = charStart - startExtraLength;
-        boolean isOpposite = isOpposite();
+        boolean visuallyRTL = isVisuallyRTL();
 
         int leadingCharIndex = -1;
         int trailingCharIndex = -1;
@@ -519,8 +519,8 @@ public class GlyphRun {
         float leadingCaretEdge = 0.0f;
         float trailingCaretEdge = 0.0f;
 
-        int index = (isOpposite ? charEnd : charStart);
-        int next = (isOpposite ? -1 : 1);
+        int index = (visuallyRTL ? charEnd : charStart);
+        int next = (visuallyRTL ? -1 : 1);
 
         while (index <= charEnd && index >= charStart) {
             float caretEdge = caretEdges.get(index - extraStart);
@@ -644,7 +644,7 @@ public class GlyphRun {
         final float clipLeft;
         final float clipRight;
 
-        if (!isOpposite()) {
+        if (!isVisuallyRTL()) {
             clipLeft = (startClipped ? getCaretEdge(charStart) : Float.NEGATIVE_INFINITY);
             clipRight = (endClipped ? getCaretEdge(charEnd) : Float.POSITIVE_INFINITY);
         } else {
