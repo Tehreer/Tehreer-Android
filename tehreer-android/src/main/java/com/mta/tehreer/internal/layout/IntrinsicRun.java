@@ -95,4 +95,9 @@ public class IntrinsicRun {
 
         return size;
     }
+
+    public float measureChars(int fromIndex, int toIndex) {
+        CaretEdgeList caretEdges = new CaretEdgeList(charExtents, isBackward);
+        return caretEdges.distance(fromIndex - charStart, toIndex - charStart, isVisuallyRTL());
+    }
 }
