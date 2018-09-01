@@ -49,9 +49,7 @@ public class RunCollection extends ArrayList<IntrinsicRun> {
             do {
                 IntrinsicRun intrinsicRun = get(runIndex);
                 int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
-
-                intrinsicRun.loadGlyphRange(charStart, segmentEnd, glyphRange);
-                extent += intrinsicRun.measureGlyphs(glyphRange[0], glyphRange[1]);
+                extent += intrinsicRun.measureChars(charStart, segmentEnd);
 
                 charStart = segmentEnd;
                 runIndex++;
