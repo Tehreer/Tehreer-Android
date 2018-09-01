@@ -27,13 +27,12 @@ public final class CaretEdgeList extends FloatList {
     private final int edgeCount;
     private final float pivotDistance;
 
-    public CaretEdgeList(@NonNull float[] extents, int offset, int size,
-                         int startExtra, int endExtra, boolean isBackward, boolean isRTL) {
-        boolean isOpposite = (isBackward ^ isRTL);
-        this.extentArray = extents;
-        this.offset = offset + (isBackward ? 0 : -1);
-        this.edgeCount = size + 1;
-        this.pivotDistance = edgeAt(isOpposite ? size - endExtra : startExtra);
+    public CaretEdgeList(@NonNull float[] charExtents, int chunkOffset, int chunkLength,
+                         int startExtra, int endExtra, boolean backward, boolean visuallyRTL) {
+        this.extentArray = charExtents;
+        this.offset = chunkOffset + (backward ? 0 : -1);
+        this.edgeCount = chunkLength + 1;
+        this.pivotDistance = edgeAt(visuallyRTL ? chunkLength - endExtra : startExtra);
     }
 
     private float edgeAt(int index) {
@@ -45,11 +44,11 @@ public final class CaretEdgeList extends FloatList {
         return extentArray[relativeIndex];
     }
 
-    public float distance(int fromIndex, int toIndex, boolean isOpposite) {
+    public float distance(int fromIndex, int toIndex, boolean visuallyRTL) {
         float firstEdge = edgeAt(fromIndex);
         float lastEdge = edgeAt(toIndex);
 
-        return (isOpposite ? firstEdge - lastEdge : lastEdge - firstEdge);
+        return (visuallyRTL ? firstEdge - lastEdge : lastEdge - firstEdge);
     }
 
     @Override
