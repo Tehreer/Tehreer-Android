@@ -16,6 +16,11 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * Represents the bidirectional class of a character in Unicode specification. The constants
  * correspond to the values defined in
@@ -24,6 +29,34 @@ package com.mta.tehreer.unicode;
  * </a>.
  */
 public final class BidiClass {
+    @IntDef({
+        LEFT_TO_RIGHT,
+        RIGHT_TO_LEFT,
+        ARABIC_LETTER,
+        BOUNDARY_NEUTRAL,
+        NONSPACING_MARK,
+        ARABIC_NUMBER,
+        EUROPEAN_NUMBER,
+        EUROPEAN_TERMINATOR,
+        EUROPEAN_SEPARATOR,
+        COMMON_SEPARATOR,
+        WHITE_SPACE,
+        SEGMENT_SEPARATOR,
+        PARAGRAPH_SEPARATOR,
+        OTHER_NEUTRAL,
+        LEFT_TO_RIGHT_ISOLATE,
+        RIGHT_TO_LEFT_ISOLATE,
+        FIRST_STRONG_ISOLATE,
+        POP_DIRECTIONAL_ISOLATE,
+        LEFT_TO_RIGHT_EMBEDDING,
+        RIGHT_TO_LEFT_EMBEDDING,
+        LEFT_TO_RIGHT_OVERRIDE,
+        RIGHT_TO_LEFT_OVERRIDE,
+        POP_DIRECTIONAL_FORMAT,
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Value { }
+
     /**
      * Bidi Class: "Left_To_Right".
      */
