@@ -16,6 +16,11 @@
 
 package com.mta.tehreer.unicode;
 
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * Represents the general category of a character in Unicode specification. The constants correspond
  * to the values defined in
@@ -24,6 +29,41 @@ package com.mta.tehreer.unicode;
  * </a>.
  */
 public final class GeneralCategory {
+    @IntDef({
+        UPPERCASE_LETTER,
+        LOWERCASE_LETTER,
+        TITLECASE_LETTER,
+        MODIFIER_LETTER,
+        OTHER_LETTER,
+        NONSPACING_MARK,
+        SPACING_MARK,
+        ENCLOSING_MARK,
+        DECIMAL_NUMBER,
+        LETTER_NUMBER,
+        OTHER_NUMBER,
+        CONNECTOR_PUNCTUATION,
+        DASH_PUNCTUATION,
+        OPEN_PUNCTUATION,
+        CLOSE_PUNCTUATION,
+        INITIAL_PUNCTUATION,
+        FINAL_PUNCTUATION,
+        OTHER_PUNCTUATION,
+        MATH_SYMBOL,
+        CURRENCY_SYMBOL,
+        MODIFIER_SYMBOL,
+        OTHER_SYMBOL,
+        SPACE_SEPARATOR,
+        LINE_SEPARATOR,
+        PARAGRAPH_SEPARATOR,
+        CONTROL,
+        FORMAT,
+        SURROGATE,
+        PRIVATE_USE,
+        UNASSIGNED,
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Value { }
+
     /**
      * General Category "Uppercase_Letter".
      */
