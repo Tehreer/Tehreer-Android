@@ -35,7 +35,7 @@ public class CodePoint {
      * @param codePoint The code point whose bidirectional class is returned.
      * @return The bidirectional class of the specified code point.
      */
-    public static int getBidiClass(int codePoint) {
+    public static @BidiClass.Value int getBidiClass(int codePoint) {
         return Unicode.getCodePointBidiClass(codePoint);
     }
 
@@ -45,7 +45,7 @@ public class CodePoint {
      * @param codePoint The code point whose general category is returned.
      * @return The general category of the specified code point.
      */
-    public static int getGeneralCategory(int codePoint) {
+    public static @GeneralCategory.Value int getGeneralCategory(int codePoint) {
         return Unicode.getCodePointGeneralCategory(codePoint);
     }
 
@@ -55,7 +55,7 @@ public class CodePoint {
      * @param codePoint The code point whose script is returned.
      * @return The script of the specified code point.
      */
-    public static int getScript(int codePoint) {
+    public static @Script.Value int getScript(int codePoint) {
         return Unicode.getCodePointScript(codePoint);
     }
 
