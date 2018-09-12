@@ -35,5 +35,29 @@ public final class Preconditions {
         }
     }
 
+    public static void checkArrayBounds(byte[] array, int offset, int size) {
+        if (offset < 0 || (array.length - offset) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkArrayBounds(int[] array, int offset, int size) {
+        if (offset < 0 || (array.length - offset) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkArrayBounds(float[] array, int offset, int size) {
+        if (offset < 0 || (array.length - offset) < size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+    }
+
+    public static void checkIndexRange(int start, int end, int size) {
+        if (start < 0 || end > size || start > end) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
     private Preconditions() { }
 }
