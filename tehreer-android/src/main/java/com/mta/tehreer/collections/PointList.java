@@ -23,6 +23,8 @@ import android.support.annotation.Size;
 import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.collections.JFloatArrayPointList;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * Represents a primitive list of points.
  */
@@ -33,13 +35,9 @@ public abstract class PointList implements Primitive {
      *
      * @param array The elements of the point list.
      * @return A new point list.
-     *
-     * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
     public static @NonNull PointList of(@NonNull @Size(multiple = 2) float[] array) {
-        if (array == null) {
-            throw new NullPointerException("Array is null");
-        }
+        checkNotNull(array);
 
         return new JFloatArrayPointList(array, 0, array.length / 2);
     }
@@ -119,14 +117,12 @@ public abstract class PointList implements Primitive {
         if (obj == this) {
             return true;
         }
-
         if (!(obj instanceof PointList)) {
             return false;
         }
 
         PointList other = (PointList) obj;
         int size = other.size();
-
         if (size() != size) {
             return false;
         }

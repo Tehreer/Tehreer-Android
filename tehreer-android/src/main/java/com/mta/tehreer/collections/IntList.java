@@ -22,6 +22,8 @@ import android.support.annotation.Nullable;
 import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.collections.JIntArrayList;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * Represents a primitive list of integers.
  */
@@ -31,13 +33,9 @@ public abstract class IntList implements Primitive {
      *
      * @param array The elements of the integer list.
      * @return A new integer list.
-     *
-     * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
     public static @NonNull IntList of(@NonNull int[] array) {
-        if (array == null) {
-            throw new NullPointerException("Array is null");
-        }
+        checkNotNull(array);
 
         return new JIntArrayList(array, 0, array.length);
     }
@@ -104,14 +102,12 @@ public abstract class IntList implements Primitive {
         if (obj == this) {
             return true;
         }
-
         if (!(obj instanceof IntList)) {
             return false;
         }
 
         IntList other = (IntList) obj;
         int size = other.size();
-
         if (size() != size) {
             return false;
         }

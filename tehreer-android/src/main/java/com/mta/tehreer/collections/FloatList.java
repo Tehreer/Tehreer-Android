@@ -22,6 +22,8 @@ import android.support.annotation.Nullable;
 import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.collections.JFloatArrayList;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * Represents a primitive list of floats.
  */
@@ -31,13 +33,9 @@ public abstract class FloatList implements Primitive {
      *
      * @param array The elements of the float list.
      * @return A new float list.
-     *
-     * @throws NullPointerException if <code>array</code> is <code>null</code>.
      */
     public static @NonNull FloatList of(@NonNull float[] array) {
-        if (array == null) {
-            throw new NullPointerException("Array is null");
-        }
+        checkNotNull(array);
 
         return new JFloatArrayList(array, 0, array.length);
     }
@@ -104,14 +102,12 @@ public abstract class FloatList implements Primitive {
         if (obj == this) {
             return true;
         }
-
         if (!(obj instanceof FloatList)) {
             return false;
         }
 
         FloatList other = (FloatList) obj;
         int size = other.size();
-
         if (size() != size) {
             return false;
         }
