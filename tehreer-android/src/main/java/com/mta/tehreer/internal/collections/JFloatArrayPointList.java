@@ -19,7 +19,9 @@ package com.mta.tehreer.internal.collections;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.PointList;
-import com.mta.tehreer.internal.Exceptions;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 
 public class JFloatArrayPointList extends PointList {
     private static final int FIELD_COUNT = 2;
@@ -43,18 +45,14 @@ public class JFloatArrayPointList extends PointList {
 
     @Override
     public float getX(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[((index + offset) * FIELD_COUNT) + X_OFFSET];
     }
 
     @Override
     public float getY(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[((index + offset) * FIELD_COUNT) + Y_OFFSET];
     }
@@ -66,9 +64,7 @@ public class JFloatArrayPointList extends PointList {
 
     @Override
     public @NonNull PointList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new JFloatArrayPointList(array, offset + fromIndex, toIndex - fromIndex);
     }

@@ -19,7 +19,9 @@ package com.mta.tehreer.internal.collections;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.FloatList;
-import com.mta.tehreer.internal.Exceptions;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 
 public class JFloatArrayList extends FloatList {
     private final @NonNull float[] array;
@@ -39,9 +41,7 @@ public class JFloatArrayList extends FloatList {
 
     @Override
     public float get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[index + offset];
     }
@@ -53,9 +53,7 @@ public class JFloatArrayList extends FloatList {
 
     @Override
     public @NonNull FloatList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new JFloatArrayList(array, offset + fromIndex, toIndex - fromIndex);
     }

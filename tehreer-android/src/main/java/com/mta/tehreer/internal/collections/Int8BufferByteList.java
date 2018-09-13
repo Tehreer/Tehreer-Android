@@ -20,8 +20,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mta.tehreer.collections.ByteList;
-import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public class Int8BufferByteList extends ByteList {
     private final @Nullable Object owner;
@@ -41,31 +45,22 @@ public class Int8BufferByteList extends ByteList {
 
     @Override
     public byte get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return Raw.getInt8Value(pointer + (index * Raw.INT8_SIZE));
     }
 
     @Override
     public void copyTo(@NonNull byte[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkNotNull(array);
+        checkArrayBounds(array, atIndex, size);
 
         Raw.copyInt8Buffer(pointer, array, atIndex, size);
     }
 
     @Override
     public @NonNull ByteList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new Int8BufferByteList(owner, pointer + (fromIndex * Raw.INT8_SIZE), toIndex - fromIndex);
     }

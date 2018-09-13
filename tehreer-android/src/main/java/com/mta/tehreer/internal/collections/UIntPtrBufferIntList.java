@@ -20,8 +20,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mta.tehreer.collections.IntList;
-import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public class UIntPtrBufferIntList extends IntList {
     private static final long UNSIGNED_MASK = 0x7FFFFFFFL;
@@ -43,31 +47,22 @@ public class UIntPtrBufferIntList extends IntList {
 
     @Override
     public int get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return (int) (Raw.getIntPtrValue(pointer + (index * Raw.POINTER_SIZE)) & UNSIGNED_MASK);
     }
 
     @Override
     public void copyTo(@NonNull int[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkNotNull(array);
+        checkArrayBounds(array, atIndex, size);
 
         Raw.copyUIntPtrBuffer(pointer, array, atIndex, size);
     }
 
     @Override
     public @NonNull IntList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new UIntPtrBufferIntList(owner, pointer + (fromIndex * Raw.POINTER_SIZE), toIndex - fromIndex);
     }

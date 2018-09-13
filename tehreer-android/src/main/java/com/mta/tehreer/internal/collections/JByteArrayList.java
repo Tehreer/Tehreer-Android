@@ -19,7 +19,9 @@ package com.mta.tehreer.internal.collections;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.ByteList;
-import com.mta.tehreer.internal.Exceptions;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 
 public class JByteArrayList extends ByteList {
     private final @NonNull byte[] array;
@@ -39,9 +41,7 @@ public class JByteArrayList extends ByteList {
 
     @Override
     public byte get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[index + offset];
     }
@@ -53,9 +53,7 @@ public class JByteArrayList extends ByteList {
 
     @Override
     public @NonNull ByteList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new JByteArrayList(array, offset + fromIndex, toIndex - fromIndex);
     }

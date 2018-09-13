@@ -20,8 +20,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.mta.tehreer.collections.FloatList;
-import com.mta.tehreer.internal.Exceptions;
 import com.mta.tehreer.internal.Raw;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public class Int32BufferFloatList extends FloatList {
     private final @Nullable Object owner;
@@ -43,31 +47,22 @@ public class Int32BufferFloatList extends FloatList {
 
     @Override
     public float get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return Raw.getInt32Value(pointer + (index * Raw.INT32_SIZE)) * scale;
     }
 
     @Override
     public void copyTo(@NonNull float[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        int length = array.length;
-        if (atIndex < 0 || (length - atIndex) < size) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkNotNull(array);
+        checkArrayBounds(array, atIndex, size);
 
         Raw.copyInt32Buffer(pointer, array, atIndex, size, scale);
     }
 
     @Override
     public @NonNull FloatList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new Int32BufferFloatList(owner, pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex, scale);
     }

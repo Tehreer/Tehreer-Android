@@ -19,7 +19,10 @@ package com.mta.tehreer.internal.collections;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
-import com.mta.tehreer.internal.Exceptions;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public class JByteArrayIntList extends IntList {
     private final @NonNull byte[] array;
@@ -39,18 +42,14 @@ public class JByteArrayIntList extends IntList {
 
     @Override
     public int get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[index + offset];
     }
 
     @Override
     public void copyTo(@NonNull int[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
+        checkNotNull(array);
 
         for (int i = 0; i < size; i++) {
             array[atIndex + i] = this.array[i + offset];
@@ -59,9 +58,7 @@ public class JByteArrayIntList extends IntList {
 
     @Override
     public @NonNull IntList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new JByteArrayIntList(array, offset + fromIndex, toIndex - fromIndex);
     }
