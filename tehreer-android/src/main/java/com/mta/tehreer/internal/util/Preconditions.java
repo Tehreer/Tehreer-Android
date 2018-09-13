@@ -29,6 +29,12 @@ public final class Preconditions {
         }
     }
 
+    public static void checkArgument(boolean expression, String message) {
+        if (!expression) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
     public static void checkElementIndex(int index, int size) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
