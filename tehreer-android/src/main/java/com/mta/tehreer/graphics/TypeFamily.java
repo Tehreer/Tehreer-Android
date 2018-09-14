@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * A <code>TypeFamily</code> object represents a collection of typefaces that relate to each other.
  */
@@ -37,6 +39,9 @@ public class TypeFamily {
      * @param typefaces The list of typefaces belonging to family.
      */
     public TypeFamily(@NonNull String familyName, @NonNull List<Typeface> typefaces) {
+        checkNotNull(familyName, "familyName");
+        checkNotNull(typefaces, "typefaces");
+
         this.familyName = familyName;
         this.typefaces = (typefaces != null ? typefaces : Collections.<Typeface>emptyList());
     }
@@ -121,21 +126,11 @@ public class TypeFamily {
      * @param typeWeight The typographic weight of desired typeface.
      * @param typeSlope The typographic slope of desired typeface.
      * @return A typeface best matching the specified style.
-     *
-     * @throws NullPointerException if <code>typeWidth</code> is <code>null</code>, or
-     *         <code>typeWeight</code> is <code>null</code>. or <code>typeSlope</code> is
-     *         <code>null</code>.
      */
     public @NonNull Typeface getTypefaceByStyle(@NonNull TypeWidth typeWidth, @NonNull TypeWeight typeWeight, @NonNull TypeSlope typeSlope) {
-        if (typeWidth == null) {
-            throw new NullPointerException("Type width is null");
-        }
-        if (typeWeight == null) {
-            throw new NullPointerException("Type weight is null");
-        }
-        if (typeSlope == null) {
-            throw new NullPointerException("Type slope is null");
-        }
+        checkNotNull(typeWidth, "typeWidth");
+        checkNotNull(typeWeight, "typeWeight");
+        checkNotNull(typeSlope, "typeSlope");
 
         // BASED ON CSS FONT MATCHING ALGORITHM.
         Iterator<Typeface> iterator = typefaces.iterator();
