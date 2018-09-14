@@ -319,6 +319,24 @@ public class Typeface {
 	    return nGetUnderlineThickness(nativeTypeface);
 	}
 
+    /**
+     * Returns the position, in font units, of the strikeout for this typeface.
+     *
+     * @return The position, in font units, of the strikeout for this typeface.
+     */
+    public int getStrikeoutPosition() {
+        return nGetStrikeoutPosition(nativeTypeface);
+    }
+
+    /**
+     * Returns the thickness, in font units, of the strikeout for this typeface.
+     *
+     * @return The thickness, in font units, of the strikeout for this typeface.
+     */
+    public int getStrikeoutThickness() {
+        return nGetStrikeoutThickness(nativeTypeface);
+    }
+
     void dispose() {
         nDispose(nativeTypeface);
     }
@@ -339,7 +357,9 @@ public class Typeface {
                 + ", boundingBox=" + getBoundingBox().toString()
                 + ", underlinePosition=" + getUnderlinePosition()
                 + ", underlineThickness=" + getUnderlineThickness()
-                + "}";
+                + ", strikeoutPosition=" + getStrikeoutPosition()
+                + ", strikeoutThickness=" + getStrikeoutThickness()
+                + '}';
     }
 
     private static native long nCreateWithAsset(AssetManager assetManager, String path);
@@ -363,4 +383,6 @@ public class Typeface {
 
 	private static native int nGetUnderlinePosition(long nativeTypeface);
 	private static native int nGetUnderlineThickness(long nativeTypeface);
+    private static native int nGetStrikeoutPosition(long nativeTypeface);
+    private static native int nGetStrikeoutThickness(long nativeTypeface);
 }
