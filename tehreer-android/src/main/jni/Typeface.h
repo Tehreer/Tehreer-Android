@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,9 @@ public:
     SFFontRef sfFont() const { return m_sfFont; }
     PatternCache &patternCache() { return m_patternCache; }
 
+    FT_Short strikeoutPosition() const { return m_strikeoutPosition; }
+    FT_Short strikeoutThickness() const { return m_strikeoutThickness; }
+
     void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
 
     FT_UInt getGlyphID(FT_ULong codePoint);
@@ -70,6 +73,9 @@ private:
     FT_Stroker m_ftStroker;
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
+
+    FT_Short m_strikeoutPosition;
+    FT_Short m_strikeoutThickness;
 
     static Typeface *createWithArgs(const FT_Open_Args *args);
 

@@ -259,6 +259,8 @@ Typeface *Typeface::createWithArgs(const FT_Open_Args *args)
 }
 
 Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
+    : m_strikeoutPosition(0)
+    , m_strikeoutThickness(0)
 {
     SFFontProtocol protocol;
     protocol.finalize = nullptr;
@@ -274,6 +276,12 @@ Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
     m_sfFont = SFFontCreateWithProtocol(&protocol, this);
 
     FT_New_Size(m_ftFace, &m_ftSize);
+
+    TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
+    if (os2Table) {
+        m_strikeoutPosition = os2Table->yStrikeoutPosition;
+        m_strikeoutThickness = os2Table->yStrikeoutSize;
+    }
 }
 
 Typeface::~Typeface()
@@ -628,6 +636,22 @@ static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle
     return static_cast<jint>(underlineThickness);
 }
 
+static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Short strikeoutPosition = typeface->strikeoutPosition();
+
+    return static_cast<jint>(strikeoutPosition);
+}
+
+static jint getStrikeoutThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Short strikeoutThickness = typeface->strikeoutThickness();
+
+    return static_cast<jint>(strikeoutThickness);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
@@ -645,6 +669,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetBoundingBox", "(JLandroid/graphics/Rect;)V", (void *)getBoundingBox },
     { "nGetUnderlinePosition", "(J)I", (void *)getUnderlinePosition },
     { "nGetUnderlineThickness", "(J)I", (void *)getUnderlineThickness },
+    { "nGetStrikeoutPosition", "(J)I", (void *)getStrikeoutPosition },
+    { "nGetStrikeoutThickness", "(J)I", (void *)getStrikeoutThickness },
 };
 
 jint register_com_mta_tehreer_graphics_Typeface(JNIEnv *env)
