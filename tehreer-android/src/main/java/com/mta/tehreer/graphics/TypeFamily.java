@@ -18,11 +18,12 @@ package com.mta.tehreer.graphics;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 /**
@@ -30,7 +31,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public class TypeFamily {
     private final @NonNull String familyName;
-    private final @NonNull List<Typeface> typefaces;
+    private final @NonNull @Size(min = 1) List<Typeface> typefaces;
 
     /**
      * Constructs a type family object.
@@ -38,12 +39,13 @@ public class TypeFamily {
      * @param familyName The name of family.
      * @param typefaces The list of typefaces belonging to family.
      */
-    public TypeFamily(@NonNull String familyName, @NonNull List<Typeface> typefaces) {
+    public TypeFamily(@NonNull String familyName, @NonNull @Size(min = 1) List<Typeface> typefaces) {
         checkNotNull(familyName, "familyName");
         checkNotNull(typefaces, "typefaces");
+        checkArgument(!typefaces.isEmpty(), "Typefaces list cannot be empty");
 
         this.familyName = familyName;
-        this.typefaces = (typefaces != null ? typefaces : Collections.<Typeface>emptyList());
+        this.typefaces = typefaces;
     }
 
     /**
@@ -134,37 +136,33 @@ public class TypeFamily {
 
         // BASED ON CSS FONT MATCHING ALGORITHM.
         Iterator<Typeface> iterator = typefaces.iterator();
-        if (iterator.hasNext()) {
-            Typeface candidate = iterator.next();
+        Typeface candidate = iterator.next();
 
-            while (iterator.hasNext()) {
-                Typeface current = iterator.next();
+        while (iterator.hasNext()) {
+            Typeface current = iterator.next();
 
-                int widthGap = widthGap(typeWidth, current.getWidth())
-                             - widthGap(typeWidth, candidate.getWidth());
-                if (widthGap > 0) {
-                    continue;
-                }
-
-                int slopeGap = slopeGap(typeSlope, current.getSlope())
-                             - slopeGap(typeSlope, candidate.getSlope());
-                if (slopeGap > 0) {
-                    continue;
-                }
-
-                int weightGap = weightGap(typeWeight, current.getWeight())
-                              - weightGap(typeWeight, candidate.getWeight());
-                if (weightGap > 0) {
-                    continue;
-                }
-
-                candidate = current;
+            int widthGap = widthGap(typeWidth, current.getWidth())
+                         - widthGap(typeWidth, candidate.getWidth());
+            if (widthGap > 0) {
+                continue;
             }
 
-            return candidate;
+            int slopeGap = slopeGap(typeSlope, current.getSlope())
+                         - slopeGap(typeSlope, candidate.getSlope());
+            if (slopeGap > 0) {
+                continue;
+            }
+
+            int weightGap = weightGap(typeWeight, current.getWeight())
+                          - weightGap(typeWeight, candidate.getWeight());
+            if (weightGap > 0) {
+                continue;
+            }
+
+            candidate = current;
         }
 
-        return null;
+        return candidate;
     }
 
     @Override
