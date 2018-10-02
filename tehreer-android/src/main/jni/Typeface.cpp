@@ -61,46 +61,6 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
     return static_cast<float>(value / 64.0);
 }
 
-struct PathContext {
-    const JavaBridge *bridge;
-    jobject path;
-};
-
-static int processMoveTo(const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_moveTo(context->path,
-                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-    return 0;
-}
-
-static int processLineTo(const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_lineTo(context->path,
-                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-    return 0;
-}
-
-static int processQuadTo(const FT_Vector *control1, const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_quadTo(context->path,
-                                 f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                 f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-    return 0;
-}
-
-static int processCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user)
-{
-    PathContext *context = reinterpret_cast<PathContext *>(user);
-    context->bridge->Path_cubicTo(context->path,
-                                  f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                  f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
-                                  f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-    return 0;
-}
-
 static unsigned long assetStreamRead(FT_Stream assetStream,
     unsigned long offset, unsigned char *buffer, unsigned long count)
 {
@@ -392,22 +352,52 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
 
     FT_Error error = FT_Load_Glyph(m_ftFace, glyphID, FT_LOAD_NO_BITMAP);
     if (error == FT_Err_Ok) {
+        struct PathContext {
+            JavaBridge bridge;
+            jobject path;
+        };
+
         FT_Outline_Funcs funcs;
-        funcs.move_to = processMoveTo;
-        funcs.line_to = processLineTo;
-        funcs.conic_to = processQuadTo;
-        funcs.cubic_to = processCubicTo;
+        funcs.move_to = [](const FT_Vector *to, void *user) -> int
+        {
+            PathContext *context = reinterpret_cast<PathContext *>(user);
+            context->bridge.Path_moveTo(context->path,
+                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
+            return 0;
+        };
+        funcs.line_to = [](const FT_Vector *to, void *user) -> int
+        {
+            PathContext *context = reinterpret_cast<PathContext *>(user);
+            context->bridge.Path_lineTo(context->path,
+                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
+            return 0;
+        };
+        funcs.conic_to = [](const FT_Vector *control1, const FT_Vector *to, void *user) -> int
+        {
+            PathContext *context = reinterpret_cast<PathContext *>(user);
+            context->bridge.Path_quadTo(context->path,
+                                        f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
+                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
+            return 0;
+        };
+        funcs.cubic_to = [](const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) -> int
+        {
+            PathContext *context = reinterpret_cast<PathContext *>(user);
+            context->bridge.Path_cubicTo(context->path,
+                                         f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
+                                         f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
+                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
+            return 0;
+        };
         funcs.shift = 0;
         funcs.delta = 0;
 
-        PathContext pathContext;
-        pathContext.bridge = &bridge;
-        pathContext.path = bridge.Path_construct();
+        PathContext context = { bridge, bridge.Path_construct() };
 
         FT_Outline *outline = &m_ftFace->glyph->outline;
-        error = FT_Outline_Decompose(outline, &funcs, &pathContext);
+        error = FT_Outline_Decompose(outline, &funcs, &context);
         if (error == FT_Err_Ok) {
-            glyphPath = pathContext.path;
+            glyphPath = context.path;
         }
     }
 
