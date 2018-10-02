@@ -61,38 +61,6 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
     return static_cast<float>(value / 64.0);
 }
 
-static void protocolLoadTable(void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length)
-{
-    Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_ULong tableSize = 0;
-
-    typeface->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
-
-    if (length) {
-        *length = tableSize;
-    }
-}
-
-static SFGlyphID protocolGetGlyphIDForCodepoint(void *object, SFCodepoint codepoint)
-{
-    Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_UInt glyphID = typeface->getGlyphID(codepoint);
-    if (glyphID > 0xFFFF) {
-        LOGW("Received invalid glyph id for code point: %u", codepoint);
-        glyphID = 0;
-    }
-
-    return static_cast<SFGlyphID>(glyphID);
-}
-
-static SFInt32 protocolGetAdvanceForGlyph(void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
-{
-    Typeface *typeface = reinterpret_cast<Typeface *>(object);
-    FT_Fixed glyphAdvance = typeface->getGlyphAdvance(glyphID, fontLayout == SFFontLayoutVertical);
-
-    return static_cast<SFInt32>(glyphAdvance);
-}
-
 struct PathContext {
     const JavaBridge *bridge;
     jobject path;
@@ -264,9 +232,33 @@ Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
 {
     SFFontProtocol protocol;
     protocol.finalize = nullptr;
-    protocol.loadTable = &protocolLoadTable;
-    protocol.getGlyphIDForCodepoint = &protocolGetGlyphIDForCodepoint;
-    protocol.getAdvanceForGlyph = &protocolGetAdvanceForGlyph;
+    protocol.loadTable = [](void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length) {
+        Typeface *typeface = reinterpret_cast<Typeface *>(object);
+        FT_ULong tableSize = 0;
+
+        typeface->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
+
+        if (length) {
+            *length = tableSize;
+        }
+    };
+    protocol.getGlyphIDForCodepoint = [](void *object, SFCodepoint codepoint) {
+        Typeface *typeface = reinterpret_cast<Typeface *>(object);
+        FT_UInt glyphID = typeface->getGlyphID(codepoint);
+        if (glyphID > 0xFFFF) {
+            LOGW("Received invalid glyph id for code point: %u", codepoint);
+            glyphID = 0;
+        }
+
+        return static_cast<SFGlyphID>(glyphID);
+    };
+    protocol.getAdvanceForGlyph = [](void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
+    {
+        Typeface *typeface = reinterpret_cast<Typeface *>(object);
+        FT_Fixed glyphAdvance = typeface->getGlyphAdvance(glyphID, fontLayout == SFFontLayoutVertical);
+
+        return static_cast<SFInt32>(glyphAdvance);
+    };
 
     m_buffer = buffer;
     m_ftStream = ftStream;
