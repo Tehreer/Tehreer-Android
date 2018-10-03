@@ -28,6 +28,8 @@ import com.mta.tehreer.internal.collections.Int8BufferByteList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+
 /**
  * A <code>BidiParagraph</code> object represents a single paragraph of text processed with rules
  * X1-I2 of Unicode Bidirectional Algorithm. It contains the resolved embedding levels of all the
@@ -162,6 +164,15 @@ public class BidiParagraph implements Disposable {
         return new RunIterable();
     }
 
+    private void checkSubRange(int charStart, int charEnd) {
+        int paragraphStart = getCharStart();
+        int paragraphEnd = getCharEnd();
+
+        checkArgument(charStart >= paragraphStart, "Char Start: " + charStart + ", Paragraph Range: [" + paragraphStart + ", " + paragraphEnd + ')');
+        checkArgument(charEnd <= paragraphEnd, "Char End: " + charEnd + ", Paragraph Range: [" + paragraphStart + ", " + paragraphEnd + ')');
+        checkArgument(charEnd > charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
+    }
+
     /**
      * Creates a line object of specified range by applying Rules L1-L2 of Unicode Bidirectional
      * Algorithm.
@@ -175,20 +186,7 @@ public class BidiParagraph implements Disposable {
      *         greater than or equal to <code>charEnd</code>.
      */
 	public @NonNull BidiLine createLine(int charStart, int charEnd) {
-        int paragraphStart = getCharStart();
-        int paragraphEnd = getCharEnd();
-
-        if (charStart < paragraphStart) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Paragraph Range: [" + paragraphStart + ".." + paragraphEnd + ")");
-        }
-        if (charEnd > paragraphEnd) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Paragraph Range: [" + paragraphStart + ".." + paragraphEnd + ")");
-        }
-        if (charStart >= charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
+        checkSubRange(charStart, charEnd);
 
         return new BidiLine(nativeBuffer,
                             nCreateLine(nativeParagraph, charStart, charEnd));

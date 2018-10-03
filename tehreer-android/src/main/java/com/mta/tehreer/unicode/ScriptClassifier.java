@@ -25,6 +25,9 @@ import com.mta.tehreer.internal.collections.JByteArrayIntList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * This class implements UAX #24 available at
  * <a href="http://www.unicode.org/reports/tr24">http://www.unicode.org/reports/tr24</a>.
@@ -41,13 +44,9 @@ public class ScriptClassifier {
      * Constructs a script classifier object for the specified text.
      *
      * @param text The text whose script classification is desired.
-     *
-     * @throws NullPointerException if <code>text</code> is null.
      */
     public ScriptClassifier(@NonNull String text) {
-        if (text == null) {
-            throw new NullPointerException("Text is null");
-        }
+        checkNotNull(text, "text");
 
         this.text = text;
         this.scripts = new byte[text.length()];
@@ -83,6 +82,12 @@ public class ScriptClassifier {
         return getScriptRuns(0, scripts.length);
     }
 
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= 0, "Char Start: " + charStart);
+        checkArgument(charEnd <= text.length(), "Char End: " + charEnd + ", Text Length: " + text.length());
+        checkArgument(charEnd > charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
+    }
+
     /**
      * Returns an iterable of resolved script runs within the specified range of source text.
      *
@@ -91,15 +96,7 @@ public class ScriptClassifier {
      * @return An iterable of script runs within the specified range of source text.
      */
     public @NonNull Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
-        if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
-        }
-        if (charEnd > text.length()) {
-            throw new IllegalArgumentException("Char End: " + charEnd + ", Text Length: " + text.length());
-        }
-        if (charStart > charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
+        checkSubRange(charStart, charEnd);
 
         return new RunIterable(scripts, charStart, charEnd);
     }

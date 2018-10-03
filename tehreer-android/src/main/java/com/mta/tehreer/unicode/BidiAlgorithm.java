@@ -24,6 +24,9 @@ import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.collections.UInt8BufferIntList;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * This class implements Unicode Bidirectional Algorithm available at
  * <a href="http://www.unicode.org/reports/tr9">http://www.unicode.org/reports/tr9</a>.
@@ -110,12 +113,11 @@ public class BidiAlgorithm implements Disposable {
      *
      * @param text The text to apply unicode bidirectional algorithm on.
      *
-     * @throws IllegalArgumentException if <code>text</code> is <code>null</code> or empty.
+     * @throws IllegalArgumentException if <code>text</code> is empty.
      */
     public BidiAlgorithm(@NonNull String text) {
-        if (text == null || text.length() == 0) {
-            throw new IllegalArgumentException("Text is null or empty");
-        }
+        checkNotNull(text, "text");
+        checkArgument(text.length() > 0, "Text is empty");
 
         this.nativeBuffer = BidiBuffer.create(text);
         this.nativeAlgorithm = nCreate(nativeBuffer);
@@ -128,18 +130,10 @@ public class BidiAlgorithm implements Disposable {
         this.text = other.text;
     }
 
-    private String checkRange(int charStart, int charEnd) {
-        if (charStart < 0) {
-            return ("Char Start: " + charStart);
-        }
-        if (charEnd > text.length()) {
-            return ("Char End: " + charEnd + ", Text Length: " + text.length());
-        }
-        if (charStart >= charEnd) {
-            return ("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
-
-        return null;
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= 0, "Char Start: " + charStart);
+        checkArgument(charEnd <= text.length(), "Char End: " + charEnd + ", Text Length: " + text.length());
+        checkArgument(charEnd > charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
     }
 
     /**
@@ -172,10 +166,7 @@ public class BidiAlgorithm implements Disposable {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
      */
     public int getParagraphBoundary(int charStart, int charEnd) {
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkSubRange(charStart, charEnd);
 
         return nGetParagraphBoundary(nativeAlgorithm, charStart, charEnd);
     }
@@ -198,16 +189,9 @@ public class BidiAlgorithm implements Disposable {
      * @throws IllegalArgumentException if <code>charStart</code> is negative, or
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
-     * @throws NullPointerException if <code>baseDirection</code> is <code>null</code>.
      */
     public @NonNull BidiParagraph createParagraph(int charStart, int charEnd, @NonNull BaseDirection baseDirection) {
-        if (baseDirection == null) {
-            throw new NullPointerException("Base direction is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkSubRange(charStart, charEnd);
 
         return new BidiParagraph(nativeBuffer,
                                  nCreateParagraph(nativeAlgorithm,
@@ -239,13 +223,8 @@ public class BidiAlgorithm implements Disposable {
      *         </ul>
      */
     public @NonNull BidiParagraph createParagraph(int charStart, int charEnd, byte baseLevel) {
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
-        if (baseLevel < 0 || baseLevel > MAX_LEVEL) {
-            throw new IllegalArgumentException("Base Level: " + baseLevel);
-        }
+        checkSubRange(charStart, charEnd);
+        checkArgument(baseLevel >= 0 && baseLevel <= MAX_LEVEL, "Base Level: " + baseLevel);
 
         return new BidiParagraph(nativeBuffer,
                                  nCreateParagraph(nativeAlgorithm,

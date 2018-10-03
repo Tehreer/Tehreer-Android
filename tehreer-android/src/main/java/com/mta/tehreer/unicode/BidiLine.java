@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+
 /**
  * A <code>BidiLine</code> object represents a single line processed with rules L1-L2 of Unicode
  * Bidirectional Algorithm. Instead of reordering the characters as stated by rule L2, it allows to
@@ -186,9 +188,7 @@ public class BidiLine implements Disposable {
 
         @Override
         public @NonNull BidiRun get(int index) {
-            if (index < 0 || index >= size) {
-                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-            }
+            checkElementIndex(index, size);
 
             return nGetVisualRun(nativeLine, index);
         }
