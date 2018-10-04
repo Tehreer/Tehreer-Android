@@ -26,6 +26,8 @@ import com.mta.tehreer.internal.Description;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+
 /**
  * Represents a line of text consisting of an array of <code>GlyphRun</code> objects in visual order.
  */
@@ -242,6 +244,11 @@ public class ComposedLine {
         return runList;
     }
 
+    private void checkCharIndex(int charIndex) {
+        checkArgument(charIndex >= lineStart && charIndex <= lineEnd,
+                      "Char Index: " + charIndex + ", Line Range: [" + lineStart + ", " + lineEnd + ')');
+    }
+
     /**
      * Determines the distance of specified character from the start of the line assumed at zero.
      *
@@ -252,10 +259,7 @@ public class ComposedLine {
      *         than line end.
      */
     public float computeCharDistance(int charIndex) {
-        if (charIndex < lineStart || charIndex > lineEnd) {
-            throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
-        }
+        checkCharIndex(charIndex);
 
         float distance = 0.0f;
 
@@ -271,6 +275,12 @@ public class ComposedLine {
         }
 
         return distance;
+    }
+
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= lineStart, "Char Start: " + charStart + ", Line Range: [" + lineStart + ", " + lineEnd + ')');
+        checkArgument(charEnd <= lineEnd, "Char End: " + charEnd + ", Line Range: [" + lineStart + ", " + lineEnd + ')');
+        checkArgument(charEnd >= charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
     }
 
     /**
@@ -289,17 +299,7 @@ public class ComposedLine {
      *         than <code>charEnd</code>.
      */
     public @NonNull @Size(multiple = 2) float[] computeVisualEdges(int charStart, int charEnd) {
-        if (charStart < lineStart) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
-        }
-        if (charEnd > lineEnd) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                               + ", Line Range: [" + lineStart + ".." + lineEnd + ")");
-        }
-        if (charStart > charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + lineStart + ".." + lineEnd + ")");
-        }
+        checkSubRange(charStart, charEnd);
 
         int runCount = runList.size();
 

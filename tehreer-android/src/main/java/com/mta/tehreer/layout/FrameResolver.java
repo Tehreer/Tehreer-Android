@@ -36,6 +36,9 @@ import com.mta.tehreer.unicode.BidiParagraph;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * This class resolves text frames by using a typesetter object.
  */
@@ -79,9 +82,7 @@ public class FrameResolver {
      * @param typesetter A typesetter object.
      */
     public void setTypesetter(@NonNull Typesetter typesetter) {
-        if (typesetter == null) {
-            throw new NullPointerException("Typesetter is null");
-        }
+        checkNotNull(typesetter, "typesetter");
 
         mTypesetter = typesetter;
         mSpanned = typesetter.getSpanned();
@@ -106,14 +107,9 @@ public class FrameResolver {
      * zero origin.
      *
      * @param frameBounds A rectangle specifying the frame bounds.
-     *
-     * @throws NullPointerException if <code>frameBounds</code> is null.
      */
     public void setFrameBounds(@NonNull RectF frameBounds) {
-        if (frameBounds == null) {
-            throw new NullPointerException("Frame bounds rectangle is null");
-        }
-
+        checkNotNull(frameBounds, "frameBounds");
         mFrameBounds.set(frameBounds);
     }
 
@@ -176,10 +172,7 @@ public class FrameResolver {
      * @param textAlignment A value of {@link TextAlignment}.
      */
     public void setTextAlignment(@NonNull TextAlignment textAlignment) {
-        if (textAlignment == null) {
-            throw new NullPointerException("Text alignment is null");
-        }
-
+        checkNotNull(textAlignment, "textAlignment");
         mTextAlignment = textAlignment;
     }
 
@@ -198,14 +191,9 @@ public class FrameResolver {
      * {@link VerticalAlignment#TOP}.
      *
      * @param verticalAlignment A value of {@link VerticalAlignment}.
-     *
-     * @throws NullPointerException if <code>verticalAlignment</code> is null.
      */
     public void setVerticalAlignment(@NonNull VerticalAlignment verticalAlignment) {
-        if (verticalAlignment == null) {
-            throw new NullPointerException("Vertical alignment is null");
-        }
-
+        checkNotNull(verticalAlignment, "verticalAlignment");
         mVerticalAlignment = verticalAlignment;
     }
 
@@ -224,14 +212,9 @@ public class FrameResolver {
      * default value is {@link BreakMode#LINE}.
      *
      * @param truncationMode A value of {@link BreakMode}.
-     *
-     * @throws NullPointerException if <code>truncationMode</code> is null.
      */
     public void setTruncationMode(@NonNull BreakMode truncationMode) {
-        if (truncationMode == null) {
-            throw new NullPointerException("Truncation mode is null");
-        }
-
+        checkNotNull(truncationMode, "truncationMode");
         mTruncationMode = truncationMode;
     }
 
@@ -376,6 +359,12 @@ public class FrameResolver {
         return 0.0f;
     }
 
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= 0, "Char Start: " + charStart);
+        checkArgument(charEnd <= mSpanned.length(), "Char End: " + charEnd + ", Text Length: " + mSpanned.length());
+        checkArgument(charEnd > charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
+    }
+
     /**
      * Creates a frame representing specified string range in source text.
      * <p>
@@ -392,15 +381,7 @@ public class FrameResolver {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>.
      */
     public @NonNull ComposedFrame createFrame(int charStart, int charEnd) {
-        if (charStart < 0) {
-            throw new IllegalArgumentException("Char Start: " + charStart);
-        }
-        if (charEnd > mSpanned.length()) {
-            throw new IllegalArgumentException("Char End: " + charEnd + ", Text Length: " + mSpanned.length());
-        }
-        if (charStart >= charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
+        checkSubRange(charStart, charEnd);
 
         FrameFiller frameFiller = new FrameFiller();
         int paragraphIndex = mParagraphs.binarySearch(charStart);

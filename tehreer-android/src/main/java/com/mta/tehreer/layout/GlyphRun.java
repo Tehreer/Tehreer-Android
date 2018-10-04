@@ -36,6 +36,8 @@ import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+
 /**
  * A <code>GlyphRun</code> object is a collection of consecutive glyphs sharing the same attributes
  * and direction.
@@ -112,28 +114,17 @@ public class GlyphRun {
         this.originY = otherRun.originY;
     }
 
-    private String checkCharIndex(int charIndex) {
-        if (charIndex < charStart || charIndex >= charEnd) {
-            return ("Char Index: " + charIndex
-                    + ", Run Range: [" + charStart + ".." + charEnd + ")");
-        }
-
-        return null;
+    private void checkCharIndex(int charIndex) {
+        checkArgument(charIndex >= charStart && charIndex < charEnd,
+                      "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
     }
 
-    private String checkGlyphRange(int glyphStart, int glyphEnd) {
-        if (glyphStart < 0) {
-            return ("Glyph Start: " + glyphStart);
-        }
+    private void checkGlyphRange(int glyphStart, int glyphEnd) {
         int glyphCount = glyphIds.size();
-        if (glyphEnd > glyphCount) {
-            return ("Glyph End: " + glyphEnd + ", Glyph Count: " + glyphCount);
-        }
-        if (glyphStart > glyphEnd) {
-            return ("Glyph Start: " + glyphStart + ", Glyph End: " + glyphEnd);
-        }
 
-        return null;
+        checkArgument(glyphStart >= 0, "Glyph Start: " + glyphStart);
+        checkArgument(glyphEnd <= glyphCount, "Glyph End: " + glyphEnd + ", Glyph Count: " + glyphCount);
+        checkArgument(glyphEnd >= glyphStart, "Bad Range: [" + glyphStart + ", " + glyphEnd + ')');
     }
 
     @NonNull List<Object> getSpans() {
@@ -371,10 +362,7 @@ public class GlyphRun {
      *         than or equal to run end.
      */
     public int getActualClusterStart(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
+        checkCharIndex(charIndex);
 
         int extraStart = charStart - startExtraLength;
         int arrayIndex = charIndex - extraStart;
@@ -395,10 +383,7 @@ public class GlyphRun {
      *         than or equal to run end.
      */
     public int getActualClusterEnd(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
+        checkCharIndex(charIndex);
 
         int extraStart = charStart - startExtraLength;
         int arrayIndex = charIndex - extraStart;
@@ -421,10 +406,7 @@ public class GlyphRun {
      * @see #getActualClusterEnd(int)
      */
     public int getLeadingGlyphIndex(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
+        checkCharIndex(charIndex);
 
         int extraStart = charStart - startExtraLength;
         int arrayIndex = charIndex - extraStart;
@@ -447,10 +429,7 @@ public class GlyphRun {
      * @see #getActualClusterEnd(int)
      */
     public int getTrailingGlyphIndex(int charIndex) {
-        String indexError = checkCharIndex(charIndex);
-        if (indexError != null) {
-            throw new IllegalArgumentException(indexError);
-        }
+        checkCharIndex(charIndex);
 
         int extraStart = charStart - startExtraLength;
         int arrayIndex = charIndex - extraStart;
@@ -479,10 +458,8 @@ public class GlyphRun {
      *         than run end.
      */
     public float computeCharDistance(int charIndex) {
-        if (charIndex < charStart || charIndex > charEnd) {
-            throw new IllegalArgumentException("Char Index: " + charIndex
-                                               + ", Run Range: [" + charStart + ".." + charEnd + ")");
-        }
+        checkArgument(charIndex >= charStart && charIndex <= charEnd,
+                      "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
 
         return getCaretEdge(charIndex);
     }
@@ -573,10 +550,7 @@ public class GlyphRun {
      * @return The typographic extent for the given glyph range in this run.
      */
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
-        String rangeError = checkGlyphRange(glyphStart, glyphEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkGlyphRange(glyphStart, glyphEnd);
 
         float extent = 0.0f;
 
@@ -604,10 +578,7 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer, int glyphStart, int glyphEnd) {
-        String rangeError = checkGlyphRange(glyphStart, glyphEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkGlyphRange(glyphStart, glyphEnd);
 
 	    renderer.setTypeface(typeface);
 	    renderer.setTypeSize(typeSize);

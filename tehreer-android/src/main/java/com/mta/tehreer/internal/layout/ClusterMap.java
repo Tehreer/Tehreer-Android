@@ -19,7 +19,10 @@ package com.mta.tehreer.internal.layout;
 import android.support.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
-import com.mta.tehreer.internal.Exceptions;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public class ClusterMap extends IntList {
     private final @NonNull int[] array;
@@ -41,18 +44,14 @@ public class ClusterMap extends IntList {
 
     @Override
     public int get(int index) {
-        if (index < 0 || index >= size) {
-            throw Exceptions.indexOutOfBounds(index, size);
-        }
+        checkElementIndex(index, size);
 
         return array[index + offset] - difference;
     }
 
     @Override
     public void copyTo(@NonNull int[] array, int atIndex) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
+        checkNotNull(array);
 
         for (int i = 0; i < size; i++) {
             array[i + atIndex] = this.array[i + offset] - difference;
@@ -61,9 +60,7 @@ public class ClusterMap extends IntList {
 
     @Override
     public @NonNull IntList subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexRange(fromIndex, toIndex, size);
 
         return new ClusterMap(array, offset + fromIndex, toIndex - fromIndex, difference);
     }

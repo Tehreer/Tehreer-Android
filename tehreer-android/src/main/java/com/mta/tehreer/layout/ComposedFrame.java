@@ -32,6 +32,8 @@ import com.mta.tehreer.internal.Description;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+
 /**
  * Represents a frame containing multiple lines of text. The frame object is the output resulting
  * from text-framing process performed by a typesetter object.
@@ -40,7 +42,7 @@ public class ComposedFrame {
     private final CharSequence source;
     private final int frameStart;
     private final int frameEnd;
-    private final List<ComposedLine> lineList;
+    private final @NonNull List<ComposedLine> lineList;
 
     private float mOriginX;
     private float mOriginY;
@@ -49,7 +51,8 @@ public class ComposedFrame {
 
     private @Nullable Paint paint;
 
-    ComposedFrame(CharSequence source, int charStart, int charEnd, @NonNull List<ComposedLine> lineList) {
+    ComposedFrame(CharSequence source, int charStart, int charEnd,
+                  @NonNull List<ComposedLine> lineList) {
         this.source = source;
         this.frameStart = charStart;
         this.frameEnd = charEnd;
@@ -207,6 +210,12 @@ public class ComposedFrame {
         }
     }
 
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= frameStart, "Char Start: " + charStart + ", Frame Range: [" + frameStart + ", " + frameEnd + ')');
+        checkArgument(charEnd <= frameEnd, "Char End: " + charEnd + ", Frame Range: [" + frameStart + ", " + frameEnd + ')');
+        checkArgument(charEnd >= charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
+    }
+
     /**
      * Generates a path that contains a set of rectangles covering the specified selection range.
      *
@@ -219,17 +228,7 @@ public class ComposedFrame {
      *         than <code>charEnd</code>.
      */
     public @NonNull Path generateSelectionPath(int charStart, int charEnd) {
-        if (charStart < frameStart) {
-            throw new IllegalArgumentException("Char Start: " + charStart
-                                               + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
-        }
-        if (charEnd > frameEnd) {
-            throw new IllegalArgumentException("Char End: " + charEnd
-                                                + ", Frame Range: [" + frameStart + ".." + frameEnd + ")");
-        }
-        if (charStart > charEnd) {
-            throw new IllegalArgumentException("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
+        checkSubRange(charStart, charEnd);
 
         Path selectionPath = new Path();
 

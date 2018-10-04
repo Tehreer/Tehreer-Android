@@ -35,6 +35,9 @@ import com.mta.tehreer.layout.style.TypefaceSpan;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * Represents a typesetter which performs text layout. It can be used to create lines, perform line
  * breaking, and do other contextual analysis based on the characters in the string.
@@ -53,19 +56,12 @@ public class Typesetter {
      * @param typeface The typeface to use.
      * @param typeSize The type size to apply.
      *
-     * @throws NullPointerException if <code>text</code> is null, or <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>text</code> is empty.
      */
 	public Typesetter(@NonNull String text, @NonNull Typeface typeface, float typeSize) {
-        if (text == null) {
-            throw new NullPointerException("Text is null");
-        }
-        if (typeface == null) {
-            throw new NullPointerException("Typeface is null");
-        }
-        if (text.length() == 0) {
-            throw new IllegalArgumentException("Text is empty");
-        }
+	    checkNotNull(text, "text");
+	    checkNotNull(typeface, "typeface");
+	    checkArgument(text.length() > 0, "Text is empty");
 
         SpannableString spanned = new SpannableString(text);
         spanned.setSpan(new TypefaceSpan(typeface), 0, text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
@@ -79,7 +75,6 @@ public class Typesetter {
      *
      * @param spanned The spanned text to typeset.
      *
-     * @throws NullPointerException if <code>spanned</code> is null.
      * @throws IllegalArgumentException if <code>spanned</code> is empty.
      */
     public Typesetter(@NonNull Spanned spanned) {
@@ -87,12 +82,8 @@ public class Typesetter {
     }
 
     public Typesetter(@NonNull Spanned spanned, @Nullable List<Object> defaultSpans) {
-        if (spanned == null) {
-            throw new NullPointerException("Spanned text is null");
-        }
-        if (spanned.length() == 0) {
-            throw new IllegalArgumentException("Spanned text is empty");
-        }
+        checkNotNull(spanned, "spanned");
+        checkArgument(spanned.length() > 0, "Text is empty");
 
         init(StringUtils.copyString(spanned), spanned, defaultSpans);
     }
@@ -134,18 +125,10 @@ public class Typesetter {
         return mBreakRecord;
     }
 
-    private String checkRange(int charStart, int charEnd) {
-        if (charStart < 0) {
-            return ("Char Start: " + charStart);
-        }
-        if (charEnd > mText.length()) {
-            return ("Char End: " + charEnd + ", Text Length: " + mText.length());
-        }
-        if (charStart >= charEnd) {
-            return ("Bad Range: [" + charStart + ".." + charEnd + ")");
-        }
-
-        return null;
+    private void checkSubRange(int charStart, int charEnd) {
+        checkArgument(charStart >= 0, "Char Start: " + charStart);
+        checkArgument(charEnd <= mText.length(), "Char End: " + charEnd + ", Text Length: " + mText.length());
+        checkArgument(charEnd > charStart, "Bad Range: [" + charStart + ", " + charEnd + ')');
     }
 
     /**
@@ -159,20 +142,14 @@ public class Typesetter {
      * @param breakMode The requested break mode.
      * @return The index (exclusive) that would cause the break.
      *
-     * @throws NullPointerException if <code>breakMode</code> is null.
      * @throws IllegalArgumentException if <code>charStart</code> is negative, or
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
     public int suggestForwardBreak(int charStart, int charEnd,
                                    float breakWidth, @NonNull BreakMode breakMode) {
-        if (breakMode == null) {
-            throw new NullPointerException("Break mode is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkNotNull(breakMode, "breakMode");
+        checkSubRange(charStart, charEnd);
 
         switch (breakMode) {
         case CHARACTER:
@@ -198,20 +175,14 @@ public class Typesetter {
      * @param breakMode The requested break mode.
      * @return The index (inclusive) that would cause the break.
      *
-     * @throws NullPointerException if <code>breakMode</code> is null.
      * @throws IllegalArgumentException if <code>charStart</code> is negative, or
      *         <code>charEnd</code> is greater than the length of source text, or
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
     public int suggestBackwardBreak(int charStart, int charEnd,
                                     float breakWidth, @NonNull BreakMode breakMode) {
-        if (breakMode == null) {
-            throw new NullPointerException("Break mode is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkNotNull(breakMode, "breakMode");
+        checkSubRange(charStart, charEnd);
 
         switch (breakMode) {
         case CHARACTER:
@@ -238,10 +209,7 @@ public class Typesetter {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
 	public @NonNull ComposedLine createSimpleLine(int charStart, int charEnd) {
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkSubRange(charStart, charEnd);
 
         LineResolver resolver = new LineResolver();
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
@@ -260,8 +228,6 @@ public class Typesetter {
      * @param truncationPlace The place of truncation for the line.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>breakMode</code> is null, or
-     *         <code>truncationPlace</code> is null.
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
@@ -272,16 +238,9 @@ public class Typesetter {
     public @NonNull ComposedLine createTruncatedLine(int charStart, int charEnd, float maxWidth,
                                                      @NonNull BreakMode breakMode,
                                                      @NonNull TruncationPlace truncationPlace) {
-        if (breakMode == null) {
-            throw new NullPointerException("Break mode is null");
-        }
-        if (truncationPlace == null) {
-            throw new NullPointerException("Truncation place is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkNotNull(breakMode, "breakMode");
+        checkNotNull(truncationPlace, "truncationPlace");
+        checkSubRange(charStart, charEnd);
 
         LineResolver resolver = new LineResolver();
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
@@ -301,8 +260,6 @@ public class Typesetter {
      * @param truncationToken The token to indicate the line truncation.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>breakMode</code> is null, or
-     *         <code>truncationPlace</code> is null, or <code>truncationToken</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
@@ -314,22 +271,11 @@ public class Typesetter {
                                                      @NonNull BreakMode breakMode,
                                                      @NonNull TruncationPlace truncationPlace,
                                                      @NonNull String truncationToken) {
-        if (breakMode == null) {
-            throw new NullPointerException("Break mode is null");
-        }
-        if (truncationPlace == null) {
-            throw new NullPointerException("Truncation place is null");
-        }
-        if (truncationToken == null) {
-            throw new NullPointerException("Truncation token is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
-        if (truncationToken.length() == 0) {
-            throw new IllegalArgumentException("Truncation token is empty");
-        }
+        checkNotNull(breakMode, "breakMode");
+        checkNotNull(truncationPlace, "truncationPlace");
+        checkNotNull(truncationToken, "truncationToken");
+        checkSubRange(charStart, charEnd);
+        checkArgument(truncationToken.length() > 0, "Truncation token is empty");
 
         LineResolver resolver = new LineResolver();
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
@@ -349,8 +295,6 @@ public class Typesetter {
      * @param truncationToken The token to indicate the line truncation.
      * @return The new line which is truncated if it overflows the <code>maxWidth</code>.
      *
-     * @throws NullPointerException if <code>breakMode</code> is null, or
-     *         <code>truncationPlace</code> is null, or <code>truncationToken</code> is null
      * @throws IllegalArgumentException if any of the following is true:
      *         <ul>
      *             <li><code>charStart</code> is negative</li>
@@ -362,24 +306,16 @@ public class Typesetter {
                                                      @NonNull BreakMode breakMode,
                                                      @NonNull TruncationPlace truncationPlace,
                                                      @NonNull ComposedLine truncationToken) {
-        if (breakMode == null) {
-            throw new NullPointerException("Break mode is null");
-        }
-        if (truncationPlace == null) {
-            throw new NullPointerException("Truncation place is null");
-        }
-        if (truncationToken == null) {
-            throw new NullPointerException("Truncation token is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
+        checkNotNull(breakMode, "breakMode");
+        checkNotNull(truncationPlace, "truncationPlace");
+        checkNotNull(truncationToken, "truncationToken");
+        checkSubRange(charStart, charEnd);
 
         LineResolver resolver = new LineResolver();
         resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
-        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace, truncationToken);
+        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode,
+                                          truncationPlace, truncationToken);
     }
 
     /**
@@ -396,19 +332,10 @@ public class Typesetter {
     public @NonNull ComposedFrame createFrame(int charStart, int charEnd,
                                               @NonNull RectF frameRect,
                                               @NonNull TextAlignment textAlignment) {
-        if (frameRect == null) {
-            throw new NullPointerException("Frame rect is null");
-        }
-        if (textAlignment == null) {
-            throw new NullPointerException("Text alignment is null");
-        }
-        String rangeError = checkRange(charStart, charEnd);
-        if (rangeError != null) {
-            throw new IllegalArgumentException(rangeError);
-        }
-        if (frameRect.isEmpty()) {
-            throw new IllegalArgumentException("Frame rect is empty");
-        }
+        checkNotNull(frameRect, "frameRect");
+        checkNotNull(textAlignment, "textAlignment");
+        checkSubRange(charStart, charEnd);
+        checkArgument(!frameRect.isEmpty(), "Frame rect is empty");
 
         FrameResolver resolver = new FrameResolver();
         resolver.setTypesetter(this);
