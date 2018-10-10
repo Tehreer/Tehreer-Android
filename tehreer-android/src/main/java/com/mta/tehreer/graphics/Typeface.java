@@ -30,6 +30,8 @@ import com.mta.tehreer.sfnt.SfntTag;
 import java.io.File;
 import java.io.InputStream;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * The <code>Typeface</code> class specifies the typeface and intrinsic style of a font. This is
  * used in the renderer, along with optionally Renderer settings like typeSize, slantAngle, scaleX,
@@ -69,12 +71,8 @@ public class Typeface {
      * @throws RuntimeException if an error occurred while initialization.
      */
     public Typeface(@NonNull AssetManager assetManager, @NonNull String filePath) {
-        if (assetManager == null) {
-            throw new NullPointerException("Asset manager is null");
-        }
-        if (filePath == null) {
-            throw new NullPointerException("File path is null");
-        }
+        checkNotNull(assetManager, "assetManager");
+        checkNotNull(filePath, "filePath");
 
         long nativeTypeface = nCreateWithAsset(assetManager, filePath);
         if (nativeTypeface == 0) {
@@ -94,9 +92,7 @@ public class Typeface {
      * @throws RuntimeException if an error occurred while initialization.
      */
     public Typeface(@NonNull File file) {
-        if (file == null) {
-            throw new NullPointerException("File is null");
-        }
+        checkNotNull(file, "file");
 
         long nativeTypeface = nCreateWithFile(file.getAbsolutePath());
         if (nativeTypeface == 0) {
@@ -116,9 +112,7 @@ public class Typeface {
      * @throws RuntimeException if an error occurred while initialization.
      */
     public Typeface(@NonNull InputStream stream) {
-        if (stream == null) {
-            throw new NullPointerException("Stream is null");
-        }
+        checkNotNull(stream, "stream");
 
         long nativeTypeface = nCreateFromStream(stream);
         if (nativeTypeface == 0) {

@@ -31,6 +31,9 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.sfnt.WritingDirection;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * The <code>Renderer</code> class represents a generic glyph renderer. It can be used to generate
  * glyph paths, measure their bounding boxes and draw them on a <code>Canvas</code> object.
@@ -133,14 +136,9 @@ public class Renderer {
      * default value is {@link RenderingStyle#FILL}.
      *
      * @param renderingStyle The new style setting for the renderer.
-     *
-     * @throws NullPointerException if <code>renderingStyle</code> is null.
      */
     public void setRenderingStyle(@NonNull RenderingStyle renderingStyle) {
-        if (renderingStyle == null) {
-            throw new NullPointerException("Rendering style is null");
-        }
-
+        checkNotNull(renderingStyle, "renderingStyle");
         mRenderingStyle = renderingStyle;
     }
 
@@ -157,14 +155,9 @@ public class Renderer {
     /**
      * Sets the direction in which the pen will advance after drawing a glyph. The default value is
      * {@link WritingDirection#LEFT_TO_RIGHT}.
-     *
-     * @param writingDirection The new writing direction.
      */
     public void setWritingDirection(@NonNull WritingDirection writingDirection) {
-        if (writingDirection == null) {
-            throw new NullPointerException("Writing direction is null");
-        }
-
+        checkNotNull(writingDirection);
         mWritingDirection = writingDirection;
     }
 
@@ -204,10 +197,7 @@ public class Renderer {
      * @throws IllegalArgumentException if <code>typeSize</code> is negative.
      */
     public void setTypeSize(float typeSize) {
-        if (typeSize < 0.0) {
-            throw new IllegalArgumentException("The value of type size is negative");
-        }
-
+        checkArgument(typeSize >= 0.0f, "The value of type size is negative");
         mTypeSize = typeSize;
         updatePixelSizes();
     }
@@ -248,10 +238,7 @@ public class Renderer {
      * @param scaleX The horizontal scale factor for drawing/measuring glyphs.
      */
     public void setScaleX(float scaleX) {
-        if (scaleX < 0.0f) {
-            throw new IllegalArgumentException("Scale value is negative");
-        }
-
+        checkArgument(scaleX >= 0.0, "Scale value is negative");
         mScaleX = scaleX;
         updatePixelSizes();
     }
@@ -273,10 +260,7 @@ public class Renderer {
      * @param scaleY The vertical scale factor for drawing/measuring glyphs.
      */
     public void setScaleY(float scaleY) {
-        if (scaleY < 0.0f) {
-            throw new IllegalArgumentException("Scale value is negative");
-        }
-
+        checkArgument(scaleY >= 0.0, "Scale value is negative");
         mScaleY = scaleY;
         updatePixelSizes();
     }
@@ -315,10 +299,7 @@ public class Renderer {
      * @param strokeWidth The stroke width in pixels.
      */
     public void setStrokeWidth(float strokeWidth) {
-        if (strokeWidth < 0.0f) {
-            throw new IllegalArgumentException("Stroke width is negative");
-        }
-
+        checkArgument(strokeWidth >= 0.0f, "Stroke width is negative");
         mStrokeWidth = strokeWidth;
         mGlyphLineRadius = (int) ((strokeWidth * 64.0f / 2.0f) + 0.5f);
     }
@@ -338,14 +319,9 @@ public class Renderer {
      * treated. The default value is {@link StrokeCap#BUTT}.
      *
      * @param strokeCap The new stroke cap style.
-     *
-     * @throws NullPointerException if <code>strokeCap</code> is null.
      */
     public void setStrokeCap(@NonNull StrokeCap strokeCap) {
-        if (strokeCap == null) {
-            throw new NullPointerException("Stroke cap is null");
-        }
-
+        checkNotNull(strokeCap);
         mStrokeCap = strokeCap;
         mGlyphLineCap = strokeCap.value;
     }
@@ -363,14 +339,9 @@ public class Renderer {
      * Sets this renderer's stroke join type. The default value is {@link StrokeJoin#ROUND}.
      *
      * @param strokeJoin The new stroke join type.
-     *
-     * @throws NullPointerException if <code>strokeJoin</code> is null.
      */
     public void setStrokeJoin(@NonNull StrokeJoin strokeJoin) {
-        if (strokeJoin == null) {
-            throw new NullPointerException("Stroke join is null");
-        }
-
+        checkNotNull(strokeJoin);
         mStrokeJoin = strokeJoin;
         mGlyphLineJoin = strokeJoin.value;
     }
@@ -394,10 +365,7 @@ public class Renderer {
      * @throws IllegalArgumentException if <code>strokeMiter</code> is less than one.
      */
     public void setStrokeMiter(float strokeMiter) {
-        if (strokeMiter < 1.0f) {
-            throw new IllegalArgumentException("Stroke miter is less than one");
-        }
-
+        checkArgument(strokeMiter >= 1.0f, "Stroke miter is less than one");
         mStrokeMiter = strokeMiter;
         mGlyphMiterLimit = (int) ((strokeMiter * 0x10000) + 0.5f);
     }
@@ -420,10 +388,7 @@ public class Renderer {
      * @throws IllegalArgumentException if <code>shadowRadius</code> is negative.
      */
     public void setShadowRadius(float shadowRadius) {
-        if (shadowRadius < 0.0f) {
-            throw new IllegalArgumentException("Shadow radius is negative");
-        }
-
+        checkArgument(shadowRadius >= 0.0f, "Shadow radius is negative");
         mShadowRadius = shadowRadius;
         mShadowLayerSynced = false;
     }

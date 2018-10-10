@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * The <code>TypefaceManager</code> class provides management activities related to typefaces.
  */
@@ -47,8 +50,7 @@ public class TypefaceManager {
     private static final @NonNull ArrayList<Typeface> typefaces = new ArrayList<>();
     private static boolean sorted;
 
-    private TypefaceManager() {
-    }
+    private TypefaceManager() { }
 
     /**
      * Registers a typeface in <code>TypefaceManager</code>.
@@ -56,23 +58,17 @@ public class TypefaceManager {
      * @param typeface The typeface that will be registered.
      * @param tag An optional tag to identify the typeface.
      *
-     * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is already registered, or
      *         <code>tag</code> is already taken.
      */
     public static void registerTypeface(@NonNull Typeface typeface, @Nullable Object tag) {
-        if (typeface == null) {
-            throw new NullPointerException("Typeface is null");
-        }
+        checkNotNull(typeface, "typeface");
 
         synchronized (TypefaceManager.class) {
-            if (typefaces.contains(typeface)) {
-                throw new IllegalArgumentException("This typeface is already registered");
-            }
+            checkArgument(!typefaces.contains(typeface), "This typeface is already registered");
+
             if (tag != null) {
-                if (tags.containsKey(tag)) {
-                    throw new IllegalArgumentException("This tag is already taken");
-                }
+                checkArgument(!tags.containsKey(tag), "This tag is already taken");
 
                 tags.put(tag, typeface);
                 typeface.tag = tag;
@@ -88,19 +84,14 @@ public class TypefaceManager {
      *
      * @param typeface The typeface to unregister.
      *
-     * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
     public static void unregisterTypeface(@NonNull Typeface typeface) {
-        if (typeface == null) {
-            throw new NullPointerException("Typeface is null");
-        }
+        checkNotNull(typeface, "typeface");
 
         synchronized (TypefaceManager.class) {
             int index = typefaces.indexOf(typeface);
-            if (index < 0) {
-                throw new IllegalArgumentException("This typeface is not registered");
-            }
+            checkArgument(index >= 0, "This typeface is not registered");
 
             typefaces.remove(index);
             tags.remove(typeface.tag);
@@ -114,13 +105,9 @@ public class TypefaceManager {
      * @param tag The tag object that identifies the typeface.
      * @return The registered typeface, or <code>null</code> if no typeface is registered against
      *         the specified tag.
-     *
-     * @throws NullPointerException if <code>tag</code> is null.
      */
     public static @Nullable Typeface getTypeface(@NonNull Object tag) {
-        if (tag == null) {
-            throw new NullPointerException("Tag is null");
-        }
+        checkNotNull(tag, "tag");
 
         synchronized (TypefaceManager.class) {
             return tags.get(tag);
@@ -134,18 +121,13 @@ public class TypefaceManager {
      * @return The tag of the typeface, or <code>null</code> if no tag was specified while
      *         registration.
      *
-     * @throws NullPointerException if <code>typeface</code> is null.
      * @throws IllegalArgumentException if <code>typeface</code> is not registered.
      */
     public static @Nullable Object getTypefaceTag(@NonNull Typeface typeface) {
-        if (typeface == null) {
-            throw new NullPointerException("Typeface is null");
-        }
+        checkNotNull(typeface, "typeface");
 
         synchronized (TypefaceManager.class) {
-            if (!typefaces.contains(typeface)) {
-                throw new IllegalArgumentException("This typeface is not registered");
-            }
+            checkArgument(typefaces.contains(typeface), "This typeface is not registered");
 
             return typeface.tag;
         }
