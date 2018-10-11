@@ -21,6 +21,7 @@ extern "C" {
 #include <SFScheme.h>
 }
 
+#include <cstdint>
 #include <jni.h>
 #include <map>
 
@@ -30,9 +31,12 @@ extern "C" {
 
 using namespace Tehreer;
 
-SFTextDirection ShapingEngine::getScriptDefaultDirection(SFTag scriptTag)
+WritingDirection ShapingEngine::getScriptDefaultDirection(uint32_t scriptTag)
 {
-    return SFScriptGetDefaultDirection(scriptTag);
+    SFTextDirection defaultDirection = SFScriptGetDefaultDirection(scriptTag);
+    WritingDirection writingDirection = static_cast<WritingDirection>(defaultDirection);
+
+    return writingDirection;
 }
 
 ShapingEngine::ShapingEngine()
@@ -42,8 +46,8 @@ ShapingEngine::ShapingEngine()
     , m_typeSize(16.0)
     , m_scriptTag(SFTagMake('D', 'F', 'L', 'T'))
     , m_languageTag(SFTagMake('d', 'f', 'l', 't'))
-    , m_textMode(SFTextModeForward)
-    , m_textDirection(SFTextDirectionLeftToRight)
+    , m_shapingOrder(ShapingOrder::FORWARD)
+    , m_writingDirection(WritingDirection::LEFT_TO_RIGHT)
 {
 }
 
@@ -53,16 +57,16 @@ ShapingEngine::~ShapingEngine()
     SFSchemeRelease(m_sfScheme);
 }
 
-void ShapingEngine::setTextDirection(SFTextDirection textDirection)
+void ShapingEngine::setShapingOrder(ShapingOrder shapingOrder)
 {
-    m_textDirection = textDirection;
-    SFArtistSetTextDirection(m_sfArtist, textDirection);
+    m_shapingOrder = shapingOrder;
+    SFArtistSetTextMode(m_sfArtist, shapingOrder);
 }
 
-void ShapingEngine::setTextMode(SFTextMode textMode)
+void ShapingEngine::setWritingDirection(WritingDirection writingDirection)
 {
-    m_textMode = textMode;
-    SFArtistSetTextMode(m_sfArtist, textMode);
+    m_writingDirection = writingDirection;
+    SFArtistSetTextDirection(m_sfArtist, writingDirection);
 }
 
 void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
@@ -92,7 +96,7 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
     }
 
     jfloat sizeByEm = m_typeSize / m_typeface->ftFace()->units_per_EM;
-    bool isBackward = m_textMode == SFTextModeBackward;
+    bool isBackward = m_shapingOrder == ShapingOrder::BACKWARD;
 
     shapingResult.setAdditionalInfo(sizeByEm, isBackward, charStart, charEnd);
 }
@@ -100,7 +104,7 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
 {
     SFTag inputTag = static_cast<SFTag>(scriptTag);
-    SFTextDirection defaultDirection = ShapingEngine::getScriptDefaultDirection(inputTag);
+    WritingDirection defaultDirection = ShapingEngine::getScriptDefaultDirection(inputTag);
 
     return static_cast<jint>(defaultDirection);
 }
@@ -177,33 +181,33 @@ static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint la
 static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextDirection textDirection = shapingEngine->textDirection();
+    WritingDirection writingDirection = shapingEngine->writingDirection();
 
-    return static_cast<jint>(textDirection);
+    return static_cast<jint>(writingDirection);
 }
 
-static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingDirection)
+static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint writingDirection)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextDirection textDirection = static_cast<SFTextDirection>(shapingDirection);
+    WritingDirection layoutDirection = static_cast<WritingDirection>(writingDirection);
 
-    shapingEngine->setTextDirection(textDirection);
+    shapingEngine->setWritingDirection(layoutDirection);
 }
 
 static jint getShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextMode textMode = shapingEngine->textMode();
+    ShapingOrder shapingOrder = shapingEngine->shapingOrder();
 
-    return static_cast<jint>(textMode);
+    return static_cast<jint>(shapingOrder);
 }
 
 static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingOrder)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTextMode textMode = static_cast<SFTextMode>(shapingOrder);
+    ShapingOrder memoryOrder = static_cast<ShapingOrder>(shapingOrder);
 
-    shapingEngine->setTextMode(textMode);
+    shapingEngine->setShapingOrder(memoryOrder);
 }
 
 static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong albumHandle, jstring text, jint fromIndex, jint toIndex)

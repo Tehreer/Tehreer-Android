@@ -35,9 +35,19 @@ class OpenTypeScheme;
 
 namespace Tehreer {
 
+enum ShapingOrder : uint32_t {
+    FORWARD = SFTextModeForward,
+    BACKWARD = SFTextModeBackward,
+};
+
+enum WritingDirection : uint32_t {
+    LEFT_TO_RIGHT = SFTextDirectionLeftToRight,
+    RIGHT_TO_LEFT = SFTextDirectionRightToLeft,
+};
+
 class ShapingEngine {
 public:
-    static SFTextDirection getScriptDefaultDirection(uint32_t scriptTag);
+    static WritingDirection getScriptDefaultDirection(uint32_t scriptTag);
 
     ShapingEngine();
     ~ShapingEngine();
@@ -54,11 +64,11 @@ public:
     SFTag languageTag() const { return m_languageTag; }
     void setLanguageTag(SFTag languageTag) { m_languageTag = languageTag; }
 
-    SFTextMode textMode() const { return m_textMode; }
-    void setTextMode(SFTextMode textMode);
+    ShapingOrder shapingOrder() const { return m_shapingOrder; }
+    void setShapingOrder(ShapingOrder shapingOrder);
 
-    SFTextDirection textDirection() const { return m_textDirection; }
-    void setTextDirection(SFTextDirection textDirection);
+    WritingDirection writingDirection() const { return m_writingDirection; }
+    void setWritingDirection(WritingDirection writingDirection);
 
     void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd);
 
@@ -69,8 +79,8 @@ private:
     jfloat m_typeSize;
     SFTag m_scriptTag;
     SFTag m_languageTag;
-    SFTextMode m_textMode;
-    SFTextDirection m_textDirection;
+    ShapingOrder m_shapingOrder;
+    WritingDirection m_writingDirection;
 };
 
 }
