@@ -22,8 +22,8 @@ import android.text.Spanned;
 import android.text.style.ReplacementSpan;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.ShapingEngine;
+import com.mta.tehreer.sfnt.ShapingOrder;
 import com.mta.tehreer.sfnt.ShapingResult;
 import com.mta.tehreer.sfnt.WritingDirection;
 import com.mta.tehreer.unicode.BaseDirection;
@@ -67,17 +67,13 @@ public class ShapeResolver {
                         boolean isOddLevel = ((bidiRun.embeddingLevel & 1) == 1);
                         boolean isBackward = (isOddLevel && writingDirection == WritingDirection.LEFT_TO_RIGHT)
                                            | (!isOddLevel && writingDirection == WritingDirection.RIGHT_TO_LEFT);
-
-                        // FIXME: Add support for backward mode and disable overriding.
-                        if (isBackward) {
-                            scriptTag = SfntTag.make(isOddLevel ? "arab" : "latn");
-                            writingDirection = (isOddLevel ? WritingDirection.RIGHT_TO_LEFT : WritingDirection.LEFT_TO_RIGHT);
-                        }
+                        ShapingOrder shapingOrder = (isBackward ? ShapingOrder.BACKWARD : ShapingOrder.FORWARD);
 
                         locator.reset(scriptRun.charStart, scriptRun.charEnd);
 
                         shapingEngine.setScriptTag(scriptTag);
                         shapingEngine.setWritingDirection(writingDirection);
+                        shapingEngine.setShapingOrder(shapingOrder);
 
                         resolveTypefaces(text, spanned, runs, locator, shapingEngine, bidiRun.embeddingLevel);
                     }
@@ -110,10 +106,7 @@ public class ShapeResolver {
             int runEnd = locator.getRunEnd();
 
             Typeface typeface = locator.getTypeface();
-            if (typeface == null) {
-                throw new IllegalArgumentException("No typeface is specified for range ["
-                                                   + runStart + ".." + runEnd + ")");
-            }
+            checkArgument(typeface != null, "No typeface is specified for range [" + runStart + ", " + runEnd + ')');
 
             float typeSize = locator.getTypeSize();
             float sizeByEm = typeSize / typeface.getUnitsPerEm();
