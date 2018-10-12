@@ -103,7 +103,7 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
 
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
 {
-    SFTag inputTag = static_cast<SFTag>(scriptTag);
+    uint32_t inputTag = static_cast<uint32_t>(scriptTag);
     WritingDirection defaultDirection = ShapingEngine::getScriptDefaultDirection(inputTag);
 
     return static_cast<jint>(defaultDirection);
@@ -149,7 +149,7 @@ static void setTypeSize(JNIEnv *env, jobject obj, jlong engineHandle, jfloat typ
 static jint getScriptTag(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTag scriptTag = shapingEngine->scriptTag();
+    uint32_t scriptTag = shapingEngine->scriptTag();
 
     return static_cast<jint>(scriptTag);
 }
@@ -157,7 +157,7 @@ static jint getScriptTag(JNIEnv *env, jobject obj, jlong engineHandle)
 static void setScriptTag(JNIEnv *env, jobject obj, jlong engineHandle, jint scriptTag)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTag inputTag = static_cast<SFTag>(scriptTag);
+    uint32_t inputTag = static_cast<uint32_t>(scriptTag);
 
     shapingEngine->setScriptTag(inputTag);
 }
@@ -165,7 +165,7 @@ static void setScriptTag(JNIEnv *env, jobject obj, jlong engineHandle, jint scri
 static jint getLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTag languageTag = shapingEngine->languageTag();
+    uint32_t languageTag = shapingEngine->languageTag();
 
     return static_cast<jint>(languageTag);
 }
@@ -173,7 +173,7 @@ static jint getLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle)
 static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint languageTag)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    SFTag inputTag = static_cast<SFTag>(languageTag);
+    uint32_t inputTag = static_cast<uint32_t>(languageTag);
 
     shapingEngine->setLanguageTag(inputTag);
 }

@@ -58,11 +58,11 @@ public:
     jfloat typeSize() const { return m_typeSize; }
     void setTypeSize(jfloat typeSize) { m_typeSize = typeSize; }
 
-    SFTag scriptTag() const { return m_scriptTag; }
-    void setScriptTag(SFTag scriptTag) { m_scriptTag = scriptTag; }
+    uint32_t scriptTag() const { return m_scriptTag; }
+    void setScriptTag(uint32_t scriptTag) { m_scriptTag = scriptTag; }
 
-    SFTag languageTag() const { return m_languageTag; }
-    void setLanguageTag(SFTag languageTag) { m_languageTag = languageTag; }
+    uint32_t languageTag() const { return m_languageTag; }
+    void setLanguageTag(uint32_t languageTag) { m_languageTag = languageTag; }
 
     ShapingOrder shapingOrder() const { return m_shapingOrder; }
     void setShapingOrder(ShapingOrder shapingOrder);
@@ -77,8 +77,8 @@ private:
     SFSchemeRef m_sfScheme;
     Typeface *m_typeface;
     jfloat m_typeSize;
-    SFTag m_scriptTag;
-    SFTag m_languageTag;
+    uint32_t m_scriptTag;
+    uint32_t m_languageTag;
     ShapingOrder m_shapingOrder;
     WritingDirection m_writingDirection;
 };
