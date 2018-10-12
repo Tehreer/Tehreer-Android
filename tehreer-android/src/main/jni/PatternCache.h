@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,17 +25,20 @@ extern "C" {
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <vector>
 
 namespace Tehreer {
 
 struct PatternKey {
     uint32_t scriptTag;
     uint32_t languageTag;
+    std::vector<uint32_t> featureTags;
+    std::vector<uint16_t> featureValues;
 
     PatternKey()
     {
-        scriptTag = 0;
-        languageTag = 0;
+        this->scriptTag = 0;
+        this->languageTag = 0;
     }
 
     PatternKey(uint32_t scriptTag, uint32_t languageTag)
@@ -44,10 +47,22 @@ struct PatternKey {
         this->languageTag = languageTag;
     }
 
+    PatternKey(uint32_t scriptTag, uint32_t languageTag,
+               const std::vector<uint32_t> &featureTags,
+               const std::vector<uint16_t> &featureValues)
+    {
+        this->scriptTag = scriptTag;
+        this->languageTag = languageTag;
+        this->featureTags = featureTags;
+        this->featureValues = featureValues;
+    }
+
     bool operator ==(const PatternKey &other) const
     {
         return scriptTag == other.scriptTag
-            && languageTag == other.languageTag;
+            && languageTag == other.languageTag
+            && featureTags == other.featureTags
+            && featureValues == other.featureValues;
     }
 };
 
@@ -65,9 +80,17 @@ private:
         size_t operator()(const PatternKey &key) const
         {
             const size_t prime = 31;
+
             size_t result = 1;
             result = prime * result + std::hash<uint32_t>()(key.scriptTag);
             result = prime * result + std::hash<uint32_t>()(key.languageTag);
+
+            for (uint32_t tag : key.featureTags) {
+                result = prime * result + std::hash<uint32_t>()(tag);
+            }
+            for (uint16_t value : key.featureValues) {
+                result = prime * result + std::hash<uint16_t>()(value);
+            }
 
             return result;
         }
