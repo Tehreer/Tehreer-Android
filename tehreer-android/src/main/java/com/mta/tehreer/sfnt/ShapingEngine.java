@@ -23,6 +23,13 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 /**
  * The <code>ShapingEngine</code> class represents text shaping engine.
  */
@@ -98,7 +105,8 @@ public class ShapingEngine implements Disposable {
     }
 
     private static class Base {
-        Typeface typeface;
+        Typeface typeface = null;
+        Set<OpenTypeFeature> features = Collections.emptySet();
     }
 
     private final Base base;
@@ -201,6 +209,30 @@ public class ShapingEngine implements Disposable {
 	public void setLanguageTag(int languageTag) {
 		nSetLanguageTag(nativeEngine, languageTag);
 	}
+
+	public @NonNull Set<OpenTypeFeature> getOpenTypeFeatures() {
+	    return Collections.unmodifiableSet(base.features);
+    }
+
+	public void setOpenTypeFeatures(@NonNull Set<OpenTypeFeature> features) {
+	    checkNotNull(features);
+
+	    base.features = new LinkedHashSet<>(features);
+
+	    int size = features.size();
+        int[] tags = new int[size];
+        short[] values = new short[size];
+        int index = 0;
+
+        for (OpenTypeFeature feature : features) {
+            tags[index] = feature.tag();
+            values[index] = (short) feature.value();
+
+            index += 1;
+        }
+
+        nSetOpenTypeFeatures(nativeEngine, tags, values);
+    }
 
     /**
      * Returns the direction in which this shaping engine will place the resultant glyphs. The
@@ -327,6 +359,8 @@ public class ShapingEngine implements Disposable {
 
     private static native int nGetLanguageTag(long nativeEngine);
     private static native void nSetLanguageTag(long nativeEngine, int languageTag);
+
+    private static native void nSetOpenTypeFeatures(long nativeEngine, int[] tags, short[] values);
 
     private static native int nGetWritingDirection(long nativeEngine);
 	private static native void nSetWritingDirection(long nativeEngine, int writingDirection);
