@@ -159,10 +159,7 @@ public class ShapingEngine implements Disposable {
      * @param typeSize The new type size.
      */
     public void setTypeSize(float typeSize) {
-        if (typeSize < 0.0) {
-            throw new IllegalArgumentException("The value of font size is negative");
-        }
-
+        checkArgument(typeSize >= 0.0f, "The value of font size is negative");
         nSetTypeSize(nativeEngine, typeSize);
     }
 
@@ -307,20 +304,10 @@ public class ShapingEngine implements Disposable {
         if (base.typeface == null) {
             throw new IllegalStateException("Typeface has not been set");
         }
-        if (text == null) {
-            throw new NullPointerException("Text is null");
-        }
-        if (fromIndex < 0) {
-            throw new IllegalArgumentException("Char Start: " + fromIndex);
-        }
-        if (toIndex > text.length()) {
-            throw new IllegalArgumentException("Char End: " + toIndex
-                    + ", Text Length: " + text.length());
-        }
-        if (fromIndex > toIndex) {
-            throw new IllegalArgumentException("Char Start: " + fromIndex
-                    + ", Char End: " + toIndex);
-        }
+        checkNotNull(text, "text");
+        checkArgument(fromIndex >= 0, "From Index: " + fromIndex);
+        checkArgument(toIndex <= text.length(), "To Index: " + toIndex + ", Text Length: " + text.length());
+        checkArgument(toIndex >= fromIndex, "Bad Range: [" + fromIndex + ", " + toIndex + ')');
 
         ShapingResult result = new ShapingResult();
         nShapeText(nativeEngine, result.nativeResult, text, fromIndex, toIndex);
