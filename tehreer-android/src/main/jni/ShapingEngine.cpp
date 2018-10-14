@@ -23,12 +23,13 @@ extern "C" {
 
 #include <cstdint>
 #include <jni.h>
-#include <map>
+#include <vector>
 
 #include "JavaBridge.h"
 #include "PatternCache.h"
 #include "ShapingEngine.h"
 
+using namespace std;
 using namespace Tehreer;
 
 WritingDirection ShapingEngine::getScriptDefaultDirection(uint32_t scriptTag)
@@ -57,6 +58,12 @@ ShapingEngine::~ShapingEngine()
     SFSchemeRelease(m_sfScheme);
 }
 
+void ShapingEngine::setOpenTypeFeatures(const vector<uint32_t> &featureTags, const vector<uint16_t> &featureValues)
+{
+    m_featureTags = featureTags;
+    m_featureValues = featureValues;
+}
+
 void ShapingEngine::setShapingOrder(ShapingOrder shapingOrder)
 {
     m_shapingOrder = shapingOrder;
@@ -72,13 +79,14 @@ void ShapingEngine::setWritingDirection(WritingDirection writingDirection)
 void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
 {
     PatternCache &cache = m_typeface->patternCache();
-    PatternKey key(m_scriptTag, m_languageTag);
+    PatternKey key(m_scriptTag, m_languageTag, m_featureTags, m_featureValues);
     SFPatternRef pattern = cache.get(key);
 
     if (!pattern) {
         SFSchemeSetFont(m_sfScheme, m_typeface->sfFont());
         SFSchemeSetScriptTag(m_sfScheme, m_scriptTag);
         SFSchemeSetLanguageTag(m_sfScheme, m_languageTag);
+        SFSchemeSetFeatureValues(m_sfScheme, m_featureTags.data(), m_featureValues.data(), m_featureTags.size());
 
         pattern = SFSchemeBuildPattern(m_sfScheme);
         cache.put(key, pattern);
@@ -178,6 +186,26 @@ static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint la
     shapingEngine->setLanguageTag(inputTag);
 }
 
+static void setOpenTypeFeatures(JNIEnv *env, jobject obj, jlong engineHandle, jintArray tagsArray, jshortArray valuesArray)
+{
+    ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
+
+    void *rawTags = env->GetPrimitiveArrayCritical(tagsArray, nullptr);
+    void *rawValues = env->GetPrimitiveArrayCritical(valuesArray, nullptr);
+
+    uint32_t *actualTags = static_cast<uint32_t *>(rawTags);
+    uint16_t *actualValues = static_cast<uint16_t *>(rawValues);
+    jint featureCount = env->GetArrayLength(tagsArray);
+
+    const vector<uint32_t> featureTags(actualTags, actualTags + featureCount);
+    const vector<uint16_t> featureValues(actualValues, actualValues + featureCount);
+
+    shapingEngine->setOpenTypeFeatures(featureTags, featureValues);
+
+    env->ReleasePrimitiveArrayCritical(tagsArray, rawTags, 0);
+    env->ReleasePrimitiveArrayCritical(valuesArray, rawValues, 0);
+}
+
 static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
@@ -210,10 +238,10 @@ static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint s
     shapingEngine->setShapingOrder(memoryOrder);
 }
 
-static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong albumHandle, jstring text, jint fromIndex, jint toIndex)
+static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong resultHandle, jstring text, jint fromIndex, jint toIndex)
 {
     ShapingEngine *shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(albumHandle);
+    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
 
     const jchar *charArray = env->GetStringChars(text, nullptr);
 
@@ -233,6 +261,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nSetScriptTag", "(JI)V", (void *)setScriptTag },
     { "nGetLanguageTag", "(J)I", (void *)getLanguageTag },
     { "nSetLanguageTag", "(JI)V", (void *)setLanguageTag },
+    { "nSetOpenTypeFeatures", "(J[I[S)V", (void *)setOpenTypeFeatures },
     { "nGetWritingDirection", "(J)I", (void *)getWritingDirection },
     { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
     { "nGetShapingOrder", "(J)I", (void *)getShapingOrder },

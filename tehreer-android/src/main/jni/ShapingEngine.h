@@ -25,8 +25,8 @@ extern "C" {
 
 #include <cstdint>
 #include <jni.h>
-#include <map>
 #include <memory>
+#include <vector>
 
 #include "Typeface.h"
 #include "ShapingResult.h"
@@ -64,6 +64,8 @@ public:
     uint32_t languageTag() const { return m_languageTag; }
     void setLanguageTag(uint32_t languageTag) { m_languageTag = languageTag; }
 
+    void setOpenTypeFeatures(const std::vector<uint32_t> &featureTags, const std::vector<uint16_t> &featureValues);
+
     ShapingOrder shapingOrder() const { return m_shapingOrder; }
     void setShapingOrder(ShapingOrder shapingOrder);
 
@@ -79,6 +81,8 @@ private:
     jfloat m_typeSize;
     uint32_t m_scriptTag;
     uint32_t m_languageTag;
+    std::vector<uint32_t> m_featureTags;
+    std::vector<uint16_t> m_featureValues;
     ShapingOrder m_shapingOrder;
     WritingDirection m_writingDirection;
 };
