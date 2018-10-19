@@ -61,35 +61,7 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
     return static_cast<float>(value / 64.0);
 }
 
-static unsigned long assetStreamRead(FT_Stream assetStream,
-    unsigned long offset, unsigned char *buffer, unsigned long count)
-{
-    AAsset *asset = static_cast<AAsset *>(assetStream->descriptor.pointer);
-    int bytesRead = 0;
-
-    if (!count && offset > assetStream->size) {
-        return 1;
-    }
-
-    if (assetStream->pos != offset) {
-        AAsset_seek(asset, offset, SEEK_SET);
-    }
-    bytesRead = AAsset_read(asset, buffer, count);
-
-    return static_cast<unsigned long>(bytesRead);
-}
-
-static void assetStreamClose(FT_Stream assetStream)
-{
-    AAsset *asset = static_cast<AAsset *>(assetStream->descriptor.pointer);
-    AAsset_close(asset);
-
-    assetStream->descriptor.pointer = nullptr;
-    assetStream->size = 0;
-    assetStream->base = 0;
-}
-
-static FT_Stream assetStreamCreate(AAssetManager *assetManager, const char *path)
+static FT_Stream createStream(AAssetManager *assetManager, const char *path)
 {
     AAsset *asset = AAssetManager_open(assetManager, path, AASSET_MODE_UNKNOWN);
     if (!asset) {
@@ -101,27 +73,49 @@ static FT_Stream assetStreamCreate(AAssetManager *assetManager, const char *path
         return nullptr;
     }
 
-    FT_Stream assetStream;
-    assetStream = (FT_Stream)malloc(sizeof(*assetStream));
-    assetStream->base = nullptr;
-    assetStream->size = static_cast<unsigned long>(size);
-    assetStream->pos = 0;
-    assetStream->descriptor.pointer = asset;
-    assetStream->pathname.pointer = nullptr;
-    assetStream->read = assetStreamRead;
-    assetStream->close = assetStreamClose;
+    FT_Stream stream;
+    stream = (FT_Stream)malloc(sizeof(*stream));
+    stream->base = nullptr;
+    stream->size = static_cast<unsigned long>(size);
+    stream->pos = 0;
+    stream->descriptor.pointer = asset;
+    stream->pathname.pointer = nullptr;
+    stream->read = [](FT_Stream stream, unsigned long offset,
+                      unsigned char *buffer, unsigned long count) -> unsigned long {
+        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
+        int bytesRead = 0;
 
-    return assetStream;
+        if (count == 0 && offset > stream->size) {
+            return 1;
+        }
+
+        if (stream->pos != offset) {
+            AAsset_seek(asset, offset, SEEK_SET);
+        }
+        bytesRead = AAsset_read(asset, buffer, count);
+
+        return static_cast<unsigned long>(bytesRead);
+    };
+    stream->close = [](FT_Stream stream) {
+        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
+        AAsset_close(asset);
+
+        stream->descriptor.pointer = nullptr;
+        stream->size = 0;
+        stream->base = 0;
+    };
+
+    return stream;
 }
 
-static void assetStreamDispose(FT_Stream assetStream)
+static void disposeStream(FT_Stream stream)
 {
-    free(assetStream);
+    free(stream);
 }
 
 Typeface *Typeface::createWithAsset(AAssetManager *assetManager, const char *path)
 {
-    FT_Stream stream = assetStreamCreate(assetManager, path);
+    FT_Stream stream = createStream(assetManager, path);
     if (stream) {
         FT_Open_Args args;
         args.flags = FT_OPEN_STREAM;
@@ -262,7 +256,7 @@ Typeface::~Typeface()
     }
 
     if (m_ftStream) {
-        assetStreamDispose(m_ftStream);
+        disposeStream(m_ftStream);
     }
 
     if (m_buffer) {
