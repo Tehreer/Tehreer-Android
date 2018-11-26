@@ -99,7 +99,7 @@ class Glyph {
     }
 
     @Override
-    public void finalize() throws Throwable {
+    protected void finalize() throws Throwable {
         try {
             if (nativeOutline != 0) {
                 nativeDisposeOutline(nativeOutline);
