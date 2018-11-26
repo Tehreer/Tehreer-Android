@@ -29,15 +29,15 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public abstract class FloatList implements Primitive {
     /**
-     * Returns a float list whose elements are the specified array.
+     * Returns a float list whose elements are the specified values.
      *
-     * @param array The elements of the float list.
+     * @param values The elements of the float list.
      * @return A new float list.
      */
-    public static @NonNull FloatList of(@NonNull float[] array) {
-        checkNotNull(array);
+    public static @NonNull FloatList of(float... values) {
+        checkNotNull(values);
 
-        return new JFloatArrayList(array, 0, array.length);
+        return new JFloatArrayList(values, 0, values.length);
     }
 
     /**

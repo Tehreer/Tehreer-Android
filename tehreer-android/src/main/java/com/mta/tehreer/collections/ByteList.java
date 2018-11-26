@@ -29,15 +29,15 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public abstract class ByteList implements Primitive {
     /**
-     * Returns a byte list whose elements are the specified array.
+     * Returns a byte list whose elements are the specified values.
      *
-     * @param array The elements of the byte list.
+     * @param values The elements of the byte list.
      * @return A new byte list.
      */
-    public static @NonNull ByteList of(@NonNull byte[] array) {
-        checkNotNull(array);
+    public static @NonNull ByteList of(byte... values) {
+        checkNotNull(values);
 
-        return new JByteArrayList(array, 0, array.length);
+        return new JByteArrayList(values, 0, values.length);
     }
 
     /**

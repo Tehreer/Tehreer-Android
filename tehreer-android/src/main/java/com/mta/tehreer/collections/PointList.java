@@ -30,16 +30,16 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public abstract class PointList implements Primitive {
     /**
-     * Returns a point list whose elements are the specified array. Even numbered array entries will
-     * become the x- coordinates while odd numbered array entries will become the y- coordinates.
+     * Returns a point list whose elements are the specified values. Even numbered entries will
+     * become the x- coordinates while odd numbered entries will become the y- coordinates.
      *
-     * @param array The elements of the point list.
+     * @param values The elements of the point list.
      * @return A new point list.
      */
-    public static @NonNull PointList of(@NonNull @Size(multiple = 2) float[] array) {
-        checkNotNull(array);
+    public static @NonNull PointList of(@Size(multiple = 2) float... values) {
+        checkNotNull(values);
 
-        return new JFloatArrayPointList(array, 0, array.length / 2);
+        return new JFloatArrayPointList(values, 0, values.length / 2);
     }
 
     /**

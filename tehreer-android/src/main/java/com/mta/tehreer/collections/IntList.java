@@ -29,15 +29,15 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public abstract class IntList implements Primitive {
     /**
-     * Returns an integers list whose elements are the specified array.
+     * Returns an integers list whose elements are the specified values.
      *
-     * @param array The elements of the integer list.
+     * @param values The elements of the integer list.
      * @return A new integer list.
      */
-    public static @NonNull IntList of(@NonNull int[] array) {
-        checkNotNull(array);
+    public static @NonNull IntList of(int... values) {
+        checkNotNull(values);
 
-        return new JIntArrayList(array, 0, array.length);
+        return new JIntArrayList(values, 0, values.length);
     }
 
     /**
