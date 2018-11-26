@@ -92,7 +92,7 @@ class Glyph {
     @Sustain
     private void ownOutline(long nativeOutline) {
         if (this.nativeOutline != 0) {
-            nativeDisposeOutline(this.nativeOutline);
+            nDisposeOutline(this.nativeOutline);
         }
 
         this.nativeOutline = nativeOutline;
@@ -102,7 +102,7 @@ class Glyph {
     protected void finalize() throws Throwable {
         try {
             if (nativeOutline != 0) {
-                nativeDisposeOutline(nativeOutline);
+                nDisposeOutline(nativeOutline);
                 nativeOutline = 0;
             }
         } finally {
@@ -110,5 +110,5 @@ class Glyph {
         }
     }
 
-    private static native void nativeDisposeOutline(long nativeOutline);
+    private static native void nDisposeOutline(long nativeOutline);
 }
