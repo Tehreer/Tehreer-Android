@@ -16,13 +16,18 @@
 
 package com.mta.tehreer.sfnt;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public final class OpenTypeFeature {
     private final int tag;
     private final int value;
 
-    public OpenTypeFeature(int tag, int value) {
+    public static @NonNull OpenTypeFeature of(int tag, int value) {
+        return new OpenTypeFeature(tag, value);
+    }
+
+    private OpenTypeFeature(int tag, int value) {
         this.tag = tag;
         this.value = value;
     }
