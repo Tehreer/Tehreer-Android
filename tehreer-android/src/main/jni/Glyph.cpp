@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ static void disposeOutline(JNIEnv *env, jobject obj, jlong outlineHandle)
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nativeDisposeOutline", "(J)V", (void *)disposeOutline },
+    { "nDisposeOutline", "(J)V", (void *)disposeOutline },
 };
 
 jint register_com_mta_tehreer_graphics_Glyph(JNIEnv *env)
