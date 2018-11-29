@@ -61,6 +61,7 @@ public class TLabel extends View {
     private @Nullable Spanned mSpanned = null;
     private @Nullable Typesetter mTypesetter = null;
 
+    private boolean mNeedsTypesetter = false;
     private int mTextWidth = 0;
     private int mTextHeight = 0;
 
@@ -211,6 +212,10 @@ public class TLabel extends View {
     }
 
     private void updateTypesetter() {
+        if (mNeedsTypesetter) {
+            return;
+        }
+
         mTypesetter = null;
 
         long t1 = System.nanoTime();
@@ -379,6 +384,7 @@ public class TLabel extends View {
         mText = null;
         mSpanned = null;
         mTypesetter = typesetter;
+        mNeedsTypesetter = true;
 
         requestLayout();
         invalidate();
@@ -411,6 +417,7 @@ public class TLabel extends View {
     public void setSpanned(Spanned spanned) {
         mText = null;
         mSpanned = spanned;
+        mNeedsTypesetter = false;
         updateTypesetter();
     }
 
@@ -462,6 +469,7 @@ public class TLabel extends View {
     public void setText(String text) {
         mText = (text == null ? "" : text);
         mSpanned = null;
+        mNeedsTypesetter = false;
         updateTypesetter();
     }
 
