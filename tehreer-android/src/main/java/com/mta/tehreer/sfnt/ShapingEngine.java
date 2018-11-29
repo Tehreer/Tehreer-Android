@@ -207,10 +207,25 @@ public class ShapingEngine implements Disposable {
 		nSetLanguageTag(nativeEngine, languageTag);
 	}
 
+    /**
+     * Returns the user-specified open type feature settings.
+     *
+     * @return A set of open type features.
+     */
 	public @NonNull Set<OpenTypeFeature> getOpenTypeFeatures() {
 	    return Collections.unmodifiableSet(base.features);
     }
 
+    /**
+     * Sets the user-specified open type feature settings.
+     *
+     * If the value of a feature is set to zero, it would be disabled provided that it is not a
+     * required feature of the chosen script. If the value of a feature is greater than zero, it
+     * would be enabled. In case of an alternate feature, this value would be used to pick the
+     * alternate glyph at this position.
+     *
+     * @param features A set of open type features.
+     */
 	public void setOpenTypeFeatures(@NonNull Set<OpenTypeFeature> features) {
 	    checkNotNull(features);
 
