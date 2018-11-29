@@ -109,7 +109,7 @@ public class FrameResolver {
      * @param frameBounds A rectangle specifying the frame bounds.
      */
     public void setFrameBounds(@NonNull RectF frameBounds) {
-        checkNotNull(frameBounds, "frameBounds");
+        checkNotNull(frameBounds);
         mFrameBounds.set(frameBounds);
     }
 
@@ -172,7 +172,7 @@ public class FrameResolver {
      * @param textAlignment A value of {@link TextAlignment}.
      */
     public void setTextAlignment(@NonNull TextAlignment textAlignment) {
-        checkNotNull(textAlignment, "textAlignment");
+        checkNotNull(textAlignment);
         mTextAlignment = textAlignment;
     }
 
@@ -193,7 +193,7 @@ public class FrameResolver {
      * @param verticalAlignment A value of {@link VerticalAlignment}.
      */
     public void setVerticalAlignment(@NonNull VerticalAlignment verticalAlignment) {
-        checkNotNull(verticalAlignment, "verticalAlignment");
+        checkNotNull(verticalAlignment);
         mVerticalAlignment = verticalAlignment;
     }
 
@@ -214,7 +214,7 @@ public class FrameResolver {
      * @param truncationMode A value of {@link BreakMode}.
      */
     public void setTruncationMode(@NonNull BreakMode truncationMode) {
-        checkNotNull(truncationMode, "truncationMode");
+        checkNotNull(truncationMode);
         mTruncationMode = truncationMode;
     }
 
