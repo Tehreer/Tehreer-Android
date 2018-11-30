@@ -36,6 +36,8 @@ import com.mta.tehreer.unicode.ScriptRun;
 
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
+
 public class ShapeResolver {
     public static void fillRuns(@NonNull String text, @NonNull Spanned spanned,
                                 @NonNull List<Object> defaultSpans, @NonNull byte[] breaks,
