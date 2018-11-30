@@ -341,9 +341,10 @@ public class ShapingEngine implements Disposable {
                 + ", typeSize=" + String.valueOf(getTypeSize())
                 + ", scriptTag=" + SfntTag.toString(getScriptTag())
                 + ", languageTag=" + SfntTag.toString(getLanguageTag())
+                + ", openTypeFeatures=" + getOpenTypeFeatures().toString()
                 + ", writingDirection=" + getWritingDirection().toString()
                 + ", shapingOrder=" + getShapingOrder().toString()
-                + "}";
+                + '}';
     }
 
     private static native int nGetScriptDefaultDirection(int scriptTag);
