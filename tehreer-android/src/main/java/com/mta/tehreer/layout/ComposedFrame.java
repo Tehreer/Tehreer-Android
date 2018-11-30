@@ -292,7 +292,7 @@ public class ComposedFrame {
 
     private void drawBackground(@NonNull Canvas canvas) {
         int frameLeft = 0;
-        int frameRight = (int) (getWidth() + 0.5f);
+        int frameRight = (int) (mWidth + 0.5f);
 
         int lineCount = lineList.size();
         for (int i = 0; i < lineCount; i++) {
@@ -345,7 +345,7 @@ public class ComposedFrame {
             Object[] lineSpans = composedLine.getSpans();
 
             int lineLeft = 0;
-            int lineRight = (int) (getWidth() + 0.5f);
+            int lineRight = (int) (mWidth + 0.5f);
 
             // Draw leading margins of this line.
             for (Object style : lineSpans) {
@@ -386,13 +386,13 @@ public class ComposedFrame {
 
     @Override
     public String toString() {
-        return "ComposedFrame{charStart=" + getCharStart()
-                + ", charEnd=" + getCharEnd()
-                + ", originX=" + getOriginX()
-                + ", originY=" + getOriginY()
-                + ", width=" + getWidth()
-                + ", height=" + getHeight()
+        return "ComposedFrame{charStart=" + frameStart
+                + ", charEnd=" + frameEnd
+                + ", originX=" + mOriginX
+                + ", originY=" + mOriginY
+                + ", width=" + mWidth
+                + ", height=" + mHeight
                 + ", lines=" + Description.forIterable(lineList)
-                + "}";
+                + '}';
     }
 }
