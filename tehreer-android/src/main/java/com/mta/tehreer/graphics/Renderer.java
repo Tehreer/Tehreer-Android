@@ -155,6 +155,8 @@ public class Renderer {
     /**
      * Sets the direction in which the pen will advance after drawing a glyph. The default value is
      * {@link WritingDirection#LEFT_TO_RIGHT}.
+     *
+     * @param writingDirection The new writing direction.
      */
     public void setWritingDirection(@NonNull WritingDirection writingDirection) {
         checkNotNull(writingDirection);
