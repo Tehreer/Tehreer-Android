@@ -138,7 +138,7 @@ public class Renderer {
      * @param renderingStyle The new style setting for the renderer.
      */
     public void setRenderingStyle(@NonNull RenderingStyle renderingStyle) {
-        checkNotNull(renderingStyle, "renderingStyle");
+        checkNotNull(renderingStyle);
         mRenderingStyle = renderingStyle;
     }
 
