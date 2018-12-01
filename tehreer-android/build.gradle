@@ -13,8 +13,8 @@ ext {
     libraryVersion = '2.2'
     libraryDescription = 'A library that gives full control over text related technologies such as bidirectional algorithm, open type shaping, text typesetting and text rendering.'
 
-    siteUrl = 'https://github.com/mta452/Tehreer-Android'
-    gitUrl = 'https://github.com/mta452/Tehreer-Android.git'
+    siteUrl = 'https://github.com/Tehreer/Tehreer-Android'
+    gitUrl = 'https://github.com/Tehreer/Tehreer-Android.git'
 
     developerId = 'mta452'
     developerName = 'Muhammad Tayyab Akram'
