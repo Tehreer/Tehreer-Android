@@ -20,8 +20,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
@@ -31,6 +29,9 @@ import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.SparseIntArray;
 import android.widget.TextView;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.mta.tehreer.unicode.BaseDirection;
 import com.mta.tehreer.unicode.BidiAlgorithm;
