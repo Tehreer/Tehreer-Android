@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.sfnt;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Size;
+import androidx.annotation.NonNull;
+import androidx.annotation.Size;
 
 /**
  * Provides static utility methods related to SFNT tags.

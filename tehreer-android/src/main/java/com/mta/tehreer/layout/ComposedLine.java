@@ -17,8 +17,9 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
-import android.support.annotation.NonNull;
-import android.support.annotation.Size;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Size;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.Description;

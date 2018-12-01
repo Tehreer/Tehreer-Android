@@ -17,10 +17,11 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.RectF;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.SpannableString;
 import android.text.Spanned;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.BreakResolver;

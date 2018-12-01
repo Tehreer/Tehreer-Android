@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public final class Raw {
     static {

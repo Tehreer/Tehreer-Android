@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.sfnt;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.FloatList;

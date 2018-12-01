@@ -16,8 +16,9 @@
 
 package com.mta.tehreer.internal.util;
 
-import android.support.annotation.NonNull;
 import android.text.GetChars;
+
+import androidx.annotation.NonNull;
 
 public class StringUtils {
     public static @NonNull String copyString(@NonNull CharSequence charSequence) {

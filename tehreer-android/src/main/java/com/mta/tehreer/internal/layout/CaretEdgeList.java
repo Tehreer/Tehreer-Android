@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal.layout;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;

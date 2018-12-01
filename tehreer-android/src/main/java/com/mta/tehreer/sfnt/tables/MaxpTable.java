@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.sfnt.tables;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;

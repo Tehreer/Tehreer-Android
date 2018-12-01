@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.internal.layout;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Size;
+import androidx.annotation.NonNull;
+import androidx.annotation.Size;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Clusters;

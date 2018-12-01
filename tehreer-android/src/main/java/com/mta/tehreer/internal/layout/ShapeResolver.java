@@ -17,9 +17,10 @@
 package com.mta.tehreer.internal.layout;
 
 import android.graphics.Paint;
-import android.support.annotation.NonNull;
 import android.text.Spanned;
 import android.text.style.ReplacementSpan;
+
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.ShapingEngine;

@@ -16,8 +16,8 @@
 
 package com.mta.tehreer.collections;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.collections.JIntArrayList;

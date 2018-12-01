@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal.sfnt;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public class DataTable implements SfntTable {
     private final @NonNull byte[] data;

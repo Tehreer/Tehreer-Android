@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.unicode;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.JniBridge;

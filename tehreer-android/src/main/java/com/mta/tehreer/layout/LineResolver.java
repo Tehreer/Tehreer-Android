@@ -16,8 +16,9 @@
 
 package com.mta.tehreer.layout;
 
-import android.support.annotation.NonNull;
 import android.text.Spanned;
+
+import androidx.annotation.NonNull;
 
 import com.mta.tehreer.internal.collections.JFloatArrayList;
 import com.mta.tehreer.internal.collections.JFloatArrayPointList;

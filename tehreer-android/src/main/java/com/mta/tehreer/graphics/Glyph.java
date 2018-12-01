@@ -18,7 +18,8 @@ package com.mta.tehreer.graphics;
 
 import android.graphics.Bitmap;
 import android.graphics.Path;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Sustain;

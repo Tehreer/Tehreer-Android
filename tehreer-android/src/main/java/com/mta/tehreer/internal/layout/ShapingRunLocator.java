@@ -16,8 +16,6 @@
 
 package com.mta.tehreer.internal.layout;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.Spanned;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.MetricAffectingSpan;
@@ -29,6 +27,9 @@ import android.text.style.SubscriptSpan;
 import android.text.style.SuperscriptSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.style.TypefaceSpan;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.TypeFamily;
 import com.mta.tehreer.graphics.TypeSlope;

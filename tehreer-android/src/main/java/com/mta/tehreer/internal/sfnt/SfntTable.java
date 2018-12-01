@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal.sfnt;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public interface SfntTable {
     @NonNull byte[] readBytes(int offset, int count);
