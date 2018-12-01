@@ -40,7 +40,7 @@ android {
         targetSdkVersion 28
         versionCode 4
         versionName libraryVersion
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     sourceSets {
@@ -76,9 +76,10 @@ android {
     }
 
     dependencies {
-        testCompile 'junit:junit:4.12'
-        androidTestCompile 'com.android.support.test:runner:1.0.1'
-        androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.1'
+        implementation 'androidx.annotation:annotation:1.0.0'
+        testImplementation 'junit:junit:4.12'
+        androidTestImplementation 'androidx.test:runner:1.1.0'
+        androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
     }
 }
 
@@ -162,8 +163,4 @@ bintray {
             }
         }
     }
-}
-
-dependencies {
-    compile 'com.android.support:support-annotations:27.1.1'
 }
