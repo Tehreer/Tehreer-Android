@@ -208,23 +208,19 @@ public class NameTable {
 
         @Override
         public boolean equals(@Nullable Object obj) {
-            if (this != obj) {
-                if (obj == null || getClass() != obj.getClass()) {
-                    return false;
-                }
-
-                Record other = (Record) obj;
-                if (nameId != other.nameId
-                        || platformId != other.platformId
-                        || languageId != other.platformId
-                        || languageId != other.languageId
-                        || encodingId != other.encodingId
-                        || !Arrays.equals(bytes, other.bytes)) {
-                    return false;
-                }
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
             }
 
-            return true;
+            Record other = (Record) obj;
+            return nameId == other.nameId
+                    && platformId == other.platformId
+                    && languageId == other.languageId
+                    && encodingId == other.encodingId
+                    && Arrays.equals(bytes, other.bytes);
         }
 
         @Override
