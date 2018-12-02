@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.mta.tehreer.internal.Sustain;
  * level. The direction of run is considered right-to-left, if its embedding level is odd.
  */
 public class BidiRun {
-
     /**
      * The index to the first character of this run in source text.
      */
@@ -68,20 +67,17 @@ public class BidiRun {
 
     @Override
     public boolean equals(Object obj) {
-        if (this != obj) {
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
-
-            BidiRun other = (BidiRun) obj;
-            if (charStart != other.charStart
-                    || charEnd != other.charEnd
-                    || embeddingLevel != other.embeddingLevel) {
-                return false;
-            }
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
         }
 
-        return true;
+        BidiRun other = (BidiRun) obj;
+        return charStart == other.charStart
+                && charEnd == other.charEnd
+                && embeddingLevel == other.embeddingLevel;
     }
 
     @Override
@@ -98,6 +94,6 @@ public class BidiRun {
         return "BidiRun{charStart=" + charStart
                 + ", charEnd=" + charEnd
                 + ", embeddingLevel=" + embeddingLevel
-                + "}";
+                + '}';
     }
 }
