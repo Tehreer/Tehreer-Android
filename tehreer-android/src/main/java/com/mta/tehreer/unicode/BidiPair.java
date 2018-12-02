@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2018 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.mta.tehreer.internal.Sustain;
  * source text.
  */
 public class BidiPair {
-
     /**
      * The index of actual character in source text.
      */
@@ -59,20 +58,17 @@ public class BidiPair {
 
     @Override
     public boolean equals(Object obj) {
-        if (this != obj) {
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
-
-            BidiPair other = (BidiPair) obj;
-            if (charIndex != other.charIndex
-                    || actualCodePoint != other.actualCodePoint
-                    || pairingCodePoint != other.pairingCodePoint) {
-                return false;
-            }
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
         }
 
-        return true;
+        BidiPair other = (BidiPair) obj;
+        return charIndex == other.charIndex
+                && actualCodePoint == other.actualCodePoint
+                && pairingCodePoint == other.pairingCodePoint;
     }
 
     @Override
@@ -89,6 +85,6 @@ public class BidiPair {
         return "BidiPair{charIndex=" + charIndex
                 + ", actualCodePoint=" + actualCodePoint
                 + ", pairingCodePoint=" + pairingCodePoint
-                + "}";
+                + '}';
     }
 }
