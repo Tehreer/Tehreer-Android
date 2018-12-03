@@ -18,12 +18,12 @@ package com.mta.tehreer.sfnt.tables;
 
 import android.os.Build;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Description;
-import com.mta.tehreer.internal.Sustain;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -114,7 +114,7 @@ public class NameTable {
          * @param encodingId The encoding id of record.
          * @param bytes The encoded bytes of record.
          */
-        @Sustain
+        @Keep
         public Record(int nameId, int platformId, int languageId, int encodingId, byte[] bytes) {
             this.nameId = nameId;
             this.platformId = platformId;

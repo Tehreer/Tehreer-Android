@@ -19,19 +19,19 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.Sustain;
 
 class Glyph {
     static {
         JniBridge.loadLibrary();
     }
 
-    @Sustain
+    @Keep
     private final int glyphId;
-    @Sustain
+    @Keep
     private long nativeOutline;
     private int mLeftSideBearing;
     private int mTopSideBearing;
@@ -74,7 +74,7 @@ class Glyph {
         return (nativeOutline != 0);
     }
 
-    @Sustain
+    @Keep
     private void ownBitmap(Bitmap bitmap, int left, int top) {
         if (mBitmap != null && !mBitmap.isRecycled()) {
             mBitmap.recycle();
@@ -85,12 +85,12 @@ class Glyph {
         mTopSideBearing = top;
     }
 
-    @Sustain
+    @Keep
     private void ownPath(Path path) {
         mPath = path;
     }
 
-    @Sustain
+    @Keep
     private void ownOutline(long nativeOutline) {
         if (this.nativeOutline != 0) {
             nDisposeOutline(this.nativeOutline);

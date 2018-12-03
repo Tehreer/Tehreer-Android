@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.unicode;
 
-import com.mta.tehreer.internal.Sustain;
+import androidx.annotation.Keep;
 
 /**
  * A <code>BidiPair</code> object represents a pair of a unicode code point at a specific index in
@@ -43,7 +43,7 @@ public class BidiPair {
      * @param actualCodePoint The code point of actual character.
      * @param pairingCodePoint The code point of pairing character.
      */
-    @Sustain
+    @Keep
     public BidiPair(int charIndex, int actualCodePoint, int pairingCodePoint) {
         this.charIndex = charIndex;
         this.actualCodePoint = actualCodePoint;

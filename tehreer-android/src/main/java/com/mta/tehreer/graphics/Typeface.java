@@ -21,11 +21,11 @@ import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.Sustain;
 import com.mta.tehreer.sfnt.SfntTag;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public class Typeface {
         }
     }
 
-    @Sustain
+    @Keep
     long nativeTypeface;
     private final @NonNull Finalizable finalizable = new Finalizable();
     private TypefaceDescription description;

@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.unicode;
 
-import com.mta.tehreer.internal.Sustain;
+import androidx.annotation.Keep;
 
 /**
  * A <code>BidiRun</code> object represents a sequence of characters which have the same embedding
@@ -43,7 +43,7 @@ public class BidiRun {
      * @param charEnd The index after the last character of run.
      * @param embeddingLevel The embedding level of run.
      */
-    @Sustain
+    @Keep
     public BidiRun(int charStart, int charEnd, byte embeddingLevel) {
         this.charStart = charStart;
         this.charEnd = charEnd;
