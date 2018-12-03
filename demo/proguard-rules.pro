@@ -13,11 +13,3 @@
 -keepclassmembers, includedescriptorclasses class * {
     native <methods>;
 }
-
-# Maintain sustain annotation.
--keep @interface com.mta.tehreer.internal.Sustain
-
-# Maintain explicitly marked classes, methods and variables.
--keepclassmembers class * {
-    @com.mta.tehreer.internal.Sustain *;
-}
