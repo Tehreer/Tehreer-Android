@@ -1,11 +1,11 @@
 [submodule "SheenBidi"]
 	path = sheenbidi
-	url = git://github.com/mta452/SheenBidi.git
+	url = git://github.com/Tehreer/SheenBidi.git
 	branch = master
 
 [submodule "SheenFigure"]
 	path = sheenfigure
-	url = git://github.com/mta452/SheenFigure.git
+	url = git://github.com/Tehreer/SheenFigure.git
 	branch = master
 
 [submodule "FreeType"]
