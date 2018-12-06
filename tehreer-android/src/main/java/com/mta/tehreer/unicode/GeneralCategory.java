@@ -29,6 +29,7 @@ import java.lang.annotation.RetentionPolicy;
  * </a>.
  */
 public final class GeneralCategory {
+    /** @hide */
     @IntDef({
         UPPERCASE_LETTER,
         LOWERCASE_LETTER,

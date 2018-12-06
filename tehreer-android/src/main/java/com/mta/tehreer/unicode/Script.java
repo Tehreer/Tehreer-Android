@@ -29,6 +29,7 @@ import java.lang.annotation.RetentionPolicy;
  * </a>.
  */
 public final class Script {
+    /** @hide */
     @IntDef({
         INHERITED,
         COMMON,

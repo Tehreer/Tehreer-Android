@@ -29,6 +29,7 @@ import java.lang.annotation.RetentionPolicy;
  * </a>.
  */
 public final class BidiClass {
+    /** @hide */
     @IntDef({
         LEFT_TO_RIGHT,
         RIGHT_TO_LEFT,
