@@ -74,30 +74,39 @@ android {
             }
         }
     }
+}
 
-    dependencies {
-        implementation 'androidx.annotation:annotation:1.0.0'
-        testImplementation 'junit:junit:4.12'
-        androidTestImplementation 'androidx.test:runner:1.1.0'
-        androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
-    }
+configurations {
+    doclet
+}
+
+dependencies {
+    implementation 'androidx.annotation:annotation:1.0.0'
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+
+    doclet project(':doclet')
 }
 
 // Configure artifacts
 artifacts {
-    task javadoc(type: Javadoc) {
+    task apiDocs(type: Javadoc, dependsOn: configurations.doclet) {
         title = "$libraryName $libraryVersion API"
         source = android.sourceSets.main.java.srcDirs
         classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
         exclude '**/internal/**'
 
+        options.doclet = "ExcludeDoclet"
+        options.docletpath = configurations.doclet.files.asType(List)
         options.links("https://developer.android.com/reference/")
         options.addStringOption("bottom", "Copyright &copy; 2018 $developerName. All rights reserved.")
     }
 
-    task javadocJar(type: Jar, dependsOn: javadoc) {
+    task javadocJar(type: Jar, dependsOn: apiDocs) {
         classifier = 'javadoc'
-        from javadoc.destinationDir
+        from apiDocs.destinationDir
     }
 
     task sourcesJar(type: Jar) {
