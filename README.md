@@ -26,12 +26,6 @@ compile 'com.github.mta452:tehreer-android:2.2'
 -keepclassmembers, includedescriptorclasses class * {
     native <methods>;
 }
-
--keep @interface com.mta.tehreer.internal.Sustain
-
--keepclassmembers class * {
-    @com.mta.tehreer.internal.Sustain *;
-}
 ```
 
 ## API Reference
