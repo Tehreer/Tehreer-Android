@@ -19,10 +19,22 @@ package com.mta.tehreer.sfnt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+/**
+ * Represents an OpenType Layout feature.
+ */
 public final class OpenTypeFeature {
     private final int tag;
     private final int value;
 
+    /**
+     * Returns an open type feature object with the specified tag and value.
+     * <p>
+     * A tag can be created from string by using {@link SfntTag#make(String)} method.
+     *
+     * @param tag The tag of the feature that identifies its typographic function and effects.
+     * @param value The value of the feature that modifies its behaviour.
+     * @return A new open type feature object.
+     */
     public static @NonNull OpenTypeFeature of(int tag, int value) {
         return new OpenTypeFeature(tag, value);
     }
@@ -32,10 +44,20 @@ public final class OpenTypeFeature {
         this.value = value;
     }
 
+    /**
+     * Returns the tag of the feature that identifies its typographic function and effects.
+     *
+     * @return The tag of the feature that identifies its typographic function and effects.
+     */
     public int tag() {
         return tag;
     }
 
+    /**
+     * Returns the value of the feature that modifies its behaviour.
+     *
+     * @return The value of the feature that modifies its behaviour.
+     */
     public int value() {
         return value;
     }
