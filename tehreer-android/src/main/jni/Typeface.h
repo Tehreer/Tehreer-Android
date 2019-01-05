@@ -40,7 +40,6 @@ class Typeface {
 public:
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
 
-    Typeface(FontFile *fontFile, FT_Face ftFace);
     ~Typeface();
 
     void lock() { m_mutex.lock(); };
@@ -76,9 +75,7 @@ private:
     FT_Short m_strikeoutPosition;
     FT_Short m_strikeoutThickness;
 
-    static Typeface *createWithArgs(const FT_Open_Args *args);
-
-    Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace);
+    Typeface(FontFile *fontFile, FT_Face ftFace);
 };
 
 }
