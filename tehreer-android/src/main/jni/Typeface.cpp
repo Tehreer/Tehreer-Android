@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ extern "C" {
 #include <jni.h>
 #include <mutex>
 
+#include "FontFile.h"
 #include "FreeType.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
@@ -61,126 +62,19 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
     return static_cast<float>(value / 64.0);
 }
 
-static FT_Stream createStream(AAssetManager *assetManager, const char *path)
+Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
 {
-    AAsset *asset = AAssetManager_open(assetManager, path, AASSET_MODE_UNKNOWN);
-    if (!asset) {
-        return nullptr;
-    }
-
-    off_t size = AAsset_getLength(asset);
-    if (size == 0) {
-        return nullptr;
-    }
-
-    FT_Stream stream;
-    stream = (FT_Stream)malloc(sizeof(*stream));
-    stream->base = nullptr;
-    stream->size = static_cast<unsigned long>(size);
-    stream->pos = 0;
-    stream->descriptor.pointer = asset;
-    stream->pathname.pointer = nullptr;
-    stream->read = [](FT_Stream stream, unsigned long offset,
-                      unsigned char *buffer, unsigned long count) -> unsigned long {
-        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
-        int bytesRead = 0;
-
-        if (count == 0 && offset > stream->size) {
-            return 1;
+    if (fontFile) {
+        FT_Face ftFace = fontFile->createFace(faceIndex);
+        if (ftFace) {
+            return new Typeface(fontFile, ftFace);
         }
-
-        if (stream->pos != offset) {
-            AAsset_seek(asset, offset, SEEK_SET);
-        }
-        bytesRead = AAsset_read(asset, buffer, count);
-
-        return static_cast<unsigned long>(bytesRead);
-    };
-    stream->close = [](FT_Stream stream) {
-        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
-        AAsset_close(asset);
-
-        stream->descriptor.pointer = nullptr;
-        stream->size = 0;
-        stream->base = 0;
-    };
-
-    return stream;
-}
-
-static void disposeStream(FT_Stream stream)
-{
-    free(stream);
-}
-
-Typeface *Typeface::createWithAsset(AAssetManager *assetManager, const char *path)
-{
-    FT_Stream stream = createStream(assetManager, path);
-    if (stream) {
-        FT_Open_Args args;
-        args.flags = FT_OPEN_STREAM;
-        args.memory_base = nullptr;
-        args.memory_size = 0;
-        args.pathname = nullptr;
-        args.stream = stream;
-
-        return createWithArgs(&args);
     }
 
     return nullptr;
 }
 
-Typeface *Typeface::createWithFile(const char *path)
-{
-    FT_Open_Args args;
-    args.flags = FT_OPEN_PATHNAME;
-    args.memory_base = nullptr;
-    args.memory_size = 0;
-    args.pathname = const_cast<FT_String *>(path);
-    args.stream = nullptr;
-
-    return createWithArgs(&args);
-}
-
-Typeface *Typeface::createFromStream(const JavaBridge &bridge, jobject stream)
-{
-    size_t length;
-    void *buffer = StreamUtils::toRawBuffer(bridge, stream, &length);
-
-    if (buffer) {
-        FT_Open_Args args;
-        args.flags = FT_OPEN_MEMORY;
-        args.memory_base = static_cast<const FT_Byte *>(buffer);
-        args.memory_size = length;
-        args.pathname = nullptr;
-        args.stream = nullptr;
-
-        return createWithArgs(&args);
-    }
-
-    return nullptr;
-}
-
-Typeface *Typeface::createWithArgs(const FT_Open_Args *args)
-{
-    std::mutex &mutex = FreeType::mutex();
-    mutex.lock();
-
-    FT_Face ftFace = nullptr;
-    FT_Error error = FT_Open_Face(FreeType::library(), args, 0, &ftFace);
-    if (error == FT_Err_Ok) {
-        if (!FT_IS_SCALABLE(ftFace)) {
-            FT_Done_Face(ftFace);
-            ftFace = nullptr;
-        }
-    }
-
-    mutex.unlock();
-
-    return (ftFace ? new Typeface((void *)args->memory_base, args->stream, ftFace) : nullptr);
-}
-
-Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
+Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     : m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
 {
@@ -214,8 +108,7 @@ Typeface::Typeface(void *buffer, FT_Stream ftStream, FT_Face ftFace)
         return static_cast<SFInt32>(glyphAdvance);
     };
 
-    m_buffer = buffer;
-    m_ftStream = ftStream;
+    m_fontFile = fontFile->retain();
     m_ftFace = ftFace;
     m_ftSize = nullptr;
     m_ftStroker = nullptr;
@@ -237,7 +130,6 @@ Typeface::~Typeface()
     if (m_ftStroker) {
         FT_Stroker_Done(m_ftStroker);
     }
-
     if (m_ftSize) {
         m_mutex.lock();
 
@@ -245,7 +137,6 @@ Typeface::~Typeface()
 
         m_mutex.unlock();
     }
-
     if (m_ftFace) {
         std::mutex &mutex = FreeType::mutex();
         mutex.lock();
@@ -255,13 +146,7 @@ Typeface::~Typeface()
         mutex.unlock();
     }
 
-    if (m_ftStream) {
-        disposeStream(m_ftStream);
-    }
-
-    if (m_buffer) {
-        free(m_buffer);
-    }
+    m_fontFile->release();
 }
 
 FT_Stroker Typeface::ftStroker()
@@ -420,7 +305,8 @@ static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jst
     if (path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         AAssetManager *nativeAssetManager = AAssetManager_fromJava(env, assetManager);
-        Typeface *typeface = Typeface::createWithAsset(nativeAssetManager, utfChars);
+        FontFile *fontFile = FontFile::createFromAsset(nativeAssetManager, utfChars);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -434,7 +320,8 @@ static jlong createWithFile(JNIEnv *env, jobject obj, jstring path)
 {
     if (path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
-        Typeface *typeface = Typeface::createWithFile(utfChars);
+        FontFile *fontFile = FontFile::createFromPath(utfChars);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -447,7 +334,9 @@ static jlong createWithFile(JNIEnv *env, jobject obj, jstring path)
 static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
 {
     if (stream) {
-        Typeface *typeface = Typeface::createFromStream(JavaBridge(env), stream);
+        FontFile *fontFile = FontFile::createFromStream(JavaBridge(env), stream);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
+
         return reinterpret_cast<jlong>(typeface);
     }
 

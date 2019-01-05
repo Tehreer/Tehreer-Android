@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ extern "C" {
 #include <jni.h>
 #include <mutex>
 
+#include "FontFile.h"
 #include "JavaBridge.h"
 #include "PatternCache.h"
 
@@ -37,10 +38,9 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    static Typeface *createWithAsset(AAssetManager *assetManager, const char *path);
-    static Typeface *createWithFile(const char *path);
-    static Typeface *createFromStream(const JavaBridge &bridge, jobject stream);
+    static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
 
+    Typeface(FontFile *fontFile, FT_Face ftFace);
     ~Typeface();
 
     void lock() { m_mutex.lock(); };
@@ -66,8 +66,7 @@ public:
 
 private:
     std::mutex m_mutex;
-    void *m_buffer;
-    FT_Stream m_ftStream;
+    FontFile *m_fontFile;
     FT_Face m_ftFace;
     FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
