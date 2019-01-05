@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ public:
 
     jclass String_class() const;
 
+    jobject Typeface_construct(jlong typefaceHandle) const;
     jlong Typeface_getNativeTypeface(jobject typeface) const;
 
 private:

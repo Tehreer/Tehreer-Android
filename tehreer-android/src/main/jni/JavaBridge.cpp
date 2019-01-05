@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,8 @@ static jmethodID RECT__SET;
 
 static jclass    STRING;
 
+static jclass    TYPEFACE;
+static jmethodID TYPEFACE__CONSTRUCTOR;
 static jfieldID  TYPEFACE__NATIVE_TYPEFACE;
 
 void JavaBridge::load(JNIEnv* env)
@@ -115,6 +117,8 @@ void JavaBridge::load(JNIEnv* env)
     STRING = (jclass)env->NewGlobalRef(clazz);
 
     clazz = env->FindClass("com/mta/tehreer/graphics/Typeface");
+    TYPEFACE = (jclass)env->NewGlobalRef(clazz);
+    TYPEFACE__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(J)V");
     TYPEFACE__NATIVE_TYPEFACE = env->GetFieldID(clazz, "nativeTypeface", "J");
 }
 
@@ -247,6 +251,11 @@ void JavaBridge::Rect_set(jobject rect, jint left, jint top, jint right, jint bo
 jclass JavaBridge::String_class() const
 {
     return STRING;
+}
+
+jobject JavaBridge::Typeface_construct(jlong typefaceHandle) const
+{
+    return m_env->NewObject(TYPEFACE, TYPEFACE__CONSTRUCTOR, typefaceHandle);
 }
 
 jlong JavaBridge::Typeface_getNativeTypeface(jobject typeface) const
