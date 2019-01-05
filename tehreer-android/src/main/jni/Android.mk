@@ -170,6 +170,7 @@ FILE_LIST := \
     BidiLine.cpp \
     BidiMirrorLocator.cpp \
     BidiParagraph.cpp \
+    FontFile.cpp \
     FreeType.cpp \
     Glyph.cpp \
     GlyphRasterizer.cpp \
