@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.mta.tehreer.internal.sfnt.StructTable;
 /**
  * Represents an OpenType `OS/2' table.
  */
-public class OS2Table {
+public final class OS2Table {
     private static final int VERSION = 0;
     private static final int X_AVG_CHAR_WIDTH = 2;
     private static final int US_WEIGHT_CLASS = 4;
