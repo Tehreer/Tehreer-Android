@@ -181,13 +181,14 @@ void FontFile::release()
     }
 }
 
-FT_Face FontFile::createFace(FT_Long faceIndex)
+FT_Face FontFile::createFace(FT_Long faceIndex, FT_Long instanceIndex)
 {
     std::mutex &mutex = FreeType::mutex();
     mutex.lock();
 
     FT_Face ftFace = nullptr;
-    FT_Error error = FT_Open_Face(FreeType::library(), &m_args, faceIndex, &ftFace);
+    FT_Long id = (instanceIndex << 16) + faceIndex;
+    FT_Error error = FT_Open_Face(FreeType::library(), &m_args, id, &ftFace);
     if (error == FT_Err_Ok) {
         if (!FT_IS_SCALABLE(ftFace)) {
             FT_Done_Face(ftFace);
@@ -245,7 +246,7 @@ static void release(JNIEnv *env, jobject obj, jlong fontFileHandle)
     fontFile->release();
 }
 
-static jint getTypefaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
+static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
 {
     FontFile *fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
     FT_Long numFaces = fontFile->numFaces();
@@ -253,10 +254,21 @@ static jint getTypefaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
     return static_cast<jint>(numFaces);
 }
 
-static jobject createTypeface(JNIEnv *env, jobject obj, jlong fontFileHandle, jint faceIndex)
+static jint getInstanceCount(JNIEnv *env, jobject obj, jobject jtypeface)
+{
+    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face baseFace = typeface->ftFace();
+    FT_Long numInstances = baseFace->style_flags >> 16;
+
+    return static_cast<jint>(numInstances);
+}
+
+static jobject createTypeface(JNIEnv *env, jobject obj,
+    jlong fontFileHandle, jint faceIndex, jint instanceIndex)
 {
     FontFile *fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
-    Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex);
+    Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex, instanceIndex);
 
     if (typeface) {
         jlong typefaceHandle = reinterpret_cast<jlong>(typeface);
@@ -273,8 +285,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromPath", "(Ljava/lang/String;)J", (void *)createFromPath },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nRelease", "(J)V", (void *)release },
-    { "nGetTypefaceCount", "(J)I", (void *)getTypefaceCount },
-    { "nCreateTypeface", "(JI)Lcom/mta/tehreer/graphics/Typeface;", (void *)createTypeface },
+    { "nGetFaceCount", "(J)I", (void *)getFaceCount },
+    { "nGetInstanceCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getInstanceCount },
+    { "nCreateTypeface", "(JII)Lcom/mta/tehreer/graphics/Typeface;", (void *)createTypeface },
 };
 
 jint register_com_mta_tehreer_font_FontFile(JNIEnv *env)

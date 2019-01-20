@@ -40,7 +40,7 @@ public:
     ~FontFile();
 
     FT_Long numFaces() const { return m_numFaces; }
-    FT_Face createFace(FT_Long faceIndex);
+    FT_Face createFace(FT_Long faceIndex, FT_Long instanceIndex);
 
     FontFile *retain();
     void release();
