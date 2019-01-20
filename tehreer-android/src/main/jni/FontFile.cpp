@@ -70,20 +70,16 @@ static FT_Stream createStream(AAssetManager *assetManager, const char *path)
 
         return static_cast<unsigned long>(bytesRead);
     };
-    stream->close = [](FT_Stream stream) {
-        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
-        AAsset_close(asset);
-
-        stream->descriptor.pointer = nullptr;
-        stream->size = 0;
-        stream->base = 0;
-    };
+    stream->close = nullptr;
 
     return stream;
 }
 
 static void disposeStream(FT_Stream stream)
 {
+    AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
+    AAsset_close(asset);
+
     free(stream);
 }
 
