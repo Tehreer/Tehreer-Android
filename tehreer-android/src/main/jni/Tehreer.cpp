@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
     JavaBridge::load(env);
     FreeType::load(env);
 
-    result = register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
+    result = register_com_mta_tehreer_font_FontFile(env) == JNI_OK
+          && register_com_mta_tehreer_graphics_Glyph(env) == JNI_OK
           && register_com_mta_tehreer_graphics_GlyphRasterizer(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
