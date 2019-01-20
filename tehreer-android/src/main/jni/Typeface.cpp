@@ -18,6 +18,7 @@ extern "C" {
 #include <ft2build.h>
 #include FT_ADVANCES_H
 #include FT_FREETYPE_H
+#include FT_MULTIPLE_MASTERS_H
 #include FT_SIZES_H
 #include FT_STROKER_H
 #include FT_SYSTEM_H
@@ -115,6 +116,30 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     m_sfFont = SFFontCreateWithProtocol(&protocol, this);
 
     FT_New_Size(m_ftFace, &m_ftSize);
+
+    FT_MM_Var *variation;
+    FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
+
+    if (error == FT_Err_Ok) {
+        FT_UInt numCoords = variation->num_axis;
+        FT_Fixed fixedCoords[numCoords];
+
+        if (FT_Get_Var_Blend_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+            SFFontRef normalFont = m_sfFont;
+            SFInt16 coordArray[numCoords];
+
+            // Convert the FreeType's F16DOT16 coordinates to standard normalized F2DOT14 format.
+            for (FT_UInt i = 0; i < numCoords; i++) {
+                coordArray[i] = static_cast<SFInt16>(fixedCoords[i] >> 2);
+            }
+
+            // Derive the variable font of SheenFigure.
+            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, m_ftFace, coordArray, numCoords);
+            SFFontRelease(normalFont);
+        }
+
+        FT_Done_MM_Var(FreeType::library(), variation);
+    }
 
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     if (os2Table) {
