@@ -62,10 +62,10 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
     return static_cast<float>(value / 64.0);
 }
 
-Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
+Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
     if (fontFile) {
-        FT_Face ftFace = fontFile->createFace(faceIndex);
+        FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
             return new Typeface(fontFile, ftFace);
         }
@@ -306,7 +306,7 @@ static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jst
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         AAssetManager *nativeAssetManager = AAssetManager_fromJava(env, assetManager);
         FontFile *fontFile = FontFile::createFromAsset(nativeAssetManager, utfChars);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -321,7 +321,7 @@ static jlong createWithFile(JNIEnv *env, jobject obj, jstring path)
     if (path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         FontFile *fontFile = FontFile::createFromPath(utfChars);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -335,7 +335,7 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
 {
     if (stream) {
         FontFile *fontFile = FontFile::createFromStream(JavaBridge(env), stream);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
 
         return reinterpret_cast<jlong>(typeface);
     }

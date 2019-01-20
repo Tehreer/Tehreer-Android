@@ -38,7 +38,7 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
+    static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex);
 
     ~Typeface();
 
