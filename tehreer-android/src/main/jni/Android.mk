@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 Muhammad Tayyab Akram
+# Copyright (C) 2016-2018 Muhammad Tayyab Akram
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -123,29 +123,28 @@ SF_SOURCE_PATH := $(SF_ROOT_PATH)/Source
 
 ifeq ($(APP_OPTIM), debug)
     SF_FILE_LIST := \
+        ArabicEngine.c \
+        GlyphDiscovery.c \
+        GlyphManipulation.c \
+        GlyphPositioning.c \
+        GlyphSubstitution.c \
+        List.c \
+        Locator.c \
+        OpenType.c \
         SFAlbum.c \
         SFArtist.c \
         SFBase.c \
         SFCodepoints.c \
         SFFont.c \
-        SFList.c \
-        SFLocator.c \
+        SFJoiningTypeLookup.c \
         SFPattern.c \
         SFPatternBuilder.c \
         SFScheme.c \
-        SFOpenType.c \
-        SFArabicEngine.c \
-        SFShapingEngine.c \
-        SFShapingKnowledge.c \
-        SFSimpleEngine.c \
-        SFStandardEngine.c \
-        SFUnifiedEngine.c \
-        SFGlyphDiscovery.c \
-        SFGlyphManipulation.c \
-        SFGlyphPositioning.c \
-        SFGlyphSubstitution.c \
-        SFTextProcessor.c \
-        SFJoiningTypeLookup.c
+        ShapingEngine.c \
+        ShapingKnowledge.c \
+        StandardEngine.c \
+        TextProcessor.c \
+        UnifiedEngine.c
 else
     SF_FILE_LIST := SheenFigure.c
     SF_MACROS := -DSF_CONFIG_UNITY
