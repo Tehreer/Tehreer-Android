@@ -17,10 +17,13 @@
 package com.mta.tehreer.sfnt.tables;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
 import com.mta.tehreer.internal.sfnt.StructTable;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 /**
  * Represents an OpenType `head' table.
@@ -49,6 +52,26 @@ public final class HeadTable {
     /**
      * Constructs a <code>HeadTable</code> object from the specified typeface.
      *
+     * @param typeface The typeface from which the <code>HeadTable</code> object is constructed.
+     * @return A new <code>HeadTable</code> object, or <code>null</code> if `head' table does not
+     *         exist in the specified typeface.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
+    public static @Nullable HeadTable from(@NonNull Typeface typeface) {
+        checkNotNull(typeface);
+
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_HEAD);
+        if (pointer != 0) {
+            return new HeadTable(new StructTable(typeface, pointer));
+        }
+
+        return null;
+    }
+
+    /**
+     * Constructs a <code>HeadTable</code> object from the specified typeface.
+     *
      * @param typeface The typeface from which the <code>HeadTable</code> object is
      *                 constructed.
      *
@@ -65,6 +88,10 @@ public final class HeadTable {
         }
 
         this.table = new StructTable(typeface, pointer);
+    }
+
+    private HeadTable(@NonNull SfntTable table) {
+        this.table = table;
     }
 
     public int version() {
