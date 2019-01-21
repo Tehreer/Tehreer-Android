@@ -78,6 +78,23 @@ static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
     return static_cast<uint16_t>(value);
 }
 
+static inline uint16_t variableWidthToStandard(FT_Fixed coordinate)
+{
+    float value = f16Dot16toFloat(coordinate);
+
+    if (value < 50) {
+        return 1;
+    }
+    if (value < 125) {
+        return static_cast<uint16_t>(((value - 50) / 12.5) + 1);
+    }
+    if (value < 200) {
+        return static_cast<uint16_t>(((value - 125) / 25) + 7);
+    }
+
+    return 9;
+}
+
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
     if (fontFile) {
