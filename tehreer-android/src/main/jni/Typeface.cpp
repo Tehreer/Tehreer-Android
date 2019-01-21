@@ -30,6 +30,7 @@ extern "C" {
 
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <cstdint>
 #include <cstdlib>
 #include <jni.h>
 #include <mutex>
@@ -61,6 +62,20 @@ static inline float f16Dot16toFloat(FT_Fixed value)
 static inline float f26Dot6PosToFloat(FT_Pos value)
 {
     return static_cast<float>(value / 64.0);
+}
+
+static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
+{
+    float value = f16Dot16toFloat(coordinate);
+
+    if (value < 1) {
+        return 1;
+    }
+    if (value > 1000) {
+        return 1000;
+    }
+
+    return static_cast<uint16_t>(value);
 }
 
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
