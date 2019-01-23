@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,39 @@
 #ifndef _TEHREER__SFNT_TABLES_H
 #define _TEHREER__SFNT_TABLES_H
 
+#include <cstdint>
 #include <jni.h>
+#include <string>
+#include <vector>
+
+namespace Tehreer {
+namespace SFNT {
+
+class Locale {
+public:
+    Locale(uint16_t platformID, uint16_t languageID);
+
+    const char *language() const { return (m_values->size() > 0 ? m_values->at(0).c_str() : nullptr); }
+    const char *region() const { return (m_values->size() > 1 ? m_values->at(1).c_str() : nullptr); }
+    const char *script() const { return (m_values->size() > 2 ? m_values->at(2).c_str() : nullptr); }
+    const char *variant() const { return (m_values->size() > 3 ? m_values->at(3).c_str() : nullptr); }
+
+private:
+    const std::vector<std::string> *m_values;
+};
+
+class Encoding {
+public:
+    Encoding(uint16_t platformID, uint16_t encodingID);
+
+    const char *name() const { return (m_name.length() > 0 ? m_name.c_str() : nullptr); }
+
+private:
+    std::string m_name;
+};
+
+}
+}
 
 jint register_com_mta_tehreer_sfnt_tables_SfntTables(JNIEnv *env);
 
