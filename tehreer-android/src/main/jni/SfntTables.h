@@ -29,10 +29,10 @@ class Locale {
 public:
     Locale(uint16_t platformID, uint16_t languageID);
 
-    const char *language() const { return (m_values->size() > 0 ? m_values->at(0).c_str() : nullptr); }
-    const char *region() const { return (m_values->size() > 1 ? m_values->at(1).c_str() : nullptr); }
-    const char *script() const { return (m_values->size() > 2 ? m_values->at(2).c_str() : nullptr); }
-    const char *variant() const { return (m_values->size() > 3 ? m_values->at(3).c_str() : nullptr); }
+    const std::string *language() const { return (m_values->size() > 0 ? &m_values->at(0) : nullptr); }
+    const std::string *region() const { return (m_values->size() > 1 ? &m_values->at(1) : nullptr); }
+    const std::string *script() const { return (m_values->size() > 2 ? &m_values->at(2) : nullptr); }
+    const std::string *variant() const { return (m_values->size() > 3 ? &m_values->at(3) : nullptr); }
 
 private:
     const std::vector<std::string> *m_values;

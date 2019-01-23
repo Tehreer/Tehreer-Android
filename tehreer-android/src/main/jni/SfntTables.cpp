@@ -542,19 +542,22 @@ static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
 
 jobjectArray getNameLocale(JNIEnv *env, jobject obj, jint platformId, jint languageId)
 {
-    JavaBridge bridge(env);
     Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+    const string *language = locale.language();
+    const string *region = locale.region();
+    const string *script = locale.script();
+    const string *variant = locale.variant();
 
-    jobjectArray values = env->NewObjectArray(4, bridge.String_class(), nullptr);
-    jstring language = env->NewStringUTF(locale.language());
-    jstring region = env->NewStringUTF(locale.region());
-    jstring script = env->NewStringUTF(locale.script());
-    jstring variant = env->NewStringUTF(locale.variant());
+    jstring first = language ? env->NewStringUTF(language->c_str()) : nullptr;
+    jstring second = region ? env->NewStringUTF(region->c_str()) : nullptr;
+    jstring third = script ? env->NewStringUTF(script->c_str()) : nullptr;
+    jstring fourth = variant ? env->NewStringUTF(variant->c_str()) : nullptr;
 
-    env->SetObjectArrayElement(values, 0, language);
-    env->SetObjectArrayElement(values, 1, region);
-    env->SetObjectArrayElement(values, 2, script);
-    env->SetObjectArrayElement(values, 3, variant);
+    jobjectArray values = env->NewObjectArray(4, JavaBridge(env).String_class(), nullptr);
+    env->SetObjectArrayElement(values, 0, first);
+    env->SetObjectArrayElement(values, 1, second);
+    env->SetObjectArrayElement(values, 2, third);
+    env->SetObjectArrayElement(values, 3, fourth);
 
     return values;
 }
