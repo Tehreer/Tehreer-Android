@@ -33,6 +33,7 @@ extern "C" {
 #include <android/asset_manager_jni.h>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <jni.h>
 #include <mutex>
 #include <string>
@@ -258,39 +259,12 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
 
     FT_New_Size(m_ftFace, &m_ftSize);
 
-    FT_MM_Var *variation;
-    FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
-
-    if (error == FT_Err_Ok) {
-        FT_UInt numCoords = variation->num_axis;
-        FT_Fixed fixedCoords[numCoords];
-
-        if (FT_Get_Var_Blend_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-            SFFontRef normalFont = m_sfFont;
-            SFInt16 coordArray[numCoords];
-
-            // Convert the FreeType's F16DOT16 coordinates to standard normalized F2DOT14 format.
-            for (FT_UInt i = 0; i < numCoords; i++) {
-                coordArray[i] = static_cast<SFInt16>(fixedCoords[i] >> 2);
-            }
-
-            // Derive the variable font of SheenFigure.
-            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, m_ftFace, coordArray, numCoords);
-            SFFontRelease(normalFont);
-        }
-
-        FT_Done_MM_Var(FreeType::library(), variation);
-    }
-
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
     m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
     m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
     m_fullName = searchFullNameRecordIndex(ftFace);
-    m_weight = Weight::REGULAR;
-    m_width = Width::NORMAL;
-    m_slope = Slope::PLAIN;
 
     if (os2Table) {
         m_weight = os2Table->usWeightClass;
@@ -318,6 +292,67 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
         if (headTable->Mac_Style & MAC_STYLE_ITALIC) {
             m_slope = Slope::ITALIC;
         }
+    }
+
+    FT_MM_Var *variation;
+    FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
+
+    if (error == FT_Err_Ok) {
+        FT_UInt numCoords = variation->num_axis;
+        FT_Fixed fixedCoords[numCoords];
+
+        if (FT_Get_Var_Blend_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+            SFFontRef normalFont = m_sfFont;
+            SFInt16 coordArray[numCoords];
+
+            // Convert the FreeType's F16DOT16 coordinates to standard normalized F2DOT14 format.
+            for (FT_UInt i = 0; i < numCoords; i++) {
+                coordArray[i] = static_cast<SFInt16>(fixedCoords[i] >> 2);
+            }
+
+            // Derive the variable font of SheenFigure.
+            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, m_ftFace, coordArray, numCoords);
+            SFFontRelease(normalFont);
+        }
+
+        if (FT_Get_Var_Design_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+            // Get the style name of this instance.
+            for (FT_UInt i = 0; i < variation->num_namedstyles; i++) {
+                FT_Var_Named_Style *namedStyle = &variation->namedstyle[i];
+                FT_Fixed *namedCoords = namedStyle->coords;
+
+                int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
+                if (result == 0) {
+                    m_styleName = static_cast<uint16_t>(namedStyle->strid);
+                    break;
+                }
+            }
+
+            // Get the values of variation axes.
+            for (FT_UInt i = 0; i < numCoords; i++) {
+                FT_Var_Axis *axis = &variation->axis[i];
+
+                switch (axis->tag) {
+                case FT_MAKE_TAG('i', 't', 'a', 'l'):
+                    m_slope = variableItalicToSlope(fixedCoords[i]);
+                    break;
+
+                case FT_MAKE_TAG('s', 'l', 'n', 't'):
+                    // TODO: Evaluate slant coordinate as oblique style.
+                    break;
+
+                case FT_MAKE_TAG('w', 'd', 't', 'h'):
+                    m_width = variableWidthToStandard(fixedCoords[i]);
+                    break;
+
+                case FT_MAKE_TAG('w', 'g', 'h', 't'):
+                    m_weight = variableWeightToStandard(fixedCoords[i]);
+                    break;
+                }
+            }
+        }
+
+        FT_Done_MM_Var(FreeType::library(), variation);
     }
 }
 
