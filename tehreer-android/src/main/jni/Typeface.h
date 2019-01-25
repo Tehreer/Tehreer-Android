@@ -113,6 +113,9 @@ private:
     int16_t m_strikeoutThickness;
 
     Typeface(FontFile *fontFile, FT_Face ftFace);
+
+    void setupDescription();
+    void setupVariation();
 };
 
 }

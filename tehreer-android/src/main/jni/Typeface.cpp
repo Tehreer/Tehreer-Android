@@ -259,12 +259,18 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
 
     FT_New_Size(m_ftFace, &m_ftSize);
 
-    TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
-    TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
+    setupDescription();
+    setupVariation();
+}
 
-    m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
-    m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
-    m_fullName = searchFullNameRecordIndex(ftFace);
+void Typeface::setupDescription()
+{
+    TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_OS2));
+    TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_HEAD));
+
+    m_familyName = searchFamilyNameRecordIndex(m_ftFace, os2Table);
+    m_styleName = searchStyleNameRecordIndex(m_ftFace, os2Table);
+    m_fullName = searchFullNameRecordIndex(m_ftFace);
 
     if (os2Table) {
         m_weight = os2Table->usWeightClass;
@@ -293,7 +299,10 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
             m_slope = Slope::ITALIC;
         }
     }
+}
 
+void Typeface::setupVariation()
+{
     FT_MM_Var *variation;
     FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
 
