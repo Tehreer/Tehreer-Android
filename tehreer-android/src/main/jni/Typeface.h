@@ -39,6 +39,28 @@ namespace Tehreer {
 
 class Typeface {
 public:
+    enum Weight : uint16_t {
+        THIN = 100,
+        EXTRA_LIGHT = 200,
+        LIGHT = 300,
+        REGULAR = 400,
+        MEDIUM = 500,
+        SEMI_BOLD = 600,
+        BOLD = 700,
+        EXTRA_BOLD = 800,
+        HEAVY = 900,
+    };
+    enum Width : uint16_t {
+        ULTRA_CONDENSED = 1,
+        EXTRA_CONDENSED = 2,
+        CONDENSED = 3,
+        SEMI_CONDENSED = 4,
+        NORMAL = 5,
+        SEMI_EXPANDED = 6,
+        EXPANDED = 7,
+        EXTRA_EXPANDED = 8,
+        ULTRA_EXPANDED = 9,
+    };
     enum Slope : uint16_t {
         PLAIN = 0,
         ITALIC = 1,
@@ -79,15 +101,16 @@ private:
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
 
-    FT_Int m_familyNameRecordIndex;
-    FT_Int m_styleNameRecordIndex;
-    FT_Int m_fullNameRecordIndex;
+    int32_t m_familyName;
+    int32_t m_styleName;
+    int32_t m_fullName;
+
     uint16_t m_weight;
     uint16_t m_width;
-    Slope m_slope;
+    uint16_t m_slope;
 
-    FT_Short m_strikeoutPosition;
-    FT_Short m_strikeoutThickness;
+    int16_t m_strikeoutPosition;
+    int16_t m_strikeoutThickness;
 
     Typeface(FontFile *fontFile, FT_Face ftFace);
 };

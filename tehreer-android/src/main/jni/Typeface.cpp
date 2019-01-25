@@ -206,12 +206,12 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
 }
 
 Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
-    : m_familyNameRecordIndex(-1)
-    , m_styleNameRecordIndex(-1)
-    , m_fullNameRecordIndex(-1)
-    , m_weight(400)
-    , m_width(5)
-    , m_slope(Typeface::Slope::PLAIN)
+    : m_familyName(-1)
+    , m_styleName(-1)
+    , m_fullName(-1)
+    , m_weight(Weight::REGULAR)
+    , m_width(Width::NORMAL)
+    , m_slope(Slope::PLAIN)
     , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
 {
@@ -280,9 +280,12 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
-    m_familyNameRecordIndex = searchFamilyNameRecordIndex(ftFace, os2Table);
-    m_styleNameRecordIndex = searchStyleNameRecordIndex(ftFace, os2Table);
-    m_fullNameRecordIndex = searchFullNameRecordIndex(ftFace);
+    m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
+    m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
+    m_fullName = searchFullNameRecordIndex(ftFace);
+    m_weight = Weight::REGULAR;
+    m_width = Width::NORMAL;
+    m_slope = Slope::PLAIN;
 
     if (os2Table) {
         m_weight = os2Table->usWeightClass;
@@ -298,13 +301,13 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
         m_strikeoutThickness = os2Table->yStrikeoutSize;
     } else if (headTable) {
         if (headTable->Mac_Style & MAC_STYLE_BOLD) {
-            m_weight = 700;
+            m_weight = Weight::BOLD;
         }
 
         if (headTable->Mac_Style & MAC_STYLE_CONDENSED) {
-            m_width = 3;
+            m_width = Width::CONDENSED;
         } else if (headTable->Mac_Style & MAC_STYLE_EXTENDED) {
-            m_width = 7;
+            m_width = Width::EXPANDED;
         }
     }
 }
