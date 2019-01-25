@@ -193,6 +193,11 @@ static inline uint16_t variableWidthToStandard(FT_Fixed coordinate)
     return 9;
 }
 
+static inline Typeface::Slope variableItalicToSlope(FT_Fixed coordinate)
+{
+    return coordinate >= 0x10000 ? Typeface::Slope::ITALIC : Typeface::Slope::PLAIN;
+}
+
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
     if (fontFile) {
