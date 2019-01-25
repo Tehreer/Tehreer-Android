@@ -314,6 +314,10 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
         } else if (headTable->Mac_Style & MAC_STYLE_EXTENDED) {
             m_width = Width::EXPANDED;
         }
+
+        if (headTable->Mac_Style & MAC_STYLE_ITALIC) {
+            m_slope = Slope::ITALIC;
+        }
     }
 }
 
