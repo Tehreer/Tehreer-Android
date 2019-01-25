@@ -82,7 +82,8 @@ public:
 
     uint16_t unitsPerEM() const { return m_ftFace->units_per_EM; }
     int16_t ascent() const { return m_ftFace->ascender; }
-    int16_t descent() const { return m_ftFace->descender; }
+    int16_t descent() const { return -m_ftFace->descender; }
+    int16_t leading() const { return m_ftFace->height - (ascent() + descent()); }
 
     int32_t glyphCount() const { return (int32_t)m_ftFace->num_glyphs; }
 
