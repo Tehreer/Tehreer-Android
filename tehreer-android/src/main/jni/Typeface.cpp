@@ -618,46 +618,39 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
 static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_UShort unitsPerEm = baseFace->units_per_EM;
+    uint16_t unitsPerEM = typeface->unitsPerEM();
 
-    return static_cast<jint>(unitsPerEm);
+    return static_cast<jint>(unitsPerEM);
 }
 
 static jint getAscent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Short ascender = baseFace->ascender;
+    int16_t ascent = typeface->ascent();
 
-    return static_cast<jint>(ascender);
+    return static_cast<jint>(ascent);
 }
 
 static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Short descender = baseFace->descender;
+    int16_t descent = typeface->descent();
 
-    return static_cast<jint>(-descender);
+    return static_cast<jint>(descent);
 }
 
 static jint getLeading(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Short ascender = baseFace->ascender;
-    FT_Short descender = baseFace->descender;
-    FT_Short height = baseFace->height;
+    int16_t leading = typeface->leading();
 
-    return static_cast<jint>(height - (ascender - descender));
+    return static_cast<jint>(leading);
 }
 
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Long glyphCount = baseFace->num_glyphs;
+    int32_t glyphCount = typeface->glyphCount();
 
     return static_cast<jint>(glyphCount);
 }
@@ -728,8 +721,7 @@ static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobje
 static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Short underlinePosition = baseFace->underline_position;
+    int16_t underlinePosition = typeface->underlinePosition();
 
     return static_cast<jint>(underlinePosition);
 }
@@ -737,8 +729,7 @@ static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Short underlineThickness = baseFace->underline_thickness;
+    int16_t underlineThickness = typeface->underlineThickness();
 
     return static_cast<jint>(underlineThickness);
 }
@@ -746,7 +737,7 @@ static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle
 static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Short strikeoutPosition = typeface->strikeoutPosition();
+    int16_t strikeoutPosition = typeface->strikeoutPosition();
 
     return static_cast<jint>(strikeoutPosition);
 }
@@ -754,7 +745,7 @@ static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 static jint getStrikeoutThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Short strikeoutThickness = typeface->strikeoutThickness();
+    int16_t strikeoutThickness = typeface->strikeoutThickness();
 
     return static_cast<jint>(strikeoutThickness);
 }
