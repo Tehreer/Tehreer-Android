@@ -80,8 +80,24 @@ public:
     SFFontRef sfFont() const { return m_sfFont; }
     PatternCache &patternCache() { return m_patternCache; }
 
-    FT_Short strikeoutPosition() const { return m_strikeoutPosition; }
-    FT_Short strikeoutThickness() const { return m_strikeoutThickness; }
+    uint16_t unitsPerEM() const { return m_ftFace->units_per_EM; }
+    int16_t ascent() const { return m_ftFace->ascender; }
+    int16_t descent() const { return m_ftFace->descender; }
+
+    int32_t glyphCount() const { return (int32_t)m_ftFace->num_glyphs; }
+
+    int32_t familyName() const { return m_familyName; }
+    int32_t styleName() const { return m_styleName; }
+    int32_t fullName() const { return m_fullName; }
+
+    uint16_t weight() const { return m_weight; }
+    uint16_t width() const { return m_width; }
+    uint16_t slope() const { return m_slope; }
+
+    int16_t underlinePosition() const { return m_ftFace->underline_position; }
+    int16_t underlineThickness() const { return m_ftFace->underline_thickness; }
+    int16_t strikeoutPosition() const { return m_strikeoutPosition; }
+    int16_t strikeoutThickness() const { return m_strikeoutThickness; }
 
     void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
 
