@@ -19,6 +19,7 @@ extern "C" {
 #include FT_ADVANCES_H
 #include FT_FREETYPE_H
 #include FT_MULTIPLE_MASTERS_H
+#include FT_SFNT_NAMES_H
 #include FT_SIZES_H
 #include FT_STROKER_H
 #include FT_SYSTEM_H
@@ -34,15 +35,18 @@ extern "C" {
 #include <cstdlib>
 #include <jni.h>
 #include <mutex>
+#include <string>
 
 #include "FontFile.h"
 #include "FreeType.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
-#include "StreamUtils.h"
+#include "SfntTables.h"
 #include "Typeface.h"
 
+using namespace std;
 using namespace Tehreer;
+using namespace Tehreer::SFNT;
 
 static inline FT_F26Dot6 toF26Dot6(float value)
 {
@@ -62,6 +66,44 @@ static inline float f16Dot16toFloat(FT_Fixed value)
 static inline float f26Dot6PosToFloat(FT_Pos value)
 {
     return static_cast<float>(value / 64.0);
+}
+
+/**
+ * NOTE: The caller needs to lock the typeface before invoking this function.
+ */
+static FT_Int searchEnglishNameRecordIndex(FT_Face face, FT_UInt nameID)
+{
+    static const uint16_t PLATFORM_MACINTOSH = 1;
+    static const uint16_t PLATFORM_WINDOWS = 3;
+
+    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
+    FT_Int candidate = -1;
+
+    for (FT_UInt i = 0; i < nameCount; i++) {
+        FT_SfntName record;
+        FT_Get_Sfnt_Name(face, i, &record);
+
+        if (record.name_id != nameID) {
+            continue;
+        }
+
+        Locale locale(record.platform_id, record.language_id);
+        const string *language = locale.language();
+
+        if (language && *language == "en") {
+            const string *region = locale.region();
+
+            if (record.platform_id == PLATFORM_WINDOWS && region && *region == "US") {
+                return i;
+            }
+
+            if (candidate == -1 || record.platform_id == PLATFORM_MACINTOSH) {
+                candidate = i;
+            }
+        }
+    }
+
+    return candidate;
 }
 
 static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
