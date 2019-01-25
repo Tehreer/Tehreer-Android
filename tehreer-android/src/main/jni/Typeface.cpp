@@ -48,6 +48,15 @@ using namespace std;
 using namespace Tehreer;
 using namespace Tehreer::SFNT;
 
+const uint16_t FS_SELECTION_ITALIC = 1 << 0;
+const uint16_t FS_SELECTION_WWS = 1 << 8;
+const uint16_t FS_SELECTION_OBLIQUE = 1 << 9;
+
+const uint16_t MAC_STYLE_BOLD = 1 << 0;
+const uint16_t MAC_STYLE_ITALIC = 1 << 1;
+const uint16_t MAC_STYLE_CONDENSED = 1 << 5;
+const uint16_t MAC_STYLE_EXTENDED = 1 << 6;
+
 static inline FT_F26Dot6 toF26Dot6(float value)
 {
     return static_cast<FT_F26Dot6>((value * 64) + 0.5);
@@ -150,7 +159,10 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
 }
 
 Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
-    : m_strikeoutPosition(0)
+    : m_weight(400)
+    , m_width(5)
+    , m_slope(Typeface::Slope::PLAIN)
+    , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
 {
     SFFontProtocol protocol;
@@ -216,9 +228,30 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     }
 
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
+    TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
+
     if (os2Table) {
+        m_weight = os2Table->usWeightClass;
+        m_width = os2Table->usWidthClass;
+
+        if (os2Table->fsSelection & FS_SELECTION_OBLIQUE) {
+            m_slope = Slope::OBLIQUE;
+        } else if (os2Table->fsSelection & FS_SELECTION_ITALIC) {
+            m_slope = Slope::ITALIC;
+        }
+
         m_strikeoutPosition = os2Table->yStrikeoutPosition;
         m_strikeoutThickness = os2Table->yStrikeoutSize;
+    } else if (headTable) {
+        if (headTable->Mac_Style & MAC_STYLE_BOLD) {
+            m_weight = 700;
+        }
+
+        if (headTable->Mac_Style & MAC_STYLE_CONDENSED) {
+            m_width = 3;
+        } else if (headTable->Mac_Style & MAC_STYLE_EXTENDED) {
+            m_width = 7;
+        }
     }
 }
 

@@ -27,6 +27,7 @@ extern "C" {
 }
 
 #include <android/asset_manager.h>
+#include <cstdint>
 #include <jni.h>
 #include <mutex>
 
@@ -38,6 +39,12 @@ namespace Tehreer {
 
 class Typeface {
 public:
+    enum Slope : uint16_t {
+        PLAIN = 0,
+        ITALIC = 1,
+        OBLIQUE = 2,
+    };
+
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex);
 
     ~Typeface();
@@ -71,6 +78,10 @@ private:
     FT_Stroker m_ftStroker;
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
+
+    uint16_t m_weight;
+    uint16_t m_width;
+    Slope m_slope;
 
     FT_Short m_strikeoutPosition;
     FT_Short m_strikeoutThickness;
