@@ -79,6 +79,9 @@ private:
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
 
+    FT_Int m_familyNameRecordIndex;
+    FT_Int m_styleNameRecordIndex;
+    FT_Int m_fullNameRecordIndex;
     uint16_t m_weight;
     uint16_t m_width;
     Slope m_slope;

@@ -48,6 +48,14 @@ using namespace std;
 using namespace Tehreer;
 using namespace Tehreer::SFNT;
 
+const uint16_t NAME_FONT_FAMILY = 1;
+const uint16_t NAME_FONT_SUBFAMILY = 2;
+const uint16_t NAME_FULL = 4;
+const uint16_t NAME_TYPOGRAPHIC_FAMILY = 16;
+const uint16_t NAME_TYPOGRAPHIC_SUBFAMILY = 17;
+const uint16_t NAME_WWS_FAMILY = 21;
+const uint16_t NAME_WWS_SUBFAMILY = 22;
+
 const uint16_t FS_SELECTION_ITALIC = 1 << 0;
 const uint16_t FS_SELECTION_WWS = 1 << 8;
 const uint16_t FS_SELECTION_OBLIQUE = 1 << 9;
@@ -115,6 +123,45 @@ static FT_Int searchEnglishNameRecordIndex(FT_Face face, FT_UInt nameID)
     return candidate;
 }
 
+static FT_Int searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+{
+    FT_Int familyName = -1;
+
+    if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_WWS_FAMILY);
+    }
+    if (familyName == -1) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_TYPOGRAPHIC_FAMILY);
+    }
+    if (familyName == -1) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_FONT_FAMILY);
+    }
+
+    return familyName;
+}
+
+static FT_Int searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+{
+    FT_Int familyName = -1;
+
+    if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_WWS_SUBFAMILY);
+    }
+    if (familyName == -1) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_TYPOGRAPHIC_SUBFAMILY);
+    }
+    if (familyName == -1) {
+        familyName = searchEnglishNameRecordIndex(face, NAME_FONT_SUBFAMILY);
+    }
+
+    return familyName;
+}
+
+static FT_Int searchFullNameRecordIndex(FT_Face face)
+{
+    return searchEnglishNameRecordIndex(face, NAME_FULL);
+}
+
 static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
 {
     float value = f16Dot16toFloat(coordinate);
@@ -159,7 +206,10 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
 }
 
 Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
-    : m_weight(400)
+    : m_familyNameRecordIndex(-1)
+    , m_styleNameRecordIndex(-1)
+    , m_fullNameRecordIndex(-1)
+    , m_weight(400)
     , m_width(5)
     , m_slope(Typeface::Slope::PLAIN)
     , m_strikeoutPosition(0)
@@ -229,6 +279,10 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
 
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
+
+    m_familyNameRecordIndex = searchFamilyNameRecordIndex(ftFace, os2Table);
+    m_styleNameRecordIndex = searchStyleNameRecordIndex(ftFace, os2Table);
+    m_fullNameRecordIndex = searchFullNameRecordIndex(ftFace);
 
     if (os2Table) {
         m_weight = os2Table->usWeightClass;
