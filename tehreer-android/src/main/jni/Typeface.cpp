@@ -49,13 +49,20 @@ using namespace std;
 using namespace Tehreer;
 using namespace Tehreer::SFNT;
 
-const uint16_t NAME_FONT_FAMILY = 1;
-const uint16_t NAME_FONT_SUBFAMILY = 2;
-const uint16_t NAME_FULL = 4;
-const uint16_t NAME_TYPOGRAPHIC_FAMILY = 16;
-const uint16_t NAME_TYPOGRAPHIC_SUBFAMILY = 17;
-const uint16_t NAME_WWS_FAMILY = 21;
-const uint16_t NAME_WWS_SUBFAMILY = 22;
+enum NameID : uint16_t {
+    FONT_FAMILY = 1,
+    FONT_SUBFAMILY = 2,
+    FULL = 4,
+    TYPOGRAPHIC_FAMILY = 16,
+    TYPOGRAPHIC_SUBFAMILY = 17,
+    WWS_FAMILY = 21,
+    WWS_SUBFAMILY = 22,
+};
+
+enum PlatformID : uint16_t {
+    MACINTOSH = 1,
+    WINDOWS = 3,
+};
 
 const uint16_t FS_SELECTION_ITALIC = 1 << 0;
 const uint16_t FS_SELECTION_WWS = 1 << 8;
@@ -89,11 +96,8 @@ static inline float f26Dot6PosToFloat(FT_Pos value)
 /**
  * NOTE: The caller needs to lock the typeface before invoking this function.
  */
-static FT_Int searchEnglishNameRecordIndex(FT_Face face, FT_UInt nameID)
+static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
 {
-    static const uint16_t PLATFORM_MACINTOSH = 1;
-    static const uint16_t PLATFORM_WINDOWS = 3;
-
     FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
     FT_Int candidate = -1;
 
@@ -111,11 +115,11 @@ static FT_Int searchEnglishNameRecordIndex(FT_Face face, FT_UInt nameID)
         if (language && *language == "en") {
             const string *region = locale.region();
 
-            if (record.platform_id == PLATFORM_WINDOWS && region && *region == "US") {
+            if (record.platform_id == PlatformID::WINDOWS && region && *region == "US") {
                 return i;
             }
 
-            if (candidate == -1 || record.platform_id == PLATFORM_MACINTOSH) {
+            if (candidate == -1 || record.platform_id == PlatformID::MACINTOSH) {
                 candidate = i;
             }
         }
@@ -124,43 +128,43 @@ static FT_Int searchEnglishNameRecordIndex(FT_Face face, FT_UInt nameID)
     return candidate;
 }
 
-static FT_Int searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+static int32_t searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
 {
-    FT_Int familyName = -1;
+    int32_t familyName = -1;
 
     if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_WWS_FAMILY);
+        familyName = searchEnglishNameRecordIndex(face, NameID::WWS_FAMILY);
     }
     if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_TYPOGRAPHIC_FAMILY);
+        familyName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_FAMILY);
     }
     if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_FONT_FAMILY);
+        familyName = searchEnglishNameRecordIndex(face, NameID::FONT_FAMILY);
     }
 
     return familyName;
 }
 
-static FT_Int searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+static int32_t searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
 {
-    FT_Int familyName = -1;
+    int32_t styleName = -1;
 
     if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_WWS_SUBFAMILY);
+        styleName = searchEnglishNameRecordIndex(face, NameID::WWS_SUBFAMILY);
     }
-    if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_TYPOGRAPHIC_SUBFAMILY);
+    if (styleName == -1) {
+        styleName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_SUBFAMILY);
     }
-    if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NAME_FONT_SUBFAMILY);
+    if (styleName == -1) {
+        styleName = searchEnglishNameRecordIndex(face, NameID::FONT_SUBFAMILY);
     }
 
-    return familyName;
+    return styleName;
 }
 
-static FT_Int searchFullNameRecordIndex(FT_Face face)
+static int32_t searchFullNameRecordIndex(FT_Face face)
 {
-    return searchEnglishNameRecordIndex(face, NAME_FULL);
+    return searchEnglishNameRecordIndex(face, NameID::FULL);
 }
 
 static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
