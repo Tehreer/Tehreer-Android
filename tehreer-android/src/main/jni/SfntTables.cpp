@@ -34,7 +34,7 @@ extern "C" {
 
 using namespace std;
 using namespace Tehreer;
-using namespace Tehreer::SFNT;
+using namespace Tehreer::SFNT::name;
 
 Locale::Locale(uint16_t platformID, uint16_t languageID)
 {

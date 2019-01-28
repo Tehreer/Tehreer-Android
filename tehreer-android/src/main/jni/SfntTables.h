@@ -25,6 +25,34 @@
 namespace Tehreer {
 namespace SFNT {
 
+namespace head {
+
+enum MacStyle : uint16_t {
+    BOLD = 1 << 0,
+    ITALIC = 1 << 1,
+    CONDENSED = 1 << 5,
+    EXTENDED = 1 << 6,
+};
+
+}
+
+namespace name {
+
+enum PlatformID : uint16_t {
+    MACINTOSH = 1,
+    WINDOWS = 3,
+};
+
+enum NameID : uint16_t {
+    FONT_FAMILY = 1,
+    FONT_SUBFAMILY = 2,
+    FULL = 4,
+    TYPOGRAPHIC_FAMILY = 16,
+    TYPOGRAPHIC_SUBFAMILY = 17,
+    WWS_FAMILY = 21,
+    WWS_SUBFAMILY = 22,
+};
+
 class Locale {
 public:
     Locale(uint16_t platformID, uint16_t languageID);
@@ -47,6 +75,18 @@ public:
 private:
     std::string m_name;
 };
+
+}
+
+namespace OS2 {
+
+enum FSSelection : uint16_t {
+    ITALIC = 1 << 0,
+    WWS = 1 << 8,
+    OBLIQUE = 1 << 9,
+};
+
+}
 
 }
 }

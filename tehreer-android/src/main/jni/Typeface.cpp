@@ -47,31 +47,9 @@ extern "C" {
 
 using namespace std;
 using namespace Tehreer;
-using namespace Tehreer::SFNT;
-
-enum NameID : uint16_t {
-    FONT_FAMILY = 1,
-    FONT_SUBFAMILY = 2,
-    FULL = 4,
-    TYPOGRAPHIC_FAMILY = 16,
-    TYPOGRAPHIC_SUBFAMILY = 17,
-    WWS_FAMILY = 21,
-    WWS_SUBFAMILY = 22,
-};
-
-enum PlatformID : uint16_t {
-    MACINTOSH = 1,
-    WINDOWS = 3,
-};
-
-const uint16_t FS_SELECTION_ITALIC = 1 << 0;
-const uint16_t FS_SELECTION_WWS = 1 << 8;
-const uint16_t FS_SELECTION_OBLIQUE = 1 << 9;
-
-const uint16_t MAC_STYLE_BOLD = 1 << 0;
-const uint16_t MAC_STYLE_ITALIC = 1 << 1;
-const uint16_t MAC_STYLE_CONDENSED = 1 << 5;
-const uint16_t MAC_STYLE_EXTENDED = 1 << 6;
+using namespace Tehreer::SFNT::head;
+using namespace Tehreer::SFNT::name;
+using namespace Tehreer::SFNT::OS2;
 
 static inline FT_F26Dot6 toF26Dot6(float value)
 {
@@ -132,7 +110,7 @@ static int32_t searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
 {
     int32_t familyName = -1;
 
-    if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
+    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
         familyName = searchEnglishNameRecordIndex(face, NameID::WWS_FAMILY);
     }
     if (familyName == -1) {
@@ -149,7 +127,7 @@ static int32_t searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
 {
     int32_t styleName = -1;
 
-    if (os2Table && (os2Table->fsSelection & FS_SELECTION_WWS)) {
+    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
         styleName = searchEnglishNameRecordIndex(face, NameID::WWS_SUBFAMILY);
     }
     if (styleName == -1) {
@@ -280,26 +258,26 @@ void Typeface::setupDescription()
         m_weight = os2Table->usWeightClass;
         m_width = os2Table->usWidthClass;
 
-        if (os2Table->fsSelection & FS_SELECTION_OBLIQUE) {
+        if (os2Table->fsSelection & FSSelection::OBLIQUE) {
             m_slope = Slope::OBLIQUE;
-        } else if (os2Table->fsSelection & FS_SELECTION_ITALIC) {
+        } else if (os2Table->fsSelection & FSSelection::ITALIC) {
             m_slope = Slope::ITALIC;
         }
 
         m_strikeoutPosition = os2Table->yStrikeoutPosition;
         m_strikeoutThickness = os2Table->yStrikeoutSize;
     } else if (headTable) {
-        if (headTable->Mac_Style & MAC_STYLE_BOLD) {
+        if (headTable->Mac_Style & MacStyle::BOLD) {
             m_weight = Weight::BOLD;
         }
 
-        if (headTable->Mac_Style & MAC_STYLE_CONDENSED) {
+        if (headTable->Mac_Style & MacStyle::CONDENSED) {
             m_width = Width::CONDENSED;
-        } else if (headTable->Mac_Style & MAC_STYLE_EXTENDED) {
+        } else if (headTable->Mac_Style & MacStyle::EXTENDED) {
             m_width = Width::EXPANDED;
         }
 
-        if (headTable->Mac_Style & MAC_STYLE_ITALIC) {
+        if (headTable->Mac_Style & MacStyle::ITALIC) {
             m_slope = Slope::ITALIC;
         }
     }
