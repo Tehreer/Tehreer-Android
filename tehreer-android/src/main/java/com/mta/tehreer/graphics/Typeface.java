@@ -368,6 +368,11 @@ public class Typeface {
 	private static native void nDispose(long nativeTypeface);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
+    private static native void nGetNameRecordIndexes(long nativeTypeface, int[] indexes);
+
+    private static native int nGetWeight(long nativeTypeface);
+    private static native int nGetWidth(long nativeTypeface);
+    private static native int nGetSlope(long nativeTypeface);
 
 	private static native int nGetUnitsPerEm(long nativeTypeface);
 	private static native int nGetAscent(long nativeTypeface);
