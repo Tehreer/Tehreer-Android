@@ -597,6 +597,47 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     return nullptr;
 }
 
+static void getNameRecordIndexes(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray indicesArray)
+{
+    const jint FAMILY_NAME = 0;
+    const jint STYLE_NAME = 1;
+    const jint FULL_NAME = 2;
+
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    void *buffer = env->GetPrimitiveArrayCritical(indicesArray, nullptr);
+
+    jint *values = static_cast<jint *>(buffer);
+    values[FAMILY_NAME] = typeface->familyName();
+    values[STYLE_NAME] = typeface->styleName();
+    values[FULL_NAME] = typeface->fullName();
+
+    env->ReleasePrimitiveArrayCritical(indicesArray, buffer, 0);
+}
+
+static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t weight = typeface->weight();
+
+    return static_cast<jint>(weight);
+}
+
+static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t width = typeface->width();
+
+    return static_cast<jint>(width);
+}
+
+static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t slope = typeface->slope();
+
+    return static_cast<jint>(slope);
+}
+
 static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -738,6 +779,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
+    { "nGetNameRecordIndexes", "(J[I)", (void *)getNameRecordIndexes },
+    { "nGetWeight", "(J)I", (void *)getWeight },
+    { "nGetWidth", "(J)I", (void *)getWidth },
+    { "nGetSlope", "(J)I", (void *)getSlope },
     { "nGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nGetAscent", "(J)I", (void *)getAscent },
     { "nGetDescent", "(J)I", (void *)getDescent },
