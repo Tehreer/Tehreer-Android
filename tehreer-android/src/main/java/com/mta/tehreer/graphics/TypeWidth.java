@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.graphics;
 
+import androidx.annotation.NonNull;
+
 /**
  * Specifies the wideness of a typeface, in terms of the width of characters in relation to their
  * heights.
@@ -30,6 +32,8 @@ public enum TypeWidth {
     EXPANDED(7),
     EXTRA_EXPANDED(8),
     ULTRA_EXPANDED(9);
+
+    private static final TypeWidth[] ALL_VALUES = TypeWidth.values();
 
     /**
      * The integer value of the <code>TypeWidth</code>. Lower value indicates narrower width; higher
@@ -48,13 +52,9 @@ public enum TypeWidth {
      * @return The enum constant with the specified value, or <code>null</code> if
      *         <code>TypeWidth</code> has no constant with the specified value.
      */
-    static TypeWidth valueOf(int value) {
-        for (TypeWidth width : TypeWidth.values()) {
-            if (width.value == value) {
-                return width;
-            }
-        }
+    static @NonNull TypeWidth valueOf(int value) {
+        final int index = value - 1;
 
-        return null;
+        return ALL_VALUES[Math.max(0, Math.min(8, index))];
     }
 }
