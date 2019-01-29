@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.graphics;
 
+import androidx.annotation.NonNull;
+
 /**
  * Specifies the slope of a typeface.
  */
@@ -31,5 +33,11 @@ public enum TypeSlope {
     /**
      * The oblique slope indicating artificially slanted characters.
      */
-    OBLIQUE,
+    OBLIQUE;
+
+    private static final TypeSlope[] ALL_VALUES = TypeSlope.values();
+
+    static @NonNull TypeSlope valueOf(int value) {
+        return ALL_VALUES[value];
+    }
 }
