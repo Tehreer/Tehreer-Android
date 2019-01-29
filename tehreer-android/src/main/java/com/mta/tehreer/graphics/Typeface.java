@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.sfnt.SfntTag;
+import com.mta.tehreer.sfnt.tables.NameTable;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,9 +57,12 @@ public class Typeface {
 
     @Keep
     long nativeTypeface;
-    private final @NonNull Finalizable finalizable = new Finalizable();
-    private TypefaceDescription description;
     @Nullable Object tag;
+    private final @NonNull Finalizable finalizable = new Finalizable();
+
+    private @NonNull String familyName = "";
+    private @NonNull String styleName = "";
+    private @NonNull String fullName = "";
 
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
@@ -130,8 +134,38 @@ public class Typeface {
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-        this.description = TypefaceDescription.deduce(this);
+        setupNames();
 	}
+
+	private void setupNames() {
+        final int[] nameRecordIndexes = new int[3];
+        nGetNameRecordIndexes(nativeTypeface, nameRecordIndexes);
+
+        final int familyNameIndex = nameRecordIndexes[0];
+        final int styleNameIndex = nameRecordIndexes[1];
+        final int fullNameIndex = nameRecordIndexes[2];
+
+        NameTable nameTable = NameTable.from(this);
+
+        if (familyNameIndex != -1) {
+            String recordString = nameTable.recordAt(familyNameIndex).string();
+            if (recordString != null) {
+                familyName = recordString;
+            }
+        }
+        if (styleNameIndex != -1) {
+            String recordString = nameTable.recordAt(styleNameIndex).string();
+            if (recordString != null) {
+                styleName = nameTable.recordAt(styleNameIndex).string();
+            }
+        }
+        if (fullNameIndex != -1) {
+            String recordString = nameTable.recordAt(fullNameIndex).string();
+            if (recordString != null) {
+                fullName = nameTable.recordAt(fullNameIndex).string();
+            }
+        }
+    }
 
     /**
      * Returns the family name of this typeface.
@@ -139,7 +173,7 @@ public class Typeface {
      * @return The family name of this typeface.
      */
     public String getFamilyName() {
-        return description.familyName;
+        return familyName;
     }
 
     /**
@@ -148,7 +182,7 @@ public class Typeface {
      * @return The style name of this typeface.
      */
     public String getStyleName() {
-        return description.styleName;
+        return styleName;
     }
 
     /**
@@ -157,7 +191,7 @@ public class Typeface {
      * @return The full name of this typeface.
      */
     public String getFullName() {
-        return description.fullName;
+        return fullName;
     }
 
     /**
@@ -167,7 +201,9 @@ public class Typeface {
      * @return The typographic weight of this typeface.
      */
     public @NonNull TypeWeight getWeight() {
-        return description.weight;
+        final int weight = nGetWeight(nativeTypeface);
+
+        return TypeWeight.valueOf(weight);
     }
 
     /**
@@ -177,7 +213,9 @@ public class Typeface {
      * @return The typographic width of this typeface.
      */
     public @NonNull TypeWidth getWidth() {
-        return description.width;
+        final int width = nGetWidth(nativeTypeface);
+
+        return TypeWidth.valueOf(width);
     }
 
     /**
@@ -187,7 +225,9 @@ public class Typeface {
      * @return The typographic slope of this typeface.
      */
     public @NonNull TypeSlope getSlope() {
-        return description.slope;
+        final int slope = nGetSlope(nativeTypeface);
+
+        return TypeSlope.valueOf(slope);
     }
 
     /**
