@@ -38,6 +38,19 @@ public final class NameTable {
     private final @NonNull Typeface typeface;
 
     /**
+     * Constructs a <code>NameTable</code> object from the specified typeface.
+     *
+     * @param typeface The typeface from which the <code>NameTable</code> object is constructed.
+     * @return A new <code>NameTable</code> object, or <code>null</code> if `name' table does not
+     *         exist in the specified typeface.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
+    public static @Nullable NameTable from(@NonNull Typeface typeface) {
+        return new NameTable(typeface);
+    }
+
+    /**
      * Constructs an <code>NameTable</code> object from the specified typeface.
      *
      * @param typeface The typeface from which the <code>NameTable</code> object is
@@ -246,7 +259,7 @@ public final class NameTable {
                     + ", locale=" + locale().toString()
                     + ", charset=" + (charset != null ? charset.name() : null)
                     + ", string=" + string()
-                    + "}";
+                    + '}';
         }
     }
 }
