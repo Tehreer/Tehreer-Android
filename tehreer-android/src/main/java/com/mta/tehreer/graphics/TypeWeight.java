@@ -16,6 +16,8 @@
 
 package com.mta.tehreer.graphics;
 
+import androidx.annotation.NonNull;
+
 /**
  * Specifies the thickness of a typeface, in terms of lightness or heaviness of the strokes.
  */
@@ -29,6 +31,8 @@ public enum TypeWeight {
     BOLD(700),
     EXTRA_BOLD(800),
     HEAVY(900);
+
+    private static final TypeWeight[] ALL_VALUES = TypeWeight.values();
 
     /**
      * The integer value of the <code>TypeWeight</code>. Lower value indicates lighter weight;
@@ -44,16 +48,11 @@ public enum TypeWeight {
      * Returns the enum constant of <code>TypeWeight</code> with the specified value.
      *
      * @param value The integer value of the weight.
-     * @return The enum constant with the specified value, or <code>null</code> if
-     *         <code>TypeWeight</code> has no constant with the specified value.
+     * @return The enum constant that is closest to the specified value.
      */
-    static TypeWeight valueOf(int value) {
-        for (TypeWeight weight : TypeWeight.values()) {
-            if (weight.value == value) {
-                return weight;
-            }
-        }
+    static @NonNull TypeWeight valueOf(int value) {
+        final int index = (int) ((value / 100.0f) - 0.5f);
 
-        return null;
+        return ALL_VALUES[Math.max(0, Math.min(8, index))];
     }
 }
