@@ -314,7 +314,7 @@ void Typeface::setupVariation()
 
                 int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
                 if (result == 0) {
-                    m_styleName = static_cast<uint16_t>(namedStyle->strid);
+                    m_styleName = searchEnglishNameRecordIndex(m_ftFace, static_cast<uint16_t>(namedStyle->strid));
                     break;
                 }
             }
