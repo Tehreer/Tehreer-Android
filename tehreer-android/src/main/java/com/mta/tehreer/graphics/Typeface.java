@@ -164,6 +164,15 @@ public class Typeface {
             if (recordString != null) {
                 fullName = nameTable.recordAt(fullNameIndex).string();
             }
+        } else {
+            if (!familyName.isEmpty()) {
+                fullName = familyName;
+                if (!styleName.isEmpty()) {
+                    fullName += ' ' + styleName;
+                }
+            } else {
+                fullName = styleName;
+            }
         }
     }
 
