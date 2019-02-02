@@ -307,6 +307,10 @@ void Typeface::setupVariation()
         }
 
         if (FT_Get_Var_Design_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+            // Reset the style name and the full name.
+            m_styleName = -1;
+            m_fullName = -1;
+
             // Get the style name of this instance.
             for (FT_UInt i = 0; i < variation->num_namedstyles; i++) {
                 FT_Var_Named_Style *namedStyle = &variation->namedstyle[i];
