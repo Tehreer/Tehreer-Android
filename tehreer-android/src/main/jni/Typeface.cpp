@@ -779,7 +779,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
-    { "nGetNameRecordIndexes", "(J[I)", (void *)getNameRecordIndexes },
+    { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
     { "nGetWeight", "(J)I", (void *)getWeight },
     { "nGetWidth", "(J)I", (void *)getWidth },
     { "nGetSlope", "(J)I", (void *)getSlope },
