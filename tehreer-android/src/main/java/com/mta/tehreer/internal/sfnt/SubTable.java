@@ -18,7 +18,7 @@ package com.mta.tehreer.internal.sfnt;
 
 import androidx.annotation.NonNull;
 
-public class SubTable implements SfntTable {
+public class SubTable extends AbstractSfntTable {
     private final SfntTable table;
     private final int globalOffset;
 

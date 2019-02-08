@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.Raw;
 
-public class StructTable implements SfntTable {
+public class StructTable extends AbstractSfntTable {
     /**
      * Represents the source from which the struct pointer was obtained. Keep the source in memory
      * so that it does not accidentally get disposed by the GC when in use.
@@ -73,10 +73,5 @@ public class StructTable implements SfntTable {
     public long readInt64(int offset) {
         return ((Raw.getInt32Value(pointerOf(offset)) & 0xFFFFFFFFL) << 32)
              | ((Raw.getInt32Value(pointerOf(offset)) & 0xFFFFFFFFL));
-    }
-
-    @Override
-    public SfntTable subTable(int offset) {
-        return null;
     }
 }

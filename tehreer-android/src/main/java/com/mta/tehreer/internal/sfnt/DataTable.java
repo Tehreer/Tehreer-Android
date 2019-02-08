@@ -18,7 +18,7 @@ package com.mta.tehreer.internal.sfnt;
 
 import androidx.annotation.NonNull;
 
-public class DataTable implements SfntTable {
+public class DataTable extends AbstractSfntTable {
     private final @NonNull byte[] data;
 
     public DataTable(@NonNull byte[] data) {
@@ -65,10 +65,5 @@ public class DataTable implements SfntTable {
     public long readInt64(int offset) {
         return (readUInt32(offset + 0) << 32)
              | (readUInt32(offset + 4) << 0);
-    }
-
-    @Override
-    public SfntTable subTable(int offset) {
-        return new SubTable(this, offset);
     }
 }

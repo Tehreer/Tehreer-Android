@@ -29,5 +29,7 @@ public interface SfntTable {
 
     long readInt64(int offset);
 
+    float readFixed(int offset);
+
     SfntTable subTable(int offset);
 }
