@@ -52,16 +52,16 @@ public final class VariationAxisRecord {
         return data.readInt32(AXIS_TAG);
     }
 
-    public int minValue() {
-        return data.readInt32(MIN_VALUE);
+    public float minValue() {
+        return data.readFixed(MIN_VALUE);
     }
 
-    public int defaultValue() {
-        return data.readInt32(DEFAULT_VALUE);
+    public float defaultValue() {
+        return data.readFixed(DEFAULT_VALUE);
     }
 
-    public int maxValue() {
-        return data.readInt32(MAX_VALUE);
+    public float maxValue() {
+        return data.readFixed(MAX_VALUE);
     }
 
     public @Flags int flags() {
