@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,5 +65,10 @@ public class DataTable implements SfntTable {
     public long readInt64(int offset) {
         return (readUInt32(offset + 0) << 32)
              | (readUInt32(offset + 4) << 0);
+    }
+
+    @Override
+    public SfntTable subTable(int offset) {
+        return new SubTable(this, offset);
     }
 }

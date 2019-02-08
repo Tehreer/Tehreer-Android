@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,5 +73,10 @@ public class StructTable implements SfntTable {
     public long readInt64(int offset) {
         return ((Raw.getInt32Value(pointerOf(offset)) & 0xFFFFFFFFL) << 32)
              | ((Raw.getInt32Value(pointerOf(offset)) & 0xFFFFFFFFL));
+    }
+
+    @Override
+    public SfntTable subTable(int offset) {
+        return null;
     }
 }
