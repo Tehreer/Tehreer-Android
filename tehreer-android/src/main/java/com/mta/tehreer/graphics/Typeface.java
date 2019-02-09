@@ -160,26 +160,25 @@ public class Typeface {
         variationAxes = new ArrayList<>(axisRecords.length);
 
         for (VariationAxisRecord axisRecord : axisRecords) {
-            final int flags = axisRecord.flags();
-            if ((flags & VariationAxisRecord.FLAG_HIDDEN_AXIS) != 0) {
-                continue;
-            }
-
             final int axisTag = axisRecord.axisTag();
-            final int axisNameId = axisRecord.axisNameId();
-            final float defaultValue = axisRecord.defaultValue();
             final float minValue = axisRecord.minValue();
+            final float defaultValue = axisRecord.defaultValue();
             final float maxValue = axisRecord.maxValue();
+            final int flags = axisRecord.flags();
+            final int axisNameId = axisRecord.axisNameId();
 
             final int nameRecordIndex = searchEnglishNameRecordIndex(axisNameId);
-            String axisName = "";
+            String axisName = null;
 
             if (nameRecordIndex > -1) {
                 NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
                 axisName = nameRecord.string();
             }
+            if (axisName == null) {
+                axisName = "";
+            }
 
-            variationAxes.add(VariationAxis.of(axisTag, axisName,
+            variationAxes.add(VariationAxis.of(axisTag, axisName, flags,
                                                defaultValue, minValue, maxValue));
         }
     }
