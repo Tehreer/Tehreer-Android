@@ -577,6 +577,26 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
     delete typeface;
 }
 
+static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    FT_Face ftFace = typeface->ftFace();
+
+    jint numCoords = env->GetArrayLength(coordinates);
+    FT_Fixed fixedCoords[numCoords];
+
+    if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+        void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
+        jfloat *coordValues = static_cast<jfloat *>(coordBuffer);
+
+        for (jint i = 0; i < numCoords; i++) {
+            coordValues[i] = f16Dot16toFloat(fixedCoords[i]);
+        }
+
+        env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
+    }
+}
+
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -791,6 +811,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
+    { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
     { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
