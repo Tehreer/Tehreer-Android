@@ -181,6 +181,11 @@ static inline Typeface::Slope variableItalicToSlope(FT_Fixed coordinate)
     return coordinate >= 0x10000 ? Typeface::Slope::ITALIC : Typeface::Slope::PLAIN;
 }
 
+static inline Typeface::Slope variableSlantToSlope(FT_Fixed coordinate)
+{
+    return coordinate != 0 ? Typeface::Slope::OBLIQUE : Typeface::Slope::PLAIN;
+}
+
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
     if (fontFile) {
@@ -333,7 +338,7 @@ void Typeface::setupVariation()
                     break;
 
                 case FT_MAKE_TAG('s', 'l', 'n', 't'):
-                    // TODO: Evaluate slant coordinate as oblique style.
+                    m_slope = variableSlantToSlope(fixedCoords)
                     break;
 
                 case FT_MAKE_TAG('w', 'd', 't', 'h'):
