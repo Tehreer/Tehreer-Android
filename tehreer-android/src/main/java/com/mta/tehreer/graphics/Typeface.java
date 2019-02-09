@@ -167,7 +167,7 @@ public class Typeface {
             final int flags = axisRecord.flags();
             final int axisNameId = axisRecord.axisNameId();
 
-            final int nameRecordIndex = searchEnglishNameRecordIndex(axisNameId);
+            final int nameRecordIndex = searchNameRecordIndex(axisNameId);
             String axisName = null;
 
             if (nameRecordIndex > -1) {
@@ -305,8 +305,8 @@ public class Typeface {
         return nGetTableData(nativeTypeface, tableTag);
     }
 
-    int searchEnglishNameRecordIndex(int nameId) {
-        return nSearchEnglishNameRecordIndex(nativeTypeface, nameId);
+    int searchNameRecordIndex(int nameId) {
+        return nSearchNameRecordIndex(nativeTypeface, nameId);
     }
 
     /**
@@ -475,7 +475,7 @@ public class Typeface {
 	private static native void nDispose(long nativeTypeface);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
-    private static native int nSearchEnglishNameRecordIndex(long nativeTypeface, int nameId);
+    private static native int nSearchNameRecordIndex(long nativeTypeface, int nameId);
     private static native void nGetNameRecordIndexes(long nativeTypeface, int[] indexes);
 
     private static native int nGetWeight(long nativeTypeface);
