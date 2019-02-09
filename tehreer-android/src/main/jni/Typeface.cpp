@@ -302,7 +302,7 @@ void Typeface::setupVariation()
             }
 
             // Derive the variable font of SheenFigure.
-            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, m_ftFace, coordArray, numCoords);
+            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, this, coordArray, numCoords);
             SFFontRelease(normalFont);
         }
 
