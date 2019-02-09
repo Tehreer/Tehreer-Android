@@ -25,6 +25,7 @@ import com.mta.tehreer.graphics.Typeface;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
@@ -102,11 +103,27 @@ public final class FontFile {
 
         for (int i = 0; i < faceCount; i++) {
             Typeface firstTypeface = nCreateTypeface(nativeFontFile, i, 0);
+            int instanceStart = allTypefaces.size();
+            int instanceCount = nGetInstanceCount(firstTypeface);
+
             allTypefaces.add(firstTypeface);
 
-            int instanceCount = nGetInstanceCount(firstTypeface);
             for (int j = 1; j < instanceCount; j++) {
                 Typeface instanceTypeface = nCreateTypeface(nativeFontFile, i, j);
+                float[] instanceCoords = instanceTypeface.getVariationCoordinates();
+
+                if (instanceCoords != null) {
+                    // Remove existing duplicate instances.
+                    for (int k = allTypefaces.size() - 1; k >= instanceStart; k--) {
+                        Typeface referenceTypeface = allTypefaces.get(k);
+                        float[] referenceCoords = referenceTypeface.getVariationCoordinates();
+
+                        if (Arrays.equals(instanceCoords, referenceCoords)) {
+                            allTypefaces.remove(k);
+                        }
+                    }
+                }
+
                 allTypefaces.add(instanceTypeface);
             }
         }
