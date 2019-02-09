@@ -230,6 +230,17 @@ public class Typeface {
         return null;
     }
 
+    public @Nullable float[] getVariationCoordinates() {
+        if (variationAxes != null) {
+            float[] coordinates = new float[variationAxes.size()];
+            nGetVariationCoordinates(nativeTypeface, coordinates);
+
+            return coordinates;
+        }
+
+        return null;
+    }
+
     /**
      * Returns the family name of this typeface.
      *
@@ -473,6 +484,8 @@ public class Typeface {
     private static native long nCreateWithFile(String path);
     private static native long nCreateFromStream(InputStream stream);
 	private static native void nDispose(long nativeTypeface);
+
+	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
     private static native int nSearchNameRecordIndex(long nativeTypeface, int nameId);
