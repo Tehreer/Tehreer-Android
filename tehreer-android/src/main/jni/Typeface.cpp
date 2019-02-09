@@ -601,7 +601,7 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     return nullptr;
 }
 
-static jint searchEnglishNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
+static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face ftFace = typeface->ftFace();
@@ -792,7 +792,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
-    { "nSearchEnglishNameRecordIndex", "(JI)I", (void *)searchEnglishNameRecordIndex },
+    { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
     { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
     { "nGetWeight", "(J)I", (void *)getWeight },
     { "nGetWidth", "(J)I", (void *)getWidth },
