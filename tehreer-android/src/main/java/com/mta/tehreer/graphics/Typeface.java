@@ -25,12 +25,19 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
+import com.mta.tehreer.internal.sfnt.DataTable;
+import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
+import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.tables.NameTable;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
@@ -60,6 +67,7 @@ public class Typeface {
     @Nullable Object tag;
     private final @NonNull Finalizable finalizable = new Finalizable();
 
+    private @Nullable List<VariationAxis> variationAxes;
     private @NonNull String familyName = "";
     private @NonNull String styleName = "";
     private @NonNull String fullName = "";
@@ -134,8 +142,47 @@ public class Typeface {
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-        setupNames();
+
+        setupVariations();
+	    setupNames();
 	}
+
+    private void setupVariations() {
+        final byte[] fvarData = getTableData(SfntTag.make("fvar"));
+        if (fvarData == null) {
+            return;
+        }
+
+        NameTable nameTable = NameTable.from(this);
+        FontVariationsTable fvarTable = new FontVariationsTable(new DataTable(fvarData));
+        VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
+
+        variationAxes = new ArrayList<>(axisRecords.length);
+
+        for (VariationAxisRecord axisRecord : axisRecords) {
+            final int flags = axisRecord.flags();
+            if ((flags & VariationAxisRecord.FLAG_HIDDEN_AXIS) != 0) {
+                continue;
+            }
+
+            final int axisTag = axisRecord.axisTag();
+            final int axisNameId = axisRecord.axisNameId();
+            final float defaultValue = axisRecord.defaultValue();
+            final float minValue = axisRecord.minValue();
+            final float maxValue = axisRecord.maxValue();
+
+            final int nameRecordIndex = searchEnglishNameRecordIndex(axisNameId);
+            String axisName = "";
+
+            if (nameRecordIndex > -1) {
+                NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
+                axisName = nameRecord.string();
+            }
+
+            variationAxes.add(VariationAxis.of(axisTag, axisName,
+                                               defaultValue, minValue, maxValue));
+        }
+    }
 
 	private void setupNames() {
         final int[] nameRecordIndexes = new int[3];
@@ -174,6 +221,14 @@ public class Typeface {
                 fullName = styleName;
             }
         }
+    }
+
+    public @Nullable List<VariationAxis> getVariationAxes() {
+        if (variationAxes != null) {
+            return Collections.unmodifiableList(variationAxes);
+        }
+
+        return null;
     }
 
     /**
@@ -249,6 +304,10 @@ public class Typeface {
      */
     public @Nullable byte[] getTableData(int tableTag) {
         return nGetTableData(nativeTypeface, tableTag);
+    }
+
+    int searchEnglishNameRecordIndex(int nameId) {
+        return nSearchEnglishNameRecordIndex(nativeTypeface, nameId);
     }
 
     /**
@@ -417,6 +476,7 @@ public class Typeface {
 	private static native void nDispose(long nativeTypeface);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
+    private static native int nSearchEnglishNameRecordIndex(long nativeTypeface, int nameId);
     private static native void nGetNameRecordIndexes(long nativeTypeface, int[] indexes);
 
     private static native int nGetWeight(long nativeTypeface);
