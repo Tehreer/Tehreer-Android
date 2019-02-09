@@ -35,8 +35,19 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  */
 public final class FontFile {
     long nativeFontFile;
-
+    private final Finalizer finalizer = new Finalizer();
     private List<Typeface> mTypefaces;
+
+    private class Finalizer {
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                release();
+            } finally {
+                super.finalize();
+            }
+        }
+    }
 
     /**
      * Constructs a font file instance representing the specified asset. The data of the asset is
@@ -141,6 +152,10 @@ public final class FontFile {
         }
 
         return mTypefaces;
+    }
+
+    void release() {
+        nRelease(nativeFontFile);
     }
 
     private static native long nCreateFromAsset(AssetManager assetManager, String path);
