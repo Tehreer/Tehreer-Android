@@ -200,6 +200,6 @@ public class VariableFontsActivity extends AppCompatActivity {
 
     private void setupCoordinate(int axisIndex, float coordinate) {
         mVariationCoordinates[axisIndex] = coordinate;
-        setupTypeface(mTypeface.deriveVariation(mVariationCoordinates));
+        setupTypeface(mTypeface.getVariationInstance(mVariationCoordinates));
     }
 }
