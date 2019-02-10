@@ -222,7 +222,7 @@ public class Typeface {
         }
     }
 
-    public Typeface deriveVariation(float[] coordinates) {
+    public Typeface getVariationInstance(float[] coordinates) {
         return new Typeface(nDeriveVariation(nativeTypeface, coordinates));
     }
 
@@ -489,7 +489,7 @@ public class Typeface {
     private static native long nCreateFromStream(InputStream stream);
 	private static native void nDispose(long nativeTypeface);
 
-    private static native long nDeriveVariation(long nativeTypeface, float[] coordinates);
+    private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
 	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
