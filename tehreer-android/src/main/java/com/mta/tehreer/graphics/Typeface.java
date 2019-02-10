@@ -222,6 +222,10 @@ public class Typeface {
         }
     }
 
+    public Typeface deriveVariation(float[] coordinates) {
+        return new Typeface(nDeriveVariation(nativeTypeface, coordinates));
+    }
+
     public @Nullable List<VariationAxis> getVariationAxes() {
         if (variationAxes != null) {
             return Collections.unmodifiableList(variationAxes);
@@ -485,6 +489,7 @@ public class Typeface {
     private static native long nCreateFromStream(InputStream stream);
 	private static native void nDispose(long nativeTypeface);
 
+    private static native long nDeriveVariation(long nativeTypeface, float[] coordinates);
 	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
