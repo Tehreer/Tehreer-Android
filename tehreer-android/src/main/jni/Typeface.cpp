@@ -592,7 +592,7 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
     delete typeface;
 }
 
-static jlong deriveVariation(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
+static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     jint numCoords = env->GetArrayLength(coordinates);
@@ -607,9 +607,9 @@ static jlong deriveVariation(JNIEnv *env, jobject obj, jlong typefaceHandle, jfl
 
     env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
 
-    Typeface *derived = typeface->deriveVariation(fixedCoords, numCoords);
+    Typeface *variationInstance = typeface->deriveVariation(fixedCoords, numCoords);
 
-    return reinterpret_cast<jlong>(derived);
+    return reinterpret_cast<jlong>(variationInstance);
 }
 
 static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
@@ -846,7 +846,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
-    { "nDeriveVariation", "(J[F)J", (void *)deriveVariation },
+    { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
