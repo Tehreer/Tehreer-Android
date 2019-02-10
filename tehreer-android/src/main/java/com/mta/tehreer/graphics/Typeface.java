@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 /**
@@ -222,8 +223,14 @@ public class Typeface {
         }
     }
 
-    public Typeface getVariationInstance(float[] coordinates) {
-        return new Typeface(nDeriveVariation(nativeTypeface, coordinates));
+    public @NonNull Typeface getVariationInstance(@NonNull float[] coordinates) {
+        if (variationAxes == null) {
+            throw new IllegalStateException("This typeface does not support variations.");
+        }
+        checkNotNull(coordinates, "coordinates");
+        checkArgument(coordinates.length == variationAxes.size(), "The number of coordinates does not match with variation axes.");
+
+        return new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
     }
 
     public @Nullable List<VariationAxis> getVariationAxes() {
