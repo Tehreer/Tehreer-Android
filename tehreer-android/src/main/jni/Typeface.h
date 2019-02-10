@@ -27,6 +27,7 @@ extern "C" {
 }
 
 #include <android/asset_manager.h>
+#include <cstddef>
 #include <cstdint>
 #include <jni.h>
 #include <mutex>
@@ -49,6 +50,8 @@ public:
 
     ~Typeface();
 
+    Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
+
     void lock() { m_mutex.lock(); };
     void unlock() { m_mutex.unlock(); }
 
@@ -58,13 +61,6 @@ public:
     SFFontRef sfFont() const { return m_sfFont; }
     PatternCache &patternCache() { return m_patternCache; }
 
-    uint16_t unitsPerEM() const { return m_ftFace->units_per_EM; }
-    int16_t ascent() const { return m_ftFace->ascender; }
-    int16_t descent() const { return -m_ftFace->descender; }
-    int16_t leading() const { return m_ftFace->height - (ascent() + descent()); }
-
-    int32_t glyphCount() const { return (int32_t)m_ftFace->num_glyphs; }
-
     int32_t familyName() const { return m_familyName; }
     int32_t styleName() const { return m_styleName; }
     int32_t fullName() const { return m_fullName; }
@@ -72,6 +68,13 @@ public:
     uint16_t weight() const { return m_weight; }
     uint16_t width() const { return m_width; }
     uint16_t slope() const { return m_slope; }
+
+    uint16_t unitsPerEM() const { return m_ftFace->units_per_EM; }
+    int16_t ascent() const { return m_ftFace->ascender; }
+    int16_t descent() const { return -m_ftFace->descender; }
+    int16_t leading() const { return m_ftFace->height - (ascent() + descent()); }
+
+    int32_t glyphCount() const { return (int32_t)m_ftFace->num_glyphs; }
 
     int16_t underlinePosition() const { return m_ftFace->underline_position; }
     int16_t underlineThickness() const { return m_ftFace->underline_thickness; }
@@ -93,6 +96,7 @@ private:
     FT_Face m_ftFace;
     FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
+
     SFFontRef m_sfFont;
     PatternCache m_patternCache;
 
