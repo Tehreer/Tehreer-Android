@@ -382,6 +382,16 @@ Typeface::~Typeface()
     m_fontFile->release();
 }
 
+Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+{
+    Typeface *typeface = Typeface::createFromFile(m_fontFile, m_ftFace->face_index, 0);
+    FT_Face ftFace = typeface->ftFace();
+
+    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
+
+    return typeface;
+}
+
 FT_Stroker Typeface::ftStroker()
 {
     /*
@@ -580,6 +590,26 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     delete typeface;
+}
+
+static jlong deriveVariation(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    jint numCoords = env->GetArrayLength(coordinates);
+
+    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
+    jfloat *coordValues = static_cast<jfloat *>(coordBuffer);
+    FT_Fixed fixedCoords[numCoords];
+
+    for (jint i = 0; i < numCoords; i++) {
+        fixedCoords[i] = toF16Dot16(coordValues[i]);
+    }
+
+    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
+
+    Typeface *derived = typeface->deriveVariation(fixedCoords, numCoords);
+
+    return reinterpret_cast<jlong>(derived);
 }
 
 static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
@@ -816,6 +846,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
+    { "nDeriveVariation", "(J[F)J", (void *)deriveVariation },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
