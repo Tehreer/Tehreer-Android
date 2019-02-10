@@ -29,23 +29,42 @@
         android:layout_marginTop="4dp"
         android:layout_marginRight="4dp"/>
 
+    <Spinner
+        android:id="@+id/spinner_variable_instance"
+        style="@style/FormSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="4dp"/>
+
     <ListView
         android:id="@+id/list_view_axis"
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="8dp"
         android:divider="@null"
         android:dividerHeight="0dp"/>
 
-    <com.mta.tehreer.widget.TLabel
-        android:id="@+id/label_preview"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        app:gravity="start"
-        app:text="ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789"
-        app:textColor="@android:color/black"
-        app:textSize="48sp"/>
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <com.mta.tehreer.widget.TLabel
+                android:id="@+id/label_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                app:gravity="start"
+                app:text="ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789"
+                app:textColor="@android:color/black"
+                app:textSize="56sp"/>
+        </ScrollView>
+    </FrameLayout>
 </LinearLayout>
