@@ -223,7 +223,18 @@ public class Typeface {
         }
     }
 
-    public @NonNull Typeface getVariationInstance(@NonNull float[] coordinates) {
+    /**
+     * Returns a variation instance of this typeface with the specified design coordinates.
+     *
+     * @param coordinates The variation design coordinates.
+     * @return A variation instance of this typeface with the specified design coordinates.
+     *
+     * @throws IllegalStateException if this typeface does not support OpenType font variations.
+     * @throws NullPointerException if <code>coordinates</code> parameter is null.
+     * @throws IllegalArgumentException if the number of specified design coordinates does not match
+     *                                  the number of variation axes.
+     */
+    public @Nullable Typeface getVariationInstance(@NonNull float[] coordinates) {
         if (variationAxes == null) {
             throw new IllegalStateException("This typeface does not support variations.");
         }
@@ -233,6 +244,11 @@ public class Typeface {
         return new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
     }
 
+    /**
+     * Returns the variation axes of this typeface if it supports OpenType font variations.
+     *
+     * @return The variation axes of this typeface if it supports OpenType font variations.
+     */
     public @Nullable List<VariationAxis> getVariationAxes() {
         if (variationAxes != null) {
             return Collections.unmodifiableList(variationAxes);
@@ -241,6 +257,13 @@ public class Typeface {
         return null;
     }
 
+    /**
+     * Returns the design variation coordinates of this typeface if it supports OpenType font
+     * variations.
+     *
+     * @return The design variation coordinates of this typeface if it supports OpenType font
+     *         variations.
+     */
     public @Nullable float[] getVariationCoordinates() {
         if (variationAxes != null) {
             float[] coordinates = new float[variationAxes.size()];
