@@ -138,6 +138,12 @@ public class VariableFontsActivity extends AppCompatActivity {
         mPreviewLabel = findViewById(R.id.label_preview);
     }
 
+    @Override
+    public boolean onSupportNavigateUp(){
+        onBackPressed();
+        return true;
+    }
+
     private void onCoordinateValueChanged(int axisIndex, float coordinate) {
         mVariationCoordinates[axisIndex] = coordinate;
         mTypeface = mTypeface.deriveVariation(mVariationCoordinates);
