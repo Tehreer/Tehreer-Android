@@ -224,6 +224,15 @@ public class Typeface {
     }
 
     /**
+     * Returns <code>true</code> if this typeface supports OpenType font variations.
+     *
+     * @return <code>true</code> if this typeface supports OpenType font variations.
+     */
+    public boolean isVariable() {
+        return variationAxes != null;
+    }
+
+    /**
      * Returns a variation instance of this typeface with the specified design coordinates.
      *
      * @param coordinates The variation design coordinates.
