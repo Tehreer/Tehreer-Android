@@ -338,7 +338,7 @@ void Typeface::setupVariation()
                     break;
 
                 case FT_MAKE_TAG('s', 'l', 'n', 't'):
-                    m_slope = variableSlantToSlope(fixedCoords)
+                    m_slope = variableSlantToSlope(fixedCoords[i]);
                     break;
 
                 case FT_MAKE_TAG('w', 'd', 't', 'h'):
