@@ -75,6 +75,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button variableFontsButton = findViewById(R.id.button_variable_fonts);
+        variableFontsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, VariableFontsActivity.class);
+                startActivity(intent);
+            }
+        });
+
         Button openSourceLicensesButton = findViewById(R.id.button_open_source_licenses);
         openSourceLicensesButton.setOnClickListener(new View.OnClickListener() {
             @Override
