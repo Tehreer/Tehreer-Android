@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2019 Muhammad Tayyab Akram
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <Spinner
+        android:id="@+id/spinner_variable_font"
+        style="@style/FormSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="4dp"/>
+
+    <ListView
+        android:id="@+id/list_view_axis"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
+
+    <com.mta.tehreer.widget.TLabel
+        android:id="@+id/label_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        app:gravity="start"
+        app:text="ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789"
+        app:textColor="@android:color/black"
+        app:textSize="48sp"/>
+</LinearLayout>
