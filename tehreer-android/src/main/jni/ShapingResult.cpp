@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,6 +142,31 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
     return reinterpret_cast<jlong>(charToGlyphMapPtr);
 }
 
+static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle,
+    jbooleanArray caretStops, jfloatArray caretEdges)
+{
+    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
+
+    void *caretEdgesBuffer = env->GetPrimitiveArrayCritical(caretEdges, nullptr);
+    void *caretStopsBuffer = nullptr;
+
+    if (caretStops) {
+        caretStopsBuffer = env->GetPrimitiveArrayCritical(caretStops, nullptr);
+    }
+
+    SFBoolean *caretStopValues = static_cast<SFBoolean *>(caretStopsBuffer);
+    SFFloat *caretEdgeValues = static_cast<SFFloat *>(caretEdgesBuffer);
+
+    SFFloat advanceScale = shapingResult->sizeByEm();
+    SFAlbumGetCaretEdges(baseAlbum, caretStopValues, advanceScale, caretEdgeValues);
+
+    if (caretStops) {
+        env->ReleasePrimitiveArrayCritical(caretStops, caretStopsBuffer, 0);
+    }
+    env->ReleasePrimitiveArrayCritical(caretEdges, caretEdgesBuffer, 0);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
@@ -155,6 +180,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
     { "nGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
+    { "nGetCaretEdges", "(J[Z[F)V", (void *)getCaretEdges },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)
