@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,6 +138,10 @@ public class ShapingResult implements Disposable {
         return nGetCharEnd(nativeResult);
     }
 
+    private int getCharCount() {
+        return nGetCharCount(nativeResult);
+    }
+
     /**
      * Returns the number of glyphs in this <code>ShapingResult</code> object.
      *
@@ -219,6 +223,19 @@ public class ShapingResult implements Disposable {
         return new UIntPtrBufferIntList(this, pointer, size);
     }
 
+    public @NonNull FloatList getCaretEdges() {
+        return getCaretEdges(null);
+    }
+
+    public @NonNull FloatList getCaretEdges(boolean[] caretStops) {
+        int charCount = getCharCount();
+        float[] caretEdges = new float[charCount + 1];
+
+        nGetCaretEdges(nativeResult, caretStops, caretEdges);
+
+        return FloatList.of(caretEdges);
+    }
+
 	@Override
 	public void dispose() {
         nDispose(nativeResult);
@@ -251,4 +268,6 @@ public class ShapingResult implements Disposable {
     private static native long nGetGlyphOffsetsPtr(long nativeResult);
     private static native long nGetGlyphAdvancesPtr(long nativeResult);
     private static native long nGetClusterMapPtr(long nativeResult);
+
+    private static native void nGetCaretEdges(long nativeResult, boolean[] caretStops, float[] caretEdges);
 }
