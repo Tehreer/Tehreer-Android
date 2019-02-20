@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,30 +22,25 @@ import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.Exceptions;
 
 public final class CaretEdgeList extends FloatList {
-    private final @NonNull float[] extentArray;
+    private final @NonNull FloatList allEdges;
     private final int offset;
     private final int edgeCount;
     private final float pivotDistance;
 
-    public CaretEdgeList(@NonNull float[] charExtents, boolean backward) {
-        this(charExtents, 0, charExtents.length, 0, 0, backward, false);
+    public CaretEdgeList(@NonNull FloatList allEdges) {
+        this(allEdges, 0, allEdges.size(), 0, 0, false);
     }
 
-    public CaretEdgeList(@NonNull float[] charExtents, int chunkOffset, int chunkLength,
-                         int startExtra, int endExtra, boolean backward, boolean visuallyRTL) {
-        this.extentArray = charExtents;
-        this.offset = chunkOffset + (backward ? 0 : -1);
+    public CaretEdgeList(@NonNull FloatList allEdges, int chunkOffset, int chunkLength,
+                         int startExtra, int endExtra, boolean visuallyRTL) {
+        this.allEdges = allEdges;
+        this.offset = chunkOffset;
         this.edgeCount = chunkLength + 1;
         this.pivotDistance = edgeAt(visuallyRTL ? chunkLength - endExtra : startExtra);
     }
 
     private float edgeAt(int index) {
-        int relativeIndex = index + offset;
-        if (relativeIndex == -1 || relativeIndex == extentArray.length) {
-            return 0.0f;
-        }
-
-        return extentArray[relativeIndex];
+        return allEdges.get(index + offset);
     }
 
     public float distance(int fromIndex, int toIndex, boolean visuallyRTL) {

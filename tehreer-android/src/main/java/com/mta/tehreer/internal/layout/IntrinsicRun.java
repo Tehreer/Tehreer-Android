@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.mta.tehreer.internal.layout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
@@ -38,7 +39,7 @@ public class IntrinsicRun {
     public final @NonNull float[] glyphOffsets;
     public final @NonNull float[] glyphAdvances;
     public final @NonNull int[] clusterMap;
-    public final @NonNull float[] charExtents;
+    public final @NonNull FloatList caretEdges;
 
     public IntrinsicRun(int charStart, int charEnd, boolean isBackward, byte bidiLevel,
                         @NonNull WritingDirection writingDirection,
@@ -46,7 +47,8 @@ public class IntrinsicRun {
                         float ascent, float descent, float leading,
                         @NonNull int[] glyphIds,
                         @NonNull float[] offsets, @NonNull float[] advances,
-                        @NonNull int[] clusterMap) {
+                        @NonNull int[] clusterMap,
+                        @NonNull FloatList caretEdges) {
         this.charStart = charStart;
         this.charEnd = charEnd;
         this.isBackward = isBackward;
@@ -61,8 +63,7 @@ public class IntrinsicRun {
         this.glyphOffsets = offsets;
         this.glyphAdvances = advances;
         this.clusterMap = clusterMap;
-        this.charExtents = new float[clusterMap.length];
-        Clusters.loadCharExtents(clusterMap, isBackward, isVisuallyRTL(), glyphIds, advances, charExtents);
+        this.caretEdges = caretEdges;
     }
 
     public boolean isVisuallyRTL() {
@@ -87,7 +88,7 @@ public class IntrinsicRun {
     }
 
     public float measureChars(int fromIndex, int toIndex) {
-        CaretEdgeList caretEdges = new CaretEdgeList(charExtents, isBackward);
-        return caretEdges.distance(fromIndex - charStart, toIndex - charStart, isVisuallyRTL());
+        CaretEdgeList edgeList = new CaretEdgeList(caretEdges);
+        return edgeList.distance(fromIndex - charStart, toIndex - charStart, isVisuallyRTL());
     }
 }

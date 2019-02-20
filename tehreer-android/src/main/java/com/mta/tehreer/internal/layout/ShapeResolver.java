@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import android.text.style.ReplacementSpan;
 
 import androidx.annotation.NonNull;
 
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingOrder;
@@ -135,6 +136,7 @@ public class ShapeResolver {
                     float[] offsets = shapingResult.getGlyphOffsets().toArray();
                     float[] advances = shapingResult.getGlyphAdvances().toArray();
                     int[] clusterMap = shapingResult.getClusterMap().toArray();
+                    FloatList caretEdges = shapingResult.getCaretEdges(null);
 
                     float scaleX = locator.getScaleX();
                     if (Float.compare(scaleX, 1.0f) != 0) {
@@ -154,7 +156,8 @@ public class ShapeResolver {
                     intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
                                                     writingDirection, typeface, typeSize,
                                                     ascent, descent, leading,
-                                                    glyphIds, offsets, advances, clusterMap);
+                                                    glyphIds, offsets, advances,
+                                                    clusterMap, caretEdges);
                 } finally {
                     if (shapingResult != null) {
                         shapingResult.dispose();
@@ -177,11 +180,13 @@ public class ShapeResolver {
                 float[] offsets = new float[] { 0.0f, 0.0f };
                 float[] advances = new float[] { replacementSize };
                 int[] clusterMap = new int[runEnd - runStart];
+                FloatList caretEdges = FloatList.of(new float[runEnd - runStart + 1]);
 
                 intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
                                                 writingDirection, typeface, typeSize,
                                                 -metrics.ascent, metrics.descent, metrics.leading,
-                                                glyphIds, offsets, advances, clusterMap);
+                                                glyphIds, offsets, advances,
+                                                clusterMap, caretEdges);
             }
 
             runs.add(intrinsicRun);
