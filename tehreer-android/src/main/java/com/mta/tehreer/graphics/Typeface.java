@@ -27,7 +27,6 @@ import androidx.annotation.Nullable;
 
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.sfnt.DataTable;
 import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
 import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -149,13 +148,12 @@ public class Typeface {
 	}
 
     private void setupVariations() {
-        final byte[] fvarData = getTableData(SfntTag.make("fvar"));
-        if (fvarData == null) {
+        FontVariationsTable fvarTable = FontVariationsTable.from(this);
+        if (fvarTable == null) {
             return;
         }
 
         NameTable nameTable = NameTable.from(this);
-        FontVariationsTable fvarTable = new FontVariationsTable(new DataTable(fvarData));
         VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
 
         variationAxes = new ArrayList<>(axisRecords.length);
