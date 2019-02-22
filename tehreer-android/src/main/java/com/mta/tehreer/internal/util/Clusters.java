@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2019 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,85 +21,6 @@ import androidx.annotation.NonNull;
 import com.mta.tehreer.collections.IntList;
 
 public final class Clusters {
-    public static void loadCharExtents(@NonNull int[] clusterMap,
-                                       boolean isBackward, boolean visuallyRTL,
-                                       @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
-                                       @NonNull float[] charExtents) {
-        if (!isBackward) {
-            loadForwardExtents(clusterMap, visuallyRTL, glyphIds, glyphAdvances, charExtents);
-        } else {
-            loadBackwardExtents(clusterMap, visuallyRTL, glyphIds, glyphAdvances, charExtents);
-        }
-    }
-
-    private static void loadForwardExtents(@NonNull int[] clusterMap, boolean visuallyRTL,
-                                           @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
-                                           @NonNull float[] charExtents) {
-        int clusterStart = 0;
-        int runLength = clusterMap.length;
-
-        int glyphStart = clusterMap[0];
-        float distance = 0.0f;
-
-        for (int i = 0; i <= runLength; i++) {
-            int glyphIndex = (i < runLength ? clusterMap[i] : glyphIds.length);
-            if (glyphIndex == glyphStart) {
-                continue;
-            }
-
-            // Find the advance of current cluster.
-            float clusterAdvance = 0.0f;
-            for (int j = glyphStart; j < glyphIndex; j++) {
-                clusterAdvance += glyphAdvances[j];
-            }
-
-            // Divide the advance evenly between cluster length.
-            int clusterLength = i - clusterStart;
-            float charAdvance = clusterAdvance / clusterLength;
-
-            for (int j = clusterStart; j < i; j++) {
-                distance += (visuallyRTL ? -charAdvance : charAdvance);
-                charExtents[j] = distance;
-            }
-
-            clusterStart = i;
-            glyphStart = glyphIndex;
-        }
-    }
-
-    private static void loadBackwardExtents(@NonNull int[] clusterMap, boolean visuallyRTL,
-                                            @NonNull int[] glyphIds, @NonNull float[] glyphAdvances,
-                                            @NonNull float[] charExtents) {
-        int clusterEnd = clusterMap.length;
-        int glyphStart = clusterMap[clusterEnd - 1];
-        float distance = 0.0f;
-
-        for (int i = clusterEnd; i >= 0; i--) {
-            int glyphIndex = (i > 0 ? clusterMap[i - 1] : glyphIds.length);
-            if (glyphIndex == glyphStart) {
-                continue;
-            }
-
-            // Find the advance of current cluster.
-            float clusterAdvance = 0.0f;
-            for (int j = glyphStart; j < glyphIndex; j++) {
-                clusterAdvance += glyphAdvances[j];
-            }
-
-            // Divide the advance evenly between cluster length.
-            int clusterLength = clusterEnd - i;
-            float charAdvance = clusterAdvance / clusterLength;
-
-            for (int j = clusterEnd; j > i; j--) {
-                distance += (visuallyRTL ? charAdvance : -charAdvance);
-                charExtents[j - 1] = distance;
-            }
-
-            clusterEnd = i;
-            glyphStart = glyphIndex;
-        }
-    }
-
     public static void loadGlyphRange(@NonNull int[] clusterMap, int startIndex, int endIndex,
                                       boolean isBackward, int glyphCount, @NonNull int[] glyphRange) {
         if (!isBackward) {
