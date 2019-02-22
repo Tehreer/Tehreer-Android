@@ -17,8 +17,14 @@
 package com.mta.tehreer.internal.sfnt.tables.fvar;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.sfnt.DataTable;
 import com.mta.tehreer.internal.sfnt.SfntTable;
+import com.mta.tehreer.sfnt.SfntTag;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 public final class FontVariationsTable {
     private static final int MAJOR_VERSION = 0;
@@ -31,7 +37,18 @@ public final class FontVariationsTable {
 
     private final @NonNull SfntTable data;
 
-    public FontVariationsTable(@NonNull SfntTable data) {
+    public static @Nullable FontVariationsTable from(@NonNull Typeface typeface) {
+        checkNotNull(typeface);
+
+        final byte[] fvarData = typeface.getTableData(SfntTag.make("fvar"));
+        if (fvarData != null) {
+            return new FontVariationsTable(new DataTable(fvarData));
+        }
+
+        return null;
+    }
+
+    FontVariationsTable(@NonNull SfntTable data) {
         this.data = data;
     }
 
