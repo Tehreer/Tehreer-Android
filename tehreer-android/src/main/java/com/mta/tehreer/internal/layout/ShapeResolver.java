@@ -174,19 +174,26 @@ public class ShapeResolver {
 
                 int spaceGlyph = typeface.getGlyphId(' ');
                 int replacementSize = replacement.getSize(null, spanned, runStart, runEnd, metrics);
+                int runLength = runEnd - runStart;
 
                 WritingDirection writingDirection = engine.getWritingDirection();
                 int[] glyphIds = new int[] { spaceGlyph };
                 float[] offsets = new float[] { 0.0f, 0.0f };
                 float[] advances = new float[] { replacementSize };
-                int[] clusterMap = new int[runEnd - runStart];
-                FloatList caretEdges = FloatList.of(new float[runEnd - runStart + 1]);
+                int[] clusterMap = new int[runLength];
+                float[] caretEdges = new float[runLength + 1];
+
+                if ((bidiLevel & 1) == 0) {
+                    caretEdges[runLength] = replacementSize;
+                } else {
+                    caretEdges[0] = replacementSize;
+                }
 
                 intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
                                                 writingDirection, typeface, typeSize,
                                                 -metrics.ascent, metrics.descent, metrics.leading,
                                                 glyphIds, offsets, advances,
-                                                clusterMap, caretEdges);
+                                                clusterMap, FloatList.of(caretEdges));
             }
 
             runs.add(intrinsicRun);
