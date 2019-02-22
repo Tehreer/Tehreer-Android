@@ -183,14 +183,17 @@ public class Typeface {
     }
 
 	private void setupNames() {
+        NameTable nameTable = NameTable.from(this);
+        if (nameTable == null) {
+            return;
+        }
+
         final int[] nameRecordIndexes = new int[3];
         nGetNameRecordIndexes(nativeTypeface, nameRecordIndexes);
 
         final int familyNameIndex = nameRecordIndexes[0];
         final int styleNameIndex = nameRecordIndexes[1];
         final int fullNameIndex = nameRecordIndexes[2];
-
-        NameTable nameTable = NameTable.from(this);
 
         if (familyNameIndex != -1) {
             String recordString = nameTable.recordAt(familyNameIndex).string();
@@ -201,13 +204,13 @@ public class Typeface {
         if (styleNameIndex != -1) {
             String recordString = nameTable.recordAt(styleNameIndex).string();
             if (recordString != null) {
-                styleName = nameTable.recordAt(styleNameIndex).string();
+                styleName = recordString;
             }
         }
         if (fullNameIndex != -1) {
             String recordString = nameTable.recordAt(fullNameIndex).string();
             if (recordString != null) {
-                fullName = nameTable.recordAt(fullNameIndex).string();
+                fullName = recordString;
             }
         } else {
             if (!familyName.isEmpty()) {
