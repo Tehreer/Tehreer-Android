@@ -64,9 +64,9 @@ public final class FontVariationsTable {
     }
 
     public @NonNull VariationAxisRecord[] axisRecords() {
-        int axesArrayOffset = axesArrayOffset();
-        int axisCount = axisCount();
-        int axisSize = axisSize();
+        final int axesArrayOffset = axesArrayOffset();
+        final int axisCount = axisCount();
+        final int axisSize = axisSize();
         VariationAxisRecord[] axisRecords = new VariationAxisRecord[axisCount];
 
         for (int i = 0; i < axisCount; i++) {
@@ -77,12 +77,12 @@ public final class FontVariationsTable {
     }
 
     public @NonNull InstanceRecord[] instanceRecords() {
-        int axesArrayOffset = axesArrayOffset();
-        int axisCount = axisCount();
-        int axisSize = axisSize();
-        int axesEndOffset = axesArrayOffset + (axisCount * axisSize);
-        int instanceCount = instanceCount();
-        int instanceSize = instanceSize();
+        final int axesArrayOffset = axesArrayOffset();
+        final int axisCount = axisCount();
+        final int axisSize = axisSize();
+        final int axesEndOffset = axesArrayOffset + (axisCount * axisSize);
+        final int instanceCount = instanceCount();
+        final int instanceSize = instanceSize();
         InstanceRecord[] instanceRecords = new InstanceRecord[instanceCount];
 
         for (int i = 0; i < instanceCount; i++) {
