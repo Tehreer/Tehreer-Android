@@ -45,11 +45,11 @@ public final class InstanceRecord {
         return data.readUInt16(FLAGS);
     }
 
-    public @NonNull int[] coordinates() {
-        int[] coordinates = new int[axisCount];
+    public @NonNull float[] coordinates() {
+        float[] coordinates = new float[axisCount];
 
         for (int i = 0; i < axisCount; i++) {
-            coordinates[i] = data.readInt32(COORDINATES + (i * 4));
+            coordinates[i] = data.readFixed(COORDINATES + (i * 4));
         }
 
         return coordinates;
