@@ -17,6 +17,8 @@
 package com.mta.tehreer.demo;
 
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spanned;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +34,12 @@ public class LabelWidgetActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+        String htmlString = getResources().getString(R.string.article_detail);
+        Spanned articleSpanned = Html.fromHtml(htmlString);
+
+        LinkableLabel nastaleeqLabel = findViewById(R.id.label_nastaleeq);
+        nastaleeqLabel.setSpanned(articleSpanned);
     }
 
     @Override
