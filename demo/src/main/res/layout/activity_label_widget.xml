@@ -39,13 +39,11 @@
         android:layout_marginTop="3dp"
         android:layout_weight="1">
 
-        <com.mta.tehreer.widget.TLabel
+        <com.mta.tehreer.demo.LinkableLabel
             android:id="@+id/label_article"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
             app:gravity="right"
-            app:text="@string/article_detail"
             app:textColor="@android:color/black"
             app:textSize="18sp"
             app:typeface="@id/typeface_taj_nastaleeq"/>
