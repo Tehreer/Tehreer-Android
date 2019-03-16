@@ -17,10 +17,13 @@
 package com.mta.tehreer.sfnt.tables;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.sfnt.SfntTable;
 import com.mta.tehreer.internal.sfnt.StructTable;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 /**
  * Represents an OpenType `OS/2' table.
@@ -90,6 +93,26 @@ public final class OS2Table {
     /**
      * Constructs an <code>OS2Table</code> object from the specified typeface.
      *
+     * @param typeface The typeface from which the <code>OS2Table</code> object is constructed.
+     * @return A new <code>OS2Table</code> object, or <code>null</code> if `OS/2' table does not
+     *         exist in the specified typeface.
+     *
+     * @throws NullPointerException if <code>typeface</code> is <code>null</code>.
+     */
+    public static @Nullable OS2Table from(@NonNull Typeface typeface) {
+        checkNotNull(typeface);
+
+        long pointer = SfntTables.getTablePointer(typeface, SfntTables.TABLE_OS_2);
+        if (pointer != 0) {
+            return new OS2Table(new OS2StructTable(typeface, pointer));
+        }
+
+        return null;
+    }
+
+    /**
+     * Constructs an <code>OS2Table</code> object from the specified typeface.
+     *
      * @param typeface The typeface from which the <code>OS2Table</code> object is
      *                 constructed.
      *
@@ -106,6 +129,10 @@ public final class OS2Table {
         }
 
         this.table = new OS2StructTable(typeface, pointer);
+    }
+
+    private OS2Table(@NonNull SfntTable table) {
+        this.table = table;
     }
 
     public int version() {
