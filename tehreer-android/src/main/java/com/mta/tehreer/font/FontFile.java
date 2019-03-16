@@ -142,6 +142,11 @@ public final class FontFile {
         mTypefaces = allTypefaces;
     }
 
+    /**
+     * Returns named typefaces of this font file.
+     *
+     * @return Named typefaces of this font file.
+     */
     public List<Typeface> getTypefaces() {
         if (mTypefaces == null) {
             synchronized (this) {

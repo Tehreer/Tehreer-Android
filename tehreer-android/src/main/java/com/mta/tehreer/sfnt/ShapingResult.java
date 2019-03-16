@@ -223,10 +223,21 @@ public class ShapingResult implements Disposable {
         return new UIntPtrBufferIntList(this, pointer, size);
     }
 
+    /**
+     * Returns a list of caret edges having caret stop on every code unit.
+     *
+     * @return A list of caret edges having caret stop on every code unit.
+     */
     public @NonNull FloatList getCaretEdges() {
         return getCaretEdges(null);
     }
 
+    /**
+     * Returns a list of caret edges.
+     *
+     * @param caretStops An array for caret stops of the code units represented by this object.
+     * @return A list of caret edges.
+     */
     public @NonNull FloatList getCaretEdges(boolean[] caretStops) {
         int charCount = getCharCount();
         float[] caretEdges = new float[charCount + 1];
