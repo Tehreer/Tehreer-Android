@@ -12,7 +12,7 @@ Tehreer is a library which gives full control over following text related techno
 It is a wrapper over mature C libraries, [FreeType](https://www.freetype.org), [SheenBidi](https://github.com/mta452/SheenBidi) and [SheenFigure](https://github.com/mta452/SheenFigure). So a part of the library has been written in JNI in order to access the functionality of said libraries.
 
 ## Screenshots
-<img src="./screenshots/001.png" width="280"> <img src="./screenshots/002.png" width="280"> <img src="./screenshots/003.png" width="280">
+<img src="./screenshots/001.png" width="170"> <img src="./screenshots/002.png" width="170"> <img src="./screenshots/003.png" width="170"> <img src="./screenshots/004.png" width="170"> <img src="./screenshots/005.png" width="170">
 
 ## Installation
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
