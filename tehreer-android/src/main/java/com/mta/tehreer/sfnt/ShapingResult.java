@@ -17,6 +17,7 @@
 package com.mta.tehreer.sfnt;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.FloatList;
@@ -238,10 +239,15 @@ public class ShapingResult implements Disposable {
      * @param caretStops An array for caret stops of the code units represented by this object.
      * @return A list of caret edges.
      */
-    public @NonNull FloatList getCaretEdges(boolean[] caretStops) {
+    public @NonNull FloatList getCaretEdges(@Nullable boolean[] caretStops) {
         int charCount = getCharCount();
-        float[] caretEdges = new float[charCount + 1];
+        if (caretStops != null) {
+            if (caretStops.length < charCount) {
+                throw new IllegalArgumentException("The length of caret stops array must be at least the represented character count");
+            }
+        }
 
+        float[] caretEdges = new float[charCount + 1];
         nGetCaretEdges(nativeResult, caretStops, caretEdges);
 
         return FloatList.of(caretEdges);
