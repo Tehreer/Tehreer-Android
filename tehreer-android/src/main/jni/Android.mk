@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2018 Muhammad Tayyab Akram
+# Copyright (C) 2016-2019 Muhammad Tayyab Akram
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ FT_SOURCE_PATH := $(FT_ROOT_PATH)/src
 FT_FILE_LIST := \
     autofit/autofit.c \
     base/ftbase.c \
-    base/ftapi.c \
     base/ftbbox.c \
     base/ftbitmap.c \
     base/ftdebug.c \
