@@ -18,7 +18,7 @@ It is a wrapper over mature C libraries, [FreeType](https://www.freetype.org), [
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-compile 'com.github.mta452:tehreer-android:2.3'
+compile 'com.github.mta452:tehreer-android:2.4'
 ```
 
 ## Proguard
