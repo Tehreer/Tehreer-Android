@@ -25,9 +25,16 @@ import java.lang.annotation.RetentionPolicy;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
+/**
+ * Represents font variation axis.
+ */
 public final class VariationAxis {
+    /**
+     * The axis should not be exposed directly in user interfaces.
+     */
     public static final int FLAG_HIDDEN_AXIS = 0x0001;
 
+    /** @hide */
     @IntDef (
         flag = true,
         value = {
@@ -43,6 +50,17 @@ public final class VariationAxis {
     private final float minValue;
     private final float maxValue;
 
+    /**
+     * Returns a variation axis object with the specified values.
+     *
+     * @param tag Tag identifying the design variation.
+     * @param name The display name.
+     * @param flags Axis qualifiers.
+     * @param defaultValue The default coordinate value.
+     * @param minValue The minimum coordinate value.
+     * @param maxValue The maximum coordinate value.
+     * @return A new variation axis object.
+     */
     public static @NonNull VariationAxis of(int tag, @NonNull String name, @Flags int flags,
                                             float defaultValue, float minValue, float maxValue) {
         checkNotNull(name, "name");
@@ -60,26 +78,56 @@ public final class VariationAxis {
         this.maxValue = maxValue;
     }
 
+    /**
+     * Returns the tag identifying the design variation.
+     *
+     * @return The tag identifying the design variation.
+     */
     public int tag() {
         return tag;
     }
 
+    /**
+     * Returns the display name.
+     *
+     * @return The display name.
+     */
     public @NonNull String name() {
         return name;
     }
 
+    /**
+     * Returns the axis qualifiers.
+     *
+     * @return The axis qualifiers.
+     */
     public @Flags int flags() {
         return flags;
     }
 
+    /**
+     * Returns the default coordinate value.
+     *
+     * @return The default coordinate value.
+     */
     public float defaultValue() {
         return defaultValue;
     }
 
+    /**
+     * Returns the minimum coordinate value.
+     *
+     * @return The minimum coordinate value.
+     */
     public float minValue() {
         return minValue;
     }
 
+    /**
+     * Returns the maximum coordinate value.
+     *
+     * @return The maximum coordinate value.
+     */
     public float maxValue() {
         return maxValue;
     }
