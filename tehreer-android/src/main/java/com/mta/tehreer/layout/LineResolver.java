@@ -20,12 +20,7 @@ import android.text.Spanned;
 
 import androidx.annotation.NonNull;
 
-import com.mta.tehreer.internal.collections.JFloatArrayList;
-import com.mta.tehreer.internal.collections.JFloatArrayPointList;
-import com.mta.tehreer.internal.collections.JIntArrayList;
 import com.mta.tehreer.internal.layout.BreakResolver;
-import com.mta.tehreer.internal.layout.CaretEdgeList;
-import com.mta.tehreer.internal.layout.ClusterMap;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
@@ -53,31 +48,7 @@ class LineResolver {
 
     static GlyphRun createGlyphRun(@NonNull IntrinsicRun intrinsicRun, int spanStart, int spanEnd,
                                    @NonNull Object[] spans) {
-        int clusterStart = intrinsicRun.clusterStart(spanStart);
-        int clusterEnd = intrinsicRun.clusterEnd(spanEnd - 1);
-
-        int startExtra = spanStart - clusterStart;
-        int endExtra = clusterEnd - spanEnd;
-
-        int[] glyphRange = new int[2];
-        intrinsicRun.loadGlyphRange(spanStart, spanEnd, glyphRange);
-
-        int glyphOffset = glyphRange[0];
-        int glyphCount = glyphRange[1] - glyphOffset;
-
-        int chunkOffset = clusterStart - intrinsicRun.charStart;
-        int chunkLength = clusterEnd - clusterStart;
-
-        return new GlyphRun(spanStart, spanEnd, startExtra, endExtra, Arrays.asList(spans),
-                            intrinsicRun.isBackward, intrinsicRun.bidiLevel,
-                            intrinsicRun.writingDirection, intrinsicRun.typeface, intrinsicRun.typeSize,
-                            intrinsicRun.ascent, intrinsicRun.descent, intrinsicRun.leading,
-                            new JIntArrayList(intrinsicRun.glyphIds, glyphOffset, glyphCount),
-                            new JFloatArrayPointList(intrinsicRun.glyphOffsets, glyphOffset, glyphCount),
-                            new JFloatArrayList(intrinsicRun.glyphAdvances, glyphOffset, glyphCount),
-                            new ClusterMap(intrinsicRun.clusterMap, chunkOffset, chunkLength, glyphOffset),
-                            new CaretEdgeList(intrinsicRun.caretEdges, chunkOffset, chunkLength,
-                                              startExtra, endExtra, intrinsicRun.isVisuallyRTL()));
+        return new GlyphRun(intrinsicRun, spanStart, spanEnd, Arrays.asList(spans));
     }
 
     static @NonNull ComposedLine createComposedLine(@NonNull CharSequence text, int charStart, int charEnd,

@@ -32,20 +32,20 @@ public final class Clusters {
         }
     }
 
-    public static int leadingGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
+    public static int leadingGlyphIndex(@NonNull int[] clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
-            return clusterMap.get(arrayIndex);
+            return clusterMap[arrayIndex];
         }
 
         return backwardGlyphIndex(clusterMap, arrayIndex, glyphCount);
     }
 
-    public static int trailingGlyphIndex(@NonNull IntList clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
+    public static int trailingGlyphIndex(@NonNull int[] clusterMap, int arrayIndex, boolean isBackward, int glyphCount) {
         if (!isBackward) {
             return forwardGlyphIndex(clusterMap, arrayIndex, glyphCount);
         }
 
-        return clusterMap.get(arrayIndex);
+        return clusterMap[arrayIndex];
     }
 
     private static int forwardGlyphIndex(@NonNull int[] clusterMap, int arrayIndex, int glyphCount) {
