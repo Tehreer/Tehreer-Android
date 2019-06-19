@@ -27,7 +27,6 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.util.Clusters;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 public class IntrinsicRun {
@@ -97,29 +96,86 @@ public class IntrinsicRun {
     }
 
     public int getClusterStart(int charIndex) {
-        return Clusters.actualClusterStart(clusterMap, charIndex - charStart) + charStart;
+        final int arrayIndex = charIndex - charStart;
+        final int common = clusterMap[arrayIndex];
+
+        for (int i = arrayIndex - 1; i >= 0; i--) {
+            if (clusterMap[i] != common) {
+                return (i + 1) + charStart;
+            }
+        }
+
+        return charStart;
     }
 
     public int getClusterEnd(int charIndex) {
-        return Clusters.actualClusterEnd(clusterMap, charIndex - charStart) + charStart;
+        final int arrayIndex = charIndex - charStart;
+        final int common = clusterMap[arrayIndex];
+        final int length = clusterMap.length;
+
+        for (int i = arrayIndex + 1; i < length; i++) {
+            if (clusterMap[i] != common) {
+                return i + charStart;
+            }
+        }
+
+        return length + charStart;
+    }
+
+    private int forwardGlyphIndex(int arrayIndex) {
+        final int common = clusterMap[arrayIndex];
+        final int length = clusterMap.length;
+
+        for (int i = arrayIndex + 1; i < length; i++) {
+            final int mapping = clusterMap[i];
+            if (mapping != common) {
+                return mapping - 1;
+            }
+        }
+
+        return glyphIds.length - 1;
+    }
+
+    private int backwardGlyphIndex(int arrayIndex) {
+        final int common = clusterMap[arrayIndex];
+
+        for (int i = arrayIndex - 1; i >= 0; i--) {
+            final int mapping = clusterMap[i];
+            if (mapping != common) {
+                return mapping - 1;
+            }
+        }
+
+        return glyphIds.length - 1;
     }
 
     public @NonNull @Size(2) int[] getGlyphRangeForChars(int fromIndex, int toIndex) {
-        int[] glyphRange = new int[2];
-        Clusters.loadGlyphRange(clusterMap, fromIndex - charStart, toIndex - charStart,
-                                isBackward, glyphIds.length, glyphRange);
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = (toIndex - 1) - charStart;
+
+        final int[] glyphRange = new int[2];
+
+        if (isBackward) {
+            glyphRange[0] = clusterMap[lastIndex];
+            glyphRange[1] = backwardGlyphIndex(firstIndex) + 1;
+        } else {
+            glyphRange[0] = clusterMap[firstIndex];
+            glyphRange[1] = forwardGlyphIndex(lastIndex) + 1;
+        }
 
         return glyphRange;
     }
 
     public int getLeadingGlyphIndex(int charIndex) {
-        return Clusters.leadingGlyphIndex(clusterMap, charIndex - charStart,
-                                          isBackward, glyphIds.length);
+        final int arrayIndex = charIndex - charStart;
+
+        return isBackward ? backwardGlyphIndex(arrayIndex) : clusterMap[arrayIndex];
     }
 
     public int getTrailingGlyphIndex(int charIndex) {
-        return Clusters.trailingGlyphIndex(clusterMap, charIndex - charStart,
-                                           isBackward, glyphIds.length);
+        final int arrayIndex = charIndex - charStart;
+
+        return isBackward ? clusterMap[arrayIndex] : forwardGlyphIndex(arrayIndex);
     }
 
     public float getCaretBoundary(int fromIndex, int toIndex) {
