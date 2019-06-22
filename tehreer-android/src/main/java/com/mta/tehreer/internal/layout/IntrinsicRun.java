@@ -179,10 +179,10 @@ public class IntrinsicRun {
     }
 
     public float getCaretBoundary(int fromIndex, int toIndex) {
-        final int boundaryIndex = (isRTL() ? toIndex : fromIndex);
-        final int arrayIndex = boundaryIndex - charStart;
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
 
-        return caretEdges.get(arrayIndex);
+        return CaretUtils.getLeftMargin(caretEdges, isRTL(), firstIndex, lastIndex);
     }
 
     public float getCaretEdge(int charIndex, float caretBoundary) {
@@ -194,57 +194,20 @@ public class IntrinsicRun {
     }
 
     public float measureChars(int fromIndex, int toIndex) {
-        float firstEdge = caretEdges.get(fromIndex - charStart);
-        float lastEdge = caretEdges.get(toIndex - charStart);
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
 
-        return isRTL() ? firstEdge - lastEdge : lastEdge - firstEdge;
+        return CaretUtils.getRangeDistance(caretEdges, isRTL(), firstIndex, lastIndex);
     }
 
     public int computeNearestCharIndex(float distance, int fromIndex, int toIndex) {
-        final boolean isRTL = isRTL();
-        final float caretBoundary = getCaretBoundary(fromIndex, toIndex);
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
 
-        int leadingCharIndex = -1;
-        int trailingCharIndex = -1;
+        int nearestIndex = CaretUtils.computeNearestIndex(caretEdges, isRTL(),
+                                                          firstIndex, lastIndex, distance);
 
-        float leadingCaretEdge = 0.0f;
-        float trailingCaretEdge = 0.0f;
-
-        int index = (isRTL ? toIndex : fromIndex);
-        int next = (isRTL ? -1 : 1);
-
-        while (index <= toIndex && index >= fromIndex) {
-            float caretEdge = getCaretEdge(index, caretBoundary);
-
-            if (caretEdge <= distance) {
-                leadingCharIndex = index;
-                leadingCaretEdge = caretEdge;
-            } else {
-                trailingCharIndex = index;
-                trailingCaretEdge = caretEdge;
-                break;
-            }
-
-            index += next;
-        }
-
-        if (leadingCharIndex == -1) {
-            // No char is covered by the input distance.
-            return fromIndex;
-        }
-
-        if (trailingCharIndex == -1) {
-            // Whole range is covered by the input distance.
-            return toIndex;
-        }
-
-        if (distance <= (leadingCaretEdge + trailingCaretEdge) / 2.0f) {
-            // Input distance is closer to first edge.
-            return leadingCharIndex;
-        }
-
-        // Input distance is closer to second edge.
-        return trailingCharIndex;
+        return nearestIndex + charStart;
     }
 
     private @Nullable ClusterRange getClusterRange(int charIndex, @Nullable ClusterRange exclusion) {
