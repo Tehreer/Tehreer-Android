@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 
-public class IntrinsicRun {
+public class IntrinsicRun extends TextRun {
     public final int charStart;
     public final int charEnd;
     public final boolean isBackward;
@@ -71,30 +71,81 @@ public class IntrinsicRun {
         this.caretEdges = caretEdges;
     }
 
-    public boolean isRTL() {
+    @Override
+    public int getCharStart() {
+        return charStart;
+    }
+
+    @Override
+    public int getCharEnd() {
+        return charEnd;
+    }
+
+    @Override
+    public byte getBidiLevel() {
+        return bidiLevel;
+    }
+
+    private boolean isRTL() {
         return (bidiLevel & 1) == 1;
     }
 
-    public int glyphCount() {
+    @Override
+    public @NonNull Typeface getTypeface() {
+        return typeface;
+    }
+
+    @Override
+    public float getTypeSize() {
+        return typeSize;
+    }
+
+    @Override
+    public @NonNull WritingDirection getWritingDirection() {
+        return writingDirection;
+    }
+
+    @Override
+    public int getGlyphCount() {
         return glyphIds.length;
     }
 
+    @Override
     public @NonNull IntList getGlyphIds() {
         return IntList.of(glyphIds);
     }
 
+    @Override
     public @NonNull PointList getGlyphOffsets() {
         return PointList.of(glyphOffsets);
     }
 
+    @Override
     public @NonNull FloatList getGlyphAdvances() {
         return FloatList.of(glyphAdvances);
     }
 
+    @Override
     public @NonNull IntList getClusterMap() {
         return IntList.of(clusterMap);
     }
 
+    @Override
+    public float getAscent() {
+        return ascent;
+    }
+
+    @Override
+    public float getDescent() {
+        return descent;
+    }
+
+    @Override
+    public float getLeading() {
+        return leading;
+    }
+
+    @Override
     public int getClusterStart(int charIndex) {
         final int arrayIndex = charIndex - charStart;
         final int common = clusterMap[arrayIndex];
@@ -108,6 +159,7 @@ public class IntrinsicRun {
         return charStart;
     }
 
+    @Override
     public int getClusterEnd(int charIndex) {
         final int arrayIndex = charIndex - charStart;
         final int common = clusterMap[arrayIndex];
@@ -166,12 +218,14 @@ public class IntrinsicRun {
         return glyphRange;
     }
 
+    @Override
     public int getLeadingGlyphIndex(int charIndex) {
         final int arrayIndex = charIndex - charStart;
 
         return isBackward ? backwardGlyphIndex(arrayIndex) : clusterMap[arrayIndex];
     }
 
+    @Override
     public int getTrailingGlyphIndex(int charIndex) {
         final int arrayIndex = charIndex - charStart;
 
@@ -185,6 +239,11 @@ public class IntrinsicRun {
         return CaretUtils.getLeftMargin(caretEdges, isRTL(), firstIndex, lastIndex);
     }
 
+    @Override
+    public float getCaretEdge(int charIndex) {
+        return getCaretEdge(charIndex, 0.0f);
+    }
+
     public float getCaretEdge(int charIndex, float caretBoundary) {
         return caretEdges.get(charIndex - charStart) - caretBoundary;
     }
@@ -194,10 +253,20 @@ public class IntrinsicRun {
     }
 
     public float measureChars(int fromIndex, int toIndex) {
+        return getRangeDistance(fromIndex, toIndex);
+    }
+
+    @Override
+    public float getRangeDistance(int fromIndex, int toIndex) {
         final int firstIndex = fromIndex - charStart;
         final int lastIndex = toIndex - charStart;
 
         return CaretUtils.getRangeDistance(caretEdges, isRTL(), firstIndex, lastIndex);
+    }
+
+    @Override
+    public int computeNearestCharIndex(float distance) {
+        return computeNearestCharIndex(distance, charStart, charEnd);
     }
 
     public int computeNearestCharIndex(float distance, int fromIndex, int toIndex) {
@@ -264,6 +333,11 @@ public class IntrinsicRun {
                             getGlyphAdvances().subList(cluster.glyphStart, cluster.glyphEnd));
 
         canvas.restore();
+    }
+
+    @Override
+    public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas) {
+        draw(renderer, canvas, charStart, charEnd);
     }
 
     public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas, int fromIndex, int toIndex) {
