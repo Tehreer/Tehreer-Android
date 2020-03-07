@@ -252,10 +252,6 @@ public class IntrinsicRun extends TextRun {
         return getCaretEdge(!isBackward ? fromIndex : toIndex, caretBoundary);
     }
 
-    public float measureChars(int fromIndex, int toIndex) {
-        return getRangeDistance(fromIndex, toIndex);
-    }
-
     @Override
     public float getRangeDistance(int fromIndex, int toIndex) {
         final int firstIndex = fromIndex - charStart;
