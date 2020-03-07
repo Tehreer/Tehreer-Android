@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 public class ShapeResolver {
     public static void fillRuns(@NonNull String text, @NonNull Spanned spanned,
                                 @NonNull List<Object> defaultSpans, @NonNull byte[] breaks,
-                                @NonNull List<BidiParagraph> paragraphs, @NonNull List<IntrinsicRun> runs) {
+                                @NonNull List<BidiParagraph> paragraphs, @NonNull List<TextRun> runs) {
         BidiAlgorithm bidiAlgorithm = null;
         ShapingEngine shapingEngine = null;
 
@@ -100,9 +100,10 @@ public class ShapeResolver {
     }
 
     private static void resolveTypefaces(@NonNull String text, @NonNull Spanned spanned,
-                                         @NonNull List<IntrinsicRun> runs,
+                                         @NonNull List<TextRun> runs,
                                          @NonNull ShapingRunLocator locator,
                                          @NonNull ShapingEngine engine, byte bidiLevel) {
+        Paint paint = null;
         Paint.FontMetricsInt metrics = null;
 
         while (locator.moveNext()) {
@@ -119,7 +120,7 @@ public class ShapeResolver {
             float leading = typeface.getLeading() * sizeByEm;
 
             ReplacementSpan replacement = locator.getReplacement();
-            IntrinsicRun intrinsicRun;
+            TextRun textRun;
 
             if (replacement == null) {
                 engine.setTypeface(typeface);
@@ -153,17 +154,20 @@ public class ShapeResolver {
                         }
                     }
 
-                    intrinsicRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
-                                                    writingDirection, typeface, typeSize,
-                                                    ascent, descent, leading,
-                                                    glyphIds, offsets, advances,
-                                                    clusterMap, caretEdges);
+                    textRun = new IntrinsicRun(runStart, runEnd, isBackward, bidiLevel,
+                                               writingDirection, typeface, typeSize,
+                                               ascent, descent, leading,
+                                               glyphIds, offsets, advances,
+                                               clusterMap, caretEdges);
                 } finally {
                     if (shapingResult != null) {
                         shapingResult.dispose();
                     }
                 }
             } else {
+                if (paint == null) {
+                    paint = new Paint();
+                }
                 if (metrics == null) {
                     metrics = new Paint.FontMetricsInt();
                 }
@@ -172,31 +176,24 @@ public class ShapeResolver {
                 metrics.descent = (int) (descent + 0.5f);
                 metrics.leading = (int) (leading + 0.5f);
 
-                int spaceGlyph = typeface.getGlyphId(' ');
-                int replacementSize = replacement.getSize(null, spanned, runStart, runEnd, metrics);
+                int extent = replacement.getSize(paint, spanned, runStart, runEnd, metrics);
                 int runLength = runEnd - runStart;
 
-                WritingDirection writingDirection = engine.getWritingDirection();
-                int[] glyphIds = new int[] { spaceGlyph };
-                float[] offsets = new float[] { 0.0f, 0.0f };
-                float[] advances = new float[] { replacementSize };
-                int[] clusterMap = new int[runLength];
                 float[] caretEdges = new float[runLength + 1];
 
                 if ((bidiLevel & 1) == 0) {
-                    caretEdges[runLength] = replacementSize;
+                    caretEdges[runLength] = extent;
                 } else {
-                    caretEdges[0] = replacementSize;
+                    caretEdges[0] = extent;
                 }
 
-                intrinsicRun = new IntrinsicRun(runStart, runEnd, false, bidiLevel,
-                                                writingDirection, typeface, typeSize,
-                                                -metrics.ascent, metrics.descent, metrics.leading,
-                                                glyphIds, offsets, advances,
-                                                clusterMap, FloatList.of(caretEdges));
+                textRun = new ReplacementRun(spanned, runStart, runEnd, bidiLevel,
+                                             replacement, paint, typeface, typeSize,
+                                             metrics.ascent, metrics.descent, metrics.leading,
+                                             extent, FloatList.of(caretEdges));
             }
 
-            runs.add(intrinsicRun);
+            runs.add(textRun);
         }
     }
 }

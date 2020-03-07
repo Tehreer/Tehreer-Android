@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.ReplacementSpan;
-import android.text.style.ScaleXSpan;
 
 import androidx.annotation.NonNull;
 
@@ -29,8 +26,7 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.layout.ClusterMap;
-import com.mta.tehreer.internal.layout.IntrinsicRun;
+import com.mta.tehreer.internal.layout.TextRun;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.List;
@@ -42,50 +38,46 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
  * and direction.
  */
 public class GlyphRun {
-    private final IntrinsicRun intrinsicRun;
-    private final int charStart;
-    private final int charEnd;
-    private final @NonNull List<Object> spans;
-    private final int glyphOffset;
-    private final int glyphCount;
+    private final TextRun textRun;
     private float originX;
     private float originY;
 
-    GlyphRun(IntrinsicRun intrinsicRun, int charStart, int charEnd, @NonNull List<Object> spans) {
-        final int[] glyphRange = intrinsicRun.getGlyphRangeForChars(charStart, charEnd);
-
-        this.intrinsicRun = intrinsicRun;
-        this.charStart = charStart;
-        this.charEnd = charEnd;
-        this.spans = spans;
-        this.glyphOffset = glyphRange[0];
-        this.glyphCount = glyphRange[1] - glyphRange[0];
+    GlyphRun(TextRun textRun) {
+        this.textRun = textRun;
     }
 
     GlyphRun(@NonNull GlyphRun otherRun) {
-        this.intrinsicRun = otherRun.intrinsicRun;
-        this.charStart = otherRun.charStart;
-        this.charEnd = otherRun.charEnd;
-        this.spans = otherRun.spans;
-        this.glyphOffset = otherRun.glyphOffset;
-        this.glyphCount = otherRun.glyphCount;
+        this.textRun = otherRun.textRun;
         this.originX = otherRun.originX;
         this.originY = otherRun.originY;
     }
 
     private void checkCharIndex(int charIndex) {
+        final int charStart = textRun.getCharStart();
+        final int charEnd = textRun.getCharEnd();
+
         checkArgument(charIndex >= charStart && charIndex < charEnd,
                       "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
     }
 
+    private void checkCaretIndex(int charIndex) {
+        final int charStart = textRun.getCharStart();
+        final int charEnd = textRun.getCharEnd();
+
+        checkArgument(charIndex >= charStart && charIndex <= charEnd,
+                      "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
+    }
+
     private void checkGlyphRange(int glyphStart, int glyphEnd) {
+        final int glyphCount = textRun.getGlyphCount();
+
         checkArgument(glyphStart >= 0, "Glyph Start: " + glyphStart);
         checkArgument(glyphEnd <= glyphCount, "Glyph End: " + glyphEnd + ", Glyph Count: " + glyphCount);
         checkArgument(glyphEnd >= glyphStart, "Bad Range: [" + glyphStart + ", " + glyphEnd + ')');
     }
 
     @NonNull List<Object> getSpans() {
-	    return spans;
+	    return textRun.getSpans();
     }
 
     /**
@@ -94,7 +86,7 @@ public class GlyphRun {
      * @return The index to the first character of this run in source text.
      */
     public int getCharStart() {
-        return charStart;
+        return textRun.getCharStart();
     }
 
     /**
@@ -103,7 +95,7 @@ public class GlyphRun {
      * @return The index after the last character of this run in source text.
      */
     public int getCharEnd() {
-        return charEnd;
+        return textRun.getCharEnd();
     }
 
     /**
@@ -122,7 +114,7 @@ public class GlyphRun {
      * @see #getClusterMap()
      */
     public int getStartExtraLength() {
-        return charStart - intrinsicRun.getClusterStart(charStart);
+        return textRun.getStartExtraLength();
     }
 
     /**
@@ -141,7 +133,7 @@ public class GlyphRun {
      * @see #getClusterMap()
      */
     public int getEndExtraLength() {
-        return intrinsicRun.getClusterEnd(charEnd - 1) - charEnd;
+        return textRun.getEndExtraLength();
     }
 
     /**
@@ -150,7 +142,7 @@ public class GlyphRun {
      * @return The bidirectional level of this run.
      */
     public byte getBidiLevel() {
-        return intrinsicRun.bidiLevel;
+        return textRun.getBidiLevel();
     }
 
     /**
@@ -159,7 +151,7 @@ public class GlyphRun {
      * @return The typeface of this run.
      */
     public @NonNull Typeface getTypeface() {
-        return intrinsicRun.typeface;
+        return textRun.getTypeface();
     }
 
     /**
@@ -168,7 +160,7 @@ public class GlyphRun {
      * @return The type size of this run.
      */
     public float getTypeSize() {
-        return intrinsicRun.typeSize;
+        return textRun.getTypeSize();
     }
 
     /**
@@ -177,7 +169,7 @@ public class GlyphRun {
      * @return The writing direction of this run.
      */
     public @NonNull WritingDirection getWritingDirection() {
-        return intrinsicRun.writingDirection;
+        return textRun.getWritingDirection();
     }
 
     /**
@@ -186,7 +178,7 @@ public class GlyphRun {
      * @return The number of glyphs in this run.
      */
     public int getGlyphCount() {
-        return glyphCount;
+        return textRun.getGlyphCount();
     }
 
     /**
@@ -195,7 +187,7 @@ public class GlyphRun {
      * @return A list of glyph IDs in this run.
      */
     public @NonNull IntList getGlyphIds() {
-        return intrinsicRun.getGlyphIds().subList(glyphOffset, glyphCount);
+        return textRun.getGlyphIds();
     }
 
     /**
@@ -204,7 +196,7 @@ public class GlyphRun {
      * @return A list of glyph offsets in this run.
      */
     public @NonNull PointList getGlyphOffsets() {
-        return intrinsicRun.getGlyphOffsets().subList(glyphOffset, glyphCount);
+        return textRun.getGlyphOffsets();
     }
 
     /**
@@ -213,7 +205,7 @@ public class GlyphRun {
      * @return A list of glyph advances in this run.
      */
     public @NonNull FloatList getGlyphAdvances() {
-        return intrinsicRun.getGlyphAdvances().subList(glyphOffset, glyphCount);
+        return textRun.getGlyphAdvances();
     }
 
     /**
@@ -222,11 +214,7 @@ public class GlyphRun {
      * @return A list of indexes, mapping each character in this run to corresponding glyph.
      */
     public @NonNull IntList getClusterMap() {
-        final int actualStart = intrinsicRun.getClusterStart(charStart);
-        final int actualEnd = intrinsicRun.getClusterEnd(charEnd - 1);
-        final int actualLength = actualEnd - actualStart;
-
-        return new ClusterMap(intrinsicRun.clusterMap, actualStart, actualLength, glyphOffset);
+        return textRun.getClusterMap();
     }
 
     /**
@@ -262,7 +250,7 @@ public class GlyphRun {
      * @return The ascent of this run.
      */
     public float getAscent() {
-        return intrinsicRun.ascent;
+        return textRun.getAscent();
     }
 
     /**
@@ -272,7 +260,7 @@ public class GlyphRun {
      * @return The descent of this run.
      */
     public float getDescent() {
-        return intrinsicRun.descent;
+        return textRun.getDescent();
     }
 
     /**
@@ -282,7 +270,7 @@ public class GlyphRun {
      * @return The leading of this run.
      */
     public float getLeading() {
-        return intrinsicRun.leading;
+        return textRun.getLeading();
     }
 
     /**
@@ -291,7 +279,7 @@ public class GlyphRun {
      * @return The typographic width of this run.
      */
     public float getWidth() {
-        return intrinsicRun.measureChars(charStart, charEnd);
+        return textRun.getWidth();
     }
 
     /**
@@ -300,7 +288,7 @@ public class GlyphRun {
      * @return The typographic height of this run.
      */
     public float getHeight() {
-        return (intrinsicRun.ascent + intrinsicRun.descent + intrinsicRun.leading);
+        return textRun.getHeight();
     }
 
     /**
@@ -318,7 +306,7 @@ public class GlyphRun {
     public int getActualClusterStart(int charIndex) {
         checkCharIndex(charIndex);
 
-        return intrinsicRun.getClusterStart(charIndex);
+        return textRun.getClusterStart(charIndex);
     }
 
     /**
@@ -336,7 +324,7 @@ public class GlyphRun {
     public int getActualClusterEnd(int charIndex) {
         checkCharIndex(charIndex);
 
-        return intrinsicRun.getClusterEnd(charIndex);
+        return textRun.getClusterEnd(charIndex);
     }
 
     /**
@@ -356,7 +344,7 @@ public class GlyphRun {
     public int getLeadingGlyphIndex(int charIndex) {
         checkCharIndex(charIndex);
 
-        return intrinsicRun.getLeadingGlyphIndex(charIndex) - glyphOffset;
+        return textRun.getLeadingGlyphIndex(charIndex);
     }
 
     /**
@@ -376,7 +364,7 @@ public class GlyphRun {
     public int getTrailingGlyphIndex(int charIndex) {
         checkCharIndex(charIndex);
 
-        return intrinsicRun.getTrailingGlyphIndex(charIndex) - glyphOffset;
+        return textRun.getTrailingGlyphIndex(charIndex);
     }
 
     /**
@@ -389,17 +377,13 @@ public class GlyphRun {
      *         than run end.
      */
     public float computeCharDistance(int charIndex) {
-        checkArgument(charIndex >= charStart && charIndex <= charEnd,
-                      "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
+        checkCaretIndex(charIndex);
 
-        final float caretBoundary = intrinsicRun.getCaretBoundary(charStart, charEnd);
-        final float caretEdge = intrinsicRun.getCaretEdge(charIndex, caretBoundary);
-
-        return caretEdge - caretBoundary;
+        return textRun.getCaretEdge(charIndex);
     }
 
     float computeRangeDistance(int fromIndex, int toIndex) {
-        return intrinsicRun.measureChars(fromIndex, toIndex);
+        return textRun.getRangeDistance(fromIndex, toIndex);
     }
 
     /**
@@ -425,7 +409,7 @@ public class GlyphRun {
      * @see #computeTypographicExtent(int, int)
      */
     public int computeNearestCharIndex(float distance) {
-        return intrinsicRun.computeNearestCharIndex(distance, charStart, charEnd);
+        return textRun.computeNearestCharIndex(distance);
     }
 
     /**
@@ -439,14 +423,7 @@ public class GlyphRun {
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
         checkGlyphRange(glyphStart, glyphEnd);
 
-        FloatList glyphAdvances = getGlyphAdvances();
-        float extent = 0.0f;
-
-        for (int i = glyphStart; i < glyphEnd; i++) {
-            extent += glyphAdvances.get(i);
-        }
-
-        return extent;
+        return textRun.computeTypographicExtent(glyphStart, glyphEnd);
     }
 
     /**
@@ -466,15 +443,7 @@ public class GlyphRun {
      *         <code>glyphStart</code> is greater than <code>glyphEnd</code>.
      */
 	public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer, int glyphStart, int glyphEnd) {
-        checkGlyphRange(glyphStart, glyphEnd);
-
-	    renderer.setTypeface(getTypeface());
-	    renderer.setTypeSize(getTypeSize());
-        renderer.setWritingDirection(getWritingDirection());
-
-        return renderer.computeBoundingBox(getGlyphIds().subList(glyphStart, glyphEnd),
-                                           getGlyphOffsets().subList(glyphStart, glyphEnd),
-                                           getGlyphAdvances().subList(glyphStart, glyphEnd));
+	    return textRun.computeBoundingBox(renderer, glyphStart, glyphEnd);
 	}
 
     /**
@@ -485,39 +454,13 @@ public class GlyphRun {
      * @param canvas The canvas onto which to draw this run.
      */
 	public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas) {
-        renderer.setScaleX(1.0f);
-
-        int defaultFillColor = renderer.getFillColor();
-        ReplacementSpan replacement = null;
-
-        for (Object span : spans) {
-            if (span instanceof ForegroundColorSpan) {
-                renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
-            } else if (span instanceof ReplacementSpan) {
-                replacement = (ReplacementSpan) span;
-            } else if (span instanceof ScaleXSpan) {
-                renderer.setScaleX(((ScaleXSpan) span).getScaleX());
-            }
-        }
-
-        if (replacement == null) {
-            intrinsicRun.draw(renderer, canvas, charStart, charEnd);
-        } else {
-            int top = (int) -(getAscent() + 0.5f);
-            int bottom = (int) (getDescent() + 0.5f);
-
-            replacement.draw(canvas,
-                             null, charStart, charEnd,
-                             0, top, 0, bottom, null);
-        }
-
-        renderer.setFillColor(defaultFillColor);
+        textRun.draw(renderer, canvas);
 	}
 
     @Override
     public String toString() {
-        return "GlyphRun{charStart=" + charStart
-                + ", charEnd=" + charEnd
+        return "GlyphRun{charStart=" + getCharStart()
+                + ", charEnd=" + getCharEnd()
                 + ", bidiLevel=" + getBidiLevel()
                 + ", writingDirection=" + getWritingDirection().toString()
                 + ", glyphCount=" + getGlyphCount()

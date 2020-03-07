@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,18 @@ package com.mta.tehreer.internal.layout;
 
 import java.util.ArrayList;
 
-public class RunCollection extends ArrayList<IntrinsicRun> {
+public class RunCollection extends ArrayList<TextRun> {
     public int binarySearch(int charIndex) {
         int low = 0;
         int high = size() - 1;
 
         while (low <= high) {
             int mid = (low + high) >>> 1;
-            IntrinsicRun value = get(mid);
+            TextRun value = get(mid);
 
-            if (charIndex >= value.charEnd) {
+            if (charIndex >= value.getCharEnd()) {
                 low = mid + 1;
-            } else if (charIndex < value.charStart) {
+            } else if (charIndex < value.getCharStart()) {
                 high = mid - 1;
             } else {
                 return mid;
@@ -44,12 +44,11 @@ public class RunCollection extends ArrayList<IntrinsicRun> {
 
         if (charEnd > charStart) {
             int runIndex = binarySearch(charStart);
-            int[] glyphRange = new int[2];
 
             do {
-                IntrinsicRun intrinsicRun = get(runIndex);
-                int segmentEnd = Math.min(charEnd, intrinsicRun.charEnd);
-                extent += intrinsicRun.measureChars(charStart, segmentEnd);
+                TextRun textRun = get(runIndex);
+                int segmentEnd = Math.min(charEnd, textRun.getCharEnd());
+                extent += textRun.getRangeDistance(charStart, segmentEnd);
 
                 charStart = segmentEnd;
                 runIndex++;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
+import com.mta.tehreer.internal.layout.IntrinsicRunSlice;
+import com.mta.tehreer.internal.layout.TextRun;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.unicode.BidiRun;
 
@@ -46,9 +48,14 @@ class LineResolver {
         mIntrinsicRuns = runs;
     }
 
-    static GlyphRun createGlyphRun(@NonNull IntrinsicRun intrinsicRun, int spanStart, int spanEnd,
-                                   @NonNull Object[] spans) {
-        return new GlyphRun(intrinsicRun, spanStart, spanEnd, Arrays.asList(spans));
+    static @NonNull GlyphRun createGlyphRun(@NonNull TextRun textRun, int spanStart, int spanEnd,
+                                            @NonNull Object[] spans) {
+        if (textRun instanceof IntrinsicRun) {
+            textRun = new IntrinsicRunSlice((IntrinsicRun) textRun, spanStart, spanEnd,
+                                              Arrays.asList(spans));
+        }
+
+        return new GlyphRun(textRun);
     }
 
     static @NonNull ComposedLine createComposedLine(@NonNull CharSequence text, int charStart, int charEnd,
@@ -293,20 +300,20 @@ class LineResolver {
             //      - Consecutive intrinsic runs may have same bidi level.
 
             int insertIndex = runList.size();
-            IntrinsicRun previousRun = null;
+            TextRun previousRun = null;
 
             do {
                 int runIndex = mIntrinsicRuns.binarySearch(visualStart);
 
-                IntrinsicRun intrinsicRun = mIntrinsicRuns.get(runIndex);
-                int feasibleStart = Math.max(intrinsicRun.charStart, visualStart);
-                int feasibleEnd = Math.min(intrinsicRun.charEnd, visualEnd);
+                TextRun textRun = mIntrinsicRuns.get(runIndex);
+                int feasibleStart = Math.max(textRun.getCharStart(), visualStart);
+                int feasibleEnd = Math.min(textRun.getCharEnd(), visualEnd);
 
-                byte bidiLevel = intrinsicRun.bidiLevel;
+                byte bidiLevel = textRun.getBidiLevel();
                 boolean isForwardRun = ((bidiLevel & 1) == 0);
 
                 if (previousRun != null) {
-                    if (bidiLevel != previousRun.bidiLevel || isForwardRun) {
+                    if (bidiLevel != previousRun.getBidiLevel() || isForwardRun) {
                         insertIndex = runList.size();
                     }
                 }
@@ -316,7 +323,7 @@ class LineResolver {
                     int spanEnd = mSpanned.nextSpanTransition(spanStart, feasibleEnd, Object.class);
                     Object[] spans = mSpanned.getSpans(spanStart, spanEnd, Object.class);
 
-                    GlyphRun glyphRun = createGlyphRun(intrinsicRun, spanStart, spanEnd, spans);
+                    GlyphRun glyphRun = createGlyphRun(textRun, spanStart, spanEnd, spans);
                     runList.add(insertIndex, glyphRun);
 
                     if (isForwardRun) {
@@ -326,7 +333,7 @@ class LineResolver {
                     spanStart = spanEnd;
                 }
 
-                previousRun = intrinsicRun;
+                previousRun = textRun;
                 visualStart = feasibleEnd;
             } while (visualStart != visualEnd);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,9 +46,9 @@ public class TokenResolver {
         }
 
         int runIndex = runs.binarySearch(truncationIndex);
-        IntrinsicRun suitableRun = runs.get(runIndex);
-        Typeface tokenTypeface = suitableRun.typeface;
-        float tokenTypeSize = suitableRun.typeSize;
+        TextRun suitableRun = runs.get(runIndex);
+        Typeface tokenTypeface = suitableRun.getTypeface();
+        float tokenTypeSize = suitableRun.getTypeSize();
 
         if (tokenStr == null || tokenStr.length() == 0) {
             // Token string is not given. Use ellipsis character if available; fallback to three
