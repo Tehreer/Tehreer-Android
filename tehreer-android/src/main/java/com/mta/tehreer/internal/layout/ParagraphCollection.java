@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,17 @@ public class ParagraphCollection extends ArrayList<BidiParagraph> {
 
     public void forEachLineRun(int lineStart, int lineEnd, @NonNull RunConsumer runConsumer) {
         int paragraphIndex = binarySearch(lineStart);
+        BidiParagraph directionalParagraph = get(paragraphIndex);
+        boolean isRTL = (directionalParagraph.getBaseLevel() & 1) == 1;
+
+        if (isRTL) {
+            int paragraphEnd = directionalParagraph.getCharEnd();
+            if (paragraphEnd < lineEnd) {
+                paragraphIndex = binarySearch(lineEnd - 1);
+            }
+        }
+
+        int next = (isRTL ? -1 : 1);
         int feasibleStart;
         int feasibleEnd;
 
@@ -76,9 +87,8 @@ public class ParagraphCollection extends ArrayList<BidiParagraph> {
             }
 
             bidiLine.dispose();
-
-            paragraphIndex++;
-        } while (feasibleEnd != lineEnd);
+            paragraphIndex += next;
+        } while (isRTL ? feasibleStart != lineStart : feasibleEnd != lineEnd);
     }
 
     @Override
