@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,16 @@ public class StructTable extends AbstractSfntTable {
         Raw.copyInt8Buffer(pointerOf(offset), array, 0, count);
 
         return array;
+    }
+
+    @Override
+    public byte readInt8(int offset) {
+        return Raw.getInt8Value(pointerOf(offset));
+    }
+
+    @Override
+    public short readUInt8(int offset) {
+        return (short) (Raw.getInt8Value(pointerOf(offset)) & 0xFF);
     }
 
     @Override

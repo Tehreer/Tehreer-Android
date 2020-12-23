@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import androidx.annotation.NonNull;
 public interface SfntTable {
     @NonNull byte[] readBytes(int offset, int count);
 
+    byte readInt8(int offset);
+    short readUInt8(int offset);
+
     short readInt16(int offset);
     int readInt32(int offset);
 
@@ -30,6 +33,8 @@ public interface SfntTable {
     long readInt64(int offset);
 
     float readFixed(int offset);
+
+    int readOffset32(int offset);
 
     SfntTable subTable(int offset);
 }

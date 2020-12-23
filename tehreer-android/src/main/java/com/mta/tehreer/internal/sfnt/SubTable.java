@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,16 @@ public class SubTable extends AbstractSfntTable {
     @Override
     public @NonNull byte[] readBytes(int offset, int count) {
         return table.readBytes(globalOffset + offset, count);
+    }
+
+    @Override
+    public byte readInt8(int offset) {
+        return table.readInt8(globalOffset + offset);
+    }
+
+    @Override
+    public short readUInt8(int offset) {
+        return table.readUInt8(globalOffset + offset);
     }
 
     @Override

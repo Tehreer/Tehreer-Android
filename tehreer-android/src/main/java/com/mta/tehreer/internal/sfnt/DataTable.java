@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,16 @@ public class DataTable extends AbstractSfntTable {
         System.arraycopy(data, offset, array, 0, count);
 
         return array;
+    }
+
+    @Override
+    public byte readInt8(int offset) {
+        return data[offset];
+    }
+
+    @Override
+    public short readUInt8(int offset) {
+        return (short) (data[offset] & 0xFF);
     }
 
     @Override
