@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 extern "C" {
 #include <ft2build.h>
 #include FT_ADVANCES_H
+#include FT_COLOR_H
 #include FT_FREETYPE_H
 #include FT_MULTIPLE_MASTERS_H
 #include FT_SFNT_NAMES_H
@@ -191,14 +192,19 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     if (fontFile) {
         FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
-            return new Typeface(fontFile, ftFace);
+            Instance *instance = new Instance(fontFile, ftFace);
+            Typeface *typeface = new Typeface(instance);
+
+            instance->release();
+
+            return typeface;
         }
     }
 
     return nullptr;
 }
 
-Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
+Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
     : m_familyName(-1)
     , m_styleName(-1)
     , m_fullName(-1)
@@ -211,18 +217,18 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     SFFontProtocol protocol;
     protocol.finalize = nullptr;
     protocol.loadTable = [](void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length) {
-        Typeface *typeface = reinterpret_cast<Typeface *>(object);
+        Instance *instance = reinterpret_cast<Instance *>(object);
         FT_ULong tableSize = 0;
 
-        typeface->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
+        instance->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
 
         if (length) {
             *length = tableSize;
         }
     };
     protocol.getGlyphIDForCodepoint = [](void *object, SFCodepoint codepoint) {
-        Typeface *typeface = reinterpret_cast<Typeface *>(object);
-        FT_UInt glyphID = typeface->getGlyphID(codepoint);
+        Instance *instance = reinterpret_cast<Instance *>(object);
+        FT_UInt glyphID = instance->getGlyphID(codepoint);
         if (glyphID > 0xFFFF) {
             LOGW("Received invalid glyph id for code point: %u", codepoint);
             glyphID = 0;
@@ -232,12 +238,13 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     };
     protocol.getAdvanceForGlyph = [](void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
     {
-        Typeface *typeface = reinterpret_cast<Typeface *>(object);
-        FT_Fixed glyphAdvance = typeface->getGlyphAdvance(glyphID, fontLayout == SFFontLayoutVertical);
+        Instance *instance = reinterpret_cast<Instance *>(object);
+        FT_Fixed glyphAdvance = instance->getUnscaledAdvance(glyphID, fontLayout == SFFontLayoutVertical);
 
         return static_cast<SFInt32>(glyphAdvance);
     };
 
+    m_retainCount = 1;
     m_fontFile = fontFile->retain();
     m_ftFace = ftFace;
     m_ftSize = nullptr;
@@ -250,7 +257,7 @@ Typeface::Typeface(FontFile *fontFile, FT_Face ftFace)
     setupVariation();
 }
 
-void Typeface::setupDescription()
+void Typeface::Instance::setupDescription()
 {
     TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_OS2));
     TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_HEAD));
@@ -288,7 +295,7 @@ void Typeface::setupDescription()
     }
 }
 
-void Typeface::setupVariation()
+void Typeface::Instance::setupVariation()
 {
     FT_MM_Var *variation;
     FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
@@ -356,7 +363,7 @@ void Typeface::setupVariation()
     }
 }
 
-Typeface::~Typeface()
+Typeface::Instance::~Instance()
 {
     SFFontRelease(m_sfFont);
 
@@ -382,35 +389,20 @@ Typeface::~Typeface()
     m_fontFile->release();
 }
 
-Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+Typeface::Instance *Typeface::Instance::retain()
 {
-    Typeface *typeface = Typeface::createFromFile(m_fontFile, m_ftFace->face_index, 0);
-    FT_Face ftFace = typeface->ftFace();
-
-    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
-
-    return typeface;
+    m_retainCount++;
+    return this;
 }
 
-FT_Stroker Typeface::ftStroker()
+void Typeface::Instance::release()
 {
-    /*
-     * NOTE:
-     *      The caller is responsible to lock the mutex.
-     */
-
-    if (!m_ftStroker) {
-        /*
-         * There is no need to lock 'library' as it is only taken to have access to FreeType's
-         * memory handling functions.
-         */
-        FT_Stroker_New(FreeType::library(), &m_ftStroker);
+    if (--m_retainCount == 0) {
+        delete this;
     }
-
-    return m_ftStroker;
 }
 
-void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
+void Typeface::Instance::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
     m_mutex.lock();
 
@@ -419,7 +411,7 @@ void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
     m_mutex.unlock();
 }
 
-FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
+FT_UInt Typeface::Instance::getGlyphID(FT_ULong codePoint)
 {
     m_mutex.lock();
 
@@ -430,7 +422,7 @@ FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
     return glyphID;
 }
 
-FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, bool vertical)
+FT_Fixed Typeface::Instance::getUnscaledAdvance(FT_UInt glyphID, bool vertical)
 {
     FT_Int32 loadFlags = FT_LOAD_NO_SCALE;
     if (vertical) {
@@ -447,6 +439,77 @@ FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, bool vertical)
     return advance;
 }
 
+Typeface::Typeface(Instance *instance)
+{
+    m_instance = instance->retain();
+    m_palette = { nullptr, 0 };
+}
+
+Typeface::Typeface(const Typeface &typeface, const Palette &palette)
+{
+    m_instance = typeface.m_instance->retain();
+    m_palette = palette;
+}
+
+Typeface::~Typeface()
+{
+    m_instance->release();
+}
+
+Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+{
+    Typeface *typeface = Typeface::createFromFile(m_instance->m_fontFile, ftFace()->face_index, 0);
+    FT_Face ftFace = typeface->ftFace();
+
+    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
+
+    return typeface;
+}
+
+Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
+{
+    Palette palette;
+    palette.colors = new FT_Color[colorCount];
+    palette.count = colorCount;
+
+    for (size_t i = 0; i < colorCount; i++) {
+        palette.colors[i].blue = colorArray[i] & 0xFF;
+        palette.colors[i].green = (colorArray[i] >> 8) & 0xFF;
+        palette.colors[i].red = (colorArray[i] >> 16) & 0xFF;
+        palette.colors[i].alpha = colorArray[i] >> 24;
+    }
+
+    return new Typeface(*this, palette);
+}
+
+FT_Stroker Typeface::ftStroker()
+{
+    /*
+     * NOTE:
+     *      The caller is responsible to lock the mutex.
+     */
+
+    if (!m_instance->m_ftStroker) {
+        /*
+         * There is no need to lock 'library' as it is only taken to have access to FreeType's
+         * memory handling functions.
+         */
+        FT_Stroker_New(FreeType::library(), &m_instance->m_ftStroker);
+    }
+
+    return m_instance->m_ftStroker;
+}
+
+void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
+{
+    m_instance->loadSfntTable(tag, buffer, length);
+}
+
+FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
+{
+    return m_instance->getGlyphID(codePoint);
+}
+
 FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical)
 {
     FT_Int32 loadFlags = FT_LOAD_DEFAULT;
@@ -454,16 +517,16 @@ FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool ve
         loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
     }
 
-    m_mutex.lock();
+    lock();
 
-    FT_Activate_Size(m_ftSize);
-    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
-    FT_Set_Transform(m_ftFace, nullptr, nullptr);
+    FT_Activate_Size(m_instance->m_ftSize);
+    FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
+    FT_Set_Transform(ftFace(), nullptr, nullptr);
 
     FT_Fixed advance;
-    FT_Get_Advance(m_ftFace, glyphID, loadFlags, &advance);
+    FT_Get_Advance(ftFace(), glyphID, loadFlags, &advance);
 
-    m_mutex.unlock();
+    unlock();
 
     return advance;
 }
@@ -472,7 +535,7 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
 {
     jobject glyphPath = nullptr;
 
-    FT_Error error = FT_Load_Glyph(m_ftFace, glyphID, FT_LOAD_NO_BITMAP);
+    FT_Error error = FT_Load_Glyph(ftFace(), glyphID, FT_LOAD_NO_BITMAP);
     if (error == FT_Err_Ok) {
         struct PathContext {
             JavaBridge bridge;
@@ -516,7 +579,7 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
 
         PathContext context = { bridge, bridge.Path_construct() };
 
-        FT_Outline *outline = &m_ftFace->glyph->outline;
+        FT_Outline *outline = &ftFace()->glyph->outline;
         error = FT_Outline_Decompose(outline, &funcs, &context);
         if (error == FT_Err_Ok) {
             glyphPath = context.path;
@@ -530,15 +593,15 @@ jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 ty
 {
     jobject glyphPath = nullptr;
 
-    m_mutex.lock();
+    lock();
 
-    FT_Activate_Size(m_ftSize);
-    FT_Set_Char_Size(m_ftFace, 0, typeSize, 0, 0);
-    FT_Set_Transform(m_ftFace, matrix, delta);
+    FT_Activate_Size(m_instance->m_ftSize);
+    FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
+    FT_Set_Transform(ftFace(), matrix, delta);
 
     glyphPath = getGlyphPathNoLock(bridge, glyphID);
 
-    m_mutex.unlock();
+    unlock();
 
     return glyphPath;
 }
@@ -630,6 +693,20 @@ static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHand
 
         env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
     }
+}
+
+static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    jint numColors = env->GetArrayLength(colors);
+
+    void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
+    uint32_t *colorValues = static_cast<uint32_t *>(colorBuffer);
+    Typeface *variationInstance = typeface->deriveColor(colorValues, numColors);
+
+    env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
+
+    return reinterpret_cast<jlong>(variationInstance);
 }
 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
@@ -848,6 +925,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
+    { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
     { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },

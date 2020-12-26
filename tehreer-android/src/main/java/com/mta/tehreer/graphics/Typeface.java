@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,13 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.mta.tehreer.font.Palette;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
+import com.mta.tehreer.internal.sfnt.tables.cpal.ColorPaletteTable;
+import com.mta.tehreer.internal.sfnt.tables.cpal.ColorRecordsArray;
+import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteLabelsArray;
+import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteTypesArray;
 import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
 import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
@@ -68,6 +73,11 @@ public class Typeface {
     private final @NonNull Finalizable finalizable = new Finalizable();
 
     private @Nullable List<VariationAxis> variationAxes;
+
+    private @Nullable List<String> paletteEntryNames;
+    private @Nullable List<Palette> predefinedPalettes;
+    private @Nullable Palette associatedPalette;
+
     private @NonNull String familyName = "";
     private @NonNull String styleName = "";
     private @NonNull String fullName = "";
@@ -140,10 +150,24 @@ public class Typeface {
         init(nativeTypeface);
     }
 
+    private Typeface(@NonNull Typeface typeface, @NonNull Palette palette) {
+        this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, palette.colors());
+
+        this.variationAxes = typeface.variationAxes;
+        this.paletteEntryNames = typeface.paletteEntryNames;
+        this.predefinedPalettes = typeface.predefinedPalettes;
+        this.associatedPalette = palette;
+
+        this.familyName = typeface.familyName;
+        this.styleName = typeface.styleName;
+        this.fullName = typeface.fullName;
+    }
+
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
 
         setupVariations();
+        setupPalettes();
 	    setupNames();
 	}
 
@@ -180,6 +204,88 @@ public class Typeface {
             variationAxes.add(VariationAxis.of(axisTag, axisName, flags,
                                                defaultValue, minValue, maxValue));
         }
+    }
+
+    private void setupPalettes() {
+        ColorPaletteTable cpalTable = ColorPaletteTable.from(this);
+        if (cpalTable == null) {
+            return;
+        }
+
+        NameTable nameTable = NameTable.from(this);
+
+        final int numPaletteEntries = cpalTable.numPaletteEntries();
+        final int numPalettes = cpalTable.numPalettes();
+
+        ColorRecordsArray colorRecords = cpalTable.colorRecords();
+        PaletteTypesArray paletteTypes = cpalTable.paletteTypes();
+        PaletteLabelsArray paletteLabels = cpalTable.paletteLabels();
+        PaletteLabelsArray paletteEntryLabels = cpalTable.paletteEntryLabels();
+
+        predefinedPalettes = new ArrayList<>(numPalettes);
+
+        /* Populate predefined palettes. */
+        for (int i = 0; i < numPalettes; i++) {
+            String name = null;
+            int flags = 0;
+            int[] colors = new int[numPaletteEntries];
+
+            if (paletteLabels != null) {
+                final int nameID = paletteLabels.get(i);
+
+                if (nameID != 0xFFFF) {
+                    final int nameRecordIndex = searchNameRecordIndex(nameID);
+
+                    if (nameRecordIndex > -1) {
+                        name = nameTable.recordAt(nameRecordIndex).string();
+                    }
+                }
+            }
+            if (name == null) {
+                name = "";
+            }
+
+            if (paletteTypes != null) {
+                flags = paletteTypes.get(i);
+            }
+
+            final int firstColorIndex = cpalTable.colorRecordIndexAt(i);
+            for (int j = 0; j < numPaletteEntries; j++) {
+                colors[j] = colorRecords.get(firstColorIndex + j);
+            }
+
+            predefinedPalettes.add(Palette.of(name, flags, colors));
+        }
+
+        paletteEntryNames = new ArrayList<>(numPaletteEntries);
+
+        /* Populate palette entry names. */
+        if (paletteEntryLabels == null) {
+            for (int i = 0; i < numPaletteEntries; i++) {
+                paletteEntryNames.add("");
+            }
+        } else {
+            for (int i = 0; i < numPaletteEntries; i++) {
+                final int nameID = paletteEntryLabels.get(i);
+                String name = null;
+
+                if (nameID != 0xFFFF) {
+                    final int nameRecordIndex = searchNameRecordIndex(nameID);
+
+                    if (nameRecordIndex > -1) {
+                        name = nameTable.recordAt(nameRecordIndex).string();
+                    }
+                }
+                if (name == null) {
+                    name = "";
+                }
+
+                paletteEntryNames.add(name);
+            }
+        }
+
+        /* By default, first palette is selected. */
+        associatedPalette = predefinedPalettes.get(0);
     }
 
 	private void setupNames() {
@@ -283,6 +389,40 @@ public class Typeface {
         }
 
         return null;
+    }
+
+    public @Nullable List<String> getPaletteEntryNames() {
+        if (paletteEntryNames != null) {
+            return Collections.unmodifiableList(paletteEntryNames);
+        }
+
+        return null;
+    }
+
+    public @Nullable List<Palette> getPredefinedPalettes() {
+        if (predefinedPalettes != null) {
+            return Collections.unmodifiableList(predefinedPalettes);
+        }
+
+        return null;
+    }
+
+    public @Nullable Palette getAssociatedPalette() {
+        return associatedPalette;
+    }
+
+    public @Nullable Typeface getColorInstance(@NonNull Palette palette) {
+        if (paletteEntryNames == null) {
+            throw new IllegalStateException("This typeface does not support color palettes");
+        }
+        checkNotNull(palette, "palette");
+
+        final int count = paletteEntryNames.size();
+        final int[] colors = palette.colors();
+
+        checkArgument(colors.length == count, "Palette should have exactly " + count + " colors");
+
+        return new Typeface(this, palette);
     }
 
     /**
@@ -531,6 +671,8 @@ public class Typeface {
 
     private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
 	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
+
+    private static native long nGetColorInstance(long nativeTypeface, int[] colors);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
     private static native int nSearchNameRecordIndex(long nativeTypeface, int nameId);
