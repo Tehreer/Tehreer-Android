@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public:
     Typeface &typeface() { return m_typeface; }
 
     void loadBitmap(const JavaBridge bridge, jobject glyph);
+    void loadColorBitmap(const JavaBridge bridge, jobject glyph, jint foregroundColor);
     void loadOutline(const JavaBridge bridge, jobject glyph);
     void loadPath(const JavaBridge bridge, jobject glyph);
 
@@ -51,7 +52,7 @@ private:
     FT_Size m_size;
     FT_Matrix m_transform;
 
-    void unsafeActivate(FT_Face ftFace);
+    void unsafeActivate(FT_Face ftFace, const Typeface::Palette *palette);
     jobject unsafeCreateBitmap(const JavaBridge bridge, const FT_Bitmap *bitmap);
 };
 

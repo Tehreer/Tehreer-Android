@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,26 @@
 
 package com.mta.tehreer.graphics;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-final class GlyphStrike implements Cloneable {
+class GlyphStrike implements Cloneable {
     public Typeface typeface;
     public int pixelWidth;      // 26.6 fixed-point value.
     public int pixelHeight;     // 26.6 fixed-point value.
     public int skewX;           // 16.16 fixed-point value.
+
+    public GlyphStrike color(@ColorInt int foregroundColor) {
+        Color strike = new Color();
+        strike.typeface = typeface;
+        strike.pixelWidth = pixelWidth;
+        strike.pixelHeight = pixelHeight;
+        strike.skewX = skewX;
+        strike.foregroundColor = foregroundColor;
+
+        return strike;
+    }
 
     @Override
     public @NonNull GlyphStrike clone() {
@@ -36,31 +48,57 @@ final class GlyphStrike implements Cloneable {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (this != obj) {
-            if (obj == null || !(obj instanceof GlyphStrike)) {
-                return false;
-            }
-
-            GlyphStrike other = (GlyphStrike) obj;
-            if ((typeface == null ? other.typeface != null : !typeface.equals(other.typeface))
-                    || pixelWidth != other.pixelWidth || pixelHeight != other.pixelHeight
-                    || skewX != other.skewX) {
-                return false;
-            }
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof GlyphStrike)) {
+            return false;
         }
 
-        return true;
+        GlyphStrike other = (GlyphStrike) obj;
+
+        return (typeface != null ? typeface.equals(other.typeface) : other.typeface == null)
+            && pixelWidth == other.pixelWidth
+            && pixelHeight == other.pixelHeight
+            && skewX == other.skewX;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + typeface.hashCode();
-        result = prime * result + pixelWidth;
-        result = prime * result + pixelHeight;
-        result = prime * result + skewX;
+        int result = typeface != null ? typeface.hashCode() : 0;
+        result = 31 * result + pixelWidth;
+        result = 31 * result + pixelHeight;
+        result = 31 * result + skewX;
 
         return result;
+    }
+
+    private static final class Color extends GlyphStrike {
+        public @ColorInt int foregroundColor;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            Color other = (Color) obj;
+
+            return foregroundColor == other.foregroundColor;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + foregroundColor;
+
+            return result;
+        }
     }
 }

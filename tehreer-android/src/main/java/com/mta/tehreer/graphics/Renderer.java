@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -501,7 +501,7 @@ public class Renderer {
     }
 
     private void getBoundingBox(int glyphId, @NonNull RectF boundingBox) {
-        Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId);
+        Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId, 0);
         boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
                         glyph.rightSideBearing(), glyph.bottomSideBearing());
     }
@@ -571,7 +571,7 @@ public class Renderer {
             }
 
             Glyph maskGlyph = (!strokeMode
-                               ? cache.getMaskGlyph(mGlyphStrike, glyphId)
+                               ? cache.getMaskGlyph(mGlyphStrike, glyphId, mFillColor)
                                : cache.getMaskGlyph(mGlyphStrike, glyphId, mGlyphLineRadius,
                                                     mGlyphLineCap, mGlyphLineJoin, mGlyphMiterLimit));
             Bitmap maskBitmap = maskGlyph.bitmap();

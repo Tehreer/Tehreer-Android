@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,37 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 class Glyph {
     static {
         JniBridge.loadLibrary();
     }
 
+    public static final int TYPE_MASK = 0x0001;
+    public static final int TYPE_COLOR = 0x0002;
+    public static final int TYPE_MIXED = 0x0003;
+
+    @IntDef({
+        TYPE_MASK,
+        TYPE_COLOR,
+        TYPE_MIXED
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type { }
+
     @Keep
     private final int glyphId;
     @Keep
     private long nativeOutline;
+    private @Type int mType;
     private int mLeftSideBearing;
     private int mTopSideBearing;
     private @Nullable Bitmap mBitmap;
@@ -44,6 +61,14 @@ class Glyph {
 
     public int glyphId() {
         return glyphId;
+    }
+
+    public boolean isLoaded() {
+        return mType != 0;
+    }
+
+    public @Type int type() {
+        return mType;
     }
 
     public int leftSideBearing() {
@@ -75,14 +100,15 @@ class Glyph {
     }
 
     @Keep
-    private void ownBitmap(Bitmap bitmap, int left, int top) {
+    private void ownBitmap(Bitmap bitmap, @Type int type, int left, int top) {
         if (mBitmap != null && !mBitmap.isRecycled()) {
             mBitmap.recycle();
         }
 
-        mBitmap = bitmap;
+        mType = type;
         mLeftSideBearing = left;
         mTopSideBearing = top;
+        mBitmap = bitmap;
     }
 
     @Keep

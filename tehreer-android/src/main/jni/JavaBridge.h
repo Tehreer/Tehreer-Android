@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ public:
 
     enum class BitmapConfig {
         Alpha8,
+        ARGB_8888
     };
 
     jobject BidiPair_construct(jint charIndex, jint actualCodePoint, jint pairingCodePoint) const;
@@ -45,7 +46,7 @@ public:
     jobject Glyph_construct(jint glyphID) const;
     jint Glyph_getGlyphID(jobject glyph) const;
     jlong Glyph_getNativeOutline(jobject glyph) const;
-    void Glyph_ownBitmap(jobject glyph, jobject bitmap, jint left, jint top) const;
+    void Glyph_ownBitmap(jobject glyph, jobject bitmap, jint type, jint left, jint top) const;
     void Glyph_ownOutline(jobject glyph, jlong nativeOutline) const;
     void Glyph_ownPath(jobject glyph, jobject path) const;
 

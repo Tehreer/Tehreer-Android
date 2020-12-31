@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 
 import com.mta.tehreer.internal.util.LruCache;
@@ -119,8 +120,38 @@ class GlyphCache extends LruCache {
         return glyph;
     }
 
+    private @NonNull Glyph getColorGlyph(@NonNull GlyphStrike strike,
+                                         @NonNull GlyphRasterizer rasterizer,
+                                         int glyphId, @ColorInt int foregroundColor) {
+        final GlyphStrike colorStrike = strike.color(foregroundColor);
+        final Segment segment;
+        final Glyph glyph;
+
+        synchronized (this) {
+            Segment colorSegment = segments.get(colorStrike);
+            if (colorSegment == null) {
+                colorSegment = new Segment(this, rasterizer);
+                segments.put(colorStrike, colorSegment);
+            }
+
+            segment = colorSegment;
+            glyph = unsafeGetGlyph(segment, glyphId);
+        }
+
+        synchronized (glyph) {
+            if (!glyph.isLoaded()) {
+                segment.remove(glyphId);
+
+                segment.rasterizer.loadColorBitmap(glyph, foregroundColor);
+                segment.put(glyphId, glyph);
+            }
+        }
+
+        return glyph;
+    }
+
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId) {
+    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId, @ColorInt int foregroundColor) {
         final Segment segment;
         final Glyph glyph;
 
@@ -130,12 +161,16 @@ class GlyphCache extends LruCache {
         }
 
         synchronized (glyph) {
-            if (glyph.bitmap() == null) {
+            if (!glyph.isLoaded()) {
                 segment.remove(glyphId);
 
                 segment.rasterizer.loadBitmap(glyph);
                 segment.put(glyphId, glyph);
             }
+        }
+
+        if (glyph.type() == Glyph.TYPE_MIXED) {
+            return getColorGlyph(strike, segment.rasterizer, glyphId, foregroundColor);
         }
 
         return glyph;

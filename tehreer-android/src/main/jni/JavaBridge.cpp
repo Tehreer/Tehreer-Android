@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ static jclass    BIDI_RUN;
 static jmethodID BIDI_RUN__CONSTRUCTOR;
 
 static jobject   BITMAP_CONFIG__ALPHA_8;
+static jobject   BITMAP_CONFIG__ARGB_8888;
 
 static jclass    BITMAP;
 static jmethodID BITMAP__CREATE_BITMAP;
@@ -85,12 +86,16 @@ void JavaBridge::load(JNIEnv* env)
     field = env->GetStaticObjectField(clazz, fieldID);
     BITMAP_CONFIG__ALPHA_8 = env->NewGlobalRef(field);
 
+    fieldID = env->GetStaticFieldID(clazz, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+    field = env->GetStaticObjectField(clazz, fieldID);
+    BITMAP_CONFIG__ARGB_8888 = env->NewGlobalRef(field);
+
     clazz = env->FindClass("com/mta/tehreer/graphics/Glyph");
     GLYPH = (jclass)env->NewGlobalRef(clazz);
     GLYPH__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(I)V");
     GLYPH__GLYPH_ID = env->GetFieldID(clazz, "glyphId", "I");
     GLYPH__NATIVE_OUTLINE = env->GetFieldID(clazz, "nativeOutline", "J");
-    GLYPH__OWN_BITMAP = env->GetMethodID(clazz, "ownBitmap", "(Landroid/graphics/Bitmap;II)V");
+    GLYPH__OWN_BITMAP = env->GetMethodID(clazz, "ownBitmap", "(Landroid/graphics/Bitmap;III)V");
     GLYPH__OWN_OUTLINE = env->GetMethodID(clazz, "ownOutline", "(J)V");
     GLYPH__OWN_PATH = env->GetMethodID(clazz, "ownPath", "(Landroid/graphics/Path;)V");
 
@@ -156,6 +161,10 @@ jobject JavaBridge::Bitmap_create(jint width, jint height, BitmapConfig config) 
     jobject configField = nullptr;
 
     switch (config) {
+    case BitmapConfig::ARGB_8888:
+        configField = BITMAP_CONFIG__ARGB_8888;
+        break;
+
     default:
         configField = BITMAP_CONFIG__ALPHA_8;
         break;
@@ -188,9 +197,9 @@ jlong JavaBridge::Glyph_getNativeOutline(jobject glyph) const
     return m_env->GetLongField(glyph, GLYPH__NATIVE_OUTLINE);
 }
 
-void JavaBridge::Glyph_ownBitmap(jobject glyph, jobject bitmap, jint left, jint top) const
+void JavaBridge::Glyph_ownBitmap(jobject glyph, jobject bitmap, jint type, jint left, jint top) const
 {
-    m_env->CallVoidMethod(glyph, GLYPH__OWN_BITMAP, bitmap, left, top);
+    m_env->CallVoidMethod(glyph, GLYPH__OWN_BITMAP, bitmap, type, left, top);
 }
 
 void JavaBridge::Glyph_ownOutline(jobject glyph, jlong nativeOutline) const

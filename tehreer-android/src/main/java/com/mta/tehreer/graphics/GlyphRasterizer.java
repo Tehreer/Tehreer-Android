@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.graphics;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 
 import com.mta.tehreer.Disposable;
@@ -48,6 +49,10 @@ final class GlyphRasterizer implements Disposable {
 	    nLoadBitmap(nativeRasterizer, glyph);
 	}
 
+    void loadColorBitmap(@NonNull Glyph glyph, @ColorInt int foregroundColor) {
+        nLoadColorBitmap(nativeRasterizer, glyph, foregroundColor);
+    }
+
     void loadOutline(@NonNull Glyph glyph) {
         nLoadOutline(nativeRasterizer, glyph);
     }
@@ -71,6 +76,7 @@ final class GlyphRasterizer implements Disposable {
     private static native void nDispose(long nativeRasterizer);
 
     private static native void nLoadBitmap(long nativeRasterizer, @NonNull Glyph glyph);
+    private static native void nLoadColorBitmap(long nativeRasterizer, @NonNull Glyph glyph, int foregroundColor);
     private static native void nLoadOutline(long nativeRasterizer, @NonNull Glyph glyph);
     private static native void nLoadPath(long nativeRasterizer, @NonNull Glyph glyph);
 

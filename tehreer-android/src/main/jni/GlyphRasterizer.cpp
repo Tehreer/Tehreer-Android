@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2020 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,13 @@ extern "C" {
 
 using namespace Tehreer;
 
+enum GlyphType : jint {
+    UNKNOWN = 0,
+    MASK = 1,
+    COLOR = 2,
+    MIXED = 3,
+};
+
 GlyphRasterizer::GlyphRasterizer(Typeface &typeface, FT_F26Dot6 pixelWidth, FT_F26Dot6 pixelHeight, FT_Matrix transform)
     : m_typeface(typeface)
     , m_size(nullptr)
@@ -64,10 +71,17 @@ GlyphRasterizer::~GlyphRasterizer()
     }
 }
 
-void GlyphRasterizer::unsafeActivate(FT_Face ftFace)
+void GlyphRasterizer::unsafeActivate(FT_Face ftFace, const Typeface::Palette *palette)
 {
     FT_Activate_Size(m_size);
     FT_Set_Transform(ftFace, &m_transform, nullptr);
+
+    if (palette) {
+        FT_Color *colors;
+        FT_Palette_Select(ftFace, 0, &colors);
+
+        memcpy(colors, palette->colors, sizeof(FT_Color) * palette->count);
+    }
 }
 
 jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge bridge, const FT_Bitmap *bitmap)
@@ -83,7 +97,27 @@ jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge bridge, const FT_Bi
             glyphBitmap = bridge.Bitmap_create(bitmap->width, bitmap->rows, JavaBridge::BitmapConfig::Alpha8);
             bridge.Bitmap_setPixels(glyphBitmap, bitmap->buffer, bitmapLength);
         }
-    break;
+        break;
+
+    case FT_PIXEL_MODE_BGRA:
+        bitmapLength = bitmap->width * bitmap->rows * 4;
+        if (bitmapLength > 0) {
+            for (size_t i = 0; i < bitmapLength; i += 4) {
+                uint8_t b = bitmap->buffer[i + 0];
+                uint8_t g = bitmap->buffer[i + 1];
+                uint8_t r = bitmap->buffer[i + 2];
+                uint8_t a = bitmap->buffer[i + 3];
+
+                bitmap->buffer[i + 0] = r;
+                bitmap->buffer[i + 1] = g;
+                bitmap->buffer[i + 2] = b;
+                bitmap->buffer[i + 3] = a;
+            }
+
+            glyphBitmap = bridge.Bitmap_create(bitmap->width, bitmap->rows, JavaBridge::BitmapConfig::ARGB_8888);
+            bridge.Bitmap_setPixels(glyphBitmap, bitmap->buffer, bitmapLength);
+        }
+        break;
 
     default:
         LOGW("Unsupported pixel mode of freetype bitmap");
@@ -93,9 +127,40 @@ jobject GlyphRasterizer::unsafeCreateBitmap(const JavaBridge bridge, const FT_Bi
     return glyphBitmap;
 }
 
+static GlyphType getGlyphType(FT_Face face, FT_UInt glyphID)
+{
+    FT_LayerIterator iterator;
+    iterator.p = nullptr;
+
+    FT_UInt layerGlyphID;
+    FT_UInt colorIndex;
+
+    bool isColored = false;
+    bool hasMask = false;
+
+    while (FT_Get_Color_Glyph_Layer(face, glyphID, &layerGlyphID, &colorIndex, &iterator)) {
+        isColored = true;
+
+        if (colorIndex == 0xFFFF) {
+            hasMask = true;
+            break;
+        }
+    }
+
+    if (!isColored) {
+        return GlyphType::MASK;
+    }
+    if (!hasMask) {
+        return GlyphType::COLOR;
+    }
+
+    return GlyphType::MIXED;
+}
+
 void GlyphRasterizer::loadBitmap(const JavaBridge bridge, jobject glyph)
 {
     FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
+    GlyphType glyphType = GlyphType::UNKNOWN;
     jobject glyphBitmap = nullptr;
     jint leftSideBearing = 0;
     jint topSideBearing = 0;
@@ -103,9 +168,55 @@ void GlyphRasterizer::loadBitmap(const JavaBridge bridge, jobject glyph)
     m_typeface.lock();
 
     FT_Face baseFace = m_typeface.ftFace();
-    unsafeActivate(baseFace);
+    unsafeActivate(baseFace, m_typeface.palette());
 
-    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_RENDER);
+    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_COLOR);
+    if (error == FT_Err_Ok) {
+        switch (baseFace->glyph->format) {
+        case FT_GLYPH_FORMAT_OUTLINE:
+            glyphType = getGlyphType(baseFace, glyphID);
+
+            if (glyphType != GlyphType::MIXED) {
+                error = FT_Render_Glyph(baseFace->glyph, FT_RENDER_MODE_NORMAL);
+                if (error == FT_Err_Ok) {
+                    FT_GlyphSlot glyphSlot = baseFace->glyph;
+                    glyphBitmap = unsafeCreateBitmap(bridge, &glyphSlot->bitmap);
+
+                    if (glyphBitmap) {
+                        leftSideBearing = glyphSlot->bitmap_left;
+                        topSideBearing = glyphSlot->bitmap_top;
+                    }
+                }
+            }
+            break;
+        }
+    }
+
+    m_typeface.unlock();
+
+    bridge.Glyph_ownBitmap(glyph, glyphBitmap, glyphType, leftSideBearing, topSideBearing);
+}
+
+void GlyphRasterizer::loadColorBitmap(const JavaBridge bridge, jobject glyph, jint foregroundColor)
+{
+    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
+    jobject glyphBitmap = nullptr;
+    jint leftSideBearing = 0;
+    jint topSideBearing = 0;
+
+    FT_Color ftColor;
+    ftColor.blue = foregroundColor & 0xFF;
+    ftColor.green = (foregroundColor >> 8) & 0xFF;
+    ftColor.red = (foregroundColor >> 16) & 0xFF;
+    ftColor.alpha = foregroundColor >> 24;
+
+    m_typeface.lock();
+
+    FT_Face baseFace = m_typeface.ftFace();
+    unsafeActivate(baseFace, m_typeface.palette());
+
+    FT_Palette_Set_Foreground_Color(baseFace, ftColor);
+    FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_COLOR | FT_LOAD_RENDER);
     if (error == FT_Err_Ok) {
         FT_GlyphSlot glyphSlot = baseFace->glyph;
         glyphBitmap = unsafeCreateBitmap(bridge, &glyphSlot->bitmap);
@@ -118,7 +229,7 @@ void GlyphRasterizer::loadBitmap(const JavaBridge bridge, jobject glyph)
 
     m_typeface.unlock();
 
-    bridge.Glyph_ownBitmap(glyph, glyphBitmap, leftSideBearing, topSideBearing);
+    bridge.Glyph_ownBitmap(glyph, glyphBitmap, GlyphType::COLOR, leftSideBearing, topSideBearing);
 }
 
 void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
@@ -128,7 +239,7 @@ void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
     m_typeface.lock();
 
     FT_Face baseFace = m_typeface.ftFace();
-    unsafeActivate(baseFace);
+    unsafeActivate(baseFace, m_typeface.palette());
 
     FT_Glyph outline = nullptr;
     FT_Error error = FT_Load_Glyph(baseFace, glyphID, FT_LOAD_NO_BITMAP);
@@ -148,7 +259,7 @@ void GlyphRasterizer::loadPath(const JavaBridge bridge, jobject glyph)
     m_typeface.lock();
 
     FT_Face baseFace = m_typeface.ftFace();
-    unsafeActivate(baseFace);
+    unsafeActivate(baseFace, m_typeface.palette());
 
     jobject glyphPath = m_typeface.getGlyphPathNoLock(bridge, glyphID);
 
@@ -187,7 +298,7 @@ jobject GlyphRasterizer::strokeGlyph(const JavaBridge bridge, jobject glyph, FT_
             }
 
             jobject result = bridge.Glyph_construct(glyphID);
-            bridge.Glyph_ownBitmap(result, strokeBitmap, leftSideBearing, topSideBearing);
+            bridge.Glyph_ownBitmap(result, strokeBitmap, 0, leftSideBearing, topSideBearing);
 
             /* Dispose the stroked / bitmap glyph. */
             FT_Done_Glyph(baseGlyph);
@@ -224,6 +335,12 @@ static void loadBitmap(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject
     glyphRasterizer->loadBitmap(JavaBridge(env), glyph);
 }
 
+static void loadColorBitmap(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph, jint foregroundColor)
+{
+    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    glyphRasterizer->loadColorBitmap(JavaBridge(env), glyph, foregroundColor);
+}
+
 static void loadOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
 {
     GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
@@ -253,6 +370,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "(JIIIIII)J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
     { "nLoadBitmap", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadBitmap },
+    { "nLoadColorBitmap", "(JLcom/mta/tehreer/graphics/Glyph;I)V", (void *)loadColorBitmap },
     { "nLoadOutline", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadOutline },
     { "nLoadPath", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadPath },
     { "nStrokeGlyph", "(JLcom/mta/tehreer/graphics/Glyph;IIII)Lcom/mta/tehreer/graphics/Glyph;", (void *)strokeGlyph },
