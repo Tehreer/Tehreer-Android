@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,16 +27,6 @@ final class GlyphRasterizer implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    public static final int LINECAP_BUTT = 0;
-    public static final int LINECAP_ROUND = 1;
-    public static final int LINECAP_SQUARE = 2;
-
-    public static final int LINEJOIN_ROUND = 0;
-    public static final int LINEJOIN_BEVEL = 1;
-    public static final int LINEJOIN_MITER_VARIABLE = 2;
-    public static final int LINEJOIN_MITER_FIXED = 3;
-    public static final int LINEJOIN_MITER = LINEJOIN_MITER_VARIABLE;
-
 	long nativeRasterizer;
 
 	GlyphRasterizer(@NonNull GlyphStrike strike) {
@@ -62,7 +52,9 @@ final class GlyphRasterizer implements Disposable {
     }
 
     @NonNull Glyph strokeGlyph(@NonNull Glyph glyph, int lineRadius,
-                               int lineCap, int lineJoin, int miterLimit) {
+                               @GlyphAttributes.LineCap int lineCap,
+                               @GlyphAttributes.LineJoin int lineJoin,
+                               int miterLimit) {
         return nStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
     }
 

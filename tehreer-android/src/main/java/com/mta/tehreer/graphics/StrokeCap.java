@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,19 +23,19 @@ public enum StrokeCap {
     /**
      * The stroke ends with the path, and does not project beyond it.
      */
-    BUTT(GlyphRasterizer.LINECAP_BUTT),
+    BUTT(GlyphAttributes.LINECAP_BUTT),
     /**
      * The stroke projects out as a semicircle, with the center at the end of the path.
      */
-    ROUND(GlyphRasterizer.LINECAP_ROUND),
+    ROUND(GlyphAttributes.LINECAP_ROUND),
     /**
      * The stroke projects out as a square, with the center at the end of the path.
      */
-    SQUARE(GlyphRasterizer.LINECAP_SQUARE);
+    SQUARE(GlyphAttributes.LINECAP_SQUARE);
 
-    final int value;
+    final @GlyphAttributes.LineCap int value;
 
-    StrokeCap(int value) {
+    StrokeCap(@GlyphAttributes.LineCap int value) {
         this.value = value;
     }
 }

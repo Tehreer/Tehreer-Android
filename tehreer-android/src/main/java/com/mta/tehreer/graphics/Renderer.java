@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,14 +42,9 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 public class Renderer {
     private static final String TAG = Renderer.class.getSimpleName();
 
-    private @NonNull GlyphStrike mGlyphStrike = new GlyphStrike();
-    private int mGlyphLineRadius;
-    private int mGlyphLineCap;
-    private int mGlyphLineJoin;
-    private int mGlyphMiterLimit;
+    private @NonNull GlyphAttributes mGlyphAttributes = new GlyphAttributes();
 
     private @NonNull Paint mPaint = new Paint();
-    private boolean mShouldRender = false;
     private boolean mShadowLayerSynced = true;
 
     private @ColorInt int mFillColor = Color.BLACK;
@@ -84,17 +79,12 @@ public class Renderer {
     }
 
     private void updatePixelSizes() {
-        int pixelWidth = (int) ((mTypeSize * mScaleX * 64.0f) + 0.5f);
-        int pixelHeight = (int) ((mTypeSize * mScaleY * 64.0f) + 0.5f);
-
-        // Minimum size supported by Freetype is 64x64.
-        mShouldRender = (pixelWidth >= 64 && pixelHeight >= 64);
-        mGlyphStrike.pixelWidth = pixelWidth;
-        mGlyphStrike.pixelHeight = pixelHeight;
+        mGlyphAttributes.setPixelWidth(mTypeSize * mScaleX);
+        mGlyphAttributes.setPixelHeight(mTypeSize * mScaleY);
     }
 
     private void updateTransform() {
-        mGlyphStrike.skewX = (int) ((mSlantAngle * 0x10000) + 0.5f);
+        mGlyphAttributes.setSkewX(mSlantAngle);
     }
 
     private void syncShadowLayer() {
@@ -180,7 +170,7 @@ public class Renderer {
      */
     public void setTypeface(Typeface typeface) {
         mTypeface = typeface;
-        mGlyphStrike.typeface = typeface;
+        mGlyphAttributes.setTypeface(typeface);
     }
 
     /**
@@ -304,7 +294,7 @@ public class Renderer {
     public void setStrokeWidth(float strokeWidth) {
         checkArgument(strokeWidth >= 0.0f, "Stroke width is negative");
         mStrokeWidth = strokeWidth;
-        mGlyphLineRadius = (int) ((strokeWidth * 64.0f / 2.0f) + 0.5f);
+        mGlyphAttributes.setLineRadius(strokeWidth / 2.0f);
     }
 
     /**
@@ -326,7 +316,7 @@ public class Renderer {
     public void setStrokeCap(@NonNull StrokeCap strokeCap) {
         checkNotNull(strokeCap);
         mStrokeCap = strokeCap;
-        mGlyphLineCap = strokeCap.value;
+        mGlyphAttributes.setLineCap(strokeCap.value);
     }
 
     /**
@@ -346,7 +336,7 @@ public class Renderer {
     public void setStrokeJoin(@NonNull StrokeJoin strokeJoin) {
         checkNotNull(strokeJoin);
         mStrokeJoin = strokeJoin;
-        mGlyphLineJoin = strokeJoin.value;
+        mGlyphAttributes.setLineJoin(strokeJoin.value);
     }
 
     /**
@@ -370,7 +360,7 @@ public class Renderer {
     public void setStrokeMiter(float strokeMiter) {
         checkArgument(strokeMiter >= 1.0f, "Stroke miter is less than one");
         mStrokeMiter = strokeMiter;
-        mGlyphMiterLimit = (int) ((strokeMiter * 0x10000) + 0.5f);
+        mGlyphAttributes.setMiterLimit(strokeMiter);
     }
 
     /**
@@ -454,7 +444,7 @@ public class Renderer {
     }
 
     private @NonNull Path getGlyphPath(int glyphId) {
-        return GlyphCache.getInstance().getGlyphPath(mGlyphStrike, glyphId);
+        return GlyphCache.getInstance().getGlyphPath(mGlyphAttributes, glyphId);
     }
 
     /**
@@ -501,7 +491,7 @@ public class Renderer {
     }
 
     private void getBoundingBox(int glyphId, @NonNull RectF boundingBox) {
-        Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphStrike, glyphId, 0);
+        Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphAttributes, glyphId);
         boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
                         glyph.rightSideBearing(), glyph.bottomSideBearing());
     }
@@ -571,9 +561,8 @@ public class Renderer {
             }
 
             Glyph maskGlyph = (!strokeMode
-                               ? cache.getMaskGlyph(mGlyphStrike, glyphId, mFillColor)
-                               : cache.getMaskGlyph(mGlyphStrike, glyphId, mGlyphLineRadius,
-                                                    mGlyphLineCap, mGlyphLineJoin, mGlyphMiterLimit));
+                               ? cache.getMaskGlyph(mGlyphAttributes, glyphId)
+                               : cache.getStrokeGlyph(mGlyphAttributes, glyphId));
             Bitmap maskBitmap = maskGlyph.bitmap();
             if (maskBitmap != null) {
                 int left = (int) (penX + xOffset + maskGlyph.leftSideBearing() + 0.5f);
@@ -599,7 +588,7 @@ public class Renderer {
      */
     public void drawGlyphs(@NonNull Canvas canvas,
                            @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances) {
-        if (mShouldRender) {
+        if (mGlyphAttributes.isRenderable()) {
             syncShadowLayer();
 
             if (mShadowRadius > 0.0f && canvas.isHardwareAccelerated()) {

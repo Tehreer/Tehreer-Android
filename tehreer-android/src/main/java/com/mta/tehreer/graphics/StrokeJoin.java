@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,19 +23,19 @@ public enum StrokeJoin {
     /**
      * The outer edges of a join meet with a straight line.
      */
-    BEVEL(GlyphRasterizer.LINEJOIN_BEVEL),
+    BEVEL(GlyphAttributes.LINEJOIN_BEVEL),
     /**
      * The outer edges of a join meet at a sharp angle.
      */
-    MITER(GlyphRasterizer.LINEJOIN_MITER),
+    MITER(GlyphAttributes.LINEJOIN_MITER_VARIABLE),
     /**
      * The outer edges of a join meet in a circular arc.
      */
-    ROUND(GlyphRasterizer.LINEJOIN_ROUND);
+    ROUND(GlyphAttributes.LINEJOIN_ROUND);
 
-    final int value;
+    final @GlyphAttributes.LineJoin int value;
 
-    StrokeJoin(int value) {
+    StrokeJoin(@GlyphAttributes.LineJoin int value) {
         this.value = value;
     }
 }

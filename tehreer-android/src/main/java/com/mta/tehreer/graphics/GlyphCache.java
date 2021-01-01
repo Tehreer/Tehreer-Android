@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -151,12 +151,12 @@ class GlyphCache extends LruCache {
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId, @ColorInt int foregroundColor) {
+    public @NonNull Glyph getMaskGlyph(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
         synchronized (this) {
-            segment = unsafeGetSegment(strike);
+            segment = unsafeGetSegment(attributes.associatedStrike());
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
@@ -170,20 +170,19 @@ class GlyphCache extends LruCache {
         }
 
         if (glyph.type() == Glyph.TYPE_MIXED) {
-            return getColorGlyph(strike, segment.rasterizer, glyphId, foregroundColor);
+            return getColorGlyph(attributes.colorStrike(), segment.rasterizer, glyphId, attributes.getForegroundColor());
         }
 
         return glyph;
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Glyph getMaskGlyph(@NonNull GlyphStrike strike, int glyphId, int lineRadius,
-                                       int lineCap, int lineJoin, int miterLimit) {
+    public @NonNull Glyph getStrokeGlyph(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
         synchronized (this) {
-            segment = unsafeGetSegment(strike);
+            segment = unsafeGetSegment(attributes.associatedStrike());
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
@@ -196,16 +195,17 @@ class GlyphCache extends LruCache {
             }
         }
 
-        return segment.rasterizer.strokeGlyph(glyph, lineRadius, lineCap, lineJoin, miterLimit);
+        return segment.rasterizer.strokeGlyph(glyph, attributes.getFixedLineRadius(),
+                attributes.getLineCap(), attributes.getLineJoin(), attributes.getFixedMiterLimit());
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Path getGlyphPath(@NonNull GlyphStrike strike, int glyphId) {
+    public @NonNull Path getGlyphPath(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
         synchronized (this) {
-            segment = unsafeGetSegment(strike);
+            segment = unsafeGetSegment(attributes.associatedStrike());
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 

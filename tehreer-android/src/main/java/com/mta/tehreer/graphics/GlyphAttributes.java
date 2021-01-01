@@ -1,0 +1,128 @@
+/*
+ * Copyright (C) 2021 Muhammad Tayyab Akram
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.mta.tehreer.graphics;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+final class GlyphAttributes {
+    public static final int LINECAP_BUTT = 0;
+    public static final int LINECAP_ROUND = 1;
+    public static final int LINECAP_SQUARE = 2;
+
+    public static final int LINEJOIN_ROUND = 0;
+    public static final int LINEJOIN_BEVEL = 1;
+    public static final int LINEJOIN_MITER_VARIABLE = 2;
+    public static final int LINEJOIN_MITER_FIXED = 3;
+
+    @IntDef({
+        LINECAP_BUTT,
+        LINECAP_ROUND,
+        LINECAP_SQUARE
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface LineCap { }
+
+    @IntDef({
+        LINEJOIN_ROUND,
+        LINEJOIN_BEVEL,
+        LINEJOIN_MITER_VARIABLE,
+        LINEJOIN_MITER_FIXED
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface LineJoin { }
+
+    private @NonNull GlyphStrike glyphStrike = new GlyphStrike();
+    private @ColorInt int foregroundColor;
+    private int lineRadius;
+    private @LineCap int lineCap;
+    private @LineJoin int lineJoin;
+    private int miterLimit;
+
+    public void setTypeface(Typeface typeface) {
+        glyphStrike.typeface = typeface;
+    }
+
+    public void setPixelWidth(float pixelWidth) {
+        glyphStrike.pixelWidth = (int) ((pixelWidth * 64.0f) + 0.5f);
+    }
+
+    public void setPixelHeight(float pixelHeight) {
+        glyphStrike.pixelHeight = (int) ((pixelHeight * 64.0f) + 0.5f);
+    }
+
+    public void setSkewX(float skewX) {
+        glyphStrike.skewX = (int) ((skewX * 0x10000) + 0.5f);
+    }
+
+    public @ColorInt int getForegroundColor() {
+        return foregroundColor;
+    }
+
+    public void setForegroundColor(@ColorInt int foregroundColor) {
+        this.foregroundColor = foregroundColor;
+    }
+
+    public int getFixedLineRadius() {
+        return lineRadius;
+    }
+
+    public void setLineRadius(float lineRadius) {
+        this.lineRadius = (int) ((lineRadius * 64.0f) + 0.5f);
+    }
+
+    public @LineCap int getLineCap() {
+        return lineCap;
+    }
+
+    public void setLineCap(@LineCap int lineCap) {
+        this.lineCap = lineCap;
+    }
+
+    public @LineJoin int getLineJoin() {
+        return lineJoin;
+    }
+
+    public void setLineJoin(@LineJoin int lineJoin) {
+        this.lineJoin = lineJoin;
+    }
+
+    public int getFixedMiterLimit() {
+        return miterLimit;
+    }
+
+    public void setMiterLimit(float miterLimit) {
+        this.miterLimit = (int) ((miterLimit * 0x10000) + 0.5f);
+    }
+
+    public boolean isRenderable() {
+        // Minimum size supported by FreeType is 64x64.
+        return (glyphStrike.pixelWidth >= 64 && glyphStrike.pixelHeight >= 64);
+    }
+
+    public GlyphStrike associatedStrike() {
+        return glyphStrike;
+    }
+
+    public GlyphStrike colorStrike() {
+        return glyphStrike.color(foregroundColor);
+    }
+}
