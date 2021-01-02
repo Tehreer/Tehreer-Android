@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,21 @@ class GlyphStrike implements Cloneable {
         strike.pixelHeight = pixelHeight;
         strike.skewX = skewX;
         strike.foregroundColor = foregroundColor;
+
+        return strike;
+    }
+
+    public GlyphStrike stroke(int lineRadius, @GlyphAttributes.LineCap int lineCap,
+                              @GlyphAttributes.LineJoin int lineJoin, int miterLimit) {
+        Stroke strike = new Stroke();
+        strike.typeface = typeface;
+        strike.pixelWidth = pixelWidth;
+        strike.pixelHeight = pixelHeight;
+        strike.skewX = skewX;
+        strike.lineRadius = lineRadius;
+        strike.lineCap = lineCap;
+        strike.lineJoin = lineJoin;
+        strike.miterLimit = miterLimit;
 
         return strike;
     }
@@ -97,6 +112,44 @@ class GlyphStrike implements Cloneable {
         public int hashCode() {
             int result = super.hashCode();
             result = 31 * result + foregroundColor;
+
+            return result;
+        }
+    }
+
+    private static final class Stroke extends GlyphStrike {
+        public int lineRadius;
+        public @GlyphAttributes.LineCap int lineCap;
+        public @GlyphAttributes.LineJoin int lineJoin;
+        public int miterLimit;
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            Stroke other = (Stroke) obj;
+
+            return lineRadius == other.lineRadius
+                && lineCap == other.lineCap
+                && lineJoin == other.lineJoin
+                && miterLimit == other.miterLimit;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + lineRadius;
+            result = 31 * result + lineCap;
+            result = 31 * result + lineJoin;
+            result = 31 * result + miterLimit;
 
             return result;
         }

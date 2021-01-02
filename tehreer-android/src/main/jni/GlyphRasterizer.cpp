@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -298,7 +298,7 @@ jobject GlyphRasterizer::strokeGlyph(const JavaBridge bridge, jobject glyph, FT_
             }
 
             jobject result = bridge.Glyph_construct(glyphID);
-            bridge.Glyph_ownBitmap(result, strokeBitmap, 0, leftSideBearing, topSideBearing);
+            bridge.Glyph_ownBitmap(result, strokeBitmap, GlyphType::MASK, leftSideBearing, topSideBearing);
 
             /* Dispose the stroked / bitmap glyph. */
             FT_Done_Glyph(baseGlyph);

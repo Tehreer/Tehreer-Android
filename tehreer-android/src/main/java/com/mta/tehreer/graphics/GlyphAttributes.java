@@ -125,4 +125,8 @@ final class GlyphAttributes {
     public GlyphStrike colorStrike() {
         return glyphStrike.color(foregroundColor);
     }
+
+    public GlyphStrike strokeStrike() {
+        return glyphStrike.stroke(lineRadius, lineCap, lineJoin, miterLimit);
+    }
 }

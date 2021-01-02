@@ -150,6 +150,39 @@ class GlyphCache extends LruCache {
         return glyph;
     }
 
+    private @NonNull Glyph getStrokeGlyph(@NonNull GlyphStrike strike,
+                                          @NonNull GlyphRasterizer rasterizer,
+                                          @NonNull Glyph parentGlyph, int lineRadius,
+                                          @GlyphAttributes.LineCap int lineCap,
+                                          @GlyphAttributes.LineJoin int lineJoin,
+                                          int miterLimit) {
+        final int glyphId = parentGlyph.glyphId();
+        final Segment segment;
+        Glyph glyph;
+
+        synchronized (this) {
+            Segment strokeSegment = segments.get(strike);
+            if (strokeSegment == null) {
+                strokeSegment = new Segment(this, rasterizer);
+                segments.put(strike, strokeSegment);
+            }
+
+            segment = strokeSegment;
+            glyph = unsafeGetGlyph(segment, glyphId);
+        }
+
+        synchronized (glyph) {
+            if (!glyph.isLoaded()) {
+                segment.remove(glyphId);
+
+                glyph = segment.rasterizer.strokeGlyph(parentGlyph, lineRadius, lineCap, lineJoin, miterLimit);
+                segment.put(glyphId, glyph);
+            }
+        }
+
+        return glyph;
+    }
+
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public @NonNull Glyph getMaskGlyph(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
@@ -195,8 +228,10 @@ class GlyphCache extends LruCache {
             }
         }
 
-        return segment.rasterizer.strokeGlyph(glyph, attributes.getFixedLineRadius(),
-                attributes.getLineCap(), attributes.getLineJoin(), attributes.getFixedMiterLimit());
+        return getStrokeGlyph(attributes.strokeStrike(), segment.rasterizer, glyph,
+                              attributes.getFixedLineRadius(),
+                              attributes.getLineCap(), attributes.getLineJoin(),
+                              attributes.getFixedMiterLimit());
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
