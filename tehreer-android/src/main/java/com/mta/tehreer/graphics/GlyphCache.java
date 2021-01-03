@@ -150,13 +150,10 @@ class GlyphCache extends LruCache {
         return glyph;
     }
 
-    private @NonNull Glyph getStrokeGlyph(@NonNull GlyphStrike strike,
+    private @NonNull Glyph getStrokeGlyph(@NonNull GlyphAttributes attributes,
                                           @NonNull GlyphRasterizer rasterizer,
-                                          @NonNull Glyph parentGlyph, int lineRadius,
-                                          @GlyphAttributes.LineCap int lineCap,
-                                          @GlyphAttributes.LineJoin int lineJoin,
-                                          int miterLimit) {
-        final int glyphId = parentGlyph.glyphId();
+                                          @NonNull Glyph parentGlyph, int glyphId) {
+        final GlyphStrike strike = attributes.strokeStrike();
         final Segment segment;
         Glyph glyph;
 
@@ -168,14 +165,16 @@ class GlyphCache extends LruCache {
             }
 
             segment = strokeSegment;
-            glyph = unsafeGetGlyph(segment, glyphId);
+            glyph = segment.get(glyphId);
         }
 
-        synchronized (glyph) {
-            if (!glyph.isLoaded()) {
-                segment.remove(glyphId);
+        if (glyph == null) {
+            glyph = rasterizer.strokeGlyph(parentGlyph, attributes.getFixedLineRadius(),
+                                           attributes.getLineCap(), attributes.getLineJoin(),
+                                           attributes.getFixedMiterLimit());
 
-                glyph = segment.rasterizer.strokeGlyph(parentGlyph, lineRadius, lineCap, lineJoin, miterLimit);
+            synchronized (this) {
+                segment.remove(glyphId);
                 segment.put(glyphId, glyph);
             }
         }
@@ -228,10 +227,7 @@ class GlyphCache extends LruCache {
             }
         }
 
-        return getStrokeGlyph(attributes.strokeStrike(), segment.rasterizer, glyph,
-                              attributes.getFixedLineRadius(),
-                              attributes.getLineCap(), attributes.getLineJoin(),
-                              attributes.getFixedMiterLimit());
+        return getStrokeGlyph(attributes, segment.rasterizer, glyph, glyphId);
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
