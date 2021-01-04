@@ -16,8 +16,11 @@
 
 package com.mta.tehreer.graphics;
 
+import android.graphics.Color;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
@@ -35,12 +38,24 @@ final class GlyphRasterizer implements Disposable {
                                    0x10000, -strike.skewX, 0, 0x10000);
 	}
 
-	void loadBitmap(@NonNull Glyph glyph) {
-	    nLoadBitmap(nativeRasterizer, glyph);
-	}
+	int getGlyphType(int glyphId) {
+        return nGetGlyphType(nativeRasterizer, glyphId);
+    }
 
-    void loadColorBitmap(@NonNull Glyph glyph, @ColorInt int foregroundColor) {
-        nLoadColorBitmap(nativeRasterizer, glyph, foregroundColor);
+    @Nullable GlyphImage getGlyphImage(int glyphId) {
+        return getGlyphImage(glyphId, Color.TRANSPARENT);
+    }
+
+    @Nullable GlyphImage getGlyphImage(int glyphId, @ColorInt int foregroundColor) {
+        return nGetGlyphImage(nativeRasterizer, glyphId, foregroundColor);
+    }
+
+    @Nullable GlyphImage getStrokeImage(long nativeOutline, int lineRadius,
+                                       @GlyphAttributes.LineCap int lineCap,
+                                       @GlyphAttributes.LineJoin int lineJoin,
+                                       int miterLimit) {
+        return nGetStrokeImage(nativeRasterizer, nativeOutline,
+                               lineRadius, lineCap, lineJoin, miterLimit);
     }
 
     void loadOutline(@NonNull Glyph glyph) {
@@ -49,13 +64,6 @@ final class GlyphRasterizer implements Disposable {
 
     void loadPath(@NonNull Glyph glyph) {
         nLoadPath(nativeRasterizer, glyph);
-    }
-
-    @NonNull Glyph strokeGlyph(@NonNull Glyph glyph, int lineRadius,
-                               @GlyphAttributes.LineCap int lineCap,
-                               @GlyphAttributes.LineJoin int lineJoin,
-                               int miterLimit) {
-        return nStrokeGlyph(nativeRasterizer, glyph, lineRadius, lineCap, lineJoin, miterLimit);
     }
 
     @Override
@@ -67,11 +75,11 @@ final class GlyphRasterizer implements Disposable {
                                        int transformXX, int transformXY, int transformYX, int transformYY);
     private static native void nDispose(long nativeRasterizer);
 
-    private static native void nLoadBitmap(long nativeRasterizer, @NonNull Glyph glyph);
-    private static native void nLoadColorBitmap(long nativeRasterizer, @NonNull Glyph glyph, int foregroundColor);
+    private static native int nGetGlyphType(long nativeRasterizer, int glyphId);
+    private static native GlyphImage nGetGlyphImage(long nativeRasterizer, int glyphId, int forgroundColor);
+    private static native GlyphImage nGetStrokeImage(long nativeRasterizer, long nativeOutline,
+                                                     int lineRadius, int lineCap, int lineJoin, int miterLimit);
+
     private static native void nLoadOutline(long nativeRasterizer, @NonNull Glyph glyph);
     private static native void nLoadPath(long nativeRasterizer, @NonNull Glyph glyph);
-
-    private static native Glyph nStrokeGlyph(long nativeRasterizer, @NonNull Glyph glyph,
-                                             int lineRadius, int lineCap, int lineJoin, int miterLimit);
 }

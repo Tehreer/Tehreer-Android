@@ -491,9 +491,11 @@ public class Renderer {
     }
 
     private void getBoundingBox(int glyphId, @NonNull RectF boundingBox) {
-        Glyph glyph = GlyphCache.getInstance().getMaskGlyph(mGlyphAttributes, glyphId);
-        boundingBox.set(glyph.leftSideBearing(), glyph.topSideBearing(),
-                        glyph.rightSideBearing(), glyph.bottomSideBearing());
+        GlyphImage glyphImage = GlyphCache.getInstance().getGlyphImage(mGlyphAttributes, glyphId);
+        if (glyphImage != null) {
+            boundingBox.set(glyphImage.left(), glyphImage.top(),
+                            glyphImage.right(), glyphImage.bottom());
+        }
     }
 
     /**
@@ -560,15 +562,15 @@ public class Renderer {
                 penX -= advance;
             }
 
-            Glyph maskGlyph = (!strokeMode
-                               ? cache.getMaskGlyph(mGlyphAttributes, glyphId)
-                               : cache.getStrokeGlyph(mGlyphAttributes, glyphId));
-            Bitmap maskBitmap = maskGlyph.bitmap();
-            if (maskBitmap != null) {
-                int left = (int) (penX + xOffset + maskGlyph.leftSideBearing() + 0.5f);
-                int top = (int) (-yOffset - maskGlyph.topSideBearing() + 0.5f);
+            GlyphImage glyphImage = (!strokeMode
+                                     ? cache.getGlyphImage(mGlyphAttributes, glyphId)
+                                     : cache.getStrokeImage(mGlyphAttributes, glyphId));
+            if (glyphImage != null) {
+                Bitmap bitmap = glyphImage.bitmap();
+                int left = (int) (penX + xOffset + glyphImage.left() + 0.5f);
+                int top = (int) (-yOffset - glyphImage.top() + 0.5f);
 
-                canvas.drawBitmap(maskBitmap, left, top, mPaint);
+                canvas.drawBitmap(bitmap, left, top, mPaint);
             }
 
             if (!reverseMode) {

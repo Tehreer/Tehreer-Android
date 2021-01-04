@@ -21,6 +21,7 @@ import android.graphics.Path;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.util.LruCache;
 
@@ -59,11 +60,12 @@ class GlyphCache extends LruCache {
 
         @Override
         protected int sizeOf(@NonNull Integer key, @NonNull Glyph value) {
-            Bitmap maskBitmap = value.bitmap();
+            GlyphImage glyphImage = value.getImage();
             int innerSize = 0;
 
-            if (maskBitmap != null) {
-                innerSize = maskBitmap.getWidth() * maskBitmap.getHeight();
+            if (glyphImage != null) {
+                Bitmap bitmap = glyphImage.bitmap();
+                innerSize = bitmap.getWidth() * bitmap.getHeight();
             }
 
             return innerSize + ESTIMATED_OVERHEAD;
@@ -120,39 +122,44 @@ class GlyphCache extends LruCache {
         return glyph;
     }
 
-    private @NonNull Glyph getColorGlyph(@NonNull GlyphStrike strike,
-                                         @NonNull GlyphRasterizer rasterizer,
-                                         int glyphId, @ColorInt int foregroundColor) {
-        final GlyphStrike colorStrike = strike.color(foregroundColor);
+    private @Nullable GlyphImage getColorImage(@NonNull GlyphAttributes attributes,
+                                               @NonNull GlyphRasterizer rasterizer,
+                                               int glyphId) {
+        final GlyphStrike strike = attributes.colorStrike();
         final Segment segment;
         final Glyph glyph;
 
         synchronized (this) {
-            Segment colorSegment = segments.get(colorStrike);
+            Segment colorSegment = segments.get(strike);
             if (colorSegment == null) {
                 colorSegment = new Segment(this, rasterizer);
-                segments.put(colorStrike, colorSegment);
+                segments.put(strike, colorSegment);
             }
 
             segment = colorSegment;
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
-        synchronized (glyph) {
-            if (!glyph.isLoaded()) {
-                segment.remove(glyphId);
+        GlyphImage glyphImage = glyph.getImage();
 
-                segment.rasterizer.loadColorBitmap(glyph, foregroundColor);
-                segment.put(glyphId, glyph);
+        if (glyphImage == null) {
+            glyphImage = rasterizer.getGlyphImage(glyphId, attributes.getForegroundColor());
+
+            synchronized (this) {
+                if (glyph.getImage() == null) {
+                    segment.remove(glyphId);
+                    glyph.setImage(glyphImage);
+                    segment.put(glyphId, glyph);
+                }
             }
         }
 
-        return glyph;
+        return glyphImage;
     }
 
-    private @NonNull Glyph getStrokeGlyph(@NonNull GlyphAttributes attributes,
-                                          @NonNull GlyphRasterizer rasterizer,
-                                          @NonNull Glyph parentGlyph, int glyphId) {
+    private @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes,
+                                                @NonNull GlyphRasterizer rasterizer,
+                                                @NonNull Glyph parentGlyph, int glyphId) {
         final GlyphStrike strike = attributes.strokeStrike();
         final Segment segment;
         Glyph glyph;
@@ -165,25 +172,31 @@ class GlyphCache extends LruCache {
             }
 
             segment = strokeSegment;
-            glyph = segment.get(glyphId);
+            glyph = unsafeGetGlyph(segment, glyphId);
         }
 
-        if (glyph == null) {
-            glyph = rasterizer.strokeGlyph(parentGlyph, attributes.getFixedLineRadius(),
-                                           attributes.getLineCap(), attributes.getLineJoin(),
-                                           attributes.getFixedMiterLimit());
+        GlyphImage glyphImage = glyph.getImage();
+
+        if (glyphImage == null) {
+            glyphImage = rasterizer.getStrokeImage(parentGlyph.getNativeOutline(),
+                                                   attributes.getFixedLineRadius(),
+                                                   attributes.getLineCap(),
+                                                   attributes.getLineJoin(),
+                                                   attributes.getFixedMiterLimit());
 
             synchronized (this) {
-                segment.remove(glyphId);
-                segment.put(glyphId, glyph);
+                if (glyph.getImage() == null) {
+                    segment.remove(glyphId);
+                    glyph.setImage(glyphImage);
+                    segment.put(glyphId, glyph);
+                }
             }
         }
 
-        return glyph;
+        return glyphImage;
     }
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Glyph getMaskGlyph(@NonNull GlyphAttributes attributes, int glyphId) {
+    public @Nullable GlyphImage getGlyphImage(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
@@ -192,24 +205,35 @@ class GlyphCache extends LruCache {
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
-        synchronized (glyph) {
-            if (!glyph.isLoaded()) {
-                segment.remove(glyphId);
+        if (!glyph.isLoaded()) {
+            int glyphType = segment.rasterizer.getGlyphType(glyphId);
+            GlyphImage glyphImage = null;
 
-                segment.rasterizer.loadBitmap(glyph);
-                segment.put(glyphId, glyph);
+            if (glyphType != Glyph.TYPE_MIXED) {
+                glyphImage = segment.rasterizer.getGlyphImage(glyphId);
+            }
+
+            synchronized (this) {
+                if (!glyph.isLoaded()) {
+                    segment.remove(glyphId);
+
+                    glyph.setType(glyphType);
+                    glyph.setImage(glyphImage);
+
+                    segment.put(glyphId, glyph);
+                }
             }
         }
 
-        if (glyph.type() == Glyph.TYPE_MIXED) {
-            return getColorGlyph(attributes.colorStrike(), segment.rasterizer, glyphId, attributes.getForegroundColor());
+        if (glyph.getType() == Glyph.TYPE_MIXED) {
+            return getColorImage(attributes, segment.rasterizer, glyphId);
         }
 
-        return glyph;
+        return glyph.getImage();
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-    public @NonNull Glyph getStrokeGlyph(@NonNull GlyphAttributes attributes, int glyphId) {
+    public @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
 
@@ -227,7 +251,7 @@ class GlyphCache extends LruCache {
             }
         }
 
-        return getStrokeGlyph(attributes, segment.rasterizer, glyph, glyphId);
+        return getStrokeImage(attributes, segment.rasterizer, glyph, glyphId);
     }
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")

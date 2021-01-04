@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 extern "C" {
 #include <ft2build.h>
+#include FT_COLOR_H
 #include FT_FREETYPE_H
 #include FT_TYPES_H
 }
@@ -39,13 +40,13 @@ public:
 
     Typeface &typeface() { return m_typeface; }
 
-    void loadBitmap(const JavaBridge bridge, jobject glyph);
-    void loadColorBitmap(const JavaBridge bridge, jobject glyph, jint foregroundColor);
+    jint getGlyphType(FT_UInt glyphID);
+    jobject getGlyphImage(const JavaBridge bridge, FT_UInt glyphID, FT_Color foregroundColor);
+    jobject getStrokeImage(const JavaBridge bridge, FT_Glyph baseGlyph, FT_Fixed lineRadius,
+        FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
+
     void loadOutline(const JavaBridge bridge, jobject glyph);
     void loadPath(const JavaBridge bridge, jobject glyph);
-
-    jobject strokeGlyph(const JavaBridge bridge, jobject glyph, FT_Fixed lineRadius,
-        FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
 
 private:
     Typeface &m_typeface;

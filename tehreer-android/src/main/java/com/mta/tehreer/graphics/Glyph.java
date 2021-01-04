@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.graphics;
 
-import android.graphics.Bitmap;
 import android.graphics.Path;
 
 import androidx.annotation.IntDef;
@@ -47,12 +46,9 @@ class Glyph {
 
     @Keep
     private final int glyphId;
-    @Keep
-    private long nativeOutline;
+    private long mNativeOutline;
     private @Type int mType;
-    private int mLeftSideBearing;
-    private int mTopSideBearing;
-    private @Nullable Bitmap mBitmap;
+    private @Nullable GlyphImage mImage;
     private @Nullable Path mPath;
 
     public Glyph(int glyphId) {
@@ -67,48 +63,32 @@ class Glyph {
         return mType != 0;
     }
 
-    public @Type int type() {
+    public @Type int getType() {
         return mType;
     }
 
-    public int leftSideBearing() {
-        return mLeftSideBearing;
+    public void setType(@Type int type) {
+        mType = type;
     }
 
-    public int topSideBearing() {
-        return mTopSideBearing;
+    public @Nullable GlyphImage getImage() {
+        return mImage;
     }
 
-    public int rightSideBearing() {
-        return mLeftSideBearing + (mBitmap != null ? mBitmap.getWidth() : 0);
-    }
-
-    public int bottomSideBearing() {
-        return mTopSideBearing + (mBitmap != null ? mBitmap.getHeight() : 0);
-    }
-
-    public @Nullable Bitmap bitmap() {
-        return mBitmap;
+    public void setImage(GlyphImage image) {
+        mImage = image;
     }
 
     public @Nullable Path path() {
         return mPath;
     }
 
-    public boolean containsOutline() {
-        return (nativeOutline != 0);
+    public long getNativeOutline() {
+        return mNativeOutline;
     }
 
-    @Keep
-    private void ownBitmap(Bitmap bitmap, @Type int type, int left, int top) {
-        if (mBitmap != null && !mBitmap.isRecycled()) {
-            mBitmap.recycle();
-        }
-
-        mType = type;
-        mLeftSideBearing = left;
-        mTopSideBearing = top;
-        mBitmap = bitmap;
+    public boolean containsOutline() {
+        return (mNativeOutline != 0);
     }
 
     @Keep
@@ -118,19 +98,19 @@ class Glyph {
 
     @Keep
     private void ownOutline(long nativeOutline) {
-        if (this.nativeOutline != 0) {
-            nDisposeOutline(this.nativeOutline);
+        if (mNativeOutline != 0) {
+            nDisposeOutline(mNativeOutline);
         }
 
-        this.nativeOutline = nativeOutline;
+        mNativeOutline = nativeOutline;
     }
 
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (nativeOutline != 0) {
-                nDisposeOutline(nativeOutline);
-                nativeOutline = 0;
+            if (mNativeOutline != 0) {
+                nDisposeOutline(mNativeOutline);
+                mNativeOutline = 0;
             }
         } finally {
             super.finalize();

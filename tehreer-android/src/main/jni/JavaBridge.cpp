@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,12 @@ static jclass    BITMAP;
 static jmethodID BITMAP__CREATE_BITMAP;
 
 static jclass    GLYPH;
-static jmethodID GLYPH__CONSTRUCTOR;
 static jfieldID  GLYPH__GLYPH_ID;
-static jfieldID  GLYPH__NATIVE_OUTLINE;
-static jmethodID GLYPH__OWN_BITMAP;
 static jmethodID GLYPH__OWN_OUTLINE;
 static jmethodID GLYPH__OWN_PATH;
+
+static jclass    GLYPH_IMAGE;
+static jmethodID GLYPH_IMAGE__CONSTRUCTOR;
 
 static jmethodID INPUT_STREAM__READ;
 
@@ -92,12 +92,13 @@ void JavaBridge::load(JNIEnv* env)
 
     clazz = env->FindClass("com/mta/tehreer/graphics/Glyph");
     GLYPH = (jclass)env->NewGlobalRef(clazz);
-    GLYPH__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(I)V");
     GLYPH__GLYPH_ID = env->GetFieldID(clazz, "glyphId", "I");
-    GLYPH__NATIVE_OUTLINE = env->GetFieldID(clazz, "nativeOutline", "J");
-    GLYPH__OWN_BITMAP = env->GetMethodID(clazz, "ownBitmap", "(Landroid/graphics/Bitmap;III)V");
     GLYPH__OWN_OUTLINE = env->GetMethodID(clazz, "ownOutline", "(J)V");
     GLYPH__OWN_PATH = env->GetMethodID(clazz, "ownPath", "(Landroid/graphics/Path;)V");
+
+    clazz = env->FindClass("com/mta/tehreer/graphics/GlyphImage");
+    GLYPH_IMAGE = (jclass)env->NewGlobalRef(clazz);
+    GLYPH_IMAGE__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(Landroid/graphics/Bitmap;II)V");
 
     clazz = env->FindClass("java/io/InputStream");
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
@@ -182,24 +183,9 @@ void JavaBridge::Bitmap_setPixels(jobject bitmap, const void *pixels, size_t len
     AndroidBitmap_unlockPixels(m_env, bitmap);
 }
 
-jobject JavaBridge::Glyph_construct(jint glyphID) const
-{
-    return m_env->NewObject(GLYPH, GLYPH__CONSTRUCTOR, glyphID);
-}
-
 jint JavaBridge::Glyph_getGlyphID(jobject glyph) const
 {
     return m_env->GetIntField(glyph, GLYPH__GLYPH_ID);
-}
-
-jlong JavaBridge::Glyph_getNativeOutline(jobject glyph) const
-{
-    return m_env->GetLongField(glyph, GLYPH__NATIVE_OUTLINE);
-}
-
-void JavaBridge::Glyph_ownBitmap(jobject glyph, jobject bitmap, jint type, jint left, jint top) const
-{
-    m_env->CallVoidMethod(glyph, GLYPH__OWN_BITMAP, bitmap, type, left, top);
 }
 
 void JavaBridge::Glyph_ownOutline(jobject glyph, jlong nativeOutline) const
@@ -210,6 +196,11 @@ void JavaBridge::Glyph_ownOutline(jobject glyph, jlong nativeOutline) const
 void JavaBridge::Glyph_ownPath(jobject glyph, jobject path) const
 {
     m_env->CallVoidMethod(glyph, GLYPH__OWN_PATH, path);
+}
+
+jobject JavaBridge::GlyphImage_construct(jobject bitmap, jint left, jint top) const
+{
+    return m_env->NewObject(GLYPH_IMAGE, GLYPH_IMAGE__CONSTRUCTOR, bitmap, left, top);
 }
 
 jint JavaBridge::InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const

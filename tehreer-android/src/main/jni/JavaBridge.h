@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,12 +43,11 @@ public:
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
     void Bitmap_setPixels(jobject bitmap, const void *pixels, size_t length) const;
 
-    jobject Glyph_construct(jint glyphID) const;
     jint Glyph_getGlyphID(jobject glyph) const;
-    jlong Glyph_getNativeOutline(jobject glyph) const;
-    void Glyph_ownBitmap(jobject glyph, jobject bitmap, jint type, jint left, jint top) const;
     void Glyph_ownOutline(jobject glyph, jlong nativeOutline) const;
     void Glyph_ownPath(jobject glyph, jobject path) const;
+
+    jobject GlyphImage_construct(jobject bitmap, jint left, jint top) const;
 
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;
 
