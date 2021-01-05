@@ -19,7 +19,6 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -254,7 +253,6 @@ class GlyphCache extends LruCache {
         return getStrokeImage(attributes, segment.rasterizer, glyph, glyphId);
     }
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public @NonNull Path getGlyphPath(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
@@ -264,15 +262,20 @@ class GlyphCache extends LruCache {
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
-        synchronized (glyph) {
-            if (glyph.path() == null) {
-                segment.remove(glyphId);
+        Path glyphPath = glyph.getPath();
 
-                segment.rasterizer.loadPath(glyph);
-                segment.put(glyphId, glyph);
+        if (glyphPath == null) {
+            glyphPath = segment.rasterizer.getGlyphPath(glyphId);
+
+            synchronized (this) {
+                if (glyph.getPath() == null) {
+                    segment.remove(glyphId);
+                    glyph.setPath(glyphPath);
+                    segment.put(glyphId, glyph);
+                }
             }
         }
 
-        return glyph.path();
+        return glyphPath;
     }
 }

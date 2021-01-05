@@ -45,7 +45,6 @@ public:
 
     jint Glyph_getGlyphID(jobject glyph) const;
     void Glyph_ownOutline(jobject glyph, jlong nativeOutline) const;
-    void Glyph_ownPath(jobject glyph, jobject path) const;
 
     jobject GlyphImage_construct(jobject bitmap, jint left, jint top) const;
 

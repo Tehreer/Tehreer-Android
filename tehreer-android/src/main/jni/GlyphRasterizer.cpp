@@ -71,14 +71,14 @@ GlyphRasterizer::~GlyphRasterizer()
     }
 }
 
-void GlyphRasterizer::unsafeActivate(FT_Face ftFace, const Typeface::Palette *palette)
+void GlyphRasterizer::unsafeActivate(FT_Face face, FT_Matrix *transform, const Typeface::Palette *palette)
 {
     FT_Activate_Size(m_size);
-    FT_Set_Transform(ftFace, &m_transform, nullptr);
+    FT_Set_Transform(face, transform, nullptr);
 
     if (palette) {
         FT_Color *colors;
-        FT_Palette_Select(ftFace, 0, &colors);
+        FT_Palette_Select(face, 0, &colors);
 
         memcpy(colors, palette->colors, sizeof(FT_Color) * palette->count);
     }
@@ -252,20 +252,26 @@ void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
     bridge.Glyph_ownOutline(glyph, outline ? reinterpret_cast<jlong>(outline) : 0);
 }
 
-void GlyphRasterizer::loadPath(const JavaBridge bridge, jobject glyph)
+jobject GlyphRasterizer::getGlyphPath(const JavaBridge bridge, FT_UInt glyphID)
 {
-    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
+    FT_Matrix flip = { 1, 0, 0, -1 };
+    FT_Matrix transform = {
+        (m_transform.xx * flip.xx) + (m_transform.xy * flip.yx),
+        (m_transform.xx * flip.xy) + (m_transform.xy * flip.yy),
+        (m_transform.yx * flip.xx) + (m_transform.yy * flip.yx),
+        (m_transform.yx * flip.xy) + (m_transform.yy * flip.yy)
+    };
 
     m_typeface.lock();
 
-    FT_Face baseFace = m_typeface.ftFace();
-    unsafeActivate(baseFace, m_typeface.palette());
+    FT_Face face = m_typeface.ftFace();
+    unsafeActivate(face, &transform);
 
     jobject glyphPath = m_typeface.getGlyphPathNoLock(bridge, glyphID);
 
     m_typeface.unlock();
 
-    bridge.Glyph_ownPath(glyph, glyphPath);
+    return glyphPath;
 }
 
 static jlong create(JNIEnv *env, jobject obj, jlong typefaceHandle, jint pixelWidth, jint pixelHeight,
@@ -330,10 +336,12 @@ static void loadOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobjec
     glyphRasterizer->loadOutline(JavaBridge(env), glyph);
 }
 
-static void loadPath(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
+static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
 {
     GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    glyphRasterizer->loadPath(JavaBridge(env), glyph);
+    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+
+    return glyphRasterizer->getGlyphPath(JavaBridge(env), glyphIndex);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
@@ -343,7 +351,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetGlyphImage", "(JII)Lcom/mta/tehreer/graphics/GlyphImage;", (void *)getGlyphImage },
     { "nGetStrokeImage", "(JJIIII)Lcom/mta/tehreer/graphics/GlyphImage;", (void *)getStrokeImage },
     { "nLoadOutline", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadOutline },
-    { "nLoadPath", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadPath },
+    { "nGetGlyphPath", "(JI)Landroid/graphics/Path;", (void *)getGlyphPath },
 };
 
 jint register_com_mta_tehreer_graphics_GlyphRasterizer(JNIEnv *env)

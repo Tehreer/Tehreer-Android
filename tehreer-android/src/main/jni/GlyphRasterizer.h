@@ -46,14 +46,23 @@ public:
         FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
 
     void loadOutline(const JavaBridge bridge, jobject glyph);
-    void loadPath(const JavaBridge bridge, jobject glyph);
+    jobject getGlyphPath(const JavaBridge bridge, FT_UInt glyphID);
 
 private:
     Typeface &m_typeface;
     FT_Size m_size;
     FT_Matrix m_transform;
 
-    void unsafeActivate(FT_Face ftFace, const Typeface::Palette *palette);
+    inline void unsafeActivate(FT_Face face, const Typeface::Palette *palette) {
+        unsafeActivate(face, &m_transform, palette);
+    }
+
+    inline void unsafeActivate(FT_Face face, FT_Matrix *transform) {
+        unsafeActivate(face, transform, nullptr);
+    }
+
+    void unsafeActivate(FT_Face face, FT_Matrix *transform, const Typeface::Palette *palette);
+
     jobject unsafeCreateBitmap(const JavaBridge bridge, const FT_Bitmap *bitmap);
 };
 

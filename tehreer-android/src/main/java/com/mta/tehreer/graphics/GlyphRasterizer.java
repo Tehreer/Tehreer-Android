@@ -17,6 +17,7 @@
 package com.mta.tehreer.graphics;
 
 import android.graphics.Color;
+import android.graphics.Path;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
@@ -62,8 +63,8 @@ final class GlyphRasterizer implements Disposable {
         nLoadOutline(nativeRasterizer, glyph);
     }
 
-    void loadPath(@NonNull Glyph glyph) {
-        nLoadPath(nativeRasterizer, glyph);
+    @NonNull Path getGlyphPath(int glyphId) {
+        return nGetGlyphPath(nativeRasterizer, glyphId);
     }
 
     @Override
@@ -81,5 +82,5 @@ final class GlyphRasterizer implements Disposable {
                                                      int lineRadius, int lineCap, int lineJoin, int miterLimit);
 
     private static native void nLoadOutline(long nativeRasterizer, @NonNull Glyph glyph);
-    private static native void nLoadPath(long nativeRasterizer, @NonNull Glyph glyph);
+    private static native Path nGetGlyphPath(long nativeRasterizer, int glyphId);
 }

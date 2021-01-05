@@ -79,10 +79,6 @@ class Glyph {
         mImage = image;
     }
 
-    public @Nullable Path path() {
-        return mPath;
-    }
-
     public long getNativeOutline() {
         return mNativeOutline;
     }
@@ -92,17 +88,20 @@ class Glyph {
     }
 
     @Keep
-    private void ownPath(Path path) {
-        mPath = path;
-    }
-
-    @Keep
     private void ownOutline(long nativeOutline) {
         if (mNativeOutline != 0) {
             nDisposeOutline(mNativeOutline);
         }
 
         mNativeOutline = nativeOutline;
+    }
+
+    public @Nullable Path getPath() {
+        return mPath;
+    }
+
+    public void setPath(Path path) {
+        mPath = path;
     }
 
     @Override

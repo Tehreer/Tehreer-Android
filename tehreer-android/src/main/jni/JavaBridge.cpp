@@ -37,7 +37,6 @@ static jmethodID BITMAP__CREATE_BITMAP;
 static jclass    GLYPH;
 static jfieldID  GLYPH__GLYPH_ID;
 static jmethodID GLYPH__OWN_OUTLINE;
-static jmethodID GLYPH__OWN_PATH;
 
 static jclass    GLYPH_IMAGE;
 static jmethodID GLYPH_IMAGE__CONSTRUCTOR;
@@ -94,7 +93,6 @@ void JavaBridge::load(JNIEnv* env)
     GLYPH = (jclass)env->NewGlobalRef(clazz);
     GLYPH__GLYPH_ID = env->GetFieldID(clazz, "glyphId", "I");
     GLYPH__OWN_OUTLINE = env->GetMethodID(clazz, "ownOutline", "(J)V");
-    GLYPH__OWN_PATH = env->GetMethodID(clazz, "ownPath", "(Landroid/graphics/Path;)V");
 
     clazz = env->FindClass("com/mta/tehreer/graphics/GlyphImage");
     GLYPH_IMAGE = (jclass)env->NewGlobalRef(clazz);
@@ -191,11 +189,6 @@ jint JavaBridge::Glyph_getGlyphID(jobject glyph) const
 void JavaBridge::Glyph_ownOutline(jobject glyph, jlong nativeOutline) const
 {
     m_env->CallVoidMethod(glyph, GLYPH__OWN_OUTLINE, nativeOutline);
-}
-
-void JavaBridge::Glyph_ownPath(jobject glyph, jobject path) const
-{
-    m_env->CallVoidMethod(glyph, GLYPH__OWN_PATH, path);
 }
 
 jobject JavaBridge::GlyphImage_construct(jobject bitmap, jint left, jint top) const
