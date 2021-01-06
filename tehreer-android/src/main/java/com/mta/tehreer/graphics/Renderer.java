@@ -110,6 +110,7 @@ public class Renderer {
      */
     public void setFillColor(@ColorInt int fillColor) {
         mFillColor = fillColor;
+        mGlyphAttributes.setForegroundColor(fillColor);
     }
 
     /**
