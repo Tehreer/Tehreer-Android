@@ -232,10 +232,8 @@ jobject GlyphRasterizer::getStrokeImage(const JavaBridge bridge, FT_Glyph baseGl
     return nullptr;
 }
 
-void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
+FT_Glyph GlyphRasterizer::getGlyphOutline(FT_UInt glyphID)
 {
-    FT_UInt glyphID = static_cast<FT_UInt>(bridge.Glyph_getGlyphID(glyph));
-
     m_typeface.lock();
 
     FT_Face baseFace = m_typeface.ftFace();
@@ -249,7 +247,7 @@ void GlyphRasterizer::loadOutline(const JavaBridge bridge, jobject glyph)
 
     m_typeface.unlock();
 
-    bridge.Glyph_ownOutline(glyph, outline ? reinterpret_cast<jlong>(outline) : 0);
+    return outline;
 }
 
 jobject GlyphRasterizer::getGlyphPath(const JavaBridge bridge, FT_UInt glyphID)
@@ -330,10 +328,13 @@ static jobject getStrokeImage(JNIEnv *env, jobject obj, jlong rasterizerHandle, 
                                            strokeCap, strokeJoin, strokeMiter);
 }
 
-static void loadOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jobject glyph)
+static jlong getGlyphOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
 {
     GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    glyphRasterizer->loadOutline(JavaBridge(env), glyph);
+    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    FT_Glyph glyphOutline = glyphRasterizer->getGlyphOutline(glyphIndex);
+
+    return reinterpret_cast<jlong>(glyphOutline);
 }
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
@@ -350,7 +351,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetGlyphType", "(JI)I", (void *)getGlyphType },
     { "nGetGlyphImage", "(JII)Lcom/mta/tehreer/graphics/GlyphImage;", (void *)getGlyphImage },
     { "nGetStrokeImage", "(JJIIII)Lcom/mta/tehreer/graphics/GlyphImage;", (void *)getStrokeImage },
-    { "nLoadOutline", "(JLcom/mta/tehreer/graphics/Glyph;)V", (void *)loadOutline },
+    { "nGetGlyphOutline", "(JI)J", (void *)getGlyphOutline },
     { "nGetGlyphPath", "(JI)Landroid/graphics/Path;", (void *)getGlyphPath },
 };
 

@@ -19,7 +19,6 @@ package com.mta.tehreer.graphics;
 import android.graphics.Path;
 
 import androidx.annotation.IntDef;
-import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.JniBridge;
@@ -27,7 +26,7 @@ import com.mta.tehreer.internal.JniBridge;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-class Glyph {
+final class Glyph {
     static {
         JniBridge.loadLibrary();
     }
@@ -44,20 +43,10 @@ class Glyph {
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type { }
 
-    @Keep
-    private final int glyphId;
-    private long mNativeOutline;
     private @Type int mType;
     private @Nullable GlyphImage mImage;
+    private @Nullable GlyphOutline mOutline;
     private @Nullable Path mPath;
-
-    public Glyph(int glyphId) {
-        this.glyphId = glyphId;
-    }
-
-    public int glyphId() {
-        return glyphId;
-    }
 
     public boolean isLoaded() {
         return mType != 0;
@@ -79,21 +68,12 @@ class Glyph {
         mImage = image;
     }
 
-    public long getNativeOutline() {
-        return mNativeOutline;
+    public @Nullable GlyphOutline getOutline() {
+        return mOutline;
     }
 
-    public boolean containsOutline() {
-        return (mNativeOutline != 0);
-    }
-
-    @Keep
-    private void ownOutline(long nativeOutline) {
-        if (mNativeOutline != 0) {
-            nDisposeOutline(mNativeOutline);
-        }
-
-        mNativeOutline = nativeOutline;
+    public void setOutline(GlyphOutline outline) {
+        mOutline = outline;
     }
 
     public @Nullable Path getPath() {
@@ -103,18 +83,4 @@ class Glyph {
     public void setPath(Path path) {
         mPath = path;
     }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (mNativeOutline != 0) {
-                nDisposeOutline(mNativeOutline);
-                mNativeOutline = 0;
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
-    private static native void nDisposeOutline(long nativeOutline);
 }

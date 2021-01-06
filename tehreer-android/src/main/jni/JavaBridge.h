@@ -43,9 +43,6 @@ public:
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
     void Bitmap_setPixels(jobject bitmap, const void *pixels, size_t length) const;
 
-    jint Glyph_getGlyphID(jobject glyph) const;
-    void Glyph_ownOutline(jobject glyph, jlong nativeOutline) const;
-
     jobject GlyphImage_construct(jobject bitmap, jint left, jint top) const;
 
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;

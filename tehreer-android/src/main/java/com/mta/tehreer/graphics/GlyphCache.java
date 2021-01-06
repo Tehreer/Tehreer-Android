@@ -115,7 +115,7 @@ class GlyphCache extends LruCache {
     public @NonNull Glyph unsafeGetGlyph(@NonNull Segment segment, int glyphId) {
         Glyph glyph = segment.get(glyphId);
         if (glyph == null) {
-            glyph = new Glyph(glyphId);
+            glyph = new Glyph();
         }
 
         return glyph;
@@ -158,7 +158,7 @@ class GlyphCache extends LruCache {
 
     private @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes,
                                                 @NonNull GlyphRasterizer rasterizer,
-                                                @NonNull Glyph parentGlyph, int glyphId) {
+                                                @NonNull GlyphOutline glyphOutline, int glyphId) {
         final GlyphStrike strike = attributes.strokeStrike();
         final Segment segment;
         Glyph glyph;
@@ -177,7 +177,7 @@ class GlyphCache extends LruCache {
         GlyphImage glyphImage = glyph.getImage();
 
         if (glyphImage == null) {
-            glyphImage = rasterizer.getStrokeImage(parentGlyph.getNativeOutline(),
+            glyphImage = rasterizer.getStrokeImage(glyphOutline,
                                                    attributes.getFixedLineRadius(),
                                                    attributes.getLineCap(),
                                                    attributes.getLineJoin(),
@@ -231,7 +231,6 @@ class GlyphCache extends LruCache {
         return glyph.getImage();
     }
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes, int glyphId) {
         final Segment segment;
         final Glyph glyph;
@@ -241,16 +240,25 @@ class GlyphCache extends LruCache {
             glyph = unsafeGetGlyph(segment, glyphId);
         }
 
-        synchronized(glyph) {
-            if (!glyph.containsOutline()) {
-                segment.remove(glyphId);
+        GlyphOutline glyphOutline = glyph.getOutline();
 
-                segment.rasterizer.loadOutline(glyph);
-                segment.put(glyphId, glyph);
+        if (glyphOutline == null) {
+            glyphOutline = segment.rasterizer.getGlyphOutline(glyphId);
+
+            synchronized (this) {
+                if (glyph.getPath() == null) {
+                    segment.remove(glyphId);
+                    glyph.setOutline(glyphOutline);
+                    segment.put(glyphId, glyph);
+                }
             }
         }
 
-        return getStrokeImage(attributes, segment.rasterizer, glyph, glyphId);
+        if (glyphOutline != null) {
+            return getStrokeImage(attributes, segment.rasterizer, glyphOutline, glyphId);
+        }
+
+        return null;
     }
 
     public @NonNull Path getGlyphPath(@NonNull GlyphAttributes attributes, int glyphId) {

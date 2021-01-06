@@ -21,13 +21,14 @@ extern "C" {
 #include <ft2build.h>
 #include FT_COLOR_H
 #include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include FT_TYPES_H
 }
 
 #include <jni.h>
 
 #include "FreeType.h"
-#include "Glyph.h"
+#include "GlyphOutline.h"
 #include "JavaBridge.h"
 #include "Typeface.h"
 
@@ -45,7 +46,7 @@ public:
     jobject getStrokeImage(const JavaBridge bridge, FT_Glyph baseGlyph, FT_Fixed lineRadius,
         FT_Stroker_LineCap lineCap, FT_Stroker_LineJoin lineJoin, FT_Fixed miterLimit);
 
-    void loadOutline(const JavaBridge bridge, jobject glyph);
+    FT_Glyph getGlyphOutline(FT_UInt glyphID);
     jobject getGlyphPath(const JavaBridge bridge, FT_UInt glyphID);
 
 private:

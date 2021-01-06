@@ -51,16 +51,22 @@ final class GlyphRasterizer implements Disposable {
         return nGetGlyphImage(nativeRasterizer, glyphId, foregroundColor);
     }
 
-    @Nullable GlyphImage getStrokeImage(long nativeOutline, int lineRadius,
-                                       @GlyphAttributes.LineCap int lineCap,
-                                       @GlyphAttributes.LineJoin int lineJoin,
-                                       int miterLimit) {
-        return nGetStrokeImage(nativeRasterizer, nativeOutline,
+    @Nullable GlyphImage getStrokeImage(@NonNull GlyphOutline glyphOutline,
+                                        int lineRadius,
+                                        @GlyphAttributes.LineCap int lineCap,
+                                        @GlyphAttributes.LineJoin int lineJoin,
+                                        int miterLimit) {
+        return nGetStrokeImage(nativeRasterizer, glyphOutline.nativeOutline,
                                lineRadius, lineCap, lineJoin, miterLimit);
     }
 
-    void loadOutline(@NonNull Glyph glyph) {
-        nLoadOutline(nativeRasterizer, glyph);
+    @Nullable GlyphOutline getGlyphOutline(int glyphId) {
+	    long nativeOutline = nGetGlyphOutline(nativeRasterizer, glyphId);
+	    if (nativeOutline != 0) {
+	        return new GlyphOutline(nativeOutline);
+        }
+
+	    return null;
     }
 
     @NonNull Path getGlyphPath(int glyphId) {
@@ -81,6 +87,6 @@ final class GlyphRasterizer implements Disposable {
     private static native GlyphImage nGetStrokeImage(long nativeRasterizer, long nativeOutline,
                                                      int lineRadius, int lineCap, int lineJoin, int miterLimit);
 
-    private static native void nLoadOutline(long nativeRasterizer, @NonNull Glyph glyph);
+    private static native long nGetGlyphOutline(long nativeRasterizer, int glyphId);
     private static native Path nGetGlyphPath(long nativeRasterizer, int glyphId);
 }

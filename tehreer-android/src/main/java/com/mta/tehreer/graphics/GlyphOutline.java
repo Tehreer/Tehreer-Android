@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER_H
-#define _TEHREER_H
+package com.mta.tehreer.graphics;
 
-#include "BidiAlgorithm.h"
-#include "BidiBuffer.h"
-#include "BidiLine.h"
-#include "BidiMirrorLocator.h"
-#include "BidiParagraph.h"
-#include "FontFile.h"
-#include "FreeType.h"
-#include "GlyphOutline.h"
-#include "GlyphRasterizer.h"
-#include "Miscellaneous.h"
-#include "Raw.h"
-#include "ScriptClassifier.h"
-#include "SfntTables.h"
-#include "ShapingEngine.h"
-#include "ShapingResult.h"
-#include "Typeface.h"
-#include "Unicode.h"
+final class GlyphOutline {
+    long nativeOutline;
 
-#endif
+    public GlyphOutline(long nativeOutline) {
+        this.nativeOutline = nativeOutline;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (nativeOutline != 0) {
+                nDispose(nativeOutline);
+            }
+        } finally {
+            super.finalize();
+        }
+    }
+
+    private static native void nDispose(long nativeOutline);
+}

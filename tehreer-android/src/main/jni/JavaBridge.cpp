@@ -34,10 +34,6 @@ static jobject   BITMAP_CONFIG__ARGB_8888;
 static jclass    BITMAP;
 static jmethodID BITMAP__CREATE_BITMAP;
 
-static jclass    GLYPH;
-static jfieldID  GLYPH__GLYPH_ID;
-static jmethodID GLYPH__OWN_OUTLINE;
-
 static jclass    GLYPH_IMAGE;
 static jmethodID GLYPH_IMAGE__CONSTRUCTOR;
 
@@ -88,11 +84,6 @@ void JavaBridge::load(JNIEnv* env)
     fieldID = env->GetStaticFieldID(clazz, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
     field = env->GetStaticObjectField(clazz, fieldID);
     BITMAP_CONFIG__ARGB_8888 = env->NewGlobalRef(field);
-
-    clazz = env->FindClass("com/mta/tehreer/graphics/Glyph");
-    GLYPH = (jclass)env->NewGlobalRef(clazz);
-    GLYPH__GLYPH_ID = env->GetFieldID(clazz, "glyphId", "I");
-    GLYPH__OWN_OUTLINE = env->GetMethodID(clazz, "ownOutline", "(J)V");
 
     clazz = env->FindClass("com/mta/tehreer/graphics/GlyphImage");
     GLYPH_IMAGE = (jclass)env->NewGlobalRef(clazz);
@@ -179,16 +170,6 @@ void JavaBridge::Bitmap_setPixels(jobject bitmap, const void *pixels, size_t len
     AndroidBitmap_lockPixels(m_env, bitmap, &source);
     memcpy(source, pixels, length);
     AndroidBitmap_unlockPixels(m_env, bitmap);
-}
-
-jint JavaBridge::Glyph_getGlyphID(jobject glyph) const
-{
-    return m_env->GetIntField(glyph, GLYPH__GLYPH_ID);
-}
-
-void JavaBridge::Glyph_ownOutline(jobject glyph, jlong nativeOutline) const
-{
-    m_env->CallVoidMethod(glyph, GLYPH__OWN_OUTLINE, nativeOutline);
 }
 
 jobject JavaBridge::GlyphImage_construct(jobject bitmap, jint left, jint top) const

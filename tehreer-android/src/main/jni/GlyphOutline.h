@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER_H
-#define _TEHREER_H
+#ifndef _TEHREER__GLYPH_OUTLINE_H
+#define _TEHREER__GLYPH_OUTLINE_H
 
-#include "BidiAlgorithm.h"
-#include "BidiBuffer.h"
-#include "BidiLine.h"
-#include "BidiMirrorLocator.h"
-#include "BidiParagraph.h"
-#include "FontFile.h"
-#include "FreeType.h"
-#include "GlyphOutline.h"
-#include "GlyphRasterizer.h"
-#include "Miscellaneous.h"
-#include "Raw.h"
-#include "ScriptClassifier.h"
-#include "SfntTables.h"
-#include "ShapingEngine.h"
-#include "ShapingResult.h"
-#include "Typeface.h"
-#include "Unicode.h"
+#include <jni.h>
+
+jint register_com_mta_tehreer_graphics_GlyphOutline(JNIEnv *env);
 
 #endif
