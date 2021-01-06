@@ -246,7 +246,7 @@ class GlyphCache extends LruCache {
             glyphOutline = segment.rasterizer.getGlyphOutline(glyphId);
 
             synchronized (this) {
-                if (glyph.getPath() == null) {
+                if (glyph.getOutline() == null) {
                     segment.remove(glyphId);
                     glyph.setOutline(glyphOutline);
                     segment.put(glyphId, glyph);
