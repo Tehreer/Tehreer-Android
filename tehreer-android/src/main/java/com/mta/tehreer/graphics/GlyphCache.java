@@ -27,32 +27,55 @@ import com.mta.tehreer.internal.util.LruCache;
 import java.util.HashMap;
 import java.util.Map;
 
-class GlyphCache extends LruCache {
-    private static class Segment extends LruCache.Segment<Integer, Glyph> {
-        //
-        // HashMap:
-        //  - 1 pointer for map entry
-        //  - 3 pointers for key, value and next
-        //  - 1 integer for hash code
-        //
-        // LruCache.Node:
-        //  - 5 pointers for segment, key, value, previous and next
-        //
-        // Glyph:
-        //  - 3 pointers for outline, bitmap and path
-        //  - 3 integers for glyph id, glyph left and glyph top
-        //
-        // Total:
-        //  - 12 pointers
-        //  - 4 integers
-        //
-        // Size: (12 * 4) + (4 * 4) = 64
-        //
-        private static final int ESTIMATED_OVERHEAD = 64;
+final class GlyphCache extends LruCache {
+    //
+    // GlyphImage:
+    //  - 1 pointer for bitmap
+    //  - 2 integers for left and right
+    //
+    // Size: (1 * 4) + (2 * 4) = 12
+    //
+    private static final int GLYPH_IMAGE_OVERHEAD = 12;
+
+    //
+    // Glyph:
+    //  - 3 pointers for image, outline and path
+    //  - 1 integer for type
+    //
+    // Size: (3 * 4) + (1 * 4) = 16
+    //
+    private static final int GLYPH_OVERHEAD = 16;
+
+    private static int sizeOf(@NonNull Bitmap bitmap) {
+        int size = bitmap.getWidth() * bitmap.getHeight();
+
+        if (bitmap.getConfig() == Bitmap.Config.ARGB_8888) {
+            size *= 4;
+        }
+
+        return size;
+    }
+
+    private static class ImageSegment extends Segment<Integer, GlyphImage> {
+        private static final int ESTIMATED_OVERHEAD = GLYPH_IMAGE_OVERHEAD + NODE_OVERHEAD;
+
+        public ImageSegment(@NonNull LruCache cache) {
+            super(cache);
+        }
+
+        @Override
+        protected int sizeOf(@NonNull Integer key, @NonNull GlyphImage value) {
+            return GlyphCache.sizeOf(value.bitmap()) + ESTIMATED_OVERHEAD;
+        }
+    }
+
+    private static class DataSegment extends Segment<Integer, Glyph> {
+        private static final int ESTIMATED_OVERHEAD = GLYPH_IMAGE_OVERHEAD + GLYPH_OVERHEAD
+                                                    + NODE_OVERHEAD;
 
         public final @NonNull GlyphRasterizer rasterizer;
 
-        public Segment(@NonNull LruCache cache, @NonNull GlyphRasterizer rasterizer) {
+        public DataSegment(@NonNull LruCache cache, @NonNull GlyphRasterizer rasterizer) {
             super(cache);
             this.rasterizer = rasterizer;
         }
@@ -60,14 +83,9 @@ class GlyphCache extends LruCache {
         @Override
         protected int sizeOf(@NonNull Integer key, @NonNull Glyph value) {
             GlyphImage glyphImage = value.getImage();
-            int innerSize = 0;
+            int size = (glyphImage != null ? GlyphCache.sizeOf(glyphImage.bitmap()) : 0);
 
-            if (glyphImage != null) {
-                Bitmap bitmap = glyphImage.bitmap();
-                innerSize = bitmap.getWidth() * bitmap.getHeight();
-            }
-
-            return innerSize + ESTIMATED_OVERHEAD;
+            return size + ESTIMATED_OVERHEAD;
         }
     }
 
@@ -84,7 +102,7 @@ class GlyphCache extends LruCache {
         return Holder.INSTANCE;
     }
 
-    private @NonNull HashMap<GlyphStrike, Segment> segments = new HashMap<>();
+    private @NonNull HashMap<GlyphStrike, Segment<Integer, ?>> segments = new HashMap<>();
 
     public GlyphCache(int capacity) {
         super(capacity);
@@ -95,24 +113,30 @@ class GlyphCache extends LruCache {
         super.clear();
 
         // Dispose all glyph rasterizers.
-        for (Map.Entry<GlyphStrike, Segment> entry : segments.entrySet()) {
-            entry.getValue().rasterizer.dispose();
+        for (Map.Entry<GlyphStrike, Segment<Integer, ?>> entry : segments.entrySet()) {
+            Segment<Integer, ?> value = entry.getValue();
+
+            if (value instanceof DataSegment) {
+                DataSegment segment = (DataSegment) value;
+                segment.rasterizer.dispose();
+            }
         }
+
         segments.clear();
     }
 
-    private @NonNull Segment unsafeGetSegment(@NonNull GlyphStrike strike) {
-        Segment segment = segments.get(strike);
+    private @NonNull DataSegment unsafeGetSegment(@NonNull GlyphStrike strike) {
+        DataSegment segment = (DataSegment) segments.get(strike);
         if (segment == null) {
             GlyphRasterizer rasterizer = new GlyphRasterizer(strike);
-            segment = new Segment(this, rasterizer);
+            segment = new DataSegment(this, rasterizer);
             segments.put(strike.clone(), segment);
         }
 
         return segment;
     }
 
-    public @NonNull Glyph unsafeGetGlyph(@NonNull Segment segment, int glyphId) {
+    public @NonNull Glyph unsafeGetGlyph(@NonNull DataSegment segment, int glyphId) {
         Glyph glyph = segment.get(glyphId);
         if (glyph == null) {
             glyph = new Glyph();
@@ -125,30 +149,27 @@ class GlyphCache extends LruCache {
                                                @NonNull GlyphRasterizer rasterizer,
                                                int glyphId) {
         final GlyphStrike strike = attributes.colorStrike();
-        final Segment segment;
-        final Glyph glyph;
+        final ImageSegment segment;
+        GlyphImage glyphImage;
 
         synchronized (this) {
-            Segment colorSegment = segments.get(strike);
+            ImageSegment colorSegment = (ImageSegment) segments.get(strike);
             if (colorSegment == null) {
-                colorSegment = new Segment(this, rasterizer);
+                colorSegment = new ImageSegment(this);
                 segments.put(strike, colorSegment);
             }
 
             segment = colorSegment;
-            glyph = unsafeGetGlyph(segment, glyphId);
+            glyphImage = segment.get(glyphId);
         }
-
-        GlyphImage glyphImage = glyph.getImage();
 
         if (glyphImage == null) {
             glyphImage = rasterizer.getGlyphImage(glyphId, attributes.getForegroundColor());
 
-            synchronized (this) {
-                if (glyph.getImage() == null) {
+            if (glyphImage != null) {
+                synchronized (this) {
                     segment.remove(glyphId);
-                    glyph.setImage(glyphImage);
-                    segment.put(glyphId, glyph);
+                    segment.put(glyphId, glyphImage);
                 }
             }
         }
@@ -160,21 +181,19 @@ class GlyphCache extends LruCache {
                                                 @NonNull GlyphRasterizer rasterizer,
                                                 @NonNull GlyphOutline glyphOutline, int glyphId) {
         final GlyphStrike strike = attributes.strokeStrike();
-        final Segment segment;
-        Glyph glyph;
+        final ImageSegment segment;
+        GlyphImage glyphImage;
 
         synchronized (this) {
-            Segment strokeSegment = segments.get(strike);
+            ImageSegment strokeSegment = (ImageSegment) segments.get(strike);
             if (strokeSegment == null) {
-                strokeSegment = new Segment(this, rasterizer);
+                strokeSegment = new ImageSegment(this);
                 segments.put(strike, strokeSegment);
             }
 
             segment = strokeSegment;
-            glyph = unsafeGetGlyph(segment, glyphId);
+            glyphImage = segment.get(glyphId);
         }
-
-        GlyphImage glyphImage = glyph.getImage();
 
         if (glyphImage == null) {
             glyphImage = rasterizer.getStrokeImage(glyphOutline,
@@ -183,11 +202,10 @@ class GlyphCache extends LruCache {
                                                    attributes.getLineJoin(),
                                                    attributes.getFixedMiterLimit());
 
-            synchronized (this) {
-                if (glyph.getImage() == null) {
+            if (glyphImage != null) {
+                synchronized (this) {
                     segment.remove(glyphId);
-                    glyph.setImage(glyphImage);
-                    segment.put(glyphId, glyph);
+                    segment.put(glyphId, glyphImage);
                 }
             }
         }
@@ -196,7 +214,7 @@ class GlyphCache extends LruCache {
     }
 
     public @Nullable GlyphImage getGlyphImage(@NonNull GlyphAttributes attributes, int glyphId) {
-        final Segment segment;
+        final DataSegment segment;
         final Glyph glyph;
 
         synchronized (this) {
@@ -232,7 +250,7 @@ class GlyphCache extends LruCache {
     }
 
     public @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes, int glyphId) {
-        final Segment segment;
+        final DataSegment segment;
         final Glyph glyph;
 
         synchronized (this) {
@@ -262,7 +280,7 @@ class GlyphCache extends LruCache {
     }
 
     public @NonNull Path getGlyphPath(@NonNull GlyphAttributes attributes, int glyphId) {
-        final Segment segment;
+        final DataSegment segment;
         final Glyph glyph;
 
         synchronized (this) {

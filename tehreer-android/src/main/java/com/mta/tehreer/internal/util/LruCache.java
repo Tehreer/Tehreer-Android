@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,23 @@ import java.util.HashMap;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class LruCache {
+    //
+    // HashMap:
+    //  - 1 pointer for map entry
+    //  - 3 pointers for key, value and next
+    //  - 1 integer for hash code
+    //
+    // Node:
+    //  - 5 pointers for segment, key, value, previous and next
+    //
+    // Total:
+    //  - 9 pointers
+    //  - 1 integer
+    //
+    // Size: (9 * 4) + (1 * 4) = 40
+    //
+    protected static final int NODE_OVERHEAD = 40;
+
     private static class Node<K, V> {
         public final Segment<K, V> segment;
         public final K key;
