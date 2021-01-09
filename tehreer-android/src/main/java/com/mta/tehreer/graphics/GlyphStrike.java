@@ -20,45 +20,19 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-class GlyphStrike implements Cloneable {
+abstract class GlyphStrike implements Cloneable {
     public Typeface typeface;
     public int pixelWidth;      // 26.6 fixed-point value.
     public int pixelHeight;     // 26.6 fixed-point value.
     public int skewX;           // 16.16 fixed-point value.
 
-    public GlyphStrike color(@ColorInt int foregroundColor) {
-        Color strike = new Color();
-        strike.typeface = typeface;
-        strike.pixelWidth = pixelWidth;
-        strike.pixelHeight = pixelHeight;
-        strike.skewX = skewX;
-        strike.foregroundColor = foregroundColor;
+    protected GlyphStrike() { }
 
-        return strike;
-    }
-
-    public GlyphStrike stroke(int lineRadius, @GlyphAttributes.LineCap int lineCap,
-                              @GlyphAttributes.LineJoin int lineJoin, int miterLimit) {
-        Stroke strike = new Stroke();
-        strike.typeface = typeface;
-        strike.pixelWidth = pixelWidth;
-        strike.pixelHeight = pixelHeight;
-        strike.skewX = skewX;
-        strike.lineRadius = lineRadius;
-        strike.lineCap = lineCap;
-        strike.lineJoin = lineJoin;
-        strike.miterLimit = miterLimit;
-
-        return strike;
-    }
-
-    @Override
-    public @NonNull GlyphStrike clone() {
-        try {
-            return (GlyphStrike) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException();
-        }
+    protected GlyphStrike(@NonNull GlyphStrike strike) {
+        this.typeface = strike.typeface;
+        this.pixelWidth = strike.pixelWidth;
+        this.pixelHeight = strike.pixelHeight;
+        this.skewX = strike.skewX;
     }
 
     @Override
@@ -88,8 +62,59 @@ class GlyphStrike implements Cloneable {
         return result;
     }
 
-    private static final class Color extends GlyphStrike {
+    public static final class Data extends GlyphStrike {
+        public Data() { }
+
+        public Data(Data strike) {
+            super(strike);
+        }
+
+        @Override
+        public @NonNull Data clone() {
+            return new Data(this);
+        }
+
+        public @NonNull Color color(@ColorInt int foregroundColor) {
+            Color strike = new Color();
+            strike.typeface = typeface;
+            strike.pixelWidth = pixelWidth;
+            strike.pixelHeight = pixelHeight;
+            strike.skewX = skewX;
+            strike.foregroundColor = foregroundColor;
+
+            return strike;
+        }
+
+        public @NonNull Stroke stroke(int lineRadius, @GlyphAttributes.LineCap int lineCap,
+                                      @GlyphAttributes.LineJoin int lineJoin, int miterLimit) {
+            Stroke strike = new Stroke();
+            strike.typeface = typeface;
+            strike.pixelWidth = pixelWidth;
+            strike.pixelHeight = pixelHeight;
+            strike.skewX = skewX;
+            strike.lineRadius = lineRadius;
+            strike.lineCap = lineCap;
+            strike.lineJoin = lineJoin;
+            strike.miterLimit = miterLimit;
+
+            return strike;
+        }
+    }
+
+    public static final class Color extends GlyphStrike {
         public @ColorInt int foregroundColor;
+
+        public Color() { }
+
+        public Color(@NonNull Color strike) {
+            super(strike);
+            this.foregroundColor = strike.foregroundColor;
+        }
+
+        @Override
+        public @NonNull Color clone() {
+            return new Color(this);
+        }
 
         @Override
         public boolean equals(Object obj) {
@@ -117,11 +142,26 @@ class GlyphStrike implements Cloneable {
         }
     }
 
-    private static final class Stroke extends GlyphStrike {
+    public static final class Stroke extends GlyphStrike {
         public int lineRadius;
         public @GlyphAttributes.LineCap int lineCap;
         public @GlyphAttributes.LineJoin int lineJoin;
         public int miterLimit;
+
+        public Stroke() { }
+
+        public Stroke(@NonNull Stroke strike) {
+            super(strike);
+            this.lineRadius = strike.lineRadius;
+            this.lineCap = strike.lineCap;
+            this.lineJoin = strike.lineJoin;
+            this.miterLimit = strike.miterLimit;
+        }
+
+        @Override
+        public @NonNull Stroke clone() {
+            return new Stroke(this);
+        }
 
         @Override
         public boolean equals(@Nullable Object obj) {

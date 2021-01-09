@@ -125,7 +125,7 @@ final class GlyphCache extends LruCache {
         segments.clear();
     }
 
-    private @NonNull DataSegment unsafeGetSegment(@NonNull GlyphStrike strike) {
+    private @NonNull DataSegment unsafeGetSegment(@NonNull GlyphStrike.Data strike) {
         DataSegment segment = (DataSegment) segments.get(strike);
         if (segment == null) {
             GlyphRasterizer rasterizer = new GlyphRasterizer(strike);
@@ -148,7 +148,7 @@ final class GlyphCache extends LruCache {
     private @Nullable GlyphImage getColorImage(@NonNull GlyphAttributes attributes,
                                                @NonNull GlyphRasterizer rasterizer,
                                                int glyphId) {
-        final GlyphStrike strike = attributes.colorStrike();
+        final GlyphStrike.Color strike = attributes.colorStrike();
         final ImageSegment segment;
         GlyphImage glyphImage;
 
@@ -164,7 +164,7 @@ final class GlyphCache extends LruCache {
         }
 
         if (glyphImage == null) {
-            glyphImage = rasterizer.getGlyphImage(glyphId, attributes.getForegroundColor());
+            glyphImage = rasterizer.getGlyphImage(glyphId, strike.foregroundColor);
 
             if (glyphImage != null) {
                 synchronized (this) {
@@ -180,7 +180,7 @@ final class GlyphCache extends LruCache {
     private @Nullable GlyphImage getStrokeImage(@NonNull GlyphAttributes attributes,
                                                 @NonNull GlyphRasterizer rasterizer,
                                                 @NonNull GlyphOutline glyphOutline, int glyphId) {
-        final GlyphStrike strike = attributes.strokeStrike();
+        final GlyphStrike.Stroke strike = attributes.strokeStrike();
         final ImageSegment segment;
         GlyphImage glyphImage;
 
@@ -197,10 +197,8 @@ final class GlyphCache extends LruCache {
 
         if (glyphImage == null) {
             glyphImage = rasterizer.getStrokeImage(glyphOutline,
-                                                   attributes.getFixedLineRadius(),
-                                                   attributes.getLineCap(),
-                                                   attributes.getLineJoin(),
-                                                   attributes.getFixedMiterLimit());
+                                                   strike.lineRadius, strike.lineCap,
+                                                   strike.lineJoin, strike.miterLimit);
 
             if (glyphImage != null) {
                 synchronized (this) {

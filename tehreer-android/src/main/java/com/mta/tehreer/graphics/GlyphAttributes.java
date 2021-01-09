@@ -50,7 +50,7 @@ final class GlyphAttributes {
     @Retention(RetentionPolicy.SOURCE)
     public @interface LineJoin { }
 
-    private @NonNull GlyphStrike glyphStrike = new GlyphStrike();
+    private @NonNull GlyphStrike.Data glyphStrike = new GlyphStrike.Data();
     private @ColorInt int foregroundColor;
     private int lineRadius;
     private @LineCap int lineCap;
@@ -73,40 +73,20 @@ final class GlyphAttributes {
         glyphStrike.skewX = (int) ((skewX * 0x10000) + 0.5f);
     }
 
-    public @ColorInt int getForegroundColor() {
-        return foregroundColor;
-    }
-
     public void setForegroundColor(@ColorInt int foregroundColor) {
         this.foregroundColor = foregroundColor;
-    }
-
-    public int getFixedLineRadius() {
-        return lineRadius;
     }
 
     public void setLineRadius(float lineRadius) {
         this.lineRadius = (int) ((lineRadius * 64.0f) + 0.5f);
     }
 
-    public @LineCap int getLineCap() {
-        return lineCap;
-    }
-
     public void setLineCap(@LineCap int lineCap) {
         this.lineCap = lineCap;
     }
 
-    public @LineJoin int getLineJoin() {
-        return lineJoin;
-    }
-
     public void setLineJoin(@LineJoin int lineJoin) {
         this.lineJoin = lineJoin;
-    }
-
-    public int getFixedMiterLimit() {
-        return miterLimit;
     }
 
     public void setMiterLimit(float miterLimit) {
@@ -118,15 +98,15 @@ final class GlyphAttributes {
         return (glyphStrike.pixelWidth >= 64 && glyphStrike.pixelHeight >= 64);
     }
 
-    public GlyphStrike associatedStrike() {
+    public @NonNull GlyphStrike.Data associatedStrike() {
         return glyphStrike;
     }
 
-    public GlyphStrike colorStrike() {
+    public @NonNull GlyphStrike.Color colorStrike() {
         return glyphStrike.color(foregroundColor);
     }
 
-    public GlyphStrike strokeStrike() {
+    public @NonNull GlyphStrike.Stroke strokeStrike() {
         return glyphStrike.stroke(lineRadius, lineCap, lineJoin, miterLimit);
     }
 }
