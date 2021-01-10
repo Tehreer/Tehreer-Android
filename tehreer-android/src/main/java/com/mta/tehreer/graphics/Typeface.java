@@ -76,7 +76,7 @@ public class Typeface {
 
     private @Nullable List<String> paletteEntryNames;
     private @Nullable List<ColorPalette> predefinedPalettes;
-    private @Nullable ColorPalette associatedPalette;
+    private @Nullable int[] associatedColors;
 
     private @NonNull String familyName = "";
     private @NonNull String styleName = "";
@@ -150,13 +150,13 @@ public class Typeface {
         init(nativeTypeface);
     }
 
-    private Typeface(@NonNull Typeface typeface, @NonNull ColorPalette palette) {
-        this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, palette.colors());
+    private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
+        this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
 
         this.variationAxes = typeface.variationAxes;
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
-        this.associatedPalette = palette;
+        this.associatedColors = colors;
 
         this.familyName = typeface.familyName;
         this.styleName = typeface.styleName;
@@ -285,7 +285,7 @@ public class Typeface {
         }
 
         /* By default, first palette is selected. */
-        associatedPalette = predefinedPalettes.get(0);
+        associatedColors = predefinedPalettes.get(0).colors();
     }
 
 	private void setupNames() {
@@ -391,6 +391,13 @@ public class Typeface {
         return null;
     }
 
+    /**
+     * Returns the names associated with palette entries if this typeface supports OpenType color
+     * palettes.
+     *
+     * @return The names associated with palette entries if this typeface supports OpenType color
+     * palettes.
+     */
     public @Nullable List<String> getPaletteEntryNames() {
         if (paletteEntryNames != null) {
             return Collections.unmodifiableList(paletteEntryNames);
@@ -399,6 +406,11 @@ public class Typeface {
         return null;
     }
 
+    /**
+     * Returns the predefined palettes in this typeface if it supports OpenType color palettes.
+     *
+     * @return The predefined palettes in this typeface if it supports OpenType color palettes.
+     */
     public @Nullable List<ColorPalette> getPredefinedPalettes() {
         if (predefinedPalettes != null) {
             return Collections.unmodifiableList(predefinedPalettes);
@@ -407,22 +419,43 @@ public class Typeface {
         return null;
     }
 
-    public @Nullable ColorPalette getAssociatedPalette() {
-        return associatedPalette;
+    /**
+     * Returns the colors associated with this typeface if it supports OpenType color palettes.
+     *
+     * @return The colors associated with this typeface if it supports OpenType color palettes.
+     */
+    public @Nullable int[] getAssociatedColors() {
+        if (paletteEntryNames != null) {
+            int[] colors = new int[paletteEntryNames.size()];
+            nGetAssociatedColors(nativeTypeface, colors);
+
+            return colors;
+        }
+
+        return null;
     }
 
-    public @Nullable Typeface getColorInstance(@NonNull ColorPalette palette) {
+    /**
+     * Returns a color instance of this typeface with the specified colors array.
+     *
+     * @param colors The colors array.
+     * @return A color instance of this typeface with the specified colors array.
+     *
+     * @throws IllegalStateException if this typeface does not support OpenType color palettes.
+     * @throws NullPointerException if <code>colors</code> parameter is null.
+     * @throws IllegalArgumentException if the number of specified colors does not match the number
+     *                                  of colors in `CPAL` table.
+     */
+    public @Nullable Typeface getColorInstance(@NonNull int[] colors) {
         if (paletteEntryNames == null) {
             throw new IllegalStateException("This typeface does not support color palettes");
         }
-        checkNotNull(palette, "palette");
+        checkNotNull(colors, "colors");
 
         final int count = paletteEntryNames.size();
-        final int[] colors = palette.colors();
-
         checkArgument(colors.length == count, "Palette should have exactly " + count + " colors");
 
-        return new Typeface(this, palette);
+        return new Typeface(this, colors);
     }
 
     /**
@@ -673,6 +706,7 @@ public class Typeface {
 	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
 
     private static native long nGetColorInstance(long nativeTypeface, int[] colors);
+    private static native void nGetAssociatedColors(long nativeTypeface, int[] colors);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
     private static native int nSearchNameRecordIndex(long nativeTypeface, int nameId);

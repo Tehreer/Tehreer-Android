@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -709,6 +709,24 @@ static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
     return reinterpret_cast<jlong>(variationInstance);
 }
 
+static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
+{
+    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    const Typeface::Palette *palette = typeface->palette();
+
+    void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
+    jint *colorValues = static_cast<jint *>(colorBuffer);
+
+    for (jint i = 0; i < palette->count; i++) {
+        colorValues[i] = (palette->colors[i].alpha << 24)
+                       | (palette->colors[i].red << 16)
+                       | (palette->colors[i].green << 8)
+                       | palette->colors[i].blue;
+    }
+
+    env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
+}
+
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -926,6 +944,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
     { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
+    { "nGetAssociatedColors", "(J[I)V", (void *)getAssociatedColors },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
     { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
