@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Muhammad Tayyab Akram
+ * Copyright (C) 2020-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.Arrays;
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
-public final class Palette {
+public final class ColorPalette {
     public static final int USABLE_WITH_LIGHT_BACKGROUND = 0x0001;
     public static final int USABLE_WITH_DARK_BACKGROUND = 0x0002;
 
@@ -53,16 +53,16 @@ public final class Palette {
      * @param colors The colors array.
      * @return A new palette object.
      */
-    public static @NonNull Palette of(@NonNull String name, @Flags int flags,
-                                      @NonNull @Size(min = 1) int[] colors) {
+    public static @NonNull ColorPalette of(@NonNull String name, @Flags int flags,
+                                           @NonNull @Size(min = 1) int[] colors) {
         checkNotNull(name, "name");
         checkNotNull(colors, "colors");
         checkArgument(colors.length >= 1, "The colors array is empty");
 
-        return new Palette(name, flags, Arrays.copyOf(colors, colors.length));
+        return new ColorPalette(name, flags, Arrays.copyOf(colors, colors.length));
     }
 
-    private Palette(@NonNull String name, @Flags int flags, @NonNull int[] colors) {
+    private ColorPalette(@NonNull String name, @Flags int flags, @NonNull int[] colors) {
         this.name = name;
         this.flags = flags;
         this.colors = colors;
@@ -104,7 +104,7 @@ public final class Palette {
             return false;
         }
 
-        Palette other = (Palette) obj;
+        ColorPalette other = (ColorPalette) obj;
 
         return name.equals(other.name)
             && flags == other.flags

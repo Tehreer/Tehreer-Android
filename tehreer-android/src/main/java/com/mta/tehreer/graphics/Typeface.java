@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.mta.tehreer.font.Palette;
+import com.mta.tehreer.font.ColorPalette;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.sfnt.tables.cpal.ColorPaletteTable;
@@ -75,8 +75,8 @@ public class Typeface {
     private @Nullable List<VariationAxis> variationAxes;
 
     private @Nullable List<String> paletteEntryNames;
-    private @Nullable List<Palette> predefinedPalettes;
-    private @Nullable Palette associatedPalette;
+    private @Nullable List<ColorPalette> predefinedPalettes;
+    private @Nullable ColorPalette associatedPalette;
 
     private @NonNull String familyName = "";
     private @NonNull String styleName = "";
@@ -150,7 +150,7 @@ public class Typeface {
         init(nativeTypeface);
     }
 
-    private Typeface(@NonNull Typeface typeface, @NonNull Palette palette) {
+    private Typeface(@NonNull Typeface typeface, @NonNull ColorPalette palette) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, palette.colors());
 
         this.variationAxes = typeface.variationAxes;
@@ -254,7 +254,7 @@ public class Typeface {
                 colors[j] = colorRecords.get(firstColorIndex + j);
             }
 
-            predefinedPalettes.add(Palette.of(name, flags, colors));
+            predefinedPalettes.add(ColorPalette.of(name, flags, colors));
         }
 
         paletteEntryNames = new ArrayList<>(numPaletteEntries);
@@ -399,7 +399,7 @@ public class Typeface {
         return null;
     }
 
-    public @Nullable List<Palette> getPredefinedPalettes() {
+    public @Nullable List<ColorPalette> getPredefinedPalettes() {
         if (predefinedPalettes != null) {
             return Collections.unmodifiableList(predefinedPalettes);
         }
@@ -407,11 +407,11 @@ public class Typeface {
         return null;
     }
 
-    public @Nullable Palette getAssociatedPalette() {
+    public @Nullable ColorPalette getAssociatedPalette() {
         return associatedPalette;
     }
 
-    public @Nullable Typeface getColorInstance(@NonNull Palette palette) {
+    public @Nullable Typeface getColorInstance(@NonNull ColorPalette palette) {
         if (paletteEntryNames == null) {
             throw new IllegalStateException("This typeface does not support color palettes");
         }
