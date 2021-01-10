@@ -35,17 +35,9 @@ abstract class GlyphStrike implements Cloneable {
         this.skewX = strike.skewX;
     }
 
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof GlyphStrike)) {
-            return false;
-        }
+    public abstract GlyphStrike clone();
 
-        GlyphStrike other = (GlyphStrike) obj;
-
+    protected boolean equals(@NonNull GlyphStrike other) {
         return (typeface != null ? typeface.equals(other.typeface) : other.typeface == null)
             && pixelWidth == other.pixelWidth
             && pixelHeight == other.pixelHeight
@@ -99,6 +91,20 @@ abstract class GlyphStrike implements Cloneable {
 
             return strike;
         }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+
+            Data other = (Data) obj;
+
+            return super.equals(other);
+        }
     }
 
     public static final class Color extends GlyphStrike {
@@ -117,20 +123,18 @@ abstract class GlyphStrike implements Cloneable {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             }
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            if (!super.equals(obj)) {
-                return false;
-            }
 
             Color other = (Color) obj;
 
-            return foregroundColor == other.foregroundColor;
+            return super.equals(other)
+                && foregroundColor == other.foregroundColor;
         }
 
         @Override
@@ -171,13 +175,11 @@ abstract class GlyphStrike implements Cloneable {
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            if (!super.equals(obj)) {
-                return false;
-            }
 
             Stroke other = (Stroke) obj;
 
-            return lineRadius == other.lineRadius
+            return super.equals(other)
+                && lineRadius == other.lineRadius
                 && lineCap == other.lineCap
                 && lineJoin == other.lineJoin
                 && miterLimit == other.miterLimit;
