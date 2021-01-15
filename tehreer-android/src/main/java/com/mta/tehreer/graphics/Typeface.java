@@ -76,7 +76,6 @@ public class Typeface {
 
     private @Nullable List<String> paletteEntryNames;
     private @Nullable List<ColorPalette> predefinedPalettes;
-    private @Nullable int[] associatedColors;
 
     private @NonNull String familyName = "";
     private @NonNull String styleName = "";
@@ -156,7 +155,6 @@ public class Typeface {
         this.variationAxes = typeface.variationAxes;
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
-        this.associatedColors = colors;
 
         this.familyName = typeface.familyName;
         this.styleName = typeface.styleName;
@@ -283,9 +281,6 @@ public class Typeface {
                 paletteEntryNames.add(name);
             }
         }
-
-        /* By default, first palette is selected. */
-        associatedColors = predefinedPalettes.get(0).colors();
     }
 
 	private void setupNames() {
@@ -357,7 +352,16 @@ public class Typeface {
         checkNotNull(coordinates, "coordinates");
         checkArgument(coordinates.length == variationAxes.size(), "The number of coordinates does not match with variation axes.");
 
-        return new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
+        Typeface typeface = new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
+
+        if (paletteEntryNames != null) {
+            int[] colors = getAssociatedColors();
+            if (colors != null) {
+                typeface = typeface.getColorInstance(colors);
+            }
+        }
+
+        return typeface;
     }
 
     /**
