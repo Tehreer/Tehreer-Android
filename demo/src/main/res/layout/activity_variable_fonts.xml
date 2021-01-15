@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2019 Muhammad Tayyab Akram
+    Copyright (C) 2019-2021 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,6 +28,16 @@
         android:layout_marginLeft="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginRight="4dp"/>
+
+    <Spinner
+        android:id="@+id/spinner_color_palette"
+        style="@style/FormSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="4dp"
+        android:visibility="gone"/>
 
     <Spinner
         android:id="@+id/spinner_variable_instance"

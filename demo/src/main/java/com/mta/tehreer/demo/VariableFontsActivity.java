@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,13 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mta.tehreer.font.FontFile;
+import com.mta.tehreer.font.ColorPalette;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.widget.TLabel;
@@ -41,10 +44,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class VariableFontsActivity extends AppCompatActivity {
+    private Spinner mColorPaletteSpinner;
     private Spinner mVariableInstanceSpinner;
     private TLabel mPreviewLabel;
 
-    private FontFile mFontFile;
     private Typeface mTypeface;
     private float[] mVariationCoordinates;
 
@@ -52,7 +55,7 @@ public class VariableFontsActivity extends AppCompatActivity {
     private List<VariationAxis> mVariationAxes = Collections.emptyList();
 
     private static class InstanceAdapter extends ArrayAdapter<Typeface> {
-        public InstanceAdapter(Context context, FontFile fontFile) {
+        public InstanceAdapter(@NonNull Context context, @NonNull FontFile fontFile) {
             super(context, android.R.layout.simple_spinner_item, fontFile.getTypefaces());
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         }
@@ -63,7 +66,7 @@ public class VariableFontsActivity extends AppCompatActivity {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public @NonNull View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             TextView textView = (TextView) super.getView(position, convertView, parent);
             textView.setText(getName(position));
 
@@ -71,7 +74,7 @@ public class VariableFontsActivity extends AppCompatActivity {
         }
 
         @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        public @NonNull View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             TextView textView = (TextView) super.getDropDownView(position, convertView, parent);
             textView.setText(getName(position));
 
@@ -86,7 +89,7 @@ public class VariableFontsActivity extends AppCompatActivity {
         }
 
         @Override
-        public VariationAxis getItem(int i) {
+        public @NonNull VariationAxis getItem(int i) {
             return mVariationAxes.get(i);
         }
 
@@ -134,7 +137,7 @@ public class VariableFontsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_variable_fonts);
 
@@ -149,6 +152,18 @@ public class VariableFontsActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 InstanceAdapter instanceAdapter = (InstanceAdapter) adapterView.getAdapter();
                 setupTypeface(instanceAdapter.getItem(i));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) { }
+        });
+
+        mColorPaletteSpinner = findViewById(R.id.spinner_color_palette);
+        mColorPaletteSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                ColorPaletteAdapter paletteAdapter = (ColorPaletteAdapter) adapterView.getAdapter();
+                setupPalette(paletteAdapter.getItem(i).colors());
             }
 
             @Override
@@ -176,13 +191,12 @@ public class VariableFontsActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onSupportNavigateUp(){
+    public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
     }
 
-    private void setupFont(FontFile fontFile) {
-        mFontFile = fontFile;
+    private void setupFont(@NonNull FontFile fontFile) {
         mTypeface = fontFile.getTypefaces().get(0);
         mVariationAxes = mTypeface.getVariationAxes();
         mVariationCoordinates = mTypeface.getVariationCoordinates();
@@ -191,8 +205,15 @@ public class VariableFontsActivity extends AppCompatActivity {
         mPreviewLabel.setTypeface(mTypeface);
     }
 
-    private void setupTypeface(Typeface typeface) {
+    private void setupTypeface(@NonNull Typeface typeface) {
+        List<ColorPalette> palettes = typeface.getPredefinedPalettes();
+        if (palettes == null) {
+            palettes = Collections.emptyList();
+        }
+
         mTypeface = typeface;
+        mColorPaletteSpinner.setAdapter(new ColorPaletteAdapter(palettes));
+        mColorPaletteSpinner.setVisibility(palettes.isEmpty() ? View.GONE : View.VISIBLE);
         mVariationCoordinates = mTypeface.getVariationCoordinates();
         mAxisAdapter.notifyDataSetChanged();
         mPreviewLabel.setTypeface(mTypeface);
@@ -200,6 +221,12 @@ public class VariableFontsActivity extends AppCompatActivity {
 
     private void setupCoordinate(int axisIndex, float coordinate) {
         mVariationCoordinates[axisIndex] = coordinate;
-        setupTypeface(mTypeface.getVariationInstance(mVariationCoordinates));
+        mTypeface = mTypeface.getVariationInstance(mVariationCoordinates);
+        mPreviewLabel.setTypeface(mTypeface);
+    }
+
+    private void setupPalette(@NonNull int[] colors) {
+        mTypeface = mTypeface.getColorInstance(colors);
+        mPreviewLabel.setTypeface(mTypeface);
     }
 }
