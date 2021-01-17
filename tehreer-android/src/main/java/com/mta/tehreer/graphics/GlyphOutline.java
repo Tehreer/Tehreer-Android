@@ -16,7 +16,13 @@
 
 package com.mta.tehreer.graphics;
 
+import com.mta.tehreer.internal.JniBridge;
+
 final class GlyphOutline {
+    static {
+        JniBridge.loadLibrary();
+    }
+
     long nativeOutline;
 
     public GlyphOutline(long nativeOutline) {
