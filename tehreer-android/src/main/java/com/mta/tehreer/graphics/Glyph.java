@@ -21,16 +21,10 @@ import android.graphics.Path;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 
-import com.mta.tehreer.internal.JniBridge;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 final class Glyph {
-    static {
-        JniBridge.loadLibrary();
-    }
-
     public static final int TYPE_MASK = 0x0001;
     public static final int TYPE_COLOR = 0x0002;
     public static final int TYPE_MIXED = 0x0003;
