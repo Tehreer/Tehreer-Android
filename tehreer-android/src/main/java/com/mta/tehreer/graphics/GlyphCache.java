@@ -88,7 +88,7 @@ final class GlyphCache extends LruCache {
         }
     }
 
-    private final @NonNull HashMap<GlyphStrike, Segment<Integer, ?>> segments = new HashMap<>();
+    private final @NonNull HashMap<GlyphKey, Segment<Integer, ?>> segments = new HashMap<>();
 
     public static @NonNull GlyphCache getInstance() {
         return Holder.INSTANCE;
@@ -113,7 +113,7 @@ final class GlyphCache extends LruCache {
         super.clear();
 
         // Dispose all glyph rasterizers.
-        for (Map.Entry<GlyphStrike, Segment<Integer, ?>> entry : segments.entrySet()) {
+        for (Map.Entry<GlyphKey, Segment<Integer, ?>> entry : segments.entrySet()) {
             Segment<Integer, ?> value = entry.getValue();
 
             if (value instanceof DataSegment) {
@@ -125,22 +125,22 @@ final class GlyphCache extends LruCache {
         segments.clear();
     }
 
-    private @NonNull DataSegment secureDataSegment(@NonNull GlyphStrike strike) {
-        DataSegment segment = (DataSegment) segments.get(strike);
+    private @NonNull DataSegment secureDataSegment(@NonNull GlyphKey key) {
+        DataSegment segment = (DataSegment) segments.get(key);
         if (segment == null) {
-            GlyphRasterizer rasterizer = new GlyphRasterizer(strike);
+            GlyphRasterizer rasterizer = new GlyphRasterizer(key);
             segment = new DataSegment(this, rasterizer);
-            segments.put(strike.clone(), segment);
+            segments.put(key.clone(), segment);
         }
 
         return segment;
     }
 
-    private @NonNull ImageSegment secureImageSegment(@NonNull GlyphStrike strike) {
-        ImageSegment segment = (ImageSegment) segments.get(strike);
+    private @NonNull ImageSegment secureImageSegment(@NonNull GlyphKey key) {
+        ImageSegment segment = (ImageSegment) segments.get(key);
         if (segment == null) {
             segment = new ImageSegment(this);
-            segments.put(strike, segment);
+            segments.put(key, segment);
         }
 
         return segment;
@@ -155,19 +155,19 @@ final class GlyphCache extends LruCache {
         return glyph;
     }
 
-    private @Nullable GlyphImage getColoredImage(@NonNull GlyphStrike.Color strike,
+    private @Nullable GlyphImage getColoredImage(@NonNull GlyphKey.Color key,
                                                  @NonNull GlyphRasterizer rasterizer,
                                                  int glyphId) {
         final ImageSegment segment;
         GlyphImage coloredImage;
 
         synchronized (this) {
-            segment = secureImageSegment(strike);
+            segment = secureImageSegment(key);
             coloredImage = segment.get(glyphId);
         }
 
         if (coloredImage == null) {
-            coloredImage = rasterizer.getGlyphImage(glyphId, strike.foregroundColor);
+            coloredImage = rasterizer.getGlyphImage(glyphId, key.foregroundColor);
 
             if (coloredImage != null) {
                 synchronized (this) {
@@ -185,7 +185,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedStrike());
+            segment = secureDataSegment(attributes.associatedKey());
             glyph = secureGlyph(segment, glyphId);
         }
 
@@ -210,27 +210,27 @@ final class GlyphCache extends LruCache {
         }
 
         if (glyph.getType() == Glyph.TYPE_MIXED) {
-            return getColoredImage(attributes.colorStrike(), segment.rasterizer, glyphId);
+            return getColoredImage(attributes.colorKey(), segment.rasterizer, glyphId);
         }
 
         return glyph.getImage();
     }
 
-    private @Nullable GlyphImage getStrokeImage(@NonNull GlyphStrike.Stroke strike,
+    private @Nullable GlyphImage getStrokeImage(@NonNull GlyphKey.Stroke key,
                                                 @NonNull GlyphRasterizer rasterizer,
                                                 @NonNull GlyphOutline outline, int glyphId) {
         final ImageSegment segment;
         GlyphImage strokeImage;
 
         synchronized (this) {
-            segment = secureImageSegment(strike);
+            segment = secureImageSegment(key);
             strokeImage = segment.get(glyphId);
         }
 
         if (strokeImage == null) {
             strokeImage = rasterizer.getStrokeImage(outline,
-                                                    strike.lineRadius, strike.lineCap,
-                                                    strike.lineJoin, strike.miterLimit);
+                                                    key.lineRadius, key.lineCap,
+                                                    key.lineJoin, key.miterLimit);
 
             if (strokeImage != null) {
                 synchronized (this) {
@@ -248,7 +248,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedStrike());
+            segment = secureDataSegment(attributes.associatedKey());
             glyph = secureGlyph(segment, glyphId);
         }
 
@@ -267,7 +267,7 @@ final class GlyphCache extends LruCache {
         }
 
         if (glyphOutline != null) {
-            return getStrokeImage(attributes.strokeStrike(), segment.rasterizer,
+            return getStrokeImage(attributes.strokeKey(), segment.rasterizer,
                                   glyphOutline, glyphId);
         }
 
@@ -279,7 +279,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedStrike());
+            segment = secureDataSegment(attributes.associatedKey());
             glyph = secureGlyph(segment, glyphId);
         }
 

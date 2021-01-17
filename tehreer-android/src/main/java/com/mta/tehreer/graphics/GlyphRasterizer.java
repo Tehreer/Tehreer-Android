@@ -33,34 +33,34 @@ final class GlyphRasterizer implements Disposable {
 
 	long nativeRasterizer;
 
-	GlyphRasterizer(@NonNull GlyphStrike strike) {
-	    nativeRasterizer = nCreate(strike.typeface.nativeTypeface,
-                                   strike.pixelWidth, strike.pixelHeight,
-                                   0x10000, -strike.skewX, 0, 0x10000);
+    public GlyphRasterizer(@NonNull GlyphKey key) {
+	    nativeRasterizer = nCreate(key.typeface.nativeTypeface,
+                                   key.pixelWidth, key.pixelHeight,
+                                   0x10000, -key.skewX, 0, 0x10000);
 	}
 
-	int getGlyphType(int glyphId) {
+    public int getGlyphType(int glyphId) {
         return nGetGlyphType(nativeRasterizer, glyphId);
     }
 
-    @Nullable GlyphImage getGlyphImage(int glyphId) {
+    public @Nullable GlyphImage getGlyphImage(int glyphId) {
         return getGlyphImage(glyphId, Color.TRANSPARENT);
     }
 
-    @Nullable GlyphImage getGlyphImage(int glyphId, @ColorInt int foregroundColor) {
+    public @Nullable GlyphImage getGlyphImage(int glyphId, @ColorInt int foregroundColor) {
         return nGetGlyphImage(nativeRasterizer, glyphId, foregroundColor);
     }
 
-    @Nullable GlyphImage getStrokeImage(@NonNull GlyphOutline glyphOutline,
-                                        int lineRadius,
-                                        @GlyphAttributes.LineCap int lineCap,
-                                        @GlyphAttributes.LineJoin int lineJoin,
-                                        int miterLimit) {
+    public @Nullable GlyphImage getStrokeImage(@NonNull GlyphOutline glyphOutline,
+                                               int lineRadius,
+                                               @GlyphAttributes.LineCap int lineCap,
+                                               @GlyphAttributes.LineJoin int lineJoin,
+                                               int miterLimit) {
         return nGetStrokeImage(nativeRasterizer, glyphOutline.nativeOutline,
                                lineRadius, lineCap, lineJoin, miterLimit);
     }
 
-    @Nullable GlyphOutline getGlyphOutline(int glyphId) {
+    public @Nullable GlyphOutline getGlyphOutline(int glyphId) {
 	    long nativeOutline = nGetGlyphOutline(nativeRasterizer, glyphId);
 	    if (nativeOutline != 0) {
 	        return new GlyphOutline(nativeOutline);
@@ -69,7 +69,7 @@ final class GlyphRasterizer implements Disposable {
 	    return null;
     }
 
-    @NonNull Path getGlyphPath(int glyphId) {
+    public @NonNull Path getGlyphPath(int glyphId) {
         return nGetGlyphPath(nativeRasterizer, glyphId);
     }
 

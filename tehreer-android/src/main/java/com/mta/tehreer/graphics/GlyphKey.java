@@ -20,24 +20,24 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-abstract class GlyphStrike implements Cloneable {
+abstract class GlyphKey implements Cloneable {
     public Typeface typeface;
     public int pixelWidth;      // 26.6 fixed-point value.
     public int pixelHeight;     // 26.6 fixed-point value.
     public int skewX;           // 16.16 fixed-point value.
 
-    protected GlyphStrike() { }
+    protected GlyphKey() { }
 
-    protected GlyphStrike(@NonNull GlyphStrike strike) {
-        this.typeface = strike.typeface;
-        this.pixelWidth = strike.pixelWidth;
-        this.pixelHeight = strike.pixelHeight;
-        this.skewX = strike.skewX;
+    protected GlyphKey(@NonNull GlyphKey key) {
+        this.typeface = key.typeface;
+        this.pixelWidth = key.pixelWidth;
+        this.pixelHeight = key.pixelHeight;
+        this.skewX = key.skewX;
     }
 
-    public abstract GlyphStrike clone();
+    public abstract @NonNull GlyphKey clone();
 
-    protected boolean equals(@NonNull GlyphStrike other) {
+    protected boolean equals(@NonNull GlyphKey other) {
         return (typeface != null ? typeface.equals(other.typeface) : other.typeface == null)
             && pixelWidth == other.pixelWidth
             && pixelHeight == other.pixelHeight
@@ -54,11 +54,11 @@ abstract class GlyphStrike implements Cloneable {
         return result;
     }
 
-    public static final class Data extends GlyphStrike {
+    public static final class Data extends GlyphKey {
         public Data() { }
 
-        public Data(Data strike) {
-            super(strike);
+        public Data(Data key) {
+            super(key);
         }
 
         @Override
@@ -67,29 +67,29 @@ abstract class GlyphStrike implements Cloneable {
         }
 
         public @NonNull Color color(@ColorInt int foregroundColor) {
-            Color strike = new Color();
-            strike.typeface = typeface;
-            strike.pixelWidth = pixelWidth;
-            strike.pixelHeight = pixelHeight;
-            strike.skewX = skewX;
-            strike.foregroundColor = foregroundColor;
+            Color key = new Color();
+            key.typeface = typeface;
+            key.pixelWidth = pixelWidth;
+            key.pixelHeight = pixelHeight;
+            key.skewX = skewX;
+            key.foregroundColor = foregroundColor;
 
-            return strike;
+            return key;
         }
 
         public @NonNull Stroke stroke(int lineRadius, @GlyphAttributes.LineCap int lineCap,
                                       @GlyphAttributes.LineJoin int lineJoin, int miterLimit) {
-            Stroke strike = new Stroke();
-            strike.typeface = typeface;
-            strike.pixelWidth = pixelWidth;
-            strike.pixelHeight = pixelHeight;
-            strike.skewX = skewX;
-            strike.lineRadius = lineRadius;
-            strike.lineCap = lineCap;
-            strike.lineJoin = lineJoin;
-            strike.miterLimit = miterLimit;
+            Stroke key = new Stroke();
+            key.typeface = typeface;
+            key.pixelWidth = pixelWidth;
+            key.pixelHeight = pixelHeight;
+            key.skewX = skewX;
+            key.lineRadius = lineRadius;
+            key.lineCap = lineCap;
+            key.lineJoin = lineJoin;
+            key.miterLimit = miterLimit;
 
-            return strike;
+            return key;
         }
 
         @Override
@@ -107,14 +107,14 @@ abstract class GlyphStrike implements Cloneable {
         }
     }
 
-    public static final class Color extends GlyphStrike {
+    public static final class Color extends GlyphKey {
         public @ColorInt int foregroundColor;
 
         public Color() { }
 
-        public Color(@NonNull Color strike) {
-            super(strike);
-            this.foregroundColor = strike.foregroundColor;
+        public Color(@NonNull Color key) {
+            super(key);
+            this.foregroundColor = key.foregroundColor;
         }
 
         @Override
@@ -146,7 +146,7 @@ abstract class GlyphStrike implements Cloneable {
         }
     }
 
-    public static final class Stroke extends GlyphStrike {
+    public static final class Stroke extends GlyphKey {
         public int lineRadius;
         public @GlyphAttributes.LineCap int lineCap;
         public @GlyphAttributes.LineJoin int lineJoin;
@@ -154,12 +154,12 @@ abstract class GlyphStrike implements Cloneable {
 
         public Stroke() { }
 
-        public Stroke(@NonNull Stroke strike) {
-            super(strike);
-            this.lineRadius = strike.lineRadius;
-            this.lineCap = strike.lineCap;
-            this.lineJoin = strike.lineJoin;
-            this.miterLimit = strike.miterLimit;
+        public Stroke(@NonNull Stroke key) {
+            super(key);
+            this.lineRadius = key.lineRadius;
+            this.lineCap = key.lineCap;
+            this.lineJoin = key.lineJoin;
+            this.miterLimit = key.miterLimit;
         }
 
         @Override

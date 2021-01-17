@@ -50,7 +50,7 @@ final class GlyphAttributes {
     @Retention(RetentionPolicy.SOURCE)
     public @interface LineJoin { }
 
-    private @NonNull GlyphStrike.Data glyphStrike = new GlyphStrike.Data();
+    private final @NonNull GlyphKey.Data key = new GlyphKey.Data();
     private @ColorInt int foregroundColor;
     private int lineRadius;
     private @LineCap int lineCap;
@@ -58,19 +58,19 @@ final class GlyphAttributes {
     private int miterLimit;
 
     public void setTypeface(Typeface typeface) {
-        glyphStrike.typeface = typeface;
+        key.typeface = typeface;
     }
 
     public void setPixelWidth(float pixelWidth) {
-        glyphStrike.pixelWidth = (int) ((pixelWidth * 64.0f) + 0.5f);
+        key.pixelWidth = (int) ((pixelWidth * 64.0f) + 0.5f);
     }
 
     public void setPixelHeight(float pixelHeight) {
-        glyphStrike.pixelHeight = (int) ((pixelHeight * 64.0f) + 0.5f);
+        key.pixelHeight = (int) ((pixelHeight * 64.0f) + 0.5f);
     }
 
     public void setSkewX(float skewX) {
-        glyphStrike.skewX = (int) ((skewX * 0x10000) + 0.5f);
+        key.skewX = (int) ((skewX * 0x10000) + 0.5f);
     }
 
     public void setForegroundColor(@ColorInt int foregroundColor) {
@@ -95,18 +95,18 @@ final class GlyphAttributes {
 
     public boolean isRenderable() {
         // Minimum size supported by FreeType is 64x64.
-        return (glyphStrike.pixelWidth >= 64 && glyphStrike.pixelHeight >= 64);
+        return (key.pixelWidth >= 64 && key.pixelHeight >= 64);
     }
 
-    public @NonNull GlyphStrike.Data associatedStrike() {
-        return glyphStrike;
+    public @NonNull GlyphKey.Data associatedKey() {
+        return key;
     }
 
-    public @NonNull GlyphStrike.Color colorStrike() {
-        return glyphStrike.color(foregroundColor);
+    public @NonNull GlyphKey.Color colorKey() {
+        return key.color(foregroundColor);
     }
 
-    public @NonNull GlyphStrike.Stroke strokeStrike() {
-        return glyphStrike.stroke(lineRadius, lineCap, lineJoin, miterLimit);
+    public @NonNull GlyphKey.Stroke strokeKey() {
+        return key.stroke(lineRadius, lineCap, lineJoin, miterLimit);
     }
 }
