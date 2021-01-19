@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,13 @@ import android.view.View;
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.Px;
 
 import com.mta.tehreer.R;
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.graphics.RenderingStyle;
+import com.mta.tehreer.graphics.StrokeCap;
+import com.mta.tehreer.graphics.StrokeJoin;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.BreakMode;
@@ -94,6 +98,51 @@ public class TLabel extends View {
         TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TLabel, defStyleAttr, 0);
 
         try {
+            RenderingStyle renderingStyle = null;
+            switch (values.getInt(R.styleable.TLabel_renderingStyle, 0)) {
+            case 0:
+                renderingStyle = RenderingStyle.FILL;
+                break;
+
+            case 1:
+                renderingStyle = RenderingStyle.FILL_STROKE;
+                break;
+
+            case 2:
+                renderingStyle = RenderingStyle.STROKE;
+                break;
+            }
+
+            StrokeCap strokeCap = null;
+            switch (values.getInt(R.styleable.TLabel_strokeCap, 0)) {
+            case 0:
+                strokeCap = StrokeCap.BUTT;
+                break;
+
+            case 1:
+                strokeCap = StrokeCap.ROUND;
+                break;
+
+            case 2:
+                strokeCap = StrokeCap.SQUARE;
+                break;
+            }
+
+            StrokeJoin strokeJoin = null;
+            switch (values.getInt(R.styleable.TLabel_strokeJoin, 0)) {
+            case 0:
+                strokeJoin = StrokeJoin.BEVEL;
+                break;
+
+            case 1:
+                strokeJoin = StrokeJoin.MITER;
+                break;
+
+            case 2:
+                strokeJoin = StrokeJoin.ROUND;
+                break;
+            }
+
             BreakMode truncationMode = null;
             switch (values.getInt(R.styleable.TLabel_truncationMode, 0)) {
             case 0:
@@ -128,6 +177,12 @@ public class TLabel extends View {
             setShadowDx(values.getDimension(R.styleable.TLabel_shadowDx, 0.0f));
             setShadowDy(values.getDimension(R.styleable.TLabel_shadowDy, 0.0f));
             setShadowColor(values.getColor(R.styleable.TLabel_shadowColor, Color.TRANSPARENT));
+            setRenderingStyle(renderingStyle);
+            setStrokeColor(values.getColor(R.styleable.TLabel_strokeColor, Color.BLACK));
+            setStrokeWidth(values.getDimension(R.styleable.TLabel_strokeWidth, 0.0f));
+            setStrokeCap(strokeCap);
+            setStrokeJoin(strokeJoin);
+            setStrokeMiter(values.getDimension(R.styleable.TLabel_strokeMiter, 1.0f));
             setTruncationMode(truncationMode);
             setTruncationPlace(truncationPlace);
             setTextColor(values.getColor(R.styleable.TLabel_textColor, Color.BLACK));
@@ -627,6 +682,125 @@ public class TLabel extends View {
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mResolver.setLineHeightMultiplier(lineHeightMultiplier);
         requestLayout();
+        invalidate();
+    }
+
+    /**
+     * Returns the rendering style, used for controlling how text should appear while drawing. The
+     * default value is {@link RenderingStyle#FILL}.
+     *
+     * @return The style setting for text.
+     */
+    public RenderingStyle getRenderingStyle() {
+        return mRenderer.getRenderingStyle();
+    }
+
+    /**
+     * Sets the rendering style, used for controlling how text should appear while drawing. The
+     * default value is {@link RenderingStyle#FILL}.
+     *
+     * @param renderingStyle The new style setting for the text.
+     */
+    public void setRenderingStyle(RenderingStyle renderingStyle) {
+        mRenderer.setRenderingStyle(renderingStyle == null ? RenderingStyle.FILL : renderingStyle);
+    }
+
+    /**
+     * Returns the stroke color for text. The default value is <code>Color.BLACK</code>.
+     *
+     * @return The stroke color expressed as ARGB integer.
+     */
+    public @ColorInt int getStrokeColor() {
+        return mRenderer.getStrokeColor();
+    }
+
+    /**
+     * Sets the stroke color text. The default value is <code>Color.BLACK</code>.
+     *
+     * @param strokeColor The 32-bit value of color expressed as ARGB.
+     */
+    public void setStrokeColor(@ColorInt int strokeColor) {
+        mRenderer.setStrokeColor(strokeColor);
+        invalidate();
+    }
+
+    /**
+     * Returns the stroke width for text.
+     *
+     * @return The stroke width in pixels.
+     */
+    public @Px float getStrokeWidth() {
+        return mRenderer.getStrokeWidth();
+    }
+
+    /**
+     * Sets the stroke width for text.
+     *
+     * @param strokeWidth The stroke width in pixels.
+     */
+    public void setStrokeWidth(@Px float strokeWidth) {
+        mRenderer.setStrokeWidth(Math.max(0.0f, strokeWidth));
+        invalidate();
+    }
+
+    /**
+     * Returns the cap, controlling how the start and end of stroked lines and paths are treated.
+     * The default value is {@link StrokeCap#BUTT}.
+     *
+     * @return The stroke cap style for text.
+     */
+    public StrokeCap getStrokeCap() {
+        return mRenderer.getStrokeCap();
+    }
+
+    /**
+     * Sets the cap, controlling how the start and end of stroked lines and paths are treated. The
+     * default value is {@link StrokeCap#BUTT}.
+     *
+     * @param strokeCap The new stroke cap style for text.
+     */
+    public void setStrokeCap(StrokeCap strokeCap) {
+        mRenderer.setStrokeCap(strokeCap == null ? StrokeCap.BUTT : strokeCap);
+        invalidate();
+    }
+
+    /**
+     * Returns the stroke join type for text. The default value is {@link StrokeJoin#ROUND}.
+     *
+     * @return The stroke join type.
+     */
+    public StrokeJoin getStrokeJoin() {
+        return mRenderer.getStrokeJoin();
+    }
+
+    /**
+     * Sets the stroke join type for text. The default value is {@link StrokeJoin#ROUND}.
+     *
+     * @param strokeJoin The new stroke join type.
+     */
+    public void setStrokeJoin(StrokeJoin strokeJoin) {
+        mRenderer.setStrokeJoin(strokeJoin == null ? StrokeJoin.ROUND : strokeJoin);
+        invalidate();
+    }
+
+    /**
+     * Returns the stroke miter value for text. Used to control the behavior of miter joins when the
+     * joins angle is sharp.
+     *
+     * @return The miter limit in pixels.
+     */
+    public @Px float getStrokeMiter() {
+        return mRenderer.getStrokeMiter();
+    }
+
+    /**
+     * Sets thee stroke miter value. This is used to control the behavior of miter joins when the
+     * joins angle is sharp.
+     *
+     * @param strokeMiter The value of miter limit in pixels.
+     */
+    public void setStrokeMiter(@Px float strokeMiter) {
+        mRenderer.setStrokeMiter(Math.max(1.0f, strokeMiter));
         invalidate();
     }
 
