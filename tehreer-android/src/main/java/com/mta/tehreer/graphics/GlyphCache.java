@@ -130,7 +130,7 @@ final class GlyphCache extends LruCache {
         if (segment == null) {
             GlyphRasterizer rasterizer = new GlyphRasterizer(key);
             segment = new DataSegment(this, rasterizer);
-            segments.put(key.clone(), segment);
+            segments.put(key.copy(), segment);
         }
 
         return segment;
@@ -140,7 +140,7 @@ final class GlyphCache extends LruCache {
         ImageSegment segment = (ImageSegment) segments.get(key);
         if (segment == null) {
             segment = new ImageSegment(this);
-            segments.put(key, segment);
+            segments.put(key.copy(), segment);
         }
 
         return segment;
@@ -185,7 +185,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedKey());
+            segment = secureDataSegment(attributes.dataKey());
             glyph = secureGlyph(segment, glyphId);
         }
 
@@ -248,7 +248,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedKey());
+            segment = secureDataSegment(attributes.dataKey());
             glyph = secureGlyph(segment, glyphId);
         }
 
@@ -279,7 +279,7 @@ final class GlyphCache extends LruCache {
         final Glyph glyph;
 
         synchronized (this) {
-            segment = secureDataSegment(attributes.associatedKey());
+            segment = secureDataSegment(attributes.dataKey());
             glyph = secureGlyph(segment, glyphId);
         }
 

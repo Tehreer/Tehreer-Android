@@ -50,63 +50,62 @@ final class GlyphAttributes {
     @Retention(RetentionPolicy.SOURCE)
     public @interface LineJoin { }
 
-    private final @NonNull GlyphKey.Data key = new GlyphKey.Data();
-    private @ColorInt int foregroundColor;
-    private int lineRadius;
-    private @LineCap int lineCap;
-    private @LineJoin int lineJoin;
-    private int miterLimit;
+    private final @NonNull GlyphKey.Data dataKey = new GlyphKey.Data();
+    private final @NonNull GlyphKey.Color colorKey = new GlyphKey.Color();
+    private final @NonNull GlyphKey.Stroke strokeKey = new GlyphKey.Stroke();
 
     public void setTypeface(Typeface typeface) {
-        key.typeface = typeface;
+        dataKey.typeface = typeface;
     }
 
     public void setPixelWidth(float pixelWidth) {
-        key.pixelWidth = (int) ((pixelWidth * 64.0f) + 0.5f);
+        dataKey.pixelWidth = (int) ((pixelWidth * 64.0f) + 0.5f);
     }
 
     public void setPixelHeight(float pixelHeight) {
-        key.pixelHeight = (int) ((pixelHeight * 64.0f) + 0.5f);
+        dataKey.pixelHeight = (int) ((pixelHeight * 64.0f) + 0.5f);
     }
 
     public void setSkewX(float skewX) {
-        key.skewX = (int) ((skewX * 0x10000) + 0.5f);
+        dataKey.skewX = (int) ((skewX * 0x10000) + 0.5f);
     }
 
     public void setForegroundColor(@ColorInt int foregroundColor) {
-        this.foregroundColor = foregroundColor;
+        colorKey.foregroundColor = foregroundColor;
     }
 
     public void setLineRadius(float lineRadius) {
-        this.lineRadius = (int) ((lineRadius * 64.0f) + 0.5f);
+        strokeKey.lineRadius = (int) ((lineRadius * 64.0f) + 0.5f);
     }
 
     public void setLineCap(@LineCap int lineCap) {
-        this.lineCap = lineCap;
+        strokeKey.lineCap = lineCap;
     }
 
     public void setLineJoin(@LineJoin int lineJoin) {
-        this.lineJoin = lineJoin;
+        strokeKey.lineJoin = lineJoin;
     }
 
     public void setMiterLimit(float miterLimit) {
-        this.miterLimit = (int) ((miterLimit * 0x10000) + 0.5f);
+        strokeKey.miterLimit = (int) ((miterLimit * 0x10000) + 0.5f);
     }
 
     public boolean isRenderable() {
         // Minimum size supported by FreeType is 64x64.
-        return (key.pixelWidth >= 64 && key.pixelHeight >= 64);
+        return (dataKey.pixelWidth >= 64 && dataKey.pixelHeight >= 64);
     }
 
-    public @NonNull GlyphKey.Data associatedKey() {
-        return key;
+    public @NonNull GlyphKey.Data dataKey() {
+        return dataKey;
     }
 
     public @NonNull GlyphKey.Color colorKey() {
-        return key.color(foregroundColor);
+        colorKey.set(dataKey);
+        return colorKey;
     }
 
     public @NonNull GlyphKey.Stroke strokeKey() {
-        return key.stroke(lineRadius, lineCap, lineJoin, miterLimit);
+        strokeKey.set(dataKey);
+        return strokeKey;
     }
 }

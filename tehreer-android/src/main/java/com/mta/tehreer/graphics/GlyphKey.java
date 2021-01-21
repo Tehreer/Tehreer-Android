@@ -20,22 +20,20 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-abstract class GlyphKey implements Cloneable {
+abstract class GlyphKey {
     public Typeface typeface;
     public int pixelWidth;      // 26.6 fixed-point value.
     public int pixelHeight;     // 26.6 fixed-point value.
     public int skewX;           // 16.16 fixed-point value.
 
-    protected GlyphKey() { }
+    public abstract GlyphKey copy();
 
-    protected GlyphKey(@NonNull GlyphKey key) {
+    protected void set(@NonNull GlyphKey key) {
         this.typeface = key.typeface;
         this.pixelWidth = key.pixelWidth;
         this.pixelHeight = key.pixelHeight;
         this.skewX = key.skewX;
     }
-
-    public abstract @NonNull GlyphKey clone();
 
     protected boolean equals(@NonNull GlyphKey other) {
         return (typeface != null ? typeface.equals(other.typeface) : other.typeface == null)
@@ -55,39 +53,10 @@ abstract class GlyphKey implements Cloneable {
     }
 
     public static final class Data extends GlyphKey {
-        public Data() { }
-
-        public Data(Data key) {
-            super(key);
-        }
-
         @Override
-        public @NonNull Data clone() {
-            return new Data(this);
-        }
-
-        public @NonNull Color color(@ColorInt int foregroundColor) {
-            Color key = new Color();
-            key.typeface = typeface;
-            key.pixelWidth = pixelWidth;
-            key.pixelHeight = pixelHeight;
-            key.skewX = skewX;
-            key.foregroundColor = foregroundColor;
-
-            return key;
-        }
-
-        public @NonNull Stroke stroke(int lineRadius, @GlyphAttributes.LineCap int lineCap,
-                                      @GlyphAttributes.LineJoin int lineJoin, int miterLimit) {
-            Stroke key = new Stroke();
-            key.typeface = typeface;
-            key.pixelWidth = pixelWidth;
-            key.pixelHeight = pixelHeight;
-            key.skewX = skewX;
-            key.lineRadius = lineRadius;
-            key.lineCap = lineCap;
-            key.lineJoin = lineJoin;
-            key.miterLimit = miterLimit;
+        public @NonNull Data copy() {
+            Data key = new Data();
+            key.set(this);
 
             return key;
         }
@@ -110,16 +79,17 @@ abstract class GlyphKey implements Cloneable {
     public static final class Color extends GlyphKey {
         public @ColorInt int foregroundColor;
 
-        public Color() { }
-
-        public Color(@NonNull Color key) {
-            super(key);
-            this.foregroundColor = key.foregroundColor;
+        public void set(GlyphKey.Data key) {
+            super.set(key);
         }
 
         @Override
-        public @NonNull Color clone() {
-            return new Color(this);
+        public @NonNull Color copy() {
+            Color key = new Color();
+            key.set(this);
+            key.foregroundColor = this.foregroundColor;
+
+            return key;
         }
 
         @Override
@@ -152,19 +122,20 @@ abstract class GlyphKey implements Cloneable {
         public @GlyphAttributes.LineJoin int lineJoin;
         public int miterLimit;
 
-        public Stroke() { }
-
-        public Stroke(@NonNull Stroke key) {
-            super(key);
-            this.lineRadius = key.lineRadius;
-            this.lineCap = key.lineCap;
-            this.lineJoin = key.lineJoin;
-            this.miterLimit = key.miterLimit;
+        public void set(GlyphKey.Data key) {
+            super.set(key);
         }
 
         @Override
-        public @NonNull Stroke clone() {
-            return new Stroke(this);
+        public @NonNull Stroke copy() {
+            Stroke key = new Stroke();
+            key.set(this);
+            key.lineRadius = this.lineRadius;
+            key.lineCap = this.lineCap;
+            key.lineJoin = this.lineJoin;
+            key.miterLimit = this.miterLimit;
+
+            return key;
         }
 
         @Override
