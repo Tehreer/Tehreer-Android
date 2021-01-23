@@ -79,25 +79,25 @@ SB_SOURCE_PATH := $(SB_ROOT_PATH)/Source
 
 ifeq ($(APP_OPTIM), debug)
     SB_FILE_LIST := \
+        BidiChain.c \
+        BidiTypeLookup.c \
+        BracketQueue.c \
+        GeneralCategoryLookup.c \
+        IsolatingRun.c \
+        LevelRun.c \
+        PairingLookup.c \
+        RunQueue.c \
         SBAlgorithm.c \
         SBBase.c \
-        SBBidiChain.c \
-        SBBidiTypeLookup.c \
-        SBBracketQueue.c \
         SBCodepointSequence.c \
-        SBGeneralCategoryLookup.c \
-        SBIsolatingRun.c \
-        SBLevelRun.c \
         SBLine.c \
         SBLog.c \
         SBMirrorLocator.c \
-        SBPairingLookup.c \
         SBParagraph.c \
-        SBRunQueue.c \
         SBScriptLocator.c \
-        SBScriptLookup.c \
-        SBScriptStack.c \
-        SBStatusStack.c
+        ScriptLookup.c \
+        ScriptStack.c \
+        StatusStack.c
 else
     SB_FILE_LIST := SheenBidi.c
     SB_MACROS := -DSB_CONFIG_UNITY
