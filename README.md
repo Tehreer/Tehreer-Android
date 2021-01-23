@@ -12,13 +12,13 @@ Tehreer is a library which gives full control over following text related techno
 It is a wrapper over mature C libraries, [FreeType](https://www.freetype.org), [SheenBidi](https://github.com/mta452/SheenBidi) and [SheenFigure](https://github.com/mta452/SheenFigure). So a part of the library has been written in JNI in order to access the functionality of said libraries.
 
 ## Screenshots
-<img src="./screenshots/001.png" width="170"> <img src="./screenshots/002.png" width="170"> <img src="./screenshots/003.png" width="170"> <img src="./screenshots/004.png" width="170"> <img src="./screenshots/005.png" width="170">
+<img src="./screenshots/001.png" width="170"> <img src="./screenshots/002.png" width="170"> <img src="./screenshots/003.png" width="170"> <img src="./screenshots/004.png" width="170"> <img src="./screenshots/005.png" width="170"> <img src="./screenshots/006.png" width="170">
 
 ## Installation
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-compile 'com.github.mta452:tehreer-android:2.4'
+compile 'com.github.mta452:tehreer-android:2.5'
 ```
 
 ## Proguard
@@ -33,7 +33,7 @@ The [Javadocs](https://tehreer.github.io/Tehreer-Android/apidocs/) are available
 
 ## License
 ```
-Copyright (C) 2016-2019 Muhammad Tayyab Akram
+Copyright (C) 2016-2021 Muhammad Tayyab Akram
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
