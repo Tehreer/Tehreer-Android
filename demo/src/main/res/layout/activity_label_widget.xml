@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Copyright (C) 2017 Muhammad Tayyab Akram
+<?xml version="1.0" encoding="utf-8"?><!--
+    Copyright (C) 2016-2021 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,16 +26,16 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="3dp"
         android:text="@string/article_title"
-        android:textColor="@android:color/black"
-        android:textSize="24sp"
-        android:textStyle="bold|italic"/>
+        android:textColor="#1E307F"
+        android:textSize="32sp"
+        android:textStyle="italic" />
 
     <ScrollView
         android:id="@+id/scroll_view_article"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="3dp"
         android:layout_marginTop="3dp"
+        android:layout_marginBottom="3dp"
         android:layout_weight="1">
 
         <com.mta.tehreer.demo.LinkableLabel
@@ -44,9 +43,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:gravity="right"
-            app:textColor="@android:color/black"
-            app:textSize="18sp"
-            app:typeface="@id/typeface_taj_nastaleeq"/>
+            app:renderingStyle="fill_stroke"
+            app:strokeColor="#FF7F00"
+            app:strokeWidth=".5sp"
+            app:textColor="@color/colorPrimary"
+            app:textSize="28sp"
+            app:typeface="@id/typeface_taj_nastaleeq" />
     </ScrollView>
 
     <TextView
@@ -55,7 +57,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:text="@string/article_reference"
-        android:textColor="@android:color/black"
-        android:textSize="14sp"
-        android:textStyle="italic"/>
+        android:textColor="#1E307F"
+        android:textSize="18sp"
+        android:textStyle="italic" />
 </LinearLayout>
