@@ -28,7 +28,7 @@ using namespace Tehreer;
 
 static void dispose(JNIEnv *env, jobject obj, jlong outlineHandle)
 {
-    FT_Glyph glyph = reinterpret_cast<FT_Glyph>(outlineHandle);
+    auto glyph = reinterpret_cast<FT_Glyph>(outlineHandle);
     FT_Done_Glyph(glyph);
 }
 

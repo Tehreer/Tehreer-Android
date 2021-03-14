@@ -192,8 +192,8 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     if (fontFile) {
         FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
-            Instance *instance = new Instance(fontFile, ftFace);
-            Typeface *typeface = new Typeface(instance);
+            auto instance = new Instance(fontFile, ftFace);
+            auto typeface = new Typeface(instance);
 
             instance->release();
 
@@ -217,7 +217,7 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
     SFFontProtocol protocol;
     protocol.finalize = nullptr;
     protocol.loadTable = [](void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length) {
-        Instance *instance = reinterpret_cast<Instance *>(object);
+        auto instance = reinterpret_cast<Instance *>(object);
         FT_ULong tableSize = 0;
 
         instance->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
@@ -227,7 +227,7 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
         }
     };
     protocol.getGlyphIDForCodepoint = [](void *object, SFCodepoint codepoint) {
-        Instance *instance = reinterpret_cast<Instance *>(object);
+        auto instance = reinterpret_cast<Instance *>(object);
         FT_UInt glyphID = instance->getGlyphID(codepoint);
         if (glyphID > 0xFFFF) {
             LOGW("Received invalid glyph id for code point: %u", codepoint);
@@ -238,7 +238,7 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
     };
     protocol.getAdvanceForGlyph = [](void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
     {
-        Instance *instance = reinterpret_cast<Instance *>(object);
+        auto instance = reinterpret_cast<Instance *>(object);
         FT_Fixed glyphAdvance = instance->getUnscaledAdvance(glyphID, fontLayout == SFFontLayoutVertical);
 
         return static_cast<SFInt32>(glyphAdvance);
@@ -259,8 +259,8 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
 
 void Typeface::Instance::setupDescription()
 {
-    TT_OS2 *os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_OS2));
-    TT_Header *headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_HEAD));
+    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_OS2));
+    auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_HEAD));
 
     m_familyName = searchFamilyNameRecordIndex(m_ftFace, os2Table);
     m_styleName = searchStyleNameRecordIndex(m_ftFace, os2Table);
@@ -545,21 +545,21 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
         FT_Outline_Funcs funcs;
         funcs.move_to = [](const FT_Vector *to, void *user) -> int
         {
-            PathContext *context = reinterpret_cast<PathContext *>(user);
+            auto context = reinterpret_cast<PathContext *>(user);
             context->bridge.Path_moveTo(context->path,
                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
             return 0;
         };
         funcs.line_to = [](const FT_Vector *to, void *user) -> int
         {
-            PathContext *context = reinterpret_cast<PathContext *>(user);
+            auto context = reinterpret_cast<PathContext *>(user);
             context->bridge.Path_lineTo(context->path,
                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
             return 0;
         };
         funcs.conic_to = [](const FT_Vector *control1, const FT_Vector *to, void *user) -> int
         {
-            PathContext *context = reinterpret_cast<PathContext *>(user);
+            auto context = reinterpret_cast<PathContext *>(user);
             context->bridge.Path_quadTo(context->path,
                                         f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
@@ -567,7 +567,7 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
         };
         funcs.cubic_to = [](const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) -> int
         {
-            PathContext *context = reinterpret_cast<PathContext *>(user);
+            auto context = reinterpret_cast<PathContext *>(user);
             context->bridge.Path_cubicTo(context->path,
                                          f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
                                          f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
@@ -651,17 +651,17 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
 
 static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     delete typeface;
 }
 
 static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     jint numCoords = env->GetArrayLength(coordinates);
 
     void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-    jfloat *coordValues = static_cast<jfloat *>(coordBuffer);
+    auto coordValues = static_cast<jfloat *>(coordBuffer);
     FT_Fixed fixedCoords[numCoords];
 
     for (jint i = 0; i < numCoords; i++) {
@@ -677,7 +677,7 @@ static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle
 
 static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face ftFace = typeface->ftFace();
 
     jint numCoords = env->GetArrayLength(coordinates);
@@ -685,7 +685,7 @@ static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHand
 
     if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
         void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-        jfloat *coordValues = static_cast<jfloat *>(coordBuffer);
+        auto coordValues = static_cast<jfloat *>(coordBuffer);
 
         for (jint i = 0; i < numCoords; i++) {
             coordValues[i] = f16Dot16toFloat(fixedCoords[i]);
@@ -697,11 +697,11 @@ static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHand
 
 static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     jint numColors = env->GetArrayLength(colors);
 
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
-    uint32_t *colorValues = static_cast<uint32_t *>(colorBuffer);
+    auto colorValues = static_cast<uint32_t *>(colorBuffer);
     Typeface *variationInstance = typeface->deriveColor(colorValues, numColors);
 
     env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
@@ -711,11 +711,11 @@ static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
 
 static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     const Typeface::Palette *palette = typeface->palette();
 
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
-    jint *colorValues = static_cast<jint *>(colorBuffer);
+    auto colorValues = static_cast<jint *>(colorBuffer);
 
     for (jint i = 0; i < palette->count; i++) {
         colorValues[i] = (palette->colors[i].alpha << 24)
@@ -729,7 +729,7 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_ULong inputTag = static_cast<SFTag>(tableTag);
     FT_ULong length = 0;
 
@@ -740,7 +740,7 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
         jbyteArray dataArray = env->NewByteArray(dataLength);
         void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-        FT_Byte *dataBytes = static_cast<FT_Byte *>(dataBuffer);
+        auto dataBytes = static_cast<FT_Byte *>(dataBuffer);
         typeface->loadSfntTable(inputTag, dataBytes, nullptr);
 
         env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
@@ -753,7 +753,7 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
 
 static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face ftFace = typeface->ftFace();
     int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
 
@@ -766,7 +766,7 @@ static void getNameRecordIndexes(JNIEnv *env, jobject obj, jlong typefaceHandle,
     const jint STYLE_NAME = 1;
     const jint FULL_NAME = 2;
 
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     void *buffer = env->GetPrimitiveArrayCritical(indicesArray, nullptr);
 
     jint *values = static_cast<jint *>(buffer);
@@ -779,7 +779,7 @@ static void getNameRecordIndexes(JNIEnv *env, jobject obj, jlong typefaceHandle,
 
 static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     uint16_t weight = typeface->weight();
 
     return static_cast<jint>(weight);
@@ -787,7 +787,7 @@ static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     uint16_t width = typeface->width();
 
     return static_cast<jint>(width);
@@ -795,7 +795,7 @@ static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     uint16_t slope = typeface->slope();
 
     return static_cast<jint>(slope);
@@ -803,7 +803,7 @@ static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     uint16_t unitsPerEM = typeface->unitsPerEM();
 
     return static_cast<jint>(unitsPerEM);
@@ -811,7 +811,7 @@ static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getAscent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t ascent = typeface->ascent();
 
     return static_cast<jint>(ascent);
@@ -819,7 +819,7 @@ static jint getAscent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t descent = typeface->descent();
 
     return static_cast<jint>(descent);
@@ -827,7 +827,7 @@ static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getLeading(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t leading = typeface->leading();
 
     return static_cast<jint>(leading);
@@ -835,7 +835,7 @@ static jint getLeading(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int32_t glyphCount = typeface->glyphCount();
 
     return static_cast<jint>(glyphCount);
@@ -843,7 +843,7 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint codePoint)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_UInt glyphId = typeface->getGlyphID(static_cast<FT_ULong>(codePoint));
 
     return static_cast<jint>(glyphId);
@@ -851,8 +851,8 @@ static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint code
 
 static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jboolean vertical)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
     FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
     FT_Fixed advance = typeface->getGlyphAdvance(glyphIndex, fixedSize, vertical);
 
@@ -861,8 +861,8 @@ static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
     FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
     FT_Matrix transform;
     FT_Vector delta;
@@ -895,7 +895,7 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint
 
 static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobject rect)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
     FT_BBox bbox = baseFace->bbox;
 
@@ -906,7 +906,7 @@ static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobje
 
 static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t underlinePosition = typeface->underlinePosition();
 
     return static_cast<jint>(underlinePosition);
@@ -914,7 +914,7 @@ static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t underlineThickness = typeface->underlineThickness();
 
     return static_cast<jint>(underlineThickness);
@@ -922,7 +922,7 @@ static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle
 
 static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t strikeoutPosition = typeface->strikeoutPosition();
 
     return static_cast<jint>(strikeoutPosition);
@@ -930,7 +930,7 @@ static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jint getStrikeoutThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     int16_t strikeoutThickness = typeface->strikeoutThickness();
 
     return static_cast<jint>(strikeoutThickness);

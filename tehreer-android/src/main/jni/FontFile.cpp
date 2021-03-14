@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ static FT_Stream createStream(AAssetManager *assetManager, const char *path)
     stream->pathname.pointer = nullptr;
     stream->read = [](FT_Stream stream, unsigned long offset,
                       unsigned char *buffer, unsigned long count) -> unsigned long {
-        AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
+        auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
         int bytesRead = 0;
 
         if (count == 0 && offset > stream->size) {
@@ -77,7 +77,7 @@ static FT_Stream createStream(AAssetManager *assetManager, const char *path)
 
 static void disposeStream(FT_Stream stream)
 {
-    AAsset *asset = static_cast<AAsset *>(stream->descriptor.pointer);
+    auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
     AAsset_close(asset);
 
     free(stream);
@@ -242,13 +242,13 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
 
 static void release(JNIEnv *env, jobject obj, jlong fontFileHandle)
 {
-    FontFile *fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
+    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
     fontFile->release();
 }
 
 static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
 {
-    FontFile *fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
+    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
     FT_Long numFaces = fontFile->numFaces();
 
     return static_cast<jint>(numFaces);
@@ -257,7 +257,7 @@ static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
 static jint getInstanceCount(JNIEnv *env, jobject obj, jobject jtypeface)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
     FT_Long numInstances = baseFace->style_flags >> 16;
 
@@ -267,11 +267,11 @@ static jint getInstanceCount(JNIEnv *env, jobject obj, jobject jtypeface)
 static jobject createTypeface(JNIEnv *env, jobject obj,
     jlong fontFileHandle, jint faceIndex, jint instanceIndex)
 {
-    FontFile *fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
+    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
     Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex, instanceIndex);
 
     if (typeface) {
-        jlong typefaceHandle = reinterpret_cast<jlong>(typeface);
+        auto typefaceHandle = reinterpret_cast<jlong>(typeface);
         JavaBridge bridge(env);
 
         return bridge.Typeface_construct(typefaceHandle);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ static void classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
     jsize charCount = env->GetStringLength(text);
 
     void *scriptsPtr = env->GetPrimitiveArrayCritical(scripts, nullptr);
-    jbyte *scriptArray = static_cast<jbyte *>(scriptsPtr);
+    auto scriptArray = static_cast<jbyte *>(scriptsPtr);
 
     SBCodepointSequence codepointSequence;
     codepointSequence.stringEncoding = SBStringEncodingUTF16;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,13 +28,13 @@ using namespace Tehreer;
 
 static void dispose(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBParagraphRelease(bidiParagraph);
 }
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
 
     return static_cast<jint>(paragraphOffset);
@@ -42,7 +42,7 @@ static jint getCharStart(JNIEnv *env, jobject obj, jlong paragraphHandle)
 
 static jint getCharEnd(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
     SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
 
@@ -51,7 +51,7 @@ static jint getCharEnd(JNIEnv *env, jobject obj, jlong paragraphHandle)
 
 static jint getCharCount(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
 
     return static_cast<jint>(paragraphLength);
@@ -59,7 +59,7 @@ static jint getCharCount(JNIEnv *env, jobject obj, jlong paragraphHandle)
 
 static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBLevel baseLevel = SBParagraphGetBaseLevel(bidiParagraph);
 
     return static_cast<jbyte>(baseLevel);
@@ -67,7 +67,7 @@ static jbyte getBaseLevel(JNIEnv *env, jobject obj, jlong paragraphHandle)
 
 static jlong getLevelsPtr(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
 
     return reinterpret_cast<jlong>(levelsPtr);
@@ -75,7 +75,7 @@ static jlong getLevelsPtr(JNIEnv *env, jobject obj, jlong paragraphHandle)
 
 static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jint charIndex)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
     SBUInteger paragraphLength = SBParagraphGetLength(bidiParagraph);
 
@@ -83,7 +83,7 @@ static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jin
     if (levelIndex < paragraphLength) {
         const SBLevel *levelsPtr = SBParagraphGetLevelsPtr(bidiParagraph);
         SBLevel currentLevel = levelsPtr[levelIndex];
-        SBUInteger nextIndex = static_cast<SBUInteger>(levelIndex);
+        auto nextIndex = static_cast<SBUInteger>(levelIndex);
 
         while (++nextIndex < paragraphLength) {
             if (levelsPtr[nextIndex] != currentLevel) {
@@ -91,9 +91,9 @@ static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jin
             }
         }
 
-        jint charStart = static_cast<jint>(levelIndex + paragraphOffset);
-        jint charEnd = static_cast<jint>(nextIndex + paragraphOffset);
-        jbyte embeddingLevel = static_cast<jbyte>(currentLevel);
+        auto charStart = static_cast<jint>(levelIndex + paragraphOffset);
+        auto charEnd = static_cast<jint>(nextIndex + paragraphOffset);
+        auto embeddingLevel = static_cast<jbyte>(currentLevel);
 
         return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
     }
@@ -103,9 +103,9 @@ static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jin
 
 static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint charStart, jint charEnd)
 {
-    SBParagraphRef bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
-    SBUInteger lineOffset = static_cast<SBUInteger>(charStart);
-    SBUInteger lineLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
+    auto lineOffset = static_cast<SBUInteger>(charStart);
+    auto lineLength = static_cast<SBUInteger>(charEnd - charStart);
 
     SBLineRef bidiLine = SBParagraphCreateLine(bidiParagraph, lineOffset, lineLength);
     return reinterpret_cast<jlong>(bidiLine);

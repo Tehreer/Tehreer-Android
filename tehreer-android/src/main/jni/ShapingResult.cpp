@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,25 +49,25 @@ void ShapingResult::setAdditionalInfo(jfloat sizeByEm, bool isBackward, jint cha
 
 static jlong create(JNIEnv *env, jobject obj)
 {
-    ShapingResult *shapingResult = new ShapingResult();
+    auto shapingResult = new ShapingResult();
     return reinterpret_cast<jlong>(shapingResult);
 }
 
 static void dispose(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     delete shapingResult;
 }
 
 static jint isBackward(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     return shapingResult->isBackward();
 }
 
 static jfloat getSizeByEm(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     jfloat sizeByEm = shapingResult->sizeByEm();
 
     return sizeByEm;
@@ -75,7 +75,7 @@ static jfloat getSizeByEm(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     jint charStart = shapingResult->charStart();
 
     return charStart;
@@ -83,7 +83,7 @@ static jint getCharStart(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jint getCharEnd(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     jint charEnd = shapingResult->charEnd();
 
     return charEnd;
@@ -91,7 +91,7 @@ static jint getCharEnd(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jint getCharCount(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     jint charCount = shapingResult->charEnd() - shapingResult->charStart();
 
     return charCount;
@@ -99,7 +99,7 @@ static jint getCharCount(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
     SFUInteger glyphCount = SFAlbumGetGlyphCount(baseAlbum);
 
@@ -108,7 +108,7 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
     const SFGlyphID *glyphIDsPtr = SFAlbumGetGlyphIDsPtr(baseAlbum);
 
@@ -117,7 +117,7 @@ static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jlong getGlyphOffsetsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
     const SFPoint *glyphOffsetsPtr = SFAlbumGetGlyphOffsetsPtr(baseAlbum);
 
@@ -126,7 +126,7 @@ static jlong getGlyphOffsetsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
     const SFInt32 *glyphAdvancesPtr = SFAlbumGetGlyphAdvancesPtr(baseAlbum);
 
@@ -135,7 +135,7 @@ static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 
 static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
     const SFUInteger *charToGlyphMapPtr = SFAlbumGetCodeunitToGlyphMapPtr(baseAlbum);
 
@@ -145,7 +145,7 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle,
     jbooleanArray caretStops, jfloatArray caretEdges)
 {
-    ShapingResult *shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     SFAlbumRef baseAlbum = shapingResult->sfAlbum();
 
     void *caretEdgesBuffer = env->GetPrimitiveArrayCritical(caretEdges, nullptr);
@@ -155,8 +155,8 @@ static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle,
         caretStopsBuffer = env->GetPrimitiveArrayCritical(caretStops, nullptr);
     }
 
-    SFBoolean *caretStopValues = static_cast<SFBoolean *>(caretStopsBuffer);
-    SFFloat *caretEdgeValues = static_cast<SFFloat *>(caretEdgesBuffer);
+    auto caretStopValues = static_cast<SFBoolean *>(caretStopsBuffer);
+    auto caretEdgeValues = static_cast<SFFloat *>(caretEdgesBuffer);
 
     SFFloat advanceScale = shapingResult->sizeByEm();
     SFAlbumGetCaretEdges(baseAlbum, caretStopValues, advanceScale, caretEdgeValues);

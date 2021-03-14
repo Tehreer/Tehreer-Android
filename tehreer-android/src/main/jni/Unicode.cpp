@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ using namespace Tehreer;
 
 static jint getCodePointBidiClass(JNIEnv *env, jobject obj, jint codePoint)
 {
-    SBCodepoint numValue = static_cast<SBCodepoint>(codePoint);
+    auto numValue = static_cast<SBCodepoint>(codePoint);
     SBBidiType bidiType = SBCodepointGetBidiType(numValue);
 
     return static_cast<jint>(bidiType);
@@ -39,7 +39,7 @@ static jint getCodePointBidiClass(JNIEnv *env, jobject obj, jint codePoint)
 
 static jint getCodePointGeneralCategory(JNIEnv *env, jobject obj, jint codePoint)
 {
-    SBCodepoint numValue = static_cast<SBCodepoint>(codePoint);
+    auto numValue = static_cast<SBCodepoint>(codePoint);
     SBGeneralCategory generalCategory = SBCodepointGetGeneralCategory(numValue);
 
     return static_cast<jint>(generalCategory);
@@ -47,7 +47,7 @@ static jint getCodePointGeneralCategory(JNIEnv *env, jobject obj, jint codePoint
 
 static jint getCodePointScript(JNIEnv *env, jobject obj, jint codePoint)
 {
-    SBCodepoint numValue = static_cast<SBCodepoint>(codePoint);
+    auto numValue = static_cast<SBCodepoint>(codePoint);
     SBScript script = SBCodepointGetScript(numValue);
 
     return static_cast<jint>(script);
@@ -55,7 +55,7 @@ static jint getCodePointScript(JNIEnv *env, jobject obj, jint codePoint)
 
 static jint getCodePointMirror(JNIEnv *env, jobject obj, jint codePoint)
 {
-    SBCodepoint numValue = static_cast<SBCodepoint>(codePoint);
+    auto numValue = static_cast<SBCodepoint>(codePoint);
     SBCodepoint mirror = SBCodepointGetMirror(numValue);
 
     return static_cast<jint>(mirror);
@@ -63,7 +63,7 @@ static jint getCodePointMirror(JNIEnv *env, jobject obj, jint codePoint)
 
 static jint getScriptOpenTypeTag(JNIEnv *env, jobject obj, jint script)
 {
-    SBScript numValue = static_cast<SBScript>(script);
+    auto numValue = static_cast<SBScript>(script);
     SBUInt32 openTypeTag = SBScriptGetOpenTypeTag(numValue);
 
     return static_cast<jint>(openTypeTag);

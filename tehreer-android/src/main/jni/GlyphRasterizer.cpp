@@ -210,7 +210,7 @@ jobject GlyphRasterizer::getStrokeImage(const JavaBridge bridge, FT_Glyph baseGl
     if (error == FT_Err_Ok) {
         FT_Glyph_To_Bitmap(&baseGlyph, FT_RENDER_MODE_NORMAL, nullptr, 1);
 
-        FT_BitmapGlyph bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(baseGlyph);
+        auto bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(baseGlyph);
         jobject strokeBitmap = nullptr;
         jint left = 0;
         jint top = 0;
@@ -275,26 +275,26 @@ jobject GlyphRasterizer::getGlyphPath(const JavaBridge bridge, FT_UInt glyphID)
 static jlong create(JNIEnv *env, jobject obj, jlong typefaceHandle, jint pixelWidth, jint pixelHeight,
     jint transformXX, jint transformXY, jint transformYX, jint transformYY)
 {
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Matrix transform = {
         transformXX, transformXY,
         transformYX, transformYY
     };
 
-    GlyphRasterizer *glyphRasterizer = new GlyphRasterizer(*typeface, pixelWidth, pixelHeight, transform);
+    auto glyphRasterizer = new GlyphRasterizer(*typeface, pixelWidth, pixelHeight, transform);
     return reinterpret_cast<jlong>(glyphRasterizer);
 }
 
 static void dispose(JNIEnv *env, jobject obj, jlong rasterizerHandle)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
     delete glyphRasterizer;
 }
 
 static jint getGlyphType(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
 
     return glyphRasterizer->getGlyphType(glyphIndex);
 }
@@ -302,8 +302,8 @@ static jint getGlyphType(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint 
 static jobject getGlyphImage(JNIEnv *env, jobject obj, jlong rasterizerHandle,
     jint glyphId, jint foregroundColor)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
 
     FT_Color ftColor;
     ftColor.blue = foregroundColor & 0xFF;
@@ -317,12 +317,12 @@ static jobject getGlyphImage(JNIEnv *env, jobject obj, jlong rasterizerHandle,
 static jobject getStrokeImage(JNIEnv *env, jobject obj, jlong rasterizerHandle, jlong outlineHandle,
     jint lineRadius, jint lineCap, jint lineJoin, jint miterLimit)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    FT_Glyph baseGlyph = reinterpret_cast<FT_Glyph>(outlineHandle);
-    FT_Fixed strokeRadius = static_cast<FT_Fixed>(lineRadius);
-    FT_Stroker_LineCap strokeCap = static_cast<FT_Stroker_LineCap>(lineCap);
-    FT_Stroker_LineJoin strokeJoin = static_cast<FT_Stroker_LineJoin>(lineJoin);
-    FT_Fixed strokeMiter = static_cast<FT_Fixed>(miterLimit);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto baseGlyph = reinterpret_cast<FT_Glyph>(outlineHandle);
+    auto strokeRadius = static_cast<FT_Fixed>(lineRadius);
+    auto strokeCap = static_cast<FT_Stroker_LineCap>(lineCap);
+    auto strokeJoin = static_cast<FT_Stroker_LineJoin>(lineJoin);
+    auto strokeMiter = static_cast<FT_Fixed>(miterLimit);
 
     return glyphRasterizer->getStrokeImage(JavaBridge(env), baseGlyph, strokeRadius,
                                            strokeCap, strokeJoin, strokeMiter);
@@ -330,8 +330,8 @@ static jobject getStrokeImage(JNIEnv *env, jobject obj, jlong rasterizerHandle, 
 
 static jlong getGlyphOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
     FT_Glyph glyphOutline = glyphRasterizer->getGlyphOutline(glyphIndex);
 
     return reinterpret_cast<jlong>(glyphOutline);
@@ -339,8 +339,8 @@ static jlong getGlyphOutline(JNIEnv *env, jobject obj, jlong rasterizerHandle, j
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong rasterizerHandle, jint glyphId)
 {
-    GlyphRasterizer *glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
-    FT_UInt glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
+    auto glyphIndex = static_cast<FT_UInt>(glyphId);
 
     return glyphRasterizer->getGlyphPath(JavaBridge(env), glyphIndex);
 }

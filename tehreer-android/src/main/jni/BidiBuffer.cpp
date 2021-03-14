@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ BidiBuffer *BidiBuffer::create(const jchar *charArray, jsize charCount)
     const size_t offsetBuffer = 0;
     const size_t offsetData = sizeBuffer;
 
-    uint8_t *memory = reinterpret_cast<uint8_t *>(malloc(sizeMemory));
-    BidiBuffer *buffer = reinterpret_cast<BidiBuffer *>(memory + offsetBuffer);
+    auto memory = reinterpret_cast<uint8_t *>(malloc(sizeMemory));
+    auto buffer = reinterpret_cast<BidiBuffer *>(memory + offsetBuffer);
     buffer->m_data = reinterpret_cast<jchar *>(memory + offsetData);
     buffer->m_length = charCount;
     buffer->m_retainCount = 1;
@@ -71,7 +71,7 @@ static jlong create(JNIEnv *env, jobject obj, jstring string)
 
 static jlong retain(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
-    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    auto bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
     bidiBuffer->retain();
 
     return reinterpret_cast<jlong>(bidiBuffer);
@@ -79,7 +79,7 @@ static jlong retain(JNIEnv *env, jobject obj, jlong bufferHandle)
 
 static void release(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
-    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    auto bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
     bidiBuffer->release();
 }
 

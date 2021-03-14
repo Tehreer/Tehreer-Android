@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,31 +31,28 @@ using namespace Tehreer;
 
 static jlong create(JNIEnv *env, jobject obj, jlong bufferHandle)
 {
-    BidiBuffer *bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
-    void *stringBuffer = static_cast<void *>(bidiBuffer->data());
-    SBUInteger stringLength = static_cast<SBUInteger>(bidiBuffer->length());
+    auto bidiBuffer = reinterpret_cast<BidiBuffer *>(bufferHandle);
+    auto stringBuffer = static_cast<void *>(bidiBuffer->data());
+    auto stringLength = static_cast<SBUInteger>(bidiBuffer->length());
 
-    SBCodepointSequence codepointSequence;
-    codepointSequence.stringEncoding = SBStringEncodingUTF16;
-    codepointSequence.stringBuffer = stringBuffer;
-    codepointSequence.stringLength = stringLength;
-
+    SBCodepointSequence codepointSequence = { SBStringEncodingUTF16, stringBuffer, stringLength };
     SBAlgorithmRef bidiAlgorithm = SBAlgorithmCreate(&codepointSequence);
+
     return reinterpret_cast<jlong>(bidiAlgorithm);
 }
 
 static void dispose(JNIEnv *env, jobject obj, jlong algorithmHandle)
 {
-    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
     SBAlgorithmRelease(bidiAlgorithm);
 }
 
 static jint getParagraphBoundary(JNIEnv *env, jobject obj,
     jlong algorithmHandle, jint charStart, jint charEnd)
 {
-    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
-    SBUInteger paragraphOffset = static_cast<SBUInteger>(charStart);
-    SBUInteger suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    auto paragraphOffset = static_cast<SBUInteger>(charStart);
+    auto suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
 
     SBUInteger actualLength;
     SBAlgorithmGetParagraphBoundary(bidiAlgorithm,
@@ -68,14 +65,15 @@ static jint getParagraphBoundary(JNIEnv *env, jobject obj,
 static jlong createParagraph(JNIEnv *env, jobject obj,
     jlong algorithmHandle, jint charStart, jint charEnd, jint baseLevel)
 {
-    SBAlgorithmRef bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
-    SBUInteger paragraphOffset = static_cast<SBUInteger>(charStart);
-    SBUInteger suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
-    SBLevel inputLevel = static_cast<SBLevel>(baseLevel);
+    auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    auto paragraphOffset = static_cast<SBUInteger>(charStart);
+    auto suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto inputLevel = static_cast<SBLevel>(baseLevel);
 
     SBParagraphRef paragraph = SBAlgorithmCreateParagraph(bidiAlgorithm,
                                                           paragraphOffset, suggestedLength,
                                                           inputLevel);
+
     return reinterpret_cast<jlong>(paragraph);
 }
 

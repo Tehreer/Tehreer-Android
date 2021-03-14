@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -573,7 +573,7 @@ jstring getNameCharset(JNIEnv *env, jobject obj, jint platformId, jint encodingI
 jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
     FT_UInt nameCount = FT_Get_Sfnt_Name_Count(baseFace);
 
@@ -583,7 +583,7 @@ jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
 jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
 
     // Lock the typeface as FreeType loads the name on demand.
@@ -604,7 +604,7 @@ jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 jstring getGlyphName(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
 
     char buffer[96];
@@ -616,9 +616,9 @@ jstring getGlyphName(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 jlong getTablePointer(JNIEnv *env, jobject obj, jobject jtypeface, jint table)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    Typeface *typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     FT_Face baseFace = typeface->ftFace();
-    FT_Sfnt_Tag tableTag = static_cast<FT_Sfnt_Tag>(table);
+    auto tableTag = static_cast<FT_Sfnt_Tag>(table);
     void *tableStruct = FT_Get_Sfnt_Table(baseFace, tableTag);
 
     return reinterpret_cast<jlong>(tableStruct);

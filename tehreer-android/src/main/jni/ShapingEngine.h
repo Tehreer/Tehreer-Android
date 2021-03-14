@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,6 @@ extern "C" {
 
 #include "Typeface.h"
 #include "ShapingResult.h"
-
-class OpenTypeScheme;
 
 namespace Tehreer {
 

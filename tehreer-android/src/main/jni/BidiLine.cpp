@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@ using namespace Tehreer;
 
 static void dispose(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBLineRelease(bidiLine);
 }
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBUInteger lineOffset = SBLineGetOffset(bidiLine);
 
     return static_cast<jint>(lineOffset);
@@ -43,7 +43,7 @@ static jint getCharStart(JNIEnv *env, jobject obj, jlong lineHandle)
 
 static jint getCharEnd(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBUInteger lineOffset = SBLineGetOffset(bidiLine);
     SBUInteger lineLength = SBLineGetLength(bidiLine);
 
@@ -52,7 +52,7 @@ static jint getCharEnd(JNIEnv *env, jobject obj, jlong lineHandle)
 
 static jint getRunCount(JNIEnv *env, jobject obj, jlong lineHandle)
 {
-    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBUInteger runCount = SBLineGetRunCount(bidiLine);
 
     return static_cast<jint>(runCount);
@@ -60,11 +60,12 @@ static jint getRunCount(JNIEnv *env, jobject obj, jlong lineHandle)
 
 static jobject getVisualRun(JNIEnv *env, jobject obj, jlong lineHandle, jint runIndex)
 {
-    SBLineRef bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+    auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
+
     const SBRun *runPtr = &SBLineGetRunsPtr(bidiLine)[runIndex];
-    jint charStart = static_cast<jint>(runPtr->offset);
-    jint charEnd = static_cast<jint>(runPtr->offset + runPtr->length);
-    jbyte embeddingLevel = static_cast<jbyte>(runPtr->level);
+    auto charStart = static_cast<jint>(runPtr->offset);
+    auto charEnd = static_cast<jint>(runPtr->offset + runPtr->length);
+    auto embeddingLevel = static_cast<jbyte>(runPtr->level);
 
     return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
 }
