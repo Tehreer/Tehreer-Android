@@ -26,8 +26,6 @@ extern "C" {
 #include FT_SYSTEM_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_TYPES_H
-
-#include <SFFont.h>
 }
 
 #include <android/asset_manager.h>
@@ -35,6 +33,8 @@ extern "C" {
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <hb.h>
+#include <hb-ft.h>
 #include <jni.h>
 #include <mutex>
 #include <string>
@@ -214,47 +214,17 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
     , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
 {
-    SFFontProtocol protocol;
-    protocol.finalize = nullptr;
-    protocol.loadTable = [](void *object, SFTag tag, SFUInt8 *buffer, SFUInteger *length) {
-        auto instance = reinterpret_cast<Instance *>(object);
-        FT_ULong tableSize = 0;
-
-        instance->loadSfntTable(tag, buffer, length ? &tableSize : nullptr);
-
-        if (length) {
-            *length = tableSize;
-        }
-    };
-    protocol.getGlyphIDForCodepoint = [](void *object, SFCodepoint codepoint) {
-        auto instance = reinterpret_cast<Instance *>(object);
-        FT_UInt glyphID = instance->getGlyphID(codepoint);
-        if (glyphID > 0xFFFF) {
-            LOGW("Received invalid glyph id for code point: %u", codepoint);
-            glyphID = 0;
-        }
-
-        return static_cast<SFGlyphID>(glyphID);
-    };
-    protocol.getAdvanceForGlyph = [](void *object, SFFontLayout fontLayout, SFGlyphID glyphID)
-    {
-        auto instance = reinterpret_cast<Instance *>(object);
-        FT_Fixed glyphAdvance = instance->getUnscaledAdvance(glyphID, fontLayout == SFFontLayoutVertical);
-
-        return static_cast<SFInt32>(glyphAdvance);
-    };
-
     m_retainCount = 1;
     m_fontFile = fontFile->retain();
     m_ftFace = ftFace;
     m_ftSize = nullptr;
     m_ftStroker = nullptr;
-    m_sfFont = SFFontCreateWithProtocol(&protocol, this);
 
     FT_New_Size(m_ftFace, &m_ftSize);
 
     setupDescription();
     setupVariation();
+    setupHarfBuzz();
 }
 
 void Typeface::Instance::setupDescription()
@@ -304,20 +274,6 @@ void Typeface::Instance::setupVariation()
         FT_UInt numCoords = variation->num_axis;
         FT_Fixed fixedCoords[numCoords];
 
-        if (FT_Get_Var_Blend_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-            SFFontRef normalFont = m_sfFont;
-            SFInt16 coordArray[numCoords];
-
-            // Convert the FreeType's F16DOT16 coordinates to standard normalized F2DOT14 format.
-            for (FT_UInt i = 0; i < numCoords; i++) {
-                coordArray[i] = static_cast<SFInt16>(fixedCoords[i] >> 2);
-            }
-
-            // Derive the variable font of SheenFigure.
-            m_sfFont = SFFontCreateWithVariationCoordinates(normalFont, this, coordArray, numCoords);
-            SFFontRelease(normalFont);
-        }
-
         if (FT_Get_Var_Design_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
             // Reset the style name and the full name.
             m_styleName = -1;
@@ -363,9 +319,15 @@ void Typeface::Instance::setupVariation()
     }
 }
 
+void Typeface::Instance::setupHarfBuzz()
+{
+    FT_Set_Char_Size(m_ftFace, 0, m_ftFace->units_per_EM, 0, 0);
+    m_hbFont = hb_ft_font_create(m_ftFace, nullptr);
+}
+
 Typeface::Instance::~Instance()
 {
-    SFFontRelease(m_sfFont);
+    hb_font_destroy(m_hbFont);
 
     if (m_ftStroker) {
         FT_Stroker_Done(m_ftStroker);
@@ -730,7 +692,7 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_ULong inputTag = static_cast<SFTag>(tableTag);
+    FT_ULong inputTag = static_cast<uint32_t>(tableTag);
     FT_ULong length = 0;
 
     typeface->loadSfntTable(inputTag, nullptr, &length);

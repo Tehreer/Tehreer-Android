@@ -111,48 +111,21 @@ LOCAL_SRC_FILES := $(SB_FILE_LIST:%=$(SB_SOURCE_PATH)/%)
 include $(BUILD_STATIC_LIBRARY)
 ###########################################################
 
-#######################SHEEN FIGURE########################
+#########################HARFBUZZ##########################
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := sheenfigure
+LOCAL_MODULE := harfbuzz
 
-SF_ROOT_PATH := $(ROOT_PATH)/sheenfigure
-SF_HEADERS_PATH := $(SF_ROOT_PATH)/Headers
-SF_SOURCE_PATH := $(SF_ROOT_PATH)/Source
+HB_ROOT_PATH := $(ROOT_PATH)/harfbuzz
+HB_SOURCE_PATH := $(HB_ROOT_PATH)/src
 
-ifeq ($(APP_OPTIM), debug)
-    SF_FILE_LIST := \
-        ArabicEngine.c \
-        GlyphDiscovery.c \
-        GlyphManipulation.c \
-        GlyphPositioning.c \
-        GlyphSubstitution.c \
-        List.c \
-        Locator.c \
-        OpenType.c \
-        SFAlbum.c \
-        SFArtist.c \
-        SFBase.c \
-        SFCodepoints.c \
-        SFFont.c \
-        SFJoiningTypeLookup.c \
-        SFPattern.c \
-        SFPatternBuilder.c \
-        SFScheme.c \
-        ShapingEngine.c \
-        ShapingKnowledge.c \
-        StandardEngine.c \
-        TextProcessor.c \
-        UnifiedEngine.c
-else
-    SF_FILE_LIST := SheenFigure.c
-    SF_MACROS := -DSF_CONFIG_UNITY
-endif
+HB_FILE_LIST := harfbuzz.cc
+HB_MACROS := -DHAVE_PTHREAD -DHAVE_FREETYPE -DHAVE_FT_GET_VAR_BLEND_COORDINATES -DHAVE_FT_DONE_MM_VAR
 
-LOCAL_CFLAGS := $(SF_MACROS)
-LOCAL_C_INCLUDES := $(SF_HEADERS_PATH) $(SB_HEADERS_PATH)
-LOCAL_EXPORT_C_INCLUDES := $(SF_HEADERS_PATH)
-LOCAL_SRC_FILES := $(SF_FILE_LIST:%=$(SF_SOURCE_PATH)/%)
+LOCAL_CFLAGS := $(HB_MACROS)
+LOCAL_C_INCLUDES := $(HB_SOURCE_PATH) $(FT_HEADERS_PATH)
+LOCAL_EXPORT_C_INCLUDES := $(HB_SOURCE_PATH)
+LOCAL_SRC_FILES := $(HB_FILE_LIST:%=$(HB_SOURCE_PATH)/%)
 
 include $(BUILD_STATIC_LIBRARY)
 ###########################################################
@@ -173,7 +146,6 @@ FILE_LIST := \
     GlyphOutline.cpp \
     GlyphRasterizer.cpp \
     JavaBridge.cpp \
-    PatternCache.cpp \
     Raw.cpp \
     ScriptClassifier.cpp \
     SfntTables.cpp \
@@ -185,7 +157,7 @@ FILE_LIST := \
     Unicode.cpp
 
 LOCAL_LDLIBS := -latomic -landroid -ljnigraphics -llog
-LOCAL_STATIC_LIBRARIES := freetype sheenbidi sheenfigure
+LOCAL_STATIC_LIBRARIES := freetype sheenbidi harfbuzz
 LOCAL_SRC_FILES := $(FILE_LIST:%=$(LOCAL_PATH)/%)
 
 include $(BUILD_SHARED_LIBRARY)

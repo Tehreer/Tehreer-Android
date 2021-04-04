@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,20 +23,18 @@ extern "C" {
 #include FT_FREETYPE_H
 #include FT_STROKER_H
 #include FT_SYSTEM_H
-
-#include <SFFont.h>
 }
 
 #include <android/asset_manager.h>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <hb.h>
 #include <jni.h>
 #include <mutex>
 
 #include "FontFile.h"
 #include "JavaBridge.h"
-#include "PatternCache.h"
 
 namespace Tehreer {
 
@@ -66,8 +64,7 @@ public:
     FT_Face ftFace() const { return m_instance->m_ftFace; }
     FT_Stroker ftStroker();
 
-    SFFontRef sfFont() const { return m_instance->m_sfFont; }
-    PatternCache &patternCache() { return m_instance->m_patternCache; }
+    hb_font_t *hbFont() const { return m_instance->m_hbFont; }
 
     const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
 
@@ -111,8 +108,7 @@ private:
         FT_Size m_ftSize;
         FT_Stroker m_ftStroker;
 
-        SFFontRef m_sfFont;
-        PatternCache m_patternCache;
+        hb_font_t *m_hbFont;
 
         int32_t m_familyName;
         int32_t m_styleName;
@@ -130,6 +126,7 @@ private:
 
         void setupDescription();
         void setupVariation();
+        void setupHarfBuzz();
 
         Instance *retain();
         void release();

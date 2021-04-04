@@ -25,10 +25,19 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
+import com.mta.tehreer.internal.Raw;
 import com.mta.tehreer.internal.collections.Int32BufferFloatList;
 import com.mta.tehreer.internal.collections.Int32BufferPointList;
 import com.mta.tehreer.internal.collections.UInt16BufferIntList;
+import com.mta.tehreer.internal.collections.UInt8BufferIntList;
 import com.mta.tehreer.internal.collections.UIntPtrBufferIntList;
+
+import java.util.Arrays;
+
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 /**
  * A <code>ShapingResult</code> object is a container for the results of text shaping. It is
@@ -119,6 +128,10 @@ public class ShapingResult implements Disposable {
 	    return nIsBackward(nativeResult);
 	}
 
+	private boolean isRTL() {
+	    return nIsRTL(nativeResult);
+    }
+
     /**
      * Returns the index to the first character in source text for this <code>ShapingResult</code>
      * object.
@@ -152,6 +165,53 @@ public class ShapingResult implements Disposable {
 		return nGetGlyphCount(nativeResult);
 	}
 
+	private int getGlyphId(int index) {
+	    return nGetGlyphId(nativeResult, index);
+    }
+
+    private class GlyphIdList extends IntList {
+        private final int offset;
+        private final int size;
+
+        public GlyphIdList() {
+            this.offset = 0;
+            this.size = getGlyphCount();
+        }
+
+        private GlyphIdList(int offset, int size) {
+            this.offset = offset;
+            this.size = size;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public int get(int index) {
+            checkElementIndex(index, size);
+
+            return getGlyphId(index + offset);
+        }
+
+        @Override
+        public void copyTo(@NonNull int[] array, int atIndex) {
+            checkNotNull(array);
+
+            for (int i = 0; i < size; i++) {
+                array[i + atIndex] = getGlyphId(i + offset);
+            }
+        }
+
+        @Override
+        public @NonNull IntList subList(int fromIndex, int toIndex) {
+            checkIndexRange(fromIndex, toIndex, size);
+
+            return new GlyphIdList(offset + fromIndex, toIndex - fromIndex);
+        }
+    }
+
     /**
      * Returns a list of glyph IDs in this <code>ShapingResult</code> object.
      * <p>
@@ -161,9 +221,68 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph IDs.
      */
     public @NonNull IntList getGlyphIds() {
-        return new UInt16BufferIntList(this,
-                                       nGetGlyphIdsPtr(nativeResult),
-                                       nGetGlyphCount(nativeResult));
+        return new GlyphIdList();
+    }
+
+    private float getGlyphXOffset(int index) {
+        return nGetGlyphXOffset(nativeResult, index);
+    }
+
+    private float getGlyphYOffset(int index) {
+        return nGetGlyphYOffset(nativeResult, index);
+    }
+
+    private class GlyphOffsetList extends PointList {
+        private final int offset;
+        private final int size;
+
+        public GlyphOffsetList() {
+            this.offset = 0;
+            this.size = getGlyphCount();
+        }
+
+        private GlyphOffsetList(int offset, int size) {
+            this.offset = offset;
+            this.size = size;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public float getX(int index) {
+            checkElementIndex(index, size);
+
+            return getGlyphXOffset(index + offset);
+        }
+
+        @Override
+        public float getY(int index) {
+            checkElementIndex(index, size);
+
+            return getGlyphYOffset(index + offset);
+        }
+
+        @Override
+        public void copyTo(@NonNull float[] array, int atIndex) {
+            checkNotNull(array);
+
+            int coordIndex = atIndex;
+
+            for (int i = 0; i < size; i++) {
+                array[coordIndex++] = getGlyphXOffset(i + offset);
+                array[coordIndex++] = getGlyphYOffset(i + offset);
+            }
+        }
+
+        @Override
+        public @NonNull PointList subList(int fromIndex, int toIndex) {
+            checkIndexRange(fromIndex, toIndex, size);
+
+            return new GlyphOffsetList(offset + fromIndex, toIndex - fromIndex);
+        }
     }
 
     /**
@@ -175,10 +294,54 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph offsets.
      */
     public @NonNull PointList getGlyphOffsets() {
-        return new Int32BufferPointList(this,
-                                        nGetGlyphOffsetsPtr(nativeResult),
-                                        nGetGlyphCount(nativeResult),
-                                        nGetSizeByEm(nativeResult));
+        return new GlyphOffsetList();
+    }
+
+    private float getGlyphAdvance(int index) {
+        return nGetGlyphAdvance(nativeResult, index);
+    }
+
+    private class GlyphAdvanceList extends FloatList {
+        private final int offset;
+        private final int size;
+
+        public GlyphAdvanceList() {
+            this.offset = 0;
+            this.size = getGlyphCount();
+        }
+
+        private GlyphAdvanceList(int offset, int size) {
+            this.offset = offset;
+            this.size = size;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public float get(int index) {
+            checkElementIndex(index, size);
+
+            return getGlyphAdvance(index + offset);
+        }
+
+        @Override
+        public void copyTo(@NonNull float[] array, int atIndex) {
+            checkNotNull(array);
+
+            for (int i = 0; i < size; i++) {
+                array[i + atIndex] = getGlyphAdvance(i + offset);
+            }
+        }
+
+        @Override
+        public @NonNull FloatList subList(int fromIndex, int toIndex) {
+            checkIndexRange(fromIndex, toIndex, size);
+
+            return new GlyphAdvanceList(offset + fromIndex, toIndex - fromIndex);
+        }
     }
 
     /**
@@ -190,10 +353,47 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph advances.
      */
     public @NonNull FloatList getGlyphAdvances() {
-        return new Int32BufferFloatList(this,
-                                        nGetGlyphAdvancesPtr(nativeResult),
-                                        nGetGlyphCount(nativeResult),
-                                        nGetSizeByEm(nativeResult));
+        return new GlyphAdvanceList();
+    }
+
+    private static class ClusterMap extends IntList {
+        private final @Nullable Object owner;
+        private final long pointer;
+        private final int size;
+
+        public ClusterMap(@Nullable Object owner, long pointer, int size) {
+            this.owner = owner;
+            this.pointer = pointer;
+            this.size = size;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public int get(int index) {
+            checkElementIndex(index, size);
+
+            return Raw.getInt32Value(pointer + (index * Raw.INT32_SIZE));
+        }
+
+        @Override
+        public void copyTo(@NonNull int[] array, int atIndex) {
+            checkNotNull(array);
+
+            for (int i = 0; i < size; i++) {
+                array[i + atIndex] = Raw.getInt32Value(pointer + (i * Raw.INT32_SIZE));
+            }
+        }
+
+        @Override
+        public @NonNull IntList subList(int fromIndex, int toIndex) {
+            checkIndexRange(fromIndex, toIndex, size);
+
+            return new ClusterMap(owner, pointer + (fromIndex * Raw.INT32_SIZE), toIndex - fromIndex);
+        }
     }
 
     /**
@@ -221,7 +421,7 @@ public class ShapingResult implements Disposable {
     public @NonNull IntList getClusterMap() {
         long pointer = nGetClusterMapPtr(nativeResult);
         int size = (pointer != 0 ? nGetCharCount(nativeResult) : 0);
-        return new UIntPtrBufferIntList(this, pointer, size);
+        return new ClusterMap(this, pointer, size);
     }
 
     /**
@@ -231,6 +431,76 @@ public class ShapingResult implements Disposable {
      */
     public @NonNull FloatList getCaretEdges() {
         return getCaretEdges(null);
+    }
+
+    private @NonNull float[] getCaretAdvances(@Nullable boolean[] caretStops) {
+        int codeUnitCount = getCharCount();
+        float[] caretAdvances = new float[codeUnitCount + 1];
+
+        boolean isBackward = isBackward();
+        FloatList glyphAdvances = getGlyphAdvances();
+        IntList clusterMap = getClusterMap();
+
+        int glyphIndex = clusterMap.get(0) + 1;
+        int refIndex = glyphIndex;
+        int totalStops = 0;
+        int clusterStart = 0;
+
+        for (int codeUnitIndex = 1; codeUnitIndex <= codeUnitCount; codeUnitIndex++) {
+            int oldIndex = glyphIndex;
+
+            if (codeUnitIndex != codeUnitCount) {
+                glyphIndex = clusterMap.get(codeUnitIndex) + 1;
+
+                if (caretStops != null && !caretStops[codeUnitIndex - 1]) {
+                    continue;
+                }
+
+                totalStops += 1;
+            } else {
+                totalStops += 1;
+                glyphIndex = (isBackward ? 0 : getGlyphCount() + 1);
+            }
+
+            if (glyphIndex != oldIndex) {
+                float clusterAdvance = 0;
+                float distance = 0;
+                int counter = 1;
+
+                /* Find the advance of current cluster. */
+                if (isBackward) {
+                    while (refIndex > glyphIndex) {
+                        clusterAdvance += glyphAdvances.get(refIndex - 1);
+                        refIndex -= 1;
+                    }
+                } else {
+                    while (refIndex < glyphIndex) {
+                        clusterAdvance += glyphAdvances.get(refIndex - 1);
+                        refIndex += 1;
+                    }
+                }
+
+                /* Divide the advance evenly between cluster length. */
+                while (clusterStart < codeUnitIndex) {
+                    float advance = 0;
+
+                    if (caretStops == null || caretStops[clusterStart] || clusterStart == codeUnitCount - 1) {
+                        float previous = distance;
+
+                        distance = (clusterAdvance * counter) / totalStops;
+                        advance = distance - previous;
+                        counter += 1;
+                    }
+
+                    caretAdvances[clusterStart] = advance;
+                    clusterStart += 1;
+                }
+
+                totalStops = 0;
+            }
+        }
+
+        return caretAdvances;
     }
 
     /**
@@ -247,8 +517,33 @@ public class ShapingResult implements Disposable {
             }
         }
 
-        float[] caretEdges = new float[charCount + 1];
-        nGetCaretEdges(nativeResult, caretStops, caretEdges);
+        int codeUnitCount = getCharCount();
+        boolean isRTL = isRTL();
+
+        float[] caretEdges = getCaretAdvances(caretStops);
+        float distance = 0;
+
+        if (isRTL) {
+            /* Last edge should be zero. */
+            caretEdges[codeUnitCount] = 0;
+
+            /* Iterate in reverse direction. */
+            for (int i = codeUnitCount - 1; i >= 0; i--) {
+                distance += caretEdges[i];
+                caretEdges[i] = distance;
+            }
+        } else {
+            float advance = caretEdges[0];
+
+            /* First edge should be zero. */
+            caretEdges[0] = 0;
+
+            for (int i = 1; i <= codeUnitCount; i++) {
+                distance += advance;
+                advance = caretEdges[i];
+                caretEdges[i] = distance;
+            }
+        }
 
         return FloatList.of(caretEdges);
     }
@@ -275,16 +570,16 @@ public class ShapingResult implements Disposable {
 	private static native void nDispose(long nativeResult);
 
 	private static native boolean nIsBackward(long nativeResult);
+    private static native boolean nIsRTL(long nativeResult);
     private static native float nGetSizeByEm(long nativeResult);
 	private static native int nGetCharStart(long nativeResult);
 	private static native int nGetCharEnd(long nativeResult);
     private static native int nGetCharCount(long nativeResult);
 	private static native int nGetGlyphCount(long nativeResult);
 
-    private static native long nGetGlyphIdsPtr(long nativeResult);
-    private static native long nGetGlyphOffsetsPtr(long nativeResult);
-    private static native long nGetGlyphAdvancesPtr(long nativeResult);
+    private static native int nGetGlyphId(long nativeResult, int index);
+    private static native float nGetGlyphXOffset(long nativeResult, int index);
+    private static native float nGetGlyphYOffset(long nativeResult, int index);
+    private static native float nGetGlyphAdvance(long nativeResult, int index);
     private static native long nGetClusterMapPtr(long nativeResult);
-
-    private static native void nGetCaretEdges(long nativeResult, boolean[] caretStops, float[] caretEdges);
 }

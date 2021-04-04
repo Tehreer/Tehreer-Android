@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-extern "C" {
-#include <SFAlbum.h>
-#include <SFBase.h>
-}
-
+#include <hb.h>
 #include <jni.h>
 
 #include "JavaBridge.h"
 #include "ShapingResult.h"
 
+using namespace std;
 using namespace Tehreer;
 
 ShapingResult::ShapingResult()
-    : m_sfAlbum(SFAlbumCreate())
+    : m_hbBuffer(hb_buffer_create())
+    , m_glyphInfos(nullptr)
+    , m_glyphPositions(nullptr)
+    , m_glyphCount(0)
+    , m_clusterMap()
+    , m_sizeByEm(0.0)
     , m_isBackward(false)
+    , m_isRTL(false)
     , m_charStart(0)
     , m_charEnd(0)
 {
@@ -36,15 +39,57 @@ ShapingResult::ShapingResult()
 
 ShapingResult::~ShapingResult()
 {
-    SFAlbumRelease(m_sfAlbum);
+    hb_buffer_destroy(m_hbBuffer);
 }
 
-void ShapingResult::setAdditionalInfo(jfloat sizeByEm, bool isBackward, jint charStart, jint charEnd)
+void ShapingResult::setup(jfloat sizeByEm, bool isBackward, bool isRTL, jint charStart, jint charEnd)
 {
+    m_glyphInfos = hb_buffer_get_glyph_infos(m_hbBuffer, &m_glyphCount);
+    m_glyphPositions = hb_buffer_get_glyph_positions(m_hbBuffer, nullptr);
+
     m_sizeByEm = sizeByEm;
     m_isBackward = isBackward;
+    m_isRTL = isRTL;
     m_charStart = charStart;
     m_charEnd = charEnd;
+
+    m_clusterMap = buildClusterMap();
+}
+
+vector<jint> ShapingResult::buildClusterMap() const {
+    jint codeUnitCount = m_charEnd - m_charStart;
+    jint association = 0;
+
+    vector<jint> array(codeUnitCount, -1);
+
+    /* Traverse in reverse order so that first glyph takes priority in case of multiple
+     * substitution. */
+    for (jint i = m_glyphCount - 1; i >= 0; i--) {
+        association = glyphClusterAt(i);
+        array[association] = i;
+    }
+
+    if (isBackward()) {
+        /* Assign the same glyph index to preceding codeunits. */
+        for (jint i = codeUnitCount - 1; i >= 0; i--) {
+            if (array[i] == -1) {
+                array[i] = association;
+            }
+
+            association = array[i];
+        }
+    } else {
+        /* Assign the same glyph index to subsequent codeunits. */
+        for (jint i = 0; i < codeUnitCount; i++) {
+            if (array[i] == -1) {
+                array[i] = association;
+            }
+
+            association = array[i];
+        }
+    }
+
+    return array;
 }
 
 static jlong create(JNIEnv *env, jobject obj)
@@ -59,10 +104,16 @@ static void dispose(JNIEnv *env, jobject obj, jlong resultHandle)
     delete shapingResult;
 }
 
-static jint isBackward(JNIEnv *env, jobject obj, jlong resultHandle)
+static jboolean isBackward(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     return shapingResult->isBackward();
+}
+
+static jboolean isRTL(JNIEnv *env, jobject obj, jlong resultHandle)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    return shapingResult->isRTL();
 }
 
 static jfloat getSizeByEm(JNIEnv *env, jobject obj, jlong resultHandle)
@@ -100,87 +151,60 @@ static jint getCharCount(JNIEnv *env, jobject obj, jlong resultHandle)
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-    SFUInteger glyphCount = SFAlbumGetGlyphCount(baseAlbum);
+    unsigned int glyphCount = shapingResult->glyphCount();
 
     return static_cast<jint>(glyphCount);
 }
 
-static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
+static jint getGlyphId(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-    const SFGlyphID *glyphIDsPtr = SFAlbumGetGlyphIDsPtr(baseAlbum);
+    hb_codepoint_t glyphId = shapingResult->glyphIdAt(index);
 
-    return reinterpret_cast<jlong>(glyphIDsPtr);
+    return static_cast<jint>(glyphId);
 }
 
-static jlong getGlyphOffsetsPtr(JNIEnv *env, jobject obj, jlong resultHandle)
+static jfloat getGlyphXOffset(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-    const SFPoint *glyphOffsetsPtr = SFAlbumGetGlyphOffsetsPtr(baseAlbum);
-
-    return reinterpret_cast<jlong>(glyphOffsetsPtr);
+    return shapingResult->glyphXOffsetAt(index);
 }
 
-static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong resultHandle)
+static jfloat getGlyphYOffset(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-    const SFInt32 *glyphAdvancesPtr = SFAlbumGetGlyphAdvancesPtr(baseAlbum);
+    return shapingResult->glyphYOffsetAt(index);
+}
 
-    return reinterpret_cast<jlong>(glyphAdvancesPtr);
+static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    return shapingResult->glyphAdvanceAt(index);
 }
 
 static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-    const SFUInteger *charToGlyphMapPtr = SFAlbumGetCodeunitToGlyphMapPtr(baseAlbum);
+    const jint *clusterMapPtr = shapingResult->clusterMapPtr();
 
-    return reinterpret_cast<jlong>(charToGlyphMapPtr);
-}
-
-static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle,
-    jbooleanArray caretStops, jfloatArray caretEdges)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    SFAlbumRef baseAlbum = shapingResult->sfAlbum();
-
-    void *caretEdgesBuffer = env->GetPrimitiveArrayCritical(caretEdges, nullptr);
-    void *caretStopsBuffer = nullptr;
-
-    if (caretStops) {
-        caretStopsBuffer = env->GetPrimitiveArrayCritical(caretStops, nullptr);
-    }
-
-    auto caretStopValues = static_cast<SFBoolean *>(caretStopsBuffer);
-    auto caretEdgeValues = static_cast<SFFloat *>(caretEdgesBuffer);
-
-    SFFloat advanceScale = shapingResult->sizeByEm();
-    SFAlbumGetCaretEdges(baseAlbum, caretStopValues, advanceScale, caretEdgeValues);
-
-    if (caretStops) {
-        env->ReleasePrimitiveArrayCritical(caretStops, caretStopsBuffer, 0);
-    }
-    env->ReleasePrimitiveArrayCritical(caretEdges, caretEdgesBuffer, 0);
+    return reinterpret_cast<jlong>(clusterMapPtr);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
     { "nIsBackward", "(J)Z", (void *)isBackward },
+    { "nIsRTL", "(J)Z", (void *)isRTL },
     { "nGetSizeByEm", "(J)F", (void *)getSizeByEm },
     { "nGetCharStart", "(J)I", (void *)getCharStart },
     { "nGetCharEnd", "(J)I", (void *)getCharEnd },
     { "nGetCharCount", "(J)I", (void *)getCharCount },
     { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
-    { "nGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
-    { "nGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
-    { "nGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
+    { "nGetGlyphId", "(JI)I", (void *)getGlyphId },
+    { "nGetGlyphXOffset", "(JI)F", (void *)getGlyphXOffset },
+    { "nGetGlyphYOffset", "(JI)F", (void *)getGlyphYOffset },
+    { "nGetGlyphAdvance", "(JI)F", (void *)getGlyphAdvance },
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
-    { "nGetCaretEdges", "(J[Z[F)V", (void *)getCaretEdges },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)

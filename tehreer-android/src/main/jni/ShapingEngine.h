@@ -17,12 +17,6 @@
 #ifndef _TEHREER__SHAPING_ENGINE_H
 #define _TEHREER__SHAPING_ENGINE_H
 
-extern "C" {
-#include <SFArtist.h>
-#include <SFBase.h>
-#include <SFScheme.h>
-}
-
 #include <cstdint>
 #include <jni.h>
 #include <memory>
@@ -34,13 +28,13 @@ extern "C" {
 namespace Tehreer {
 
 enum ShapingOrder : uint32_t {
-    FORWARD = SFTextModeForward,
-    BACKWARD = SFTextModeBackward,
+    FORWARD = 0,
+    BACKWARD = 1,
 };
 
 enum WritingDirection : uint32_t {
-    LEFT_TO_RIGHT = SFTextDirectionLeftToRight,
-    RIGHT_TO_LEFT = SFTextDirectionRightToLeft,
+    LEFT_TO_RIGHT = 0,
+    RIGHT_TO_LEFT = 1,
 };
 
 class ShapingEngine {
@@ -73,8 +67,6 @@ public:
     void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd);
 
 private:
-    SFArtistRef m_sfArtist;
-    SFSchemeRef m_sfScheme;
     Typeface *m_typeface;
     jfloat m_typeSize;
     uint32_t m_scriptTag;
@@ -83,6 +75,8 @@ private:
     std::vector<uint16_t> m_featureValues;
     ShapingOrder m_shapingOrder;
     WritingDirection m_writingDirection;
+
+    bool isRTL();
 };
 
 }

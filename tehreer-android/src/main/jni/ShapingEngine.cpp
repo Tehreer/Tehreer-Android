@@ -15,18 +15,17 @@
  */
 
 extern "C" {
-#include <SFArtist.h>
-#include <SFBase.h>
-#include <SFPattern.h>
-#include <SFScheme.h>
+#include <ft2build.h>
+#include FT_TYPES_H
 }
 
 #include <cstdint>
+#include <hb.h>
+#include <hb-ot.h>
 #include <jni.h>
 #include <vector>
 
 #include "JavaBridge.h"
-#include "PatternCache.h"
 #include "ShapingEngine.h"
 
 using namespace std;
@@ -34,19 +33,21 @@ using namespace Tehreer;
 
 WritingDirection ShapingEngine::getScriptDefaultDirection(uint32_t scriptTag)
 {
-    SFTextDirection defaultDirection = SFScriptGetDefaultDirection(scriptTag);
-    auto writingDirection = static_cast<WritingDirection>(defaultDirection);
+    hb_script_t script = hb_ot_tag_to_script(scriptTag);
+    hb_direction_t direction = hb_script_get_horizontal_direction(script);
 
-    return writingDirection;
+    if (direction == HB_DIRECTION_RTL) {
+        return WritingDirection::RIGHT_TO_LEFT;
+    }
+
+    return WritingDirection::LEFT_TO_RIGHT;
 }
 
 ShapingEngine::ShapingEngine()
-    : m_sfArtist(SFArtistCreate())
-    , m_sfScheme(SFSchemeCreate())
-    , m_typeface(nullptr)
+    : m_typeface(nullptr)
     , m_typeSize(16.0)
-    , m_scriptTag(SFTagMake('D', 'F', 'L', 'T'))
-    , m_languageTag(SFTagMake('d', 'f', 'l', 't'))
+    , m_scriptTag(FT_MAKE_TAG('D', 'F', 'L', 'T'))
+    , m_languageTag(FT_MAKE_TAG('d', 'f', 'l', 't'))
     , m_shapingOrder(ShapingOrder::FORWARD)
     , m_writingDirection(WritingDirection::LEFT_TO_RIGHT)
 {
@@ -54,8 +55,6 @@ ShapingEngine::ShapingEngine()
 
 ShapingEngine::~ShapingEngine()
 {
-    SFArtistRelease(m_sfArtist);
-    SFSchemeRelease(m_sfScheme);
 }
 
 void ShapingEngine::setOpenTypeFeatures(const vector<uint32_t> &featureTags, const vector<uint16_t> &featureValues)
@@ -67,46 +66,66 @@ void ShapingEngine::setOpenTypeFeatures(const vector<uint32_t> &featureTags, con
 void ShapingEngine::setShapingOrder(ShapingOrder shapingOrder)
 {
     m_shapingOrder = shapingOrder;
-    SFArtistSetTextMode(m_sfArtist, shapingOrder);
 }
 
 void ShapingEngine::setWritingDirection(WritingDirection writingDirection)
 {
     m_writingDirection = writingDirection;
-    SFArtistSetTextDirection(m_sfArtist, writingDirection);
+}
+
+bool ShapingEngine::isRTL()
+{
+    if (m_shapingOrder == ShapingOrder::BACKWARD) {
+        return m_writingDirection != WritingDirection::RIGHT_TO_LEFT;
+    }
+
+    return m_writingDirection == WritingDirection::RIGHT_TO_LEFT;
 }
 
 void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
 {
-    PatternCache &cache = m_typeface->patternCache();
-    PatternKey key(m_scriptTag, m_languageTag, m_featureTags, m_featureValues);
-    SFPatternRef pattern = cache.get(key);
+    hb_script_t script = hb_ot_tag_to_script(m_scriptTag);
+    hb_language_t language = hb_ot_tag_to_language(m_languageTag);
+    hb_direction_t direction;
 
-    if (!pattern) {
-        SFSchemeSetFont(m_sfScheme, m_typeface->sfFont());
-        SFSchemeSetScriptTag(m_sfScheme, m_scriptTag);
-        SFSchemeSetLanguageTag(m_sfScheme, m_languageTag);
-        SFSchemeSetFeatureValues(m_sfScheme, m_featureTags.data(), m_featureValues.data(), m_featureTags.size());
-
-        pattern = SFSchemeBuildPattern(m_sfScheme);
-        cache.put(key, pattern);
-        SFPatternRelease(pattern);
+    if (m_writingDirection == WritingDirection::RIGHT_TO_LEFT) {
+        direction = HB_DIRECTION_RTL;
+    } else {
+        direction = HB_DIRECTION_LTR;
     }
 
-    if (pattern) {
-        auto stringOffset = const_cast<jchar *>(charArray + charStart);
-        auto stringBuffer = reinterpret_cast<void *>(stringOffset);
-        auto stringLength = static_cast<SFUInteger>(charEnd - charStart);
+    hb_buffer_t *buffer = shapingResult.hbBuffer();
+    hb_buffer_clear_contents(buffer);
+    hb_buffer_set_script(buffer, script);
+    hb_buffer_set_language(buffer, language);
+    hb_buffer_set_direction(buffer, direction);
 
-        SFArtistSetPattern(m_sfArtist, pattern);
-        SFArtistSetString(m_sfArtist, SFStringEncodingUTF16, stringBuffer, stringLength);
-        SFArtistFillAlbum(m_sfArtist, shapingResult.sfAlbum());
+    const jchar *codeUnits = charArray + charStart;
+    jint length = charEnd - charStart;
+
+    hb_buffer_add_utf16(buffer, codeUnits, length, 0, length);
+
+    size_t numFeatures = m_featureTags.size();
+    hb_feature_t features[numFeatures];
+
+    for (size_t i = 0; i < m_featureTags.size(); i++) {
+        features[i].tag = m_featureTags[i];
+        features[i].value = m_featureValues[i];
+        features[i].start = 0;
+        features[i].end = length;
     }
 
-    jfloat sizeByEm = m_typeSize / m_typeface->ftFace()->units_per_EM;
+    m_typeface->lock();
+
+    FT_Set_Char_Size(m_typeface->ftFace(), 0, m_typeface->unitsPerEM(), 0, 0);
+    hb_shape(m_typeface->hbFont(), shapingResult.hbBuffer(), features, numFeatures);
+
+    m_typeface->unlock();
+
+    jfloat sizeByEm = m_typeSize / m_typeface->unitsPerEM();
     bool isBackward = m_shapingOrder == ShapingOrder::BACKWARD;
 
-    shapingResult.setAdditionalInfo(sizeByEm, isBackward, charStart, charEnd);
+    shapingResult.setup(sizeByEm, isBackward, isRTL(), charStart, charEnd);
 }
 
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
