@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,15 +26,7 @@ import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.collections.Int32BufferFloatList;
-import com.mta.tehreer.internal.collections.Int32BufferPointList;
-import com.mta.tehreer.internal.collections.UInt16BufferIntList;
-import com.mta.tehreer.internal.collections.UInt8BufferIntList;
-import com.mta.tehreer.internal.collections.UIntPtrBufferIntList;
 
-import java.util.Arrays;
-
-import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
 import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
 import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
