@@ -21,6 +21,7 @@ extern "C" {
 #include <ft2build.h>
 #include FT_COLOR_H
 #include FT_FREETYPE_H
+#include FT_SIZES_H
 #include FT_STROKER_H
 #include FT_SYSTEM_H
 }
@@ -62,6 +63,7 @@ public:
     void unlock() { m_instance->m_mutex.unlock(); }
 
     FT_Face ftFace() const { return m_instance->m_ftFace; }
+    FT_Size ftSize() const { return m_instance->m_ftSize; }
     FT_Stroker ftStroker();
 
     hb_font_t *hbFont() const { return m_instance->m_hbFont; }
