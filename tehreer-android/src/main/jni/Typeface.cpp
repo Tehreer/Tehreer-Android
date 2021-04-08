@@ -384,23 +384,6 @@ FT_UInt Typeface::Instance::getGlyphID(FT_ULong codePoint)
     return glyphID;
 }
 
-FT_Fixed Typeface::Instance::getUnscaledAdvance(FT_UInt glyphID, bool vertical)
-{
-    FT_Int32 loadFlags = FT_LOAD_NO_SCALE;
-    if (vertical) {
-        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-    }
-
-    m_mutex.lock();
-
-    FT_Fixed advance;
-    FT_Get_Advance(m_ftFace, glyphID, loadFlags, &advance);
-
-    m_mutex.unlock();
-
-    return advance;
-}
-
 Typeface::Typeface(Instance *instance)
 {
     m_instance = instance->retain();

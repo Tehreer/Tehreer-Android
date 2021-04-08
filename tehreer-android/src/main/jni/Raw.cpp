@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,48 +66,9 @@ static void copyInt8Buffer(JNIEnv *env, jobject obj, jlong pointer, jbyteArray d
     env->SetByteArrayRegion(destination, start, length, buffer);
 }
 
-static void copyInt32Buffer(JNIEnv *env, jobject obj, jlong pointer, jfloatArray destination, jint start, jint length, jfloat scale)
-{
-    int32_t *buffer = reinterpret_cast<int32_t *>(pointer);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    jfloat *values = static_cast<jfloat *>(raw) + start;
-
-    for (jint i = 0; i < length; i++) {
-        values[i] = buffer[i] * scale;
-    }
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
-}
-
 static void copyUInt8Buffer(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
 {
     uint8_t *buffer = reinterpret_cast<uint8_t *>(pointer);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    jint *values = static_cast<jint *>(raw) + start;
-
-    for (jint i = 0; i < length; i++) {
-        values[i] = static_cast<jint>(buffer[i]);
-    }
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
-}
-
-static void copyUInt16Buffer(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
-{
-    uint16_t *buffer = reinterpret_cast<uint16_t *>(pointer);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    jint *values = static_cast<jint *>(raw) + start;
-
-    for (jint i = 0; i < length; i++) {
-        values[i] = static_cast<jint>(buffer[i]);
-    }
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
-}
-
-static void copyUIntPtrBuffer(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
-{
-    size_t *buffer = reinterpret_cast<size_t *>(pointer);
     void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
     jint *values = static_cast<jint *>(raw) + start;
 
@@ -125,10 +86,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "getInt32Value", "(J)I", (void *)getInt32Value },
     { "getIntPtrValue", "(J)J", (void *)getIntPtrValue },
     { "copyInt8Buffer", "(J[BII)V", (void *)copyInt8Buffer },
-    { "copyInt32Buffer", "(J[FIIF)V", (void *)copyInt32Buffer },
     { "copyUInt8Buffer", "(J[III)V", (void *)copyUInt8Buffer },
-    { "copyUInt16Buffer", "(J[III)V", (void *)copyUInt16Buffer },
-    { "copyUIntPtrBuffer", "(J[III)V", (void *)copyUIntPtrBuffer },
 };
 
 jint register_com_mta_tehreer_internal_Raw(JNIEnv *env)

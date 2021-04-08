@@ -136,7 +136,6 @@ private:
         void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
 
         FT_UInt getGlyphID(FT_ULong codePoint);
-        FT_Fixed getUnscaledAdvance(FT_UInt glyphID, bool vertical);
 
         friend class Typeface;
     };
