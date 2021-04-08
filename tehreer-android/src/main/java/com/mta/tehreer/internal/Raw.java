@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,7 @@ public final class Raw {
     public static native long getIntPtrValue(long pointer);
 
     public static native void copyInt8Buffer(long pointer, @NonNull byte[] destination, int start, int length);
-    public static native void copyInt32Buffer(long pointer, @NonNull float[] destination, int start, int length, float scale);
     public static native void copyUInt8Buffer(long pointer, @NonNull int[] destination, int start, int length);
-    public static native void copyUInt16Buffer(long pointer, @NonNull int[] destination, int start, int length);
-    public static native void copyUIntPtrBuffer(long pointer, @NonNull int[] destination, int start, int length);
 
-    private Raw() {
-    }
+    private Raw() { }
 }
