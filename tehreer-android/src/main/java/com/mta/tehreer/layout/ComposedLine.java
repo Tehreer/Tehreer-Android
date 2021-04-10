@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.mta.tehreer.layout;
 
 import android.graphics.Canvas;
+import android.graphics.RectF;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Size;
@@ -354,6 +355,20 @@ public class ComposedLine {
         }
 
         return glyphRun.computeNearestCharIndex(distance - glyphRun.getOriginX());
+    }
+
+    public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer) {
+        RectF comulativeBox = new RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+                                        Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
+
+        for (GlyphRun glyphRun : getRuns()) {
+            RectF runBox = glyphRun.computeBoundingBox(renderer);
+            runBox.offset(glyphRun.getOriginX(), glyphRun.getOriginY());
+
+            comulativeBox.union(runBox);
+        }
+
+        return comulativeBox;
     }
 
     /**
