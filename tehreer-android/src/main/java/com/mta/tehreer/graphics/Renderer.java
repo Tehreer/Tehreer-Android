@@ -523,7 +523,11 @@ public class Renderer {
     public @NonNull RectF computeBoundingBox(@NonNull IntList glyphIds,
                                              @NonNull PointList offsets, @NonNull FloatList advances) {
         RectF glyphBBox = new RectF();
-        RectF cumulativeBBox = new RectF();
+        RectF cumulativeBBox = new RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+                                         Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
+
+        boolean reverseMode = (mWritingDirection == WritingDirection.RIGHT_TO_LEFT);
+        float totalAdvance = 0.0f;
         float penX = 0.0f;
 
         int size = glyphIds.size();
@@ -534,11 +538,29 @@ public class Renderer {
             float yOffset = offsets.getY(i);
             float advance = advances.get(i);
 
-            getBoundingBox(glyphId, glyphBBox);
-            glyphBBox.offset(penX + xOffset, yOffset);
-            cumulativeBBox.union(cumulativeBBox);
+            if (reverseMode) {
+                penX -= advance;
+            }
 
-            penX += advance;
+            getBoundingBox(glyphId, glyphBBox);
+
+            float width = glyphBBox.width();
+            float height = glyphBBox.height();
+
+            int left = (int) (penX + xOffset + glyphBBox.left + 0.5f);
+            int top = (int) (-yOffset - glyphBBox.top + 0.5f);
+
+            cumulativeBBox.union(left, top, left + width, top + height);
+
+            if (!reverseMode) {
+                penX += advance;
+            }
+
+            totalAdvance += advance;
+        }
+
+        if (reverseMode) {
+            cumulativeBBox.offset((float) Math.ceil(totalAdvance), 0.0f);
         }
 
         return cumulativeBBox;
