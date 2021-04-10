@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Muhammad Tayyab Akram
+ * Copyright (C) 2020-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,17 +103,17 @@ public class IntrinsicRunSlice extends TextRun {
 
     @Override
     public @NonNull IntList getGlyphIds() {
-        return intrinsicRun.getGlyphIds().subList(glyphOffset, glyphCount);
+        return intrinsicRun.getGlyphIds().subList(glyphOffset, glyphOffset + glyphCount);
     }
 
     @Override
     public @NonNull PointList getGlyphOffsets() {
-        return intrinsicRun.getGlyphOffsets().subList(glyphOffset, glyphCount);
+        return intrinsicRun.getGlyphOffsets().subList(glyphOffset, glyphOffset + glyphCount);
     }
 
     @Override
     public @NonNull FloatList getGlyphAdvances() {
-        return intrinsicRun.getGlyphAdvances().subList(glyphOffset, glyphCount);
+        return intrinsicRun.getGlyphAdvances().subList(glyphOffset, glyphOffset + glyphCount);
     }
 
     @Override
