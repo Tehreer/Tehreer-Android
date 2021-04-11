@@ -17,14 +17,17 @@
 package com.mta.tehreer.widget;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
@@ -45,7 +48,7 @@ import com.mta.tehreer.layout.style.TypefaceSpan;
 import java.util.ArrayList;
 import java.util.List;
 
-class TextContainer extends View {
+class TextContainer extends ViewGroup {
     private @Nullable Typeface mTypeface = null;
     private @Nullable String mText = null;
     private @Nullable Spanned mSpanned = null;
@@ -63,10 +66,22 @@ class TextContainer extends View {
     private @NonNull RectF mLayoutRect = new RectF();
     private @Nullable ComposedFrame mComposedFrame = null;
 
-    private int mScrollLeft;
-    private int mScrollTop;
+    private Rect mVisibleRect = new Rect();
+    private int mScrollX;
+    private int mScrollY;
     private int mScrollWidth;
     private int mScrollHeight;
+
+    private ArrayList<LineView> mLineViews = new ArrayList<>();
+    private ArrayList<LineView> mInsideViews = new ArrayList<>();
+    private ArrayList<LineView> mOutsideViews = new ArrayList<>();
+
+    private ArrayList<Rect> mLineBoxes = new ArrayList<>();
+    private ArrayList<Integer> mVisibleIndexes = new ArrayList<>();
+
+    private boolean mNeedsLayout = false;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     public TextContainer(Context context) {
         super(context);
@@ -84,58 +99,95 @@ class TextContainer extends View {
     }
 
     private void setup(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        setBackgroundColor(Color.RED);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int widthMode = View.MeasureSpec.getMode(widthMeasureSpec);
-        int heightMode = View.MeasureSpec.getMode(heightMeasureSpec);
         int widthSize = View.MeasureSpec.getSize(widthMeasureSpec);
-        int heightSize = View.MeasureSpec.getSize(heightMeasureSpec);
 
-        float layoutWidth = (widthMode == View.MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : widthSize);
-        float layoutHeight = (heightMode == View.MeasureSpec.UNSPECIFIED ? Float.POSITIVE_INFINITY : heightSize);
-
-        updateFrame(0.0f, 0.0f, layoutWidth, layoutHeight);
-
-        setMeasuredDimension(mTextWidth, mTextHeight);
+        setMeasuredDimension(widthSize, mTextHeight);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
+        if (mNeedsLayout) {
+            layoutLines();
+            mNeedsLayout = false;
+        }
     }
 
-    @Override
-    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-        super.onScrollChanged(l, t, oldl, oldt);
-
-        mScrollLeft = l;
-        mScrollTop = l;
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        long t1 = System.nanoTime();
-
-        canvas.save();
-
-        if (mComposedFrame != null) {
-            Renderer renderer = new Renderer();
-            renderer.setTypeface(mTypeface);
-            renderer.setTypeSize(mTextSize);
-            renderer.setFillColor(mTextColor);
-
-            mComposedFrame.draw(renderer, canvas, mComposedFrame.getOriginX(), mComposedFrame.getOriginY());
+    private void layoutLines() {
+        if (mComposedFrame == null) {
+            return;
         }
 
-        canvas.restore();
+        mVisibleRect.set(mScrollX, mScrollY, mScrollX + mScrollWidth, mScrollY + mScrollHeight);
 
-        long t2 = System.nanoTime();
-        Log.i("Tehreer", "Time taken to render label: " + ((t2 - t1) * 1E-6));
+        mInsideViews.clear();
+        mOutsideViews.clear();
+
+        // Get outside and inside line views.
+        for (LineView lineView : mLineViews) {
+            if (Rect.intersects(lineView.getFrame(), mVisibleRect)) {
+                mInsideViews.add(lineView);
+            } else {
+                mOutsideViews.add(lineView);
+            }
+        }
+
+        mVisibleIndexes.clear();
+
+        // Get line indexes that should be visible.
+        for (int i = 0, count = mLineBoxes.size(); i < count; i++) {
+            if (Rect.intersects(mLineBoxes.get(i), mVisibleRect)) {
+                mVisibleIndexes.add(i);
+            }
+        }
+
+        List<ComposedLine> allLines = mComposedFrame.getLines();
+
+        // Layout the lines.
+        for (int i = 0, count = mVisibleIndexes.size(); i < count; i++) {
+            int index = mVisibleIndexes.get(i);
+            ComposedLine textLine = allLines.get(index);
+            LineView insideView = null;
+            LineView lineView;
+
+            for (int j = 0, size = mInsideViews.size(); j < size; j++) {
+                LineView view = mInsideViews.get(j);
+                if (view.getLine() == textLine) {
+                    insideView = view;
+                    break;
+                }
+            }
+
+            if (insideView != null) {
+                lineView = insideView;
+            } else {
+                int outsideCount = mOutsideViews.size();
+                if (outsideCount > 0) {
+                    lineView = mOutsideViews.get(outsideCount - 1);
+                    mOutsideViews.remove(outsideCount - 1);
+                } else {
+                    lineView = new LineView(getContext());
+                    lineView.setBackgroundColor(Color.TRANSPARENT);
+                    mLineViews.add(lineView);
+                }
+
+                updateRenderer(lineView.getRenderer());
+
+                lineView.setLine(textLine);
+            }
+
+            if (lineView.getParent() == null) {
+                addView(lineView);
+            }
+
+            lineView.bringToFront();
+
+            Rect lineBox = mLineBoxes.get(index);
+            lineView.layout(lineBox.left, lineBox.top, lineBox.right, lineBox.bottom);
+        }
     }
 
     private void updateFrame(float paddingLeft, float paddingTop, float layoutWidth, float layoutHeight) {
@@ -159,6 +211,20 @@ class TextContainer extends View {
             resolver.setTypesetter(mTypesetter);
 
             mComposedFrame = resolver.createFrame(0, mTypesetter.getSpanned().length());
+
+            mLineBoxes.clear();
+
+            Renderer renderer = new Renderer();
+            updateRenderer(renderer);
+
+            for (ComposedLine line : mComposedFrame.getLines()) {
+                RectF box = line.computeBoundingBox(renderer);
+                box.offset(line.getOriginX(), line.getOriginY());
+
+                Rect small = new Rect((int) box.left, (int) box.top, (int) box.right, (int) box.bottom);
+
+                mLineBoxes.add(small);
+            }
 
             mTextWidth = (int) (mComposedFrame.getWidth() + 0.5f);
             mTextHeight = (int) (mComposedFrame.getHeight() + 0.5f);
@@ -204,6 +270,12 @@ class TextContainer extends View {
         invalidate();
     }
 
+    private void updateRenderer(@NonNull Renderer renderer) {
+        renderer.setFillColor(mTextColor);
+        renderer.setTypeface(mTypeface);
+        renderer.setTypeSize(mTextSize);
+    }
+
     public int hitTestPosition(float x, float y) {
         float adjustedX = x - mComposedFrame.getOriginX();
         float adjustedY = y - mComposedFrame.getOriginY();
@@ -229,9 +301,36 @@ class TextContainer extends View {
         return -1;
     }
 
-    public void setVisibleRegion(int width, int height) {
+    public void setScrollPosition(int scrollX, int scrollY) {
+        boolean needsLayout = false;
+
+        if (scrollX != mScrollX) {
+            mScrollX = scrollX;
+            needsLayout = true;
+        }
+        if (scrollY != mScrollY) {
+            mScrollY = scrollY;
+            needsLayout = true;
+        }
+
+        if (needsLayout) {
+            mNeedsLayout = true;
+            requestLayout();
+        }
+    }
+
+    public void setVisibleRegion(final int width, int height) {
         mScrollWidth = width;
         mScrollHeight = height;
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                updateFrame(0, 0, width, Float.POSITIVE_INFINITY);
+                mNeedsLayout = true;
+                requestLayout();
+            }
+        }, 1);
     }
 
     public void setGravity(int gravity) {

@@ -66,9 +66,15 @@ public class TTextView extends ScrollView {
     }
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
-        mTextContainer.setVisibleRegion(r - l, b - t);
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        mTextContainer.setVisibleRegion(w, h);
+    }
+
+    @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+        mTextContainer.setScrollPosition(l, t);
     }
 
     /**
