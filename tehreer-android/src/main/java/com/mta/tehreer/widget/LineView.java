@@ -69,5 +69,6 @@ class LineView extends View {
 
     public void setLine(@Nullable ComposedLine line) {
         mLine = line;
+        invalidate();
     }
 }
