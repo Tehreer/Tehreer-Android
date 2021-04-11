@@ -59,7 +59,6 @@ class TextContainer extends ViewGroup {
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
 
-    private boolean mNeedsTypesetter = false;
     private int mTextWidth = 0;
     private int mTextHeight = 0;
 
@@ -72,14 +71,18 @@ class TextContainer extends ViewGroup {
     private int mScrollWidth;
     private int mScrollHeight;
 
+    private boolean mIsScrollChanged = false;
+    private boolean mIsTextLayoutRequested = false;
+    private boolean mIsTypesetterUserDefined = false;
+    private boolean mIsTypesetterResolved = false;
+    private boolean mIsComposedFrameResolved = false;
+
     private ArrayList<LineView> mLineViews = new ArrayList<>();
     private ArrayList<LineView> mInsideViews = new ArrayList<>();
     private ArrayList<LineView> mOutsideViews = new ArrayList<>();
 
     private ArrayList<Rect> mLineBoxes = new ArrayList<>();
     private ArrayList<Integer> mVisibleIndexes = new ArrayList<>();
-
-    private boolean mNeedsLayout = false;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -110,10 +113,37 @@ class TextContainer extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        if (mNeedsLayout) {
-            layoutLines();
-            mNeedsLayout = false;
+        if (mIsTextLayoutRequested) {
+            performTextLayout();
         }
+
+        if (mIsScrollChanged) {
+            layoutLines();
+        }
+    }
+
+    private void performTextLayout() {
+        if (!mIsTypesetterResolved) {
+            updateTypesetter();
+            mIsTypesetterResolved = true;
+        }
+
+        if (!mIsComposedFrameResolved) {
+            updateFrame(0.0f, 0.0f, getMeasuredWidth(), Float.POSITIVE_INFINITY);
+            mIsComposedFrameResolved = true;
+
+            updateBoxes();
+            mIsScrollChanged = true;
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    requestLayout();
+                }
+            });
+        }
+
+        mIsTextLayoutRequested = false;
     }
 
     private void layoutLines() {
@@ -212,20 +242,6 @@ class TextContainer extends ViewGroup {
 
             mComposedFrame = resolver.createFrame(0, mTypesetter.getSpanned().length());
 
-            mLineBoxes.clear();
-
-            Renderer renderer = new Renderer();
-            updateRenderer(renderer);
-
-            for (ComposedLine line : mComposedFrame.getLines()) {
-                RectF box = line.computeBoundingBox(renderer);
-                box.offset(line.getOriginX(), line.getOriginY());
-
-                Rect small = new Rect((int) box.left, (int) box.top, (int) box.right, (int) box.bottom);
-
-                mLineBoxes.add(small);
-            }
-
             mTextWidth = (int) (mComposedFrame.getWidth() + 0.5f);
             mTextHeight = (int) (mComposedFrame.getHeight() + 0.5f);
 
@@ -234,8 +250,24 @@ class TextContainer extends ViewGroup {
         }
     }
 
+    private void updateBoxes() {
+        mLineBoxes.clear();
+
+        Renderer renderer = new Renderer();
+        updateRenderer(renderer);
+
+        for (ComposedLine line : mComposedFrame.getLines()) {
+            RectF box = line.computeBoundingBox(renderer);
+            box.offset(line.getOriginX(), line.getOriginY());
+
+            Rect small = new Rect((int) box.left, (int) box.top, (int) box.right, (int) box.bottom);
+
+            mLineBoxes.add(small);
+        }
+    }
+
     private void updateTypesetter() {
-        if (mNeedsTypesetter) {
+        if (mIsTypesetterUserDefined) {
             return;
         }
 
@@ -265,9 +297,6 @@ class TextContainer extends ViewGroup {
 
         long t2 = System.nanoTime();
         Log.i("Tehreer", "Time taken to create typesetter: " + ((t2 - t1) * 1E-6));
-
-        requestLayout();
-        invalidate();
     }
 
     private void updateRenderer(@NonNull Renderer renderer) {
@@ -302,35 +331,45 @@ class TextContainer extends ViewGroup {
     }
 
     public void setScrollPosition(int scrollX, int scrollY) {
-        boolean needsLayout = false;
+        boolean scrollChanged = false;
 
         if (scrollX != mScrollX) {
             mScrollX = scrollX;
-            needsLayout = true;
+            scrollChanged = true;
         }
         if (scrollY != mScrollY) {
             mScrollY = scrollY;
-            needsLayout = true;
+            scrollChanged = true;
         }
 
-        if (needsLayout) {
-            mNeedsLayout = true;
+        if (scrollChanged) {
+            mIsScrollChanged = true;
             requestLayout();
         }
     }
 
     public void setVisibleRegion(final int width, int height) {
-        mScrollWidth = width;
-        mScrollHeight = height;
+        if (width != mScrollWidth) {
+            mScrollWidth = width;
+            requestComposedFrame();
+        }
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                updateFrame(0, 0, width, Float.POSITIVE_INFINITY);
-                mNeedsLayout = true;
-                requestLayout();
-            }
-        }, 1);
+        mScrollHeight = height;
+    }
+
+    private void requestTypesetter() {
+        mIsTypesetterResolved = mIsTypesetterUserDefined;
+        requestComposedFrame();
+    }
+
+    private void requestComposedFrame() {
+        mIsComposedFrameResolved = false;
+        requestTextLayout();
+    }
+
+    private void requestTextLayout() {
+        mIsTextLayoutRequested = true;
+        requestLayout();
     }
 
     public void setGravity(int gravity) {
@@ -363,26 +402,24 @@ class TextContainer extends ViewGroup {
 
         mTextAlignment = textAlignment;
 
-        requestLayout();
-        invalidate();
+        requestComposedFrame();
     }
 
     public ComposedFrame getComposedFrame() {
-        return mComposedFrame;
+        return mIsComposedFrameResolved ? mComposedFrame : null;
     }
 
     public Typesetter getTypesetter() {
-        return mTypesetter;
+        return mIsTypesetterResolved ? mTypesetter : null;
     }
 
     public void setTypesetter(Typesetter typesetter) {
         mText = null;
         mSpanned = null;
         mTypesetter = typesetter;
-        mNeedsTypesetter = true;
+        mIsTypesetterUserDefined = true;
 
-        requestLayout();
-        invalidate();
+        requestTypesetter();
     }
 
     public Spanned getSpanned() {
@@ -392,8 +429,9 @@ class TextContainer extends ViewGroup {
     public void setSpanned(Spanned spanned) {
         mText = null;
         mSpanned = spanned;
-        mNeedsTypesetter = false;
-        updateTypesetter();
+        mIsTypesetterUserDefined = false;
+
+        requestTypesetter();
     }
 
     public Typeface getTypeface() {
@@ -402,7 +440,7 @@ class TextContainer extends ViewGroup {
 
     public void setTypeface(Typeface typeface) {
         mTypeface = typeface;
-        updateTypesetter();
+        requestTypesetter();
     }
 
     private void setTypeface(@NonNull Object tag) {
@@ -416,8 +454,9 @@ class TextContainer extends ViewGroup {
     public void setText(String text) {
         mText = (text == null ? "" : text);
         mSpanned = null;
-        mNeedsTypesetter = false;
-        updateTypesetter();
+        mIsTypesetterUserDefined = false;
+
+        requestTypesetter();
     }
 
     public float getTextSize() {
@@ -426,7 +465,7 @@ class TextContainer extends ViewGroup {
 
     public void setTextSize(float textSize) {
         mTextSize = Math.max(0.0f, textSize);
-        updateTypesetter();
+        requestTypesetter();
     }
 
     public @ColorInt int getTextColor() {
@@ -444,8 +483,7 @@ class TextContainer extends ViewGroup {
 
     public void setExtraLineSpacing(float extraLineSpacing) {
         mExtraLineSpacing = extraLineSpacing;
-        requestLayout();
-        invalidate();
+        requestComposedFrame();
     }
 
     public float getLineHeightMultiplier() {
@@ -454,7 +492,6 @@ class TextContainer extends ViewGroup {
 
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mLineHeightMultiplier = lineHeightMultiplier;
-        requestLayout();
-        invalidate();
+        requestComposedFrame();
     }
 }
