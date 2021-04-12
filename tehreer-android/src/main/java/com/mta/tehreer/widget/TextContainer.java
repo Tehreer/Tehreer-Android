@@ -24,10 +24,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Spanned;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
@@ -36,7 +36,7 @@ import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.graphics.TypefaceManager;
+import com.mta.tehreer.internal.util.SmartRunnable;
 import com.mta.tehreer.layout.ComposedFrame;
 import com.mta.tehreer.layout.ComposedLine;
 import com.mta.tehreer.layout.FrameResolver;
@@ -45,8 +45,13 @@ import com.mta.tehreer.layout.Typesetter;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 class TextContainer extends ViewGroup {
     private @Nullable Typeface mTypeface = null;
@@ -59,19 +64,17 @@ class TextContainer extends ViewGroup {
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
 
-    private int mTextWidth = 0;
-    private int mTextHeight = 0;
-
-    private @NonNull RectF mLayoutRect = new RectF();
+    private int mLayoutWidth = 0;
     private @Nullable ComposedFrame mComposedFrame = null;
 
-    private Rect mVisibleRect = new Rect();
+    private ScrollView mScrollView;
     private int mScrollX;
     private int mScrollY;
     private int mScrollWidth;
     private int mScrollHeight;
 
-    private boolean mIsScrollChanged = false;
+    private Rect mVisibleRect = new Rect();
+
     private boolean mIsTextLayoutRequested = false;
     private boolean mIsTypesetterUserDefined = false;
     private boolean mIsTypesetterResolved = false;
@@ -81,10 +84,14 @@ class TextContainer extends ViewGroup {
     private ArrayList<LineView> mInsideViews = new ArrayList<>();
     private ArrayList<LineView> mOutsideViews = new ArrayList<>();
 
-    private ArrayList<Rect> mLineBoxes = new ArrayList<>();
+    private List<Rect> mLineBoxes = new ArrayList<>();
     private ArrayList<Integer> mVisibleIndexes = new ArrayList<>();
 
-    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Executor mExecutor = Executors.newCachedThreadPool();
+
+    private TextResolvingTask mTextTask;
+    private Object mLayoutID;
 
     public TextContainer(Context context) {
         super(context);
@@ -104,11 +111,56 @@ class TextContainer extends ViewGroup {
     private void setup(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
     }
 
+    public void setScrollView(ScrollView scrollView) {
+        mScrollView = scrollView;
+    }
+
+    public void setScrollPosition(int scrollX, int scrollY) {
+        boolean scrollChanged = false;
+
+        if (scrollX != mScrollX) {
+            mScrollX = scrollX;
+            scrollChanged = true;
+        }
+        if (scrollY != mScrollY) {
+            mScrollY = scrollY;
+            scrollChanged = true;
+        }
+
+        if (scrollChanged) {
+            layoutLines();
+        }
+    }
+
+    public void setVisibleRegion(int width, int height) {
+        if (width != mScrollWidth) {
+            mScrollWidth = width;
+            requestComposedFrame();
+        }
+
+        mScrollHeight = height;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = View.MeasureSpec.getSize(widthMeasureSpec);
+        int heightSize = 0;
 
-        setMeasuredDimension(widthSize, mTextHeight);
+        if (widthMode != MeasureSpec.EXACTLY) {
+            widthSize = 0;
+        }
+
+        if (mComposedFrame != null) {
+            heightSize = (int) Math.ceil(mComposedFrame.getHeight());
+        }
+
+        setMeasuredDimension(widthSize, heightSize);
+
+        if (mLayoutWidth != widthSize) {
+            mLayoutWidth = widthSize;
+            requestTextLayout();
+        }
     }
 
     @Override
@@ -117,33 +169,292 @@ class TextContainer extends ViewGroup {
             performTextLayout();
         }
 
-        if (mIsScrollChanged) {
-            layoutLines();
+        layoutLines();
+    }
+
+    private static class TextContext {
+        Handler handler;
+
+        Object layoutID;
+        int layoutWidth;
+        Typeface typeface;
+        String text;
+        Spanned spanned;
+        float textSize;
+        @ColorInt int textColor;
+        TextAlignment textAlignment;
+        float extraLineSpacing;
+        float lineHeightMultiplier;
+
+        Typesetter typesetter;
+        ComposedFrame composedFrame;
+    }
+
+    private interface OnTaskUpdateListener<T> {
+        void onUpdate(T object);
+    }
+
+    private static class TypesettingTask extends SmartRunnable {
+        private final @NonNull TextContext context;
+        private final @NonNull OnTaskUpdateListener<Typesetter> listener;
+
+        public TypesettingTask(TextContext context, OnTaskUpdateListener<Typesetter> listener) {
+            this.context = context;
+            this.listener = listener;
+        }
+
+        private void notifyUpdateIfNeeded() {
+            if (!isCancelled()) {
+                context.handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onUpdate(context.typesetter);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void run() {
+            final String text = context.text;
+            final Spanned spanned = context.spanned;
+
+            if (text != null) {
+                final Typeface typeface = context.typeface;
+                final float textSize = context.textSize;
+
+                if (typeface != null && text.length() > 0) {
+                    context.typesetter = new Typesetter(text, typeface, textSize);
+                }
+            } else if (spanned != null) {
+                if (spanned.length() > 0) {
+                    final Typeface typeface = context.typeface;
+                    final float textSize = context.textSize;
+
+                    List<Object> defaultSpans = new ArrayList<>();
+
+                    if (typeface != null) {
+                        defaultSpans.add(new TypefaceSpan(typeface));
+                    }
+                    defaultSpans.add(new TypeSizeSpan(textSize));
+
+                    context.typesetter = new Typesetter(spanned, defaultSpans);
+                }
+            }
+
+            notifyUpdateIfNeeded();
+        }
+    }
+
+    private static class FrameResolvingTask extends SmartRunnable {
+        private final @NonNull TextContext context;
+        private final @NonNull OnTaskUpdateListener<ComposedFrame> listener;
+
+        public FrameResolvingTask(TextContext context, OnTaskUpdateListener<ComposedFrame> listener) {
+            this.context = context;
+            this.listener = listener;
+        }
+
+        private void notifyUpdateIfNeeded() {
+            if (!isCancelled()) {
+                context.handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onUpdate(context.composedFrame);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void run() {
+            final Typesetter typesetter = context.typesetter;
+
+            if (typesetter != null) {
+                FrameResolver resolver = new FrameResolver();
+                resolver.setTypesetter(typesetter);
+                resolver.setFrameBounds(new RectF(0.0f, 0.0f, context.layoutWidth, Float.POSITIVE_INFINITY));
+                resolver.setFitsHorizontally(false);
+                resolver.setFitsVertically(true);
+                resolver.setTextAlignment(context.textAlignment);
+                resolver.setExtraLineSpacing(context.extraLineSpacing);
+                resolver.setLineHeightMultiplier(context.lineHeightMultiplier);
+
+                context.composedFrame = resolver.createFrame(0, typesetter.getSpanned().length());
+            }
+
+            notifyUpdateIfNeeded();
+        }
+    }
+
+    private static class LineBoxesTask extends SmartRunnable {
+        private final @NonNull TextContext context;
+        private final @NonNull OnTaskUpdateListener<List<Rect>> listener;
+
+        private final @NonNull List<Rect> lineBoxes = new ArrayList<>();
+
+        public LineBoxesTask(TextContext context, OnTaskUpdateListener<List<Rect>> listener) {
+            this.context = context;
+            this.listener = listener;
+        }
+
+        private void notifyUpdateIfNeeded() {
+            if (!isCancelled()) {
+                final List<Rect> array = new ArrayList<>(lineBoxes);
+
+                context.handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onUpdate(array);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void run() {
+            final ComposedFrame composedFrame = context.composedFrame;
+            final List<ComposedLine> lines = composedFrame != null ? composedFrame.getLines() : null;
+
+            if (lines != null) {
+                Renderer renderer = new Renderer();
+                renderer.setTypeface(context.typeface);
+                renderer.setTypeSize(context.textSize);
+                renderer.setFillColor(context.textColor);
+
+                int lineCount = 0;
+
+                for (int i = 0, count = lines.size(); i < count; i++) {
+                    final ComposedLine line = lines.get(i);
+
+                    RectF boundingBox = line.computeBoundingBox(renderer);
+                    boundingBox.offset(line.getOriginX(), line.getOriginY());
+
+                    lineBoxes.add(new Rect((int) (boundingBox.left + 0.5f), (int) (boundingBox.top + 0.5f),
+                                           (int) (boundingBox.right + 0.5f), (int) (boundingBox.bottom + 0.5f)));
+
+                    if (isCancelled()) {
+                        break;
+                    }
+
+                    if (lineCount == 64) {
+                        notifyUpdateIfNeeded();
+                        lineCount = 0;
+                    }
+                }
+            }
+
+            notifyUpdateIfNeeded();
+        }
+    }
+
+    private static class TextResolvingTask extends SmartRunnable {
+        private final @NonNull Queue<SmartRunnable> subTasks;
+
+        public TextResolvingTask(Queue<SmartRunnable> subTasks) {
+            this.subTasks = subTasks;
+        }
+
+        private synchronized SmartRunnable poll() {
+            return subTasks.poll();
+        }
+
+        @Override
+        public void run() {
+            SmartRunnable runnable;
+
+            while ((runnable = poll()) != null) {
+                runnable.run();
+            }
+        }
+
+        @Override
+        public synchronized void cancel() {
+            super.cancel();
+
+            Iterator<SmartRunnable> iterator = subTasks.iterator();
+
+            while (iterator.hasNext()) {
+                SmartRunnable runnable = iterator.next();
+                runnable.cancel();
+
+                iterator.remove();
+            }
         }
     }
 
     private void performTextLayout() {
+        final TextContext context = new TextContext();
+        context.handler = mHandler;
+        context.layoutID = mLayoutID;
+        context.layoutWidth = mLayoutWidth;
+        context.typeface = mTypeface;
+        context.text = mText;
+        context.spanned = mSpanned;
+        context.textSize = mTextSize;
+        context.textAlignment = mTextAlignment;
+        context.textColor = mTextColor;
+        context.extraLineSpacing = mExtraLineSpacing;
+        context.lineHeightMultiplier = mLineHeightMultiplier;
+        context.typesetter = mTypesetter;
+
+        Queue<SmartRunnable> subTasks = new ArrayDeque<>();
+
         if (!mIsTypesetterResolved) {
-            updateTypesetter();
-            mIsTypesetterResolved = true;
-        }
-
-        if (!mIsComposedFrameResolved) {
-            updateFrame(0.0f, 0.0f, getMeasuredWidth(), Float.POSITIVE_INFINITY);
-            mIsComposedFrameResolved = true;
-
-            updateBoxes();
-            mIsScrollChanged = true;
-
-            handler.post(new Runnable() {
+            subTasks.add(new TypesettingTask(context, new OnTaskUpdateListener<Typesetter>() {
                 @Override
-                public void run() {
-                    requestLayout();
+                public void onUpdate(Typesetter typesetter) {
+                    updateTypesetter(context.layoutID, typesetter);
                 }
-            });
+            }));
         }
+
+        subTasks.add(new FrameResolvingTask(context, new OnTaskUpdateListener<ComposedFrame>() {
+            @Override
+            public void onUpdate(ComposedFrame composedFrame) {
+                updateComposedFrame(context.layoutID, composedFrame);
+            }
+        }));
+
+        subTasks.add(new LineBoxesTask(context, new OnTaskUpdateListener<List<Rect>>() {
+            @Override
+            public void onUpdate(List<Rect> lineBoxes) {
+                updateLineBoxes(context.layoutID, lineBoxes);
+            }
+        }));
+
+        mTextTask = new TextResolvingTask(subTasks);
+        mExecutor.execute(mTextTask);
 
         mIsTextLayoutRequested = false;
+    }
+
+    private void updateTypesetter(Object layoutID, Typesetter typesetter) {
+        if (layoutID == mLayoutID) {
+            mIsTypesetterResolved = true;
+            mTypesetter = typesetter;
+        }
+    }
+
+    private void updateComposedFrame(Object layoutID, ComposedFrame composedFrame) {
+        if (layoutID == mLayoutID) {
+            mIsComposedFrameResolved = true;
+            mComposedFrame = composedFrame;
+
+            mLineBoxes.clear();
+            mLineViews.clear();
+            removeAllViews();
+
+            mScrollView.scrollTo(0, 0);
+            layoutLines();
+        }
+    }
+
+    private void updateLineBoxes(Object layoutID, List<Rect> lineBoxes) {
+        if (layoutID == mLayoutID) {
+            mLineBoxes = lineBoxes;
+            layoutLines();
+        }
     }
 
     private void layoutLines() {
@@ -220,85 +531,6 @@ class TextContainer extends ViewGroup {
         }
     }
 
-    private void updateFrame(float paddingLeft, float paddingTop, float layoutWidth, float layoutHeight) {
-        mComposedFrame = null;
-        mTextWidth = 0;
-        mTextHeight = 0;
-
-        if (mTypesetter != null) {
-            long t1 = System.nanoTime();
-
-            mLayoutRect.set(paddingLeft, paddingTop, layoutWidth, layoutHeight);
-
-            FrameResolver resolver = new FrameResolver();
-            resolver.setTypesetter(mTypesetter);
-            resolver.setFrameBounds(mLayoutRect);
-            resolver.setFitsHorizontally(false);
-            resolver.setFitsVertically(true);
-            resolver.setTextAlignment(mTextAlignment);
-            resolver.setExtraLineSpacing(mExtraLineSpacing);
-            resolver.setLineHeightMultiplier(mLineHeightMultiplier);
-            resolver.setTypesetter(mTypesetter);
-
-            mComposedFrame = resolver.createFrame(0, mTypesetter.getSpanned().length());
-
-            mTextWidth = (int) (mComposedFrame.getWidth() + 0.5f);
-            mTextHeight = (int) (mComposedFrame.getHeight() + 0.5f);
-
-            long t2 = System.nanoTime();
-            Log.i("Tehreer", "Time taken to resolve frame: " + ((t2 - t1) * 1E-6));
-        }
-    }
-
-    private void updateBoxes() {
-        mLineBoxes.clear();
-
-        Renderer renderer = new Renderer();
-        updateRenderer(renderer);
-
-        for (ComposedLine line : mComposedFrame.getLines()) {
-            RectF box = line.computeBoundingBox(renderer);
-            box.offset(line.getOriginX(), line.getOriginY());
-
-            Rect small = new Rect((int) box.left, (int) box.top, (int) box.right, (int) box.bottom);
-
-            mLineBoxes.add(small);
-        }
-    }
-
-    private void updateTypesetter() {
-        if (mIsTypesetterUserDefined) {
-            return;
-        }
-
-        mTypesetter = null;
-
-        long t1 = System.nanoTime();
-
-        if (mText != null) {
-            Typeface typeface = getTypeface();
-            if (typeface != null && mText.length() > 0) {
-                mTypesetter = new Typesetter(mText, typeface, getTextSize());
-            }
-        } else if (mSpanned != null) {
-            if (mSpanned.length() > 0) {
-                List<Object> defaultSpans = new ArrayList<>();
-                Typeface typeface = getTypeface();
-                float textSize = getTextSize();
-
-                if (typeface != null) {
-                    defaultSpans.add(new TypefaceSpan(typeface));
-                }
-                defaultSpans.add(new TypeSizeSpan(textSize));
-
-                mTypesetter = new Typesetter(mSpanned, defaultSpans);
-            }
-        }
-
-        long t2 = System.nanoTime();
-        Log.i("Tehreer", "Time taken to create typesetter: " + ((t2 - t1) * 1E-6));
-    }
-
     private void updateRenderer(@NonNull Renderer renderer) {
         renderer.setFillColor(mTextColor);
         renderer.setTypeface(mTypeface);
@@ -330,33 +562,6 @@ class TextContainer extends ViewGroup {
         return -1;
     }
 
-    public void setScrollPosition(int scrollX, int scrollY) {
-        boolean scrollChanged = false;
-
-        if (scrollX != mScrollX) {
-            mScrollX = scrollX;
-            scrollChanged = true;
-        }
-        if (scrollY != mScrollY) {
-            mScrollY = scrollY;
-            scrollChanged = true;
-        }
-
-        if (scrollChanged) {
-            mIsScrollChanged = true;
-            requestLayout();
-        }
-    }
-
-    public void setVisibleRegion(final int width, int height) {
-        if (width != mScrollWidth) {
-            mScrollWidth = width;
-            requestComposedFrame();
-        }
-
-        mScrollHeight = height;
-    }
-
     private void requestTypesetter() {
         mIsTypesetterResolved = mIsTypesetterUserDefined;
         requestComposedFrame();
@@ -368,7 +573,13 @@ class TextContainer extends ViewGroup {
     }
 
     private void requestTextLayout() {
+        if (mTextTask != null) {
+            mTextTask.cancel();
+        }
+
+        mLayoutID = new Object();
         mIsTextLayoutRequested = true;
+
         requestLayout();
     }
 
@@ -441,10 +652,6 @@ class TextContainer extends ViewGroup {
     public void setTypeface(Typeface typeface) {
         mTypeface = typeface;
         requestTypesetter();
-    }
-
-    private void setTypeface(@NonNull Object tag) {
-        setTypeface(TypefaceManager.getTypeface(tag));
     }
 
     public String getText() {
