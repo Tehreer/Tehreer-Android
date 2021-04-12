@@ -62,6 +62,7 @@ public class TTextView extends ScrollView {
     private void setup(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         mTextContainer = new TextContainer(context);
         mTextContainer.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        mTextContainer.setScrollView(this);
         addView(mTextContainer);
     }
 
