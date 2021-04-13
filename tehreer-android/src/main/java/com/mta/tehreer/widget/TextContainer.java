@@ -322,7 +322,7 @@ class TextContainer extends ViewGroup {
                 renderer.setTypeSize(context.textSize);
                 renderer.setFillColor(context.textColor);
 
-                int lineCount = 0;
+                int lineChunk = 0;
 
                 for (int i = 0, count = lines.size(); i < count; i++) {
                     final ComposedLine line = lines.get(i);
@@ -337,9 +337,11 @@ class TextContainer extends ViewGroup {
                         break;
                     }
 
-                    if (lineCount == 64) {
+                    if (lineChunk == 64) {
                         notifyUpdateIfNeeded();
-                        lineCount = 0;
+                        lineChunk = 0;
+                    } else {
+                        lineChunk += 1;
                     }
                 }
             }
