@@ -66,6 +66,7 @@ class TextContainer extends ViewGroup {
 
     private int mLayoutWidth = 0;
     private @Nullable ComposedFrame mComposedFrame = null;
+    private List<Rect> mLineBoxes = new ArrayList<>();
 
     private ScrollView mScrollView;
     private int mScrollX;
@@ -73,19 +74,17 @@ class TextContainer extends ViewGroup {
     private int mScrollWidth;
     private int mScrollHeight;
 
-    private Rect mVisibleRect = new Rect();
+    private final Rect mVisibleRect = new Rect();
 
     private boolean mIsTextLayoutRequested = false;
     private boolean mIsTypesetterUserDefined = false;
     private boolean mIsTypesetterResolved = false;
     private boolean mIsComposedFrameResolved = false;
 
-    private ArrayList<LineView> mLineViews = new ArrayList<>();
-    private ArrayList<LineView> mInsideViews = new ArrayList<>();
-    private ArrayList<LineView> mOutsideViews = new ArrayList<>();
-
-    private List<Rect> mLineBoxes = new ArrayList<>();
-    private ArrayList<Integer> mVisibleIndexes = new ArrayList<>();
+    private final List<LineView> mLineViews = new ArrayList<>();
+    private final List<LineView> mInsideViews = new ArrayList<>();
+    private final List<LineView> mOutsideViews = new ArrayList<>();
+    private final List<Integer> mVisibleIndexes = new ArrayList<>();
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Executor mExecutor = Executors.newCachedThreadPool();
@@ -198,7 +197,8 @@ class TextContainer extends ViewGroup {
         private final @NonNull TextContext context;
         private final @NonNull OnTaskUpdateListener<Typesetter> listener;
 
-        public TypesettingTask(TextContext context, OnTaskUpdateListener<Typesetter> listener) {
+        public TypesettingTask(@NonNull TextContext context,
+                               @NonNull OnTaskUpdateListener<Typesetter> listener) {
             this.context = context;
             this.listener = listener;
         }
@@ -250,7 +250,8 @@ class TextContainer extends ViewGroup {
         private final @NonNull TextContext context;
         private final @NonNull OnTaskUpdateListener<ComposedFrame> listener;
 
-        public FrameResolvingTask(TextContext context, OnTaskUpdateListener<ComposedFrame> listener) {
+        public FrameResolvingTask(@NonNull TextContext context,
+                                  @NonNull OnTaskUpdateListener<ComposedFrame> listener) {
             this.context = context;
             this.listener = listener;
         }
@@ -293,7 +294,8 @@ class TextContainer extends ViewGroup {
 
         private final @NonNull List<Rect> lineBoxes = new ArrayList<>();
 
-        public LineBoxesTask(TextContext context, OnTaskUpdateListener<List<Rect>> listener) {
+        public LineBoxesTask(@NonNull TextContext context,
+                             @NonNull OnTaskUpdateListener<List<Rect>> listener) {
             this.context = context;
             this.listener = listener;
         }
@@ -354,7 +356,7 @@ class TextContainer extends ViewGroup {
         private final @NonNull Queue<SmartRunnable> subTasks;
         private SmartRunnable currentTask;
 
-        public TextResolvingTask(Queue<SmartRunnable> subTasks) {
+        public TextResolvingTask(@NonNull Queue<SmartRunnable> subTasks) {
             this.subTasks = subTasks;
         }
 
