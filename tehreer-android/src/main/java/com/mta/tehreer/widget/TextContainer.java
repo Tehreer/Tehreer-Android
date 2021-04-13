@@ -350,13 +350,15 @@ class TextContainer extends ViewGroup {
 
     private static class TextResolvingTask extends SmartRunnable {
         private final @NonNull Queue<SmartRunnable> subTasks;
+        private SmartRunnable currentTask;
 
         public TextResolvingTask(Queue<SmartRunnable> subTasks) {
             this.subTasks = subTasks;
         }
 
         private synchronized SmartRunnable poll() {
-            return subTasks.poll();
+            currentTask = subTasks.poll();
+            return currentTask;
         }
 
         @Override
@@ -379,6 +381,10 @@ class TextContainer extends ViewGroup {
                 runnable.cancel();
 
                 iterator.remove();
+            }
+
+            if (currentTask != null) {
+                currentTask.cancel();
             }
         }
     }
