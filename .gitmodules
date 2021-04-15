@@ -1,7 +1,3 @@
-[submodule "SheenBidi"]
-	path = sheenbidi
-	url = git://github.com/Tehreer/SheenBidi.git
-	branch = master
 
 [submodule "SheenFigure"]
 	path = sheenfigure
