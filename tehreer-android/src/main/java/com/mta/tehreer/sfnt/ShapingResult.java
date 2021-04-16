@@ -27,6 +27,7 @@ import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Raw;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
 import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
 import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
@@ -161,6 +162,10 @@ public class ShapingResult implements Disposable {
 	    return nGetGlyphId(nativeResult, index);
     }
 
+    private void copyGlyphIds(int offset, int length, @NonNull int[] destination, int index) {
+	    nCopyGlyphIds(nativeResult, offset, length, destination, index);
+    }
+
     private class GlyphIdList extends IntList {
         private final int offset;
         private final int size;
@@ -190,10 +195,9 @@ public class ShapingResult implements Disposable {
         @Override
         public void copyTo(@NonNull int[] array, int atIndex) {
             checkNotNull(array);
+            checkArrayBounds(array, atIndex, size);
 
-            for (int i = 0; i < size; i++) {
-                array[i + atIndex] = getGlyphId(i + offset);
-            }
+            copyGlyphIds(offset, size, array, atIndex);
         }
 
         @Override
@@ -222,6 +226,10 @@ public class ShapingResult implements Disposable {
 
     private float getGlyphYOffset(int index) {
         return nGetGlyphYOffset(nativeResult, index);
+    }
+
+    private void copyGlyphOffsets(int offset, int length, @NonNull float[] destination, int index) {
+        nCopyGlyphOffsets(nativeResult, offset, length, destination, index);
     }
 
     private class GlyphOffsetList extends PointList {
@@ -260,13 +268,9 @@ public class ShapingResult implements Disposable {
         @Override
         public void copyTo(@NonNull float[] array, int atIndex) {
             checkNotNull(array);
+            checkArrayBounds(array, atIndex, size * 2);
 
-            int coordIndex = atIndex;
-
-            for (int i = 0; i < size; i++) {
-                array[coordIndex++] = getGlyphXOffset(i + offset);
-                array[coordIndex++] = getGlyphYOffset(i + offset);
-            }
+            copyGlyphOffsets(offset, size, array, atIndex);
         }
 
         @Override
@@ -291,6 +295,10 @@ public class ShapingResult implements Disposable {
 
     private float getGlyphAdvance(int index) {
         return nGetGlyphAdvance(nativeResult, index);
+    }
+
+    private void copyGlyphAdvances(int offset, int length, @NonNull float[] destination, int index) {
+        nCopyGlyphAdvances(nativeResult, offset, length, destination, index);
     }
 
     private class GlyphAdvanceList extends FloatList {
@@ -322,10 +330,9 @@ public class ShapingResult implements Disposable {
         @Override
         public void copyTo(@NonNull float[] array, int atIndex) {
             checkNotNull(array);
+            checkArrayBounds(array, atIndex, size);
 
-            for (int i = 0; i < size; i++) {
-                array[i + atIndex] = getGlyphAdvance(i + offset);
-            }
+            copyGlyphAdvances(offset, size, array, atIndex);
         }
 
         @Override
@@ -574,4 +581,8 @@ public class ShapingResult implements Disposable {
     private static native float nGetGlyphYOffset(long nativeResult, int index);
     private static native float nGetGlyphAdvance(long nativeResult, int index);
     private static native long nGetClusterMapPtr(long nativeResult);
+
+    private static native void nCopyGlyphIds(long nativeResult, int offset, int length, @NonNull int[] destination, int index);
+    private static native void nCopyGlyphOffsets(long nativeResult, int offset, int length, @NonNull float[] destination, int index);
+    private static native void nCopyGlyphAdvances(long nativeResult, int offset, int length, @NonNull float[] destination, int index);
 }
