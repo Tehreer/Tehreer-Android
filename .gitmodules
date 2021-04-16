@@ -1,6 +1,2 @@
 
-[submodule "SheenFigure"]
-	path = sheenfigure
-	url = git://github.com/Tehreer/SheenFigure.git
-	branch = master
 
