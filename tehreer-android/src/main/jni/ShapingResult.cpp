@@ -92,6 +92,56 @@ vector<jint> ShapingResult::buildClusterMap() const {
     return array;
 }
 
+void ShapingResult::copyGlyphIds(jint offset, jint length, jint *destination) const
+{
+    if (m_isRTL) {
+        jint last = m_glyphCount - offset - 1;
+
+        for (int i = 0; i < length; i++) {
+            destination[i] = m_glyphInfos[last - i].codepoint;
+        }
+    } else {
+        for (jint i = 0; i < length; i++) {
+            destination[i] = m_glyphInfos[offset + i].codepoint;
+        }
+    }
+}
+
+void ShapingResult::copyGlyphOffsets(jint offset, jint length, jfloat *destination) const
+{
+    if (m_isRTL) {
+        jint last = m_glyphCount - offset - 1;
+        jint index = 0;
+
+        for (int i = 0; i < length; i++) {
+            destination[index++] = m_glyphPositions[last - i].x_offset * m_sizeByEm;
+            destination[index++] = m_glyphPositions[last - i].y_offset * m_sizeByEm;
+        }
+    } else {
+        jint index = 0;
+
+        for (jint i = 0; i < length; i++) {
+            destination[index++] = m_glyphPositions[offset + i].x_offset * m_sizeByEm;
+            destination[index++] = m_glyphPositions[offset + i].y_offset * m_sizeByEm;
+        }
+    }
+}
+
+void ShapingResult::copyGlyphAdvances(jint offset, jint length, jfloat *destination) const
+{
+    if (m_isRTL) {
+        jint last = m_glyphCount - offset - 1;
+
+        for (int i = 0; i < length; i++) {
+            destination[i] = m_glyphPositions[last - i].x_advance * m_sizeByEm;
+        }
+    } else {
+        for (jint i = 0; i < length; i++) {
+            destination[i] = m_glyphPositions[offset + i].x_advance * m_sizeByEm;
+        }
+    }
+}
+
 static jlong create(JNIEnv *env, jobject obj)
 {
     auto shapingResult = new ShapingResult();
@@ -190,6 +240,42 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
     return reinterpret_cast<jlong>(clusterMapPtr);
 }
 
+static void copyGlyphIds(JNIEnv *env, jobject obj, jlong resultHandle, jint offset, jint length,
+    jintArray destination, jint index)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
+    auto values = static_cast<jint *>(raw) + index;
+
+    shapingResult->copyGlyphIds(offset, length, values);
+
+    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
+}
+
+static void copyGlyphOffsets(JNIEnv *env, jobject obj, jlong resultHandle, jint offset, jint length,
+    jfloatArray destination, jint index)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
+    auto values = static_cast<jfloat *>(raw) + index;
+
+    shapingResult->copyGlyphOffsets(offset, length, values);
+
+    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
+}
+
+static void copyGlyphAdvances(JNIEnv *env, jobject obj, jlong resultHandle,
+    jint offset, jint length, jfloatArray destination, jint index)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
+    auto values = static_cast<jfloat *>(raw) + index;
+
+    shapingResult->copyGlyphAdvances(offset, length, values);
+
+    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
@@ -205,6 +291,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetGlyphYOffset", "(JI)F", (void *)getGlyphYOffset },
     { "nGetGlyphAdvance", "(JI)F", (void *)getGlyphAdvance },
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
+    { "nCopyGlyphIds", "(JII[II)V", (void *)copyGlyphIds },
+    { "nCopyGlyphOffsets", "(JII[FI)V", (void *)copyGlyphOffsets },
+    { "nCopyGlyphAdvances", "(JII[FI)V", (void *)copyGlyphAdvances },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)

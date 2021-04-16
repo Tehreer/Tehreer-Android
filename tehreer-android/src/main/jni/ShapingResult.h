@@ -49,6 +49,10 @@ public:
 
     const jint *clusterMapPtr() const { return m_clusterMap.data(); }
 
+    void copyGlyphIds(jint offset, jint length, jint *destination) const;
+    void copyGlyphOffsets(jint offset, jint length, jfloat *destination) const;
+    void copyGlyphAdvances(jint offset, jint length, jfloat *destination) const;
+
 private:
     hb_buffer_t *m_hbBuffer;
     hb_glyph_info_t *m_glyphInfos;
