@@ -64,6 +64,28 @@ public class TTextView extends ScrollView {
         mTextContainer.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         mTextContainer.setScrollView(this);
         addView(mTextContainer);
+
+        TypedArray values = context.getTheme().obtainStyledAttributes(attrs, R.styleable.TTextView, defStyleAttr, 0);
+
+        try {
+            setGravity(values.getInt(R.styleable.TTextView_gravity, Gravity.TOP | Gravity.START));
+            setExtraLineSpacing(values.getDimension(R.styleable.TTextView_extraLineSpacing, 0.0f));
+            setLineHeightMultiplier(values.getFloat(R.styleable.TTextView_lineHeightMultiplier, 0.0f));
+            setTextColor(values.getColor(R.styleable.TTextView_textColor, Color.BLACK));
+            setTextSize(values.getDimension(R.styleable.TTextView_textSize, 16));
+            if (values.hasValue(R.styleable.TTextView_typeface)) {
+                setTypeface(values.getResourceId(R.styleable.TTextView_typeface, 0));
+            }
+
+            CharSequence text = values.getText(R.styleable.TTextView_text);
+            if (text instanceof Spanned) {
+                setSpanned((Spanned) text);
+            } else if (text != null) {
+                setText(text.toString());
+            }
+        } finally {
+            values.recycle();
+        }
     }
 
     @Override
