@@ -15,56 +15,75 @@
     limitations under the License.
 -->
 <resources>
+    <attr name="gravity">
+        <flag name="top" value="0x30" />
+        <flag name="bottom" value="0x50" />
+        <flag name="left" value="0x03" />
+        <flag name="right" value="0x05" />
+        <flag name="start" value="0x00800003" />
+        <flag name="end" value="0x00800005" />
+        <flag name="center_vertical" value="0x10" />
+        <flag name="center_horizontal" value="0x01" />
+        <flag name="center" value="0x11" />
+    </attr>
+
+    <attr name="extraLineSpacing" format="dimension" />
+    <attr name="lineHeightMultiplier" format="float" />
+    <attr name="text" format="string" />
+    <attr name="textColor" format="color" />
+    <attr name="textSize" format="dimension" />
+    <attr name="typeface" format="reference" />
+
     <declare-styleable name="TLabel">
-        <attr name="gravity">
-            <flag name="top" value="0x30"/>
-            <flag name="bottom" value="0x50"/>
-            <flag name="left" value="0x03"/>
-            <flag name="right" value="0x05"/>
-            <flag name="start" value="0x00800003"/>
-            <flag name="end" value="0x00800005"/>
-            <flag name="center_vertical" value="0x10"/>
-            <flag name="center_horizontal" value="0x01"/>
-            <flag name="center" value="0x11"/>
-        </attr>
+        <attr name="gravity" />
         <attr name="maxLines" format="integer" />
-        <attr name="extraLineSpacing" format="dimension" />
-        <attr name="lineHeightMultiplier" format="float" />
+        <attr name="extraLineSpacing" />
+        <attr name="lineHeightMultiplier" />
         <attr name="shadowRadius" format="dimension" />
         <attr name="shadowDx" format="dimension" />
         <attr name="shadowDy" format="dimension" />
         <attr name="shadowColor" format="color" />
         <attr name="renderingStyle" format="enum">
-            <enum name="fill" value="0"/>
-            <enum name="fill_stroke" value="1"/>
-            <enum name="stroke" value="2"/>
+            <enum name="fill" value="0" />
+            <enum name="fill_stroke" value="1" />
+            <enum name="stroke" value="2" />
         </attr>
         <attr name="strokeColor" format="color" />
         <attr name="strokeWidth" format="dimension" />
         <attr name="strokeCap" format="enum">
-            <enum name="butt" value="0"/>
-            <enum name="round" value="1"/>
-            <enum name="square" value="2"/>
+            <enum name="butt" value="0" />
+            <enum name="round" value="1" />
+            <enum name="square" value="2" />
         </attr>
         <attr name="strokeJoin" format="enum">
-            <enum name="bevel" value="0"/>
-            <enum name="miter" value="1"/>
-            <enum name="round" value="2"/>
+            <enum name="bevel" value="0" />
+            <enum name="miter" value="1" />
+            <enum name="round" value="2" />
         </attr>
         <attr name="strokeMiter" format="dimension" />
-        <attr name="text" format="string" />
-        <attr name="textColor" format="color" />
-        <attr name="textSize" format="dimension" />
+        <attr name="text" />
+        <attr name="textColor" />
+        <attr name="textSize" />
         <attr name="truncationPlace" format="enum">
-            <enum name="none" value="0"/>
-            <enum name="end" value="1"/>
-            <enum name="middle" value="2"/>
-            <enum name="start" value="3"/>
+            <enum name="none" value="0" />
+            <enum name="end" value="1" />
+            <enum name="middle" value="2" />
+            <enum name="start" value="3" />
         </attr>
         <attr name="truncationMode" format="enum">
-            <enum name="line" value="0"/>
-            <enum name="character" value="1"/>
+            <enum name="line" value="0" />
+            <enum name="character" value="1" />
         </attr>
-        <attr name="typeface" format="reference" />
+        <attr name="typeface" />
+    </declare-styleable>
+
+    <declare-styleable name="TTextView">
+        <attr name="gravity" />
+        <attr name="extraLineSpacing" />
+        <attr name="lineHeightMultiplier" />
+        <attr name="text" />
+        <attr name="textColor" />
+        <attr name="textSize" />
+        <attr name="typeface" />
     </declare-styleable>
 </resources>
