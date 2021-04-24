@@ -35,7 +35,7 @@ import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.ComposedFrame;
 import com.mta.tehreer.layout.Typesetter;
 
-public class TTextView extends ScrollView {
+class TTextView extends ScrollView {
     private TextContainer mTextContainer;
 
     public TTextView(Context context) {
