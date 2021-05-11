@@ -18,6 +18,7 @@ package com.mta.tehreer.internal.layout;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.text.style.ReplacementSpan;
 
 import androidx.annotation.NonNull;
@@ -140,6 +141,11 @@ public class ReplacementRun extends TextRun {
     @Override
     public int computeNearestCharIndex(float distance) {
         return CaretUtils.computeNearestIndex(caretEdges, isRTL(), distance) + charStart;
+    }
+
+    @Override
+    public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer, int glyphStart, int glyphEnd) {
+        return new RectF(0.0f, 0.0f, getWidth(), getHeight());
     }
 
     @Override
