@@ -35,7 +35,7 @@ import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.ComposedFrame;
 import com.mta.tehreer.layout.Typesetter;
 
-class TTextView extends ScrollView {
+public class TTextView extends ScrollView {
     private TextContainer mTextContainer;
 
     public TTextView(Context context) {
@@ -98,6 +98,19 @@ class TTextView extends ScrollView {
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
         mTextContainer.setScrollPosition(l, t);
+    }
+
+    /**
+     * Performs hit testing. Returns the index of character representing the specified position, or
+     * -1 if there is no character at this position.
+     *
+     * @param x The x- coordinate of position.
+     * @param y The y- coordinate of position.
+     * @return The index of character representing the specified position, or -1 if there is no
+     *         character at this position.
+     */
+    public int hitTestPosition(float x, float y) {
+        return mTextContainer.hitTestPosition(x, y);
     }
 
     /**
