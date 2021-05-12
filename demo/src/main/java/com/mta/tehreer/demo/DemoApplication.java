@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ public class DemoApplication extends Application {
         registerTypeface("TajNastaleeq.ttf", R.id.typeface_taj_nastaleeq);
         registerTypeface("MehrNastaliq.ttf", R.id.typeface_mehr_nastaliq);
         registerTypeface("NafeesWeb.ttf", R.id.typeface_nafees_web);
+        registerTypeface("Noorehuda.ttf", R.id.typeface_noorehuda);
     }
 
     private void registerTypeface(String fileName, int tag) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2017 Muhammad Tayyab Akram
+    Copyright (C) 2017-2021 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,4 +18,5 @@
     <item type="id" name="typeface_taj_nastaleeq" />
     <item type="id" name="typeface_mehr_nastaliq" />
     <item type="id" name="typeface_nafees_web" />
+    <item type="id" name="typeface_noorehuda" />
 </resources>
