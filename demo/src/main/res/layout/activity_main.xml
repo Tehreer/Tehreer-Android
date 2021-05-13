@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2017 Muhammad Tayyab Akram
+    Copyright (C) 2016-2021 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -61,6 +61,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Label Widget"/>
+
+            <Button
+                android:id="@+id/button_text_view_widget"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Text View Widget"/>
 
             <Button
                 android:id="@+id/button_variable_fonts"
