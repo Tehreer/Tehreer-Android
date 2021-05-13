@@ -49,6 +49,10 @@
             android:label="Label Widget">
         </activity>
         <activity
+            android:name=".TextViewWidgetActivity"
+            android:label="Al Kahf">
+        </activity>
+        <activity
             android:name=".VariableFontsActivity"
             android:label="Variable Fonts">
         </activity>
