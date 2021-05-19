@@ -20,6 +20,7 @@ extern "C" {
 #include FT_TYPES_H
 }
 
+#include <cmath>
 #include <cstdint>
 #include <hb.h>
 #include <hb-ot.h>
@@ -116,14 +117,13 @@ void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArr
         features[i].end = length;
     }
 
-    m_typeface->lock();
+    hb_font_t *hbFont = hb_font_create_sub_font(m_typeface->hbFont());
+    auto ppem = lround(m_typeSize);
+    hb_font_set_ppem(hbFont, ppem, ppem);
 
-    FT_Activate_Size(m_typeface->ftSize());
-    FT_Set_Char_Size(m_typeface->ftFace(), 0, m_typeface->unitsPerEM(), 0, 0);
+    hb_shape(hbFont, shapingResult.hbBuffer(), features, numFeatures);
 
-    hb_shape(m_typeface->hbFont(), shapingResult.hbBuffer(), features, numFeatures);
-
-    m_typeface->unlock();
+    hb_font_destroy(hbFont);
 
     jfloat sizeByEm = m_typeSize / m_typeface->unitsPerEM();
     bool isBackward = m_shapingOrder == ShapingOrder::BACKWARD;

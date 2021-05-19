@@ -133,6 +133,11 @@ private:
         Instance *retain();
         void release();
 
+        void lock() { m_mutex.lock(); };
+        void unlock() { m_mutex.unlock(); }
+
+        FT_Face ftFace() const { return m_ftFace; }
+
         void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
 
         FT_UInt getGlyphID(FT_ULong codePoint);
