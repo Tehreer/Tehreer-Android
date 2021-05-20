@@ -37,6 +37,7 @@ extern "C" {
 #include "FontFile.h"
 #include "JavaBridge.h"
 #include "RenderableFace.h"
+#include "ShapableFace.h"
 
 namespace Tehreer {
 
@@ -67,7 +68,7 @@ public:
     FT_Size ftSize() const { return m_instance->m_ftSize; }
     FT_Stroker ftStroker();
 
-    hb_font_t *hbFont() const { return m_instance->m_hbFont; }
+    hb_font_t *hbFont() const { return m_instance->m_shapableFace->hbFont(); }
 
     const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
 
@@ -107,11 +108,10 @@ private:
 
         FontFile *m_fontFile;
         RenderableFace *m_renderableFace;
-
         FT_Size m_ftSize;
         FT_Stroker m_ftStroker;
 
-        hb_font_t *m_hbFont;
+        ShapableFace *m_shapableFace;
 
         int32_t m_familyName;
         int32_t m_styleName;

@@ -150,6 +150,7 @@ FILE_LIST := \
     RenderableFace.cpp \
     ScriptClassifier.cpp \
     SfntTables.cpp \
+    ShapableFace.cpp \
     ShapingEngine.cpp \
     ShapingResult.cpp \
     StreamUtils.cpp \
