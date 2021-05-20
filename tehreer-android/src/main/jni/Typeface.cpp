@@ -39,6 +39,7 @@ extern "C" {
 #include <mutex>
 #include <string>
 
+#include "Convert.h"
 #include "FontFile.h"
 #include "FreeType.h"
 #include "JavaBridge.h"
@@ -53,26 +54,6 @@ using namespace Tehreer;
 using namespace Tehreer::SFNT::head;
 using namespace Tehreer::SFNT::name;
 using namespace Tehreer::SFNT::OS2;
-
-static inline FT_F26Dot6 toF26Dot6(float value)
-{
-    return static_cast<FT_F26Dot6>((value * 64) + 0.5);
-}
-
-static inline FT_Fixed toF16Dot16(float value)
-{
-    return static_cast<FT_Fixed>((value * 0x10000) + 0.5);
-}
-
-static inline float f16Dot16toFloat(FT_Fixed value)
-{
-    return value / static_cast<float>(0x10000);
-}
-
-static inline float f26Dot6PosToFloat(FT_Pos value)
-{
-    return static_cast<float>(value / 64.0);
-}
 
 /**
  * NOTE: The caller needs to lock the typeface before invoking this function.
