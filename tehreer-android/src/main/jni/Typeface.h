@@ -36,6 +36,7 @@ extern "C" {
 
 #include "FontFile.h"
 #include "JavaBridge.h"
+#include "RenderableFace.h"
 
 namespace Tehreer {
 
@@ -59,10 +60,10 @@ public:
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
-    void lock() { m_instance->m_mutex.lock(); };
-    void unlock() { m_instance->m_mutex.unlock(); }
+    void lock() { m_instance->m_renderableFace->lock(); };
+    void unlock() { m_instance->m_renderableFace->unlock(); }
 
-    FT_Face ftFace() const { return m_instance->m_ftFace; }
+    FT_Face ftFace() const { return m_instance->ftFace(); }
     FT_Size ftSize() const { return m_instance->m_ftSize; }
     FT_Stroker ftStroker();
 
@@ -102,11 +103,11 @@ public:
 private:
     class Instance {
     private:
-        std::mutex m_mutex;
         std::atomic_int m_retainCount;
 
         FontFile *m_fontFile;
-        FT_Face m_ftFace;
+        RenderableFace *m_renderableFace;
+
         FT_Size m_ftSize;
         FT_Stroker m_ftStroker;
 
@@ -123,7 +124,7 @@ private:
         int16_t m_strikeoutPosition;
         int16_t m_strikeoutThickness;
 
-        Instance(FontFile *fontFile, FT_Face ftFace);
+        Instance(FontFile *fontFile, RenderableFace *renderableFace);
         ~Instance();
 
         void setupDescription();
@@ -133,10 +134,10 @@ private:
         Instance *retain();
         void release();
 
-        void lock() { m_mutex.lock(); };
-        void unlock() { m_mutex.unlock(); }
+        void lock() { m_renderableFace->lock(); };
+        void unlock() { m_renderableFace->unlock(); }
 
-        FT_Face ftFace() const { return m_ftFace; }
+        FT_Face ftFace() const { return m_renderableFace->ftFace(); }
 
         void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
 

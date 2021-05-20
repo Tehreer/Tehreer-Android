@@ -147,6 +147,7 @@ FILE_LIST := \
     GlyphRasterizer.cpp \
     JavaBridge.cpp \
     Raw.cpp \
+    RenderableFace.cpp \
     ScriptClassifier.cpp \
     SfntTables.cpp \
     ShapingEngine.cpp \

@@ -43,6 +43,7 @@ extern "C" {
 #include "FreeType.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
+#include "RenderableFace.h"
 #include "SfntTables.h"
 #include "Typeface.h"
 
@@ -192,10 +193,12 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     if (fontFile) {
         FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
-            auto instance = new Instance(fontFile, ftFace);
+            auto renderableFace = RenderableFace::create(ftFace);
+            auto instance = new Instance(fontFile, renderableFace);
             auto typeface = new Typeface(instance);
 
             instance->release();
+            renderableFace->release();
 
             return typeface;
         }
@@ -204,7 +207,7 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     return nullptr;
 }
 
-Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
+Typeface::Instance::Instance(FontFile *fontFile, RenderableFace *renderableFace)
     : m_familyName(-1)
     , m_styleName(-1)
     , m_fullName(-1)
@@ -216,11 +219,12 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
 {
     m_retainCount = 1;
     m_fontFile = fontFile->retain();
-    m_ftFace = ftFace;
+    m_renderableFace = renderableFace->retain();
     m_ftSize = nullptr;
     m_ftStroker = nullptr;
 
-    FT_New_Size(m_ftFace, &m_ftSize);
+    FT_Face ftFace = renderableFace->ftFace();
+    FT_New_Size(ftFace, &m_ftSize);
 
     setupDescription();
     setupVariation();
@@ -229,12 +233,13 @@ Typeface::Instance::Instance(FontFile *fontFile, FT_Face ftFace)
 
 void Typeface::Instance::setupDescription()
 {
-    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_OS2));
-    auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(m_ftFace, FT_SFNT_HEAD));
+    FT_Face ftFace = m_renderableFace->ftFace();
+    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
+    auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
-    m_familyName = searchFamilyNameRecordIndex(m_ftFace, os2Table);
-    m_styleName = searchStyleNameRecordIndex(m_ftFace, os2Table);
-    m_fullName = searchFullNameRecordIndex(m_ftFace);
+    m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
+    m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
+    m_fullName = searchFullNameRecordIndex(ftFace);
 
     if (os2Table) {
         m_weight = os2Table->usWeightClass;
@@ -267,14 +272,16 @@ void Typeface::Instance::setupDescription()
 
 void Typeface::Instance::setupVariation()
 {
+    FT_Face ftFace = m_renderableFace->ftFace();
+
     FT_MM_Var *variation;
-    FT_Error error = FT_Get_MM_Var(m_ftFace, &variation);
+    FT_Error error = FT_Get_MM_Var(ftFace, &variation);
 
     if (error == FT_Err_Ok) {
         FT_UInt numCoords = variation->num_axis;
         FT_Fixed fixedCoords[numCoords];
 
-        if (FT_Get_Var_Design_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
+        if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
             // Reset the style name and the full name.
             m_styleName = -1;
             m_fullName = -1;
@@ -286,7 +293,7 @@ void Typeface::Instance::setupVariation()
 
                 int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
                 if (result == 0) {
-                    m_styleName = searchEnglishNameRecordIndex(m_ftFace, static_cast<uint16_t>(namedStyle->strid));
+                    m_styleName = searchEnglishNameRecordIndex(ftFace, static_cast<uint16_t>(namedStyle->strid));
                     break;
                 }
             }
@@ -503,21 +510,14 @@ Typeface::Instance::~Instance()
         FT_Stroker_Done(m_ftStroker);
     }
     if (m_ftSize) {
-        m_mutex.lock();
+        m_renderableFace->lock();
 
         FT_Done_Size(m_ftSize);
 
-        m_mutex.unlock();
-    }
-    if (m_ftFace) {
-        std::mutex &mutex = FreeType::mutex();
-        mutex.lock();
-
-        FT_Done_Face(m_ftFace);
-
-        mutex.unlock();
+        m_renderableFace->unlock();
     }
 
+    m_renderableFace->release();
     m_fontFile->release();
 }
 
@@ -536,20 +536,22 @@ void Typeface::Instance::release()
 
 void Typeface::Instance::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
-    m_mutex.lock();
+    m_renderableFace->lock();
 
-    FT_Load_Sfnt_Table(m_ftFace, tag, 0, buffer, length);
+    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length);
 
-    m_mutex.unlock();
+    m_renderableFace->unlock();
 }
 
 FT_UInt Typeface::Instance::getGlyphID(FT_ULong codePoint)
 {
-    m_mutex.lock();
+    m_renderableFace->lock();
 
-    FT_UInt glyphID = FT_Get_Char_Index(m_ftFace, codePoint);
+    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
 
-    m_mutex.unlock();
+    m_renderableFace->unlock();
 
     return glyphID;
 }
