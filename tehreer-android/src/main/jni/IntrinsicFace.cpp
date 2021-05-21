@@ -172,21 +172,20 @@ IntrinsicFace::IntrinsicFace(FontFile *fontFile, RenderableFace *renderableFace)
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
-    , m_familyName(-1)
-    , m_styleName(-1)
-    , m_fullName(-1)
-    , m_weight(Weight::REGULAR)
-    , m_width(Width::NORMAL)
-    , m_slope(Slope::PLAIN)
     , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
     , m_retainCount(1)
 {
-    FT_New_Size(renderableFace->ftFace(), &m_ftSize);
-
+    setupSize();
     setupDescription();
+    setupStrikeout();
     setupVariation();
     setupHarfBuzz();
+}
+
+void IntrinsicFace::setupSize()
+{
+    FT_New_Size(m_renderableFace->ftFace(), &m_ftSize);
 }
 
 void IntrinsicFace::setupDescription()
@@ -195,36 +194,48 @@ void IntrinsicFace::setupDescription()
     auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
-    m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
-    m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
-    m_fullName = searchFullNameRecordIndex(ftFace);
+    Description description;
+    description.familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
+    description.styleName = searchStyleNameRecordIndex(ftFace, os2Table);
+    description.fullName = searchFullNameRecordIndex(ftFace);
 
     if (os2Table) {
-        m_weight = os2Table->usWeightClass;
-        m_width = os2Table->usWidthClass;
+        description.weight = os2Table->usWeightClass;
+        description.width = os2Table->usWidthClass;
 
         if (os2Table->fsSelection & FSSelection::OBLIQUE) {
-            m_slope = Slope::OBLIQUE;
+            description.slope = Slope::OBLIQUE;
         } else if (os2Table->fsSelection & FSSelection::ITALIC) {
-            m_slope = Slope::ITALIC;
+            description.slope = Slope::ITALIC;
         }
-
-        m_strikeoutPosition = os2Table->yStrikeoutPosition;
-        m_strikeoutThickness = os2Table->yStrikeoutSize;
     } else if (headTable) {
         if (headTable->Mac_Style & MacStyle::BOLD) {
-            m_weight = Weight::BOLD;
+            description.weight = Weight::BOLD;
         }
 
         if (headTable->Mac_Style & MacStyle::CONDENSED) {
-            m_width = Width::CONDENSED;
+            description.width = Width::CONDENSED;
         } else if (headTable->Mac_Style & MacStyle::EXTENDED) {
-            m_width = Width::EXPANDED;
+            description.width = Width::EXPANDED;
         }
 
         if (headTable->Mac_Style & MacStyle::ITALIC) {
-            m_slope = Slope::ITALIC;
+            description.slope = Slope::ITALIC;
         }
+    }
+
+    m_defaults.description = description;
+    m_description = description;
+}
+
+void IntrinsicFace::setupStrikeout()
+{
+    FT_Face ftFace = m_renderableFace->ftFace();
+    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
+
+    if (os2Table) {
+        m_strikeoutPosition = os2Table->yStrikeoutPosition;
+        m_strikeoutThickness = os2Table->yStrikeoutSize;
     }
 }
 
@@ -236,13 +247,15 @@ void IntrinsicFace::setupVariation()
     FT_Error error = FT_Get_MM_Var(ftFace, &variation);
 
     if (error == FT_Err_Ok) {
+        Description description;
+
         FT_UInt numCoords = variation->num_axis;
         FT_Fixed fixedCoords[numCoords];
 
         if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
             // Reset the style name and the full name.
-            m_styleName = -1;
-            m_fullName = -1;
+            description.styleName = -1;
+            description.fullName = -1;
 
             // Get the style name of this instance.
             for (FT_UInt i = 0; i < variation->num_namedstyles; i++) {
@@ -251,7 +264,7 @@ void IntrinsicFace::setupVariation()
 
                 int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
                 if (result == 0) {
-                    m_styleName = searchEnglishNameRecordIndex(ftFace, static_cast<uint16_t>(namedStyle->strid));
+                    description.styleName = searchEnglishNameRecordIndex(ftFace, static_cast<uint16_t>(namedStyle->strid));
                     break;
                 }
             }
@@ -262,31 +275,37 @@ void IntrinsicFace::setupVariation()
 
                 switch (axis->tag) {
                 case FT_MAKE_TAG('i', 't', 'a', 'l'):
-                    m_slope = variableItalicToSlope(fixedCoords[i]);
+                    description.slope = variableItalicToSlope(fixedCoords[i]);
                     break;
 
                 case FT_MAKE_TAG('s', 'l', 'n', 't'):
-                    m_slope = variableSlantToSlope(fixedCoords[i]);
+                    description.slope = variableSlantToSlope(fixedCoords[i]);
                     break;
 
                 case FT_MAKE_TAG('w', 'd', 't', 'h'):
-                    m_width = variableWidthToStandard(fixedCoords[i]);
+                    description.width = variableWidthToStandard(fixedCoords[i]);
                     break;
 
                 case FT_MAKE_TAG('w', 'g', 'h', 't'):
-                    m_weight = variableWeightToStandard(fixedCoords[i]);
+                    description.weight = variableWeightToStandard(fixedCoords[i]);
                     break;
                 }
             }
         }
 
         FT_Done_MM_Var(FreeType::library(), variation);
+
+        m_description = description;
     }
 }
 
-void IntrinsicFace::setupHarfBuzz()
+void IntrinsicFace::setupHarfBuzz(IntrinsicFace *parent)
 {
-    m_shapableFace = ShapableFace::create(m_renderableFace);
+    if (parent) {
+        m_shapableFace = ShapableFace::create(parent->shapableFace(), m_renderableFace);
+    } else {
+        m_shapableFace = ShapableFace::create(m_renderableFace);
+    }
 }
 
 IntrinsicFace::~IntrinsicFace()
