@@ -20,155 +20,23 @@ extern "C" {
 #include FT_COLOR_H
 #include FT_FREETYPE_H
 #include FT_MULTIPLE_MASTERS_H
-#include FT_SFNT_NAMES_H
 #include FT_SIZES_H
-#include FT_STROKER_H
-#include FT_SYSTEM_H
-#include FT_TRUETYPE_TABLES_H
 #include FT_TYPES_H
 }
 
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <hb.h>
-#include <hb-ft.h>
 #include <jni.h>
-#include <mutex>
-#include <string>
 
 #include "Convert.h"
 #include "FontFile.h"
-#include "FreeType.h"
 #include "JavaBridge.h"
-#include "Miscellaneous.h"
 #include "RenderableFace.h"
-#include "SfntTables.h"
-#include "ShapableFace.h"
 #include "Typeface.h"
 
 using namespace std;
 using namespace Tehreer;
-using namespace Tehreer::SFNT::head;
-using namespace Tehreer::SFNT::name;
-using namespace Tehreer::SFNT::OS2;
-
-/**
- * NOTE: The caller needs to lock the typeface before invoking this function.
- */
-static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
-{
-    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
-    FT_Int candidate = -1;
-
-    for (FT_UInt i = 0; i < nameCount; i++) {
-        FT_SfntName record;
-        FT_Get_Sfnt_Name(face, i, &record);
-
-        if (record.name_id != nameID) {
-            continue;
-        }
-
-        Locale locale(record.platform_id, record.language_id);
-        const string *language = locale.language();
-
-        if (language && *language == "en") {
-            const string *region = locale.region();
-
-            if (record.platform_id == PlatformID::WINDOWS && region && *region == "US") {
-                return i;
-            }
-
-            if (candidate == -1 || record.platform_id == PlatformID::MACINTOSH) {
-                candidate = i;
-            }
-        }
-    }
-
-    return candidate;
-}
-
-static int32_t searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
-{
-    int32_t familyName = -1;
-
-    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::WWS_FAMILY);
-    }
-    if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_FAMILY);
-    }
-    if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::FONT_FAMILY);
-    }
-
-    return familyName;
-}
-
-static int32_t searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
-{
-    int32_t styleName = -1;
-
-    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::WWS_SUBFAMILY);
-    }
-    if (styleName == -1) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_SUBFAMILY);
-    }
-    if (styleName == -1) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::FONT_SUBFAMILY);
-    }
-
-    return styleName;
-}
-
-static int32_t searchFullNameRecordIndex(FT_Face face)
-{
-    return searchEnglishNameRecordIndex(face, NameID::FULL);
-}
-
-static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
-{
-    float value = f16Dot16toFloat(coordinate);
-
-    if (value < 1) {
-        return 1;
-    }
-    if (value > 1000) {
-        return 1000;
-    }
-
-    return static_cast<uint16_t>(value);
-}
-
-static inline uint16_t variableWidthToStandard(FT_Fixed coordinate)
-{
-    float value = f16Dot16toFloat(coordinate);
-
-    if (value < 50) {
-        return 1;
-    }
-    if (value < 125) {
-        return static_cast<uint16_t>(((value - 50) / 12.5) + 1);
-    }
-    if (value < 200) {
-        return static_cast<uint16_t>(((value - 125) / 25) + 7);
-    }
-
-    return 9;
-}
-
-static inline Typeface::Slope variableItalicToSlope(FT_Fixed coordinate)
-{
-    return coordinate >= 0x10000 ? Typeface::Slope::ITALIC : Typeface::Slope::PLAIN;
-}
-
-static inline Typeface::Slope variableSlantToSlope(FT_Fixed coordinate)
-{
-    return coordinate != 0 ? Typeface::Slope::OBLIQUE : Typeface::Slope::PLAIN;
-}
 
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
@@ -176,7 +44,7 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
         FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
             auto renderableFace = RenderableFace::create(ftFace);
-            auto instance = new Instance(fontFile, renderableFace);
+            auto instance = IntrinsicFace::create(fontFile, renderableFace);
             auto typeface = new Typeface(instance);
 
             instance->release();
@@ -189,185 +57,7 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     return nullptr;
 }
 
-Typeface::Instance::Instance(FontFile *fontFile, RenderableFace *renderableFace)
-    : m_familyName(-1)
-    , m_styleName(-1)
-    , m_fullName(-1)
-    , m_weight(Weight::REGULAR)
-    , m_width(Width::NORMAL)
-    , m_slope(Slope::PLAIN)
-    , m_strikeoutPosition(0)
-    , m_strikeoutThickness(0)
-{
-    m_retainCount = 1;
-    m_fontFile = fontFile->retain();
-    m_renderableFace = renderableFace->retain();
-    m_ftSize = nullptr;
-    m_ftStroker = nullptr;
-
-    FT_Face ftFace = renderableFace->ftFace();
-    FT_New_Size(ftFace, &m_ftSize);
-
-    setupDescription();
-    setupVariation();
-    setupHarfBuzz();
-}
-
-void Typeface::Instance::setupDescription()
-{
-    FT_Face ftFace = m_renderableFace->ftFace();
-    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
-    auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
-
-    m_familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
-    m_styleName = searchStyleNameRecordIndex(ftFace, os2Table);
-    m_fullName = searchFullNameRecordIndex(ftFace);
-
-    if (os2Table) {
-        m_weight = os2Table->usWeightClass;
-        m_width = os2Table->usWidthClass;
-
-        if (os2Table->fsSelection & FSSelection::OBLIQUE) {
-            m_slope = Slope::OBLIQUE;
-        } else if (os2Table->fsSelection & FSSelection::ITALIC) {
-            m_slope = Slope::ITALIC;
-        }
-
-        m_strikeoutPosition = os2Table->yStrikeoutPosition;
-        m_strikeoutThickness = os2Table->yStrikeoutSize;
-    } else if (headTable) {
-        if (headTable->Mac_Style & MacStyle::BOLD) {
-            m_weight = Weight::BOLD;
-        }
-
-        if (headTable->Mac_Style & MacStyle::CONDENSED) {
-            m_width = Width::CONDENSED;
-        } else if (headTable->Mac_Style & MacStyle::EXTENDED) {
-            m_width = Width::EXPANDED;
-        }
-
-        if (headTable->Mac_Style & MacStyle::ITALIC) {
-            m_slope = Slope::ITALIC;
-        }
-    }
-}
-
-void Typeface::Instance::setupVariation()
-{
-    FT_Face ftFace = m_renderableFace->ftFace();
-
-    FT_MM_Var *variation;
-    FT_Error error = FT_Get_MM_Var(ftFace, &variation);
-
-    if (error == FT_Err_Ok) {
-        FT_UInt numCoords = variation->num_axis;
-        FT_Fixed fixedCoords[numCoords];
-
-        if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-            // Reset the style name and the full name.
-            m_styleName = -1;
-            m_fullName = -1;
-
-            // Get the style name of this instance.
-            for (FT_UInt i = 0; i < variation->num_namedstyles; i++) {
-                FT_Var_Named_Style *namedStyle = &variation->namedstyle[i];
-                FT_Fixed *namedCoords = namedStyle->coords;
-
-                int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
-                if (result == 0) {
-                    m_styleName = searchEnglishNameRecordIndex(ftFace, static_cast<uint16_t>(namedStyle->strid));
-                    break;
-                }
-            }
-
-            // Get the values of variation axes.
-            for (FT_UInt i = 0; i < numCoords; i++) {
-                FT_Var_Axis *axis = &variation->axis[i];
-
-                switch (axis->tag) {
-                case FT_MAKE_TAG('i', 't', 'a', 'l'):
-                    m_slope = variableItalicToSlope(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('s', 'l', 'n', 't'):
-                    m_slope = variableSlantToSlope(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('w', 'd', 't', 'h'):
-                    m_width = variableWidthToStandard(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('w', 'g', 'h', 't'):
-                    m_weight = variableWeightToStandard(fixedCoords[i]);
-                    break;
-                }
-            }
-        }
-
-        FT_Done_MM_Var(FreeType::library(), variation);
-    }
-}
-
-void Typeface::Instance::setupHarfBuzz()
-{
-    m_shapableFace = ShapableFace::create(m_renderableFace);
-}
-
-Typeface::Instance::~Instance()
-{
-    m_shapableFace->release();
-
-    if (m_ftStroker) {
-        FT_Stroker_Done(m_ftStroker);
-    }
-    if (m_ftSize) {
-        m_renderableFace->lock();
-
-        FT_Done_Size(m_ftSize);
-
-        m_renderableFace->unlock();
-    }
-
-    m_renderableFace->release();
-    m_fontFile->release();
-}
-
-Typeface::Instance *Typeface::Instance::retain()
-{
-    m_retainCount++;
-    return this;
-}
-
-void Typeface::Instance::release()
-{
-    if (--m_retainCount == 0) {
-        delete this;
-    }
-}
-
-void Typeface::Instance::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
-{
-    m_renderableFace->lock();
-
-    FT_Face ftFace = m_renderableFace->ftFace();
-    FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length);
-
-    m_renderableFace->unlock();
-}
-
-FT_UInt Typeface::Instance::getGlyphID(FT_ULong codePoint)
-{
-    m_renderableFace->lock();
-
-    FT_Face ftFace = m_renderableFace->ftFace();
-    FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
-
-    m_renderableFace->unlock();
-
-    return glyphID;
-}
-
-Typeface::Typeface(Instance *instance)
+Typeface::Typeface(IntrinsicFace *instance)
 {
     m_instance = instance->retain();
     m_palette = { nullptr, 0 };
@@ -386,7 +76,7 @@ Typeface::~Typeface()
 
 Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
-    Typeface *typeface = Typeface::createFromFile(m_instance->m_fontFile, ftFace()->face_index, 0);
+    Typeface *typeface = Typeface::createFromFile(m_instance->fontFile(), ftFace()->face_index, 0);
     FT_Face ftFace = typeface->ftFace();
 
     FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
@@ -410,27 +100,14 @@ Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
     return new Typeface(*this, palette);
 }
 
-FT_Stroker Typeface::ftStroker()
-{
-    /*
-     * NOTE:
-     *      The caller is responsible to lock the mutex.
-     */
-
-    if (!m_instance->m_ftStroker) {
-        /*
-         * There is no need to lock 'library' as it is only taken to have access to FreeType's
-         * memory handling functions.
-         */
-        FT_Stroker_New(FreeType::library(), &m_instance->m_ftStroker);
-    }
-
-    return m_instance->m_ftStroker;
-}
-
 void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
     m_instance->loadSfntTable(tag, buffer, length);
+}
+
+int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
+{
+    return m_instance->searchNameRecordIndex(nameID);
 }
 
 FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
@@ -447,7 +124,7 @@ FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool ve
 
     lock();
 
-    FT_Activate_Size(m_instance->m_ftSize);
+    FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
     FT_Set_Transform(ftFace(), nullptr, nullptr);
 
@@ -523,7 +200,7 @@ jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 ty
 
     lock();
 
-    FT_Activate_Size(m_instance->m_ftSize);
+    FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
     FT_Set_Transform(ftFace(), matrix, delta);
 
@@ -682,8 +359,7 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
 static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face ftFace = typeface->ftFace();
-    int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
+    int32_t recordIndex = typeface->searchNameRecordIndex(nameID);
 
     return static_cast<jint>(recordIndex);
 }

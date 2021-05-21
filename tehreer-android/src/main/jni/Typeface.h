@@ -21,21 +21,15 @@ extern "C" {
 #include <ft2build.h>
 #include FT_COLOR_H
 #include FT_FREETYPE_H
-#include FT_SIZES_H
 #include FT_STROKER_H
-#include FT_SYSTEM_H
 }
 
-#include <android/asset_manager.h>
-#include <atomic>
-#include <cstddef>
 #include <cstdint>
 #include <hb.h>
-#include <jni.h>
-#include <mutex>
 
 #include "FontFile.h"
 #include "JavaBridge.h"
+#include "IntrinsicFace.h"
 #include "RenderableFace.h"
 #include "ShapableFace.h"
 
@@ -43,12 +37,6 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    enum Slope : uint16_t {
-        PLAIN = 0,
-        ITALIC = 1,
-        OBLIQUE = 2,
-    };
-
     struct Palette {
         FT_Color *colors;
         size_t count;
@@ -61,39 +49,40 @@ public:
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
-    void lock() { m_instance->m_renderableFace->lock(); };
-    void unlock() { m_instance->m_renderableFace->unlock(); }
+    void lock() { m_instance->renderableFace()->lock(); };
+    void unlock() { m_instance->renderableFace()->unlock(); }
 
-    FT_Face ftFace() const { return m_instance->ftFace(); }
-    FT_Size ftSize() const { return m_instance->m_ftSize; }
-    FT_Stroker ftStroker();
+    inline FT_Face ftFace() const { return m_instance->renderableFace()->ftFace(); }
+    inline FT_Size ftSize() const { return m_instance->ftSize(); }
+    inline FT_Stroker ftStroker() { return m_instance->ftStroker(); };
 
-    hb_font_t *hbFont() const { return m_instance->m_shapableFace->hbFont(); }
+    inline hb_font_t *hbFont() const { return m_instance->shapableFace()->hbFont(); }
 
-    const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
+    inline const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
 
-    int32_t familyName() const { return m_instance->m_familyName; }
-    int32_t styleName() const { return m_instance->m_styleName; }
-    int32_t fullName() const { return m_instance->m_fullName; }
+    inline int32_t familyName() const { return m_instance->familyName(); }
+    inline int32_t styleName() const { return m_instance->styleName(); }
+    inline int32_t fullName() const { return m_instance->fullName(); }
 
-    uint16_t weight() const { return m_instance->m_weight; }
-    uint16_t width() const { return m_instance->m_width; }
-    uint16_t slope() const { return m_instance->m_slope; }
+    inline uint16_t weight() const { return m_instance->weight(); }
+    inline uint16_t width() const { return m_instance->width(); }
+    inline uint16_t slope() const { return m_instance->slope(); }
 
-    uint16_t unitsPerEM() const { return ftFace()->units_per_EM; }
-    int16_t ascent() const { return ftFace()->ascender; }
-    int16_t descent() const { return -ftFace()->descender; }
-    int16_t leading() const { return ftFace()->height - (ascent() + descent()); }
+    inline uint16_t unitsPerEM() const { return m_instance->unitsPerEM(); }
+    inline int16_t ascent() const { return m_instance->ascent(); }
+    inline int16_t descent() const { return m_instance->descent(); }
+    inline int16_t leading() const { return m_instance->leading(); }
 
-    int32_t glyphCount() const { return (int32_t)ftFace()->num_glyphs; }
+    inline int32_t glyphCount() const { return m_instance->glyphCount(); }
 
-    int16_t underlinePosition() const { return ftFace()->underline_position; }
-    int16_t underlineThickness() const { return ftFace()->underline_thickness; }
+    inline int16_t underlinePosition() const { return m_instance->underlinePosition(); }
+    inline int16_t underlineThickness() const { return m_instance->underlineThickness(); }
 
-    int16_t strikeoutPosition() const { return m_instance->m_strikeoutPosition; }
-    int16_t strikeoutThickness() const { return m_instance->m_strikeoutThickness; }
+    inline int16_t strikeoutPosition() const { return m_instance->strikeoutPosition(); }
+    inline int16_t strikeoutThickness() const { return m_instance->strikeoutThickness(); }
 
     void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
+    int32_t searchNameRecordIndex(uint16_t nameID);
 
     FT_UInt getGlyphID(FT_ULong codePoint);
     FT_Fixed getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical);
@@ -102,54 +91,10 @@ public:
     jobject getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta);
 
 private:
-    class Instance {
-    private:
-        std::atomic_int m_retainCount;
-
-        FontFile *m_fontFile;
-        RenderableFace *m_renderableFace;
-        FT_Size m_ftSize;
-        FT_Stroker m_ftStroker;
-
-        ShapableFace *m_shapableFace;
-
-        int32_t m_familyName;
-        int32_t m_styleName;
-        int32_t m_fullName;
-
-        uint16_t m_weight;
-        uint16_t m_width;
-        uint16_t m_slope;
-
-        int16_t m_strikeoutPosition;
-        int16_t m_strikeoutThickness;
-
-        Instance(FontFile *fontFile, RenderableFace *renderableFace);
-        ~Instance();
-
-        void setupDescription();
-        void setupVariation();
-        void setupHarfBuzz();
-
-        Instance *retain();
-        void release();
-
-        void lock() { m_renderableFace->lock(); };
-        void unlock() { m_renderableFace->unlock(); }
-
-        FT_Face ftFace() const { return m_renderableFace->ftFace(); }
-
-        void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
-
-        FT_UInt getGlyphID(FT_ULong codePoint);
-
-        friend class Typeface;
-    };
-
-    Instance *m_instance;
+    IntrinsicFace *m_instance;
     Palette m_palette;
 
-    Typeface(Instance *instance);
+    Typeface(IntrinsicFace *instance);
     Typeface(const Typeface &typeface, const Palette &palette);
 };
 
