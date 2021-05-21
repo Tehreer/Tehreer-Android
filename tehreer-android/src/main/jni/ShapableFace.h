@@ -28,6 +28,7 @@ namespace Tehreer {
 class ShapableFace {
 public:
     static ShapableFace *create(RenderableFace *renderableFace);
+    static ShapableFace *create(ShapableFace *parent, RenderableFace *renderableFace);
     ~ShapableFace();
 
     ShapableFace *retain();
@@ -39,11 +40,15 @@ private:
     static hb_font_funcs_t *createFontFuncs();
     static hb_font_funcs_t *defaultFontFuncs();
 
+    ShapableFace *m_rootFace;
+
     RenderableFace *m_renderableFace;
     hb_font_t *m_hbFont;
+
     std::atomic_int m_retainCount;
 
     ShapableFace(RenderableFace *renderableFace);
+    ShapableFace(ShapableFace *parent, RenderableFace *renderableFace);
 
     inline FT_Face ftFace() const { return m_renderableFace->ftFace(); }
 };

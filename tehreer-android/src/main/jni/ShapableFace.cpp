@@ -181,9 +181,19 @@ ShapableFace *ShapableFace::create(RenderableFace *renderableFace)
     return nullptr;
 }
 
+ShapableFace *ShapableFace::create(ShapableFace *parent, RenderableFace *renderableFace)
+{
+    if (parent && renderableFace) {
+        return new ShapableFace(parent, renderableFace);
+    }
+
+    return nullptr;
+}
+
 ShapableFace::ShapableFace(RenderableFace *renderableFace)
-    : m_retainCount(1)
+    : m_rootFace(nullptr)
     , m_renderableFace(renderableFace)
+    , m_retainCount(1)
 {
     FT_Face ftFace = renderableFace->ftFace();
 
@@ -225,10 +235,28 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
     hb_face_destroy(hbFace);
 }
 
+ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
+    : m_rootFace(nullptr)
+    , m_renderableFace(renderableFace)
+    , m_retainCount(1)
+{
+    ShapableFace *rootFace = parent->m_rootFace ?: parent;
+    hb_font_t *rootFont = rootFace->hbFont();
+
+    m_hbFont = hb_font_create_sub_font(rootFont);
+    hb_font_set_funcs(m_hbFont, defaultFontFuncs(), this, nullptr);
+
+    m_rootFace = rootFace->retain();
+}
+
 ShapableFace::~ShapableFace()
 {
     hb_font_destroy(m_hbFont);
     m_renderableFace->release();
+
+    if (m_rootFace) {
+        m_rootFace->release();
+    }
 }
 
 ShapableFace *ShapableFace::retain()
