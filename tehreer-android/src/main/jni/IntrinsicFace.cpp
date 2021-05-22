@@ -183,6 +183,32 @@ IntrinsicFace::IntrinsicFace(FontFile *fontFile, RenderableFace *renderableFace)
     setupHarfBuzz();
 }
 
+IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UInt coordCount)
+    : m_fontFile(nullptr)
+    , m_renderableFace(nullptr)
+    , m_ftSize(nullptr)
+    , m_ftStroker(nullptr)
+    , m_shapableFace(nullptr)
+    , m_strikeoutPosition(0)
+    , m_strikeoutThickness(0)
+    , m_retainCount(1)
+{
+    FontFile *fontFile = parent->m_fontFile;
+    FT_Long faceIndex = parent->m_renderableFace->ftFace()->face_index;
+
+    m_fontFile = fontFile->retain();
+    m_renderableFace = RenderableFace::create(m_fontFile->createFace(faceIndex, 0));
+    m_defaults = parent->m_defaults;
+
+    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
+
+    setupSize();
+    setupStrikeout();
+    setupVariation();
+    setupHarfBuzz();
+}
+
 void IntrinsicFace::setupSize()
 {
     FT_New_Size(m_renderableFace->ftFace(), &m_ftSize);
@@ -225,7 +251,6 @@ void IntrinsicFace::setupDescription()
     }
 
     m_defaults.description = description;
-    m_description = description;
 }
 
 void IntrinsicFace::setupStrikeout()
@@ -338,6 +363,11 @@ void IntrinsicFace::release()
     if (--m_retainCount == 0) {
         delete this;
     }
+}
+
+IntrinsicFace *IntrinsicFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+{
+    return new IntrinsicFace(this, coordArray, coordCount);
 }
 
 void IntrinsicFace::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)

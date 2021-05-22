@@ -50,6 +50,8 @@ private:
     ShapableFace(RenderableFace *renderableFace);
     ShapableFace(ShapableFace *parent, RenderableFace *renderableFace);
 
+    void setupCoordinates();
+
     inline FT_Face ftFace() const { return m_renderableFace->ftFace(); }
 };
 

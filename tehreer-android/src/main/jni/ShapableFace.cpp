@@ -18,9 +18,11 @@ extern "C" {
 #include <ft2build.h>
 #include FT_ADVANCES_H
 #include FT_FREETYPE_H
+#include FT_MULTIPLE_MASTERS_H
 #include FT_TRUETYPE_TABLES_H
 }
 
+#include "FreeType.h"
 #include "ShapableFace.h"
 
 using namespace std;
@@ -233,6 +235,8 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
     hb_font_set_funcs(m_hbFont, defaultFontFuncs(), this, nullptr);
 
     hb_face_destroy(hbFace);
+
+    setupCoordinates();
 }
 
 ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
@@ -247,6 +251,34 @@ ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
     hb_font_set_funcs(m_hbFont, defaultFontFuncs(), this, nullptr);
 
     m_rootFace = rootFace->retain();
+
+    setupCoordinates();
+}
+
+void ShapableFace::setupCoordinates()
+{
+    FT_Face ftFace = m_renderableFace->ftFace();
+
+    FT_MM_Var *variation;
+    FT_Error error = FT_Get_MM_Var(ftFace, &variation);
+
+    if (error == FT_Err_Ok) {
+        FT_UInt numCoords = variation->num_axis;
+        FT_Fixed ftCoords[numCoords];
+
+        if (FT_Get_Var_Blend_Coordinates(ftFace, numCoords, ftCoords) == FT_Err_Ok) {
+            int coordArray[numCoords];
+
+            // Convert the FreeType's F16DOT16 coordinates to normalized format.
+            for (FT_UInt i = 0; i < numCoords; i++) {
+                coordArray[i] = ftCoords[i] >> 2;
+            }
+
+            hb_font_set_var_coords_normalized(m_hbFont, coordArray, numCoords);
+        }
+
+        FT_Done_MM_Var(FreeType::library(), variation);
+    }
 }
 
 ShapableFace::~ShapableFace()

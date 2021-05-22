@@ -76,10 +76,8 @@ Typeface::~Typeface()
 
 Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
-    Typeface *typeface = Typeface::createFromFile(m_instance->fontFile(), ftFace()->face_index, 0);
-    FT_Face ftFace = typeface->ftFace();
-
-    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
+    IntrinsicFace *instance = m_instance->deriveVariation(coordArray, coordCount);
+    auto typeface = new Typeface(instance);
 
     return typeface;
 }

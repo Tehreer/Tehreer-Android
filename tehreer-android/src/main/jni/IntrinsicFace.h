@@ -45,6 +45,8 @@ public:
     static IntrinsicFace *create(FontFile *fontFile, RenderableFace *renderableFace);
     ~IntrinsicFace();
 
+    IntrinsicFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
+
     inline FontFile *fontFile() const { return m_fontFile; }
 
     inline RenderableFace *renderableFace() const { return m_renderableFace; }
