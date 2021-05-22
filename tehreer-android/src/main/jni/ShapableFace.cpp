@@ -194,7 +194,7 @@ ShapableFace *ShapableFace::create(ShapableFace *parent, RenderableFace *rendera
 
 ShapableFace::ShapableFace(RenderableFace *renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(renderableFace)
+    , m_renderableFace(renderableFace->retain())
     , m_retainCount(1)
 {
     FT_Face ftFace = renderableFace->ftFace();
@@ -241,7 +241,7 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
 
 ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(renderableFace)
+    , m_renderableFace(renderableFace->retain())
     , m_retainCount(1)
 {
     ShapableFace *rootFace = parent->m_rootFace ?: parent;
