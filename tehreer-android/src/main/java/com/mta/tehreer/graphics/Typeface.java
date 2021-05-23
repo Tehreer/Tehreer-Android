@@ -352,16 +352,7 @@ public class Typeface {
         checkNotNull(coordinates, "coordinates");
         checkArgument(coordinates.length == variationAxes.size(), "The number of coordinates does not match with variation axes.");
 
-        Typeface typeface = new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
-
-        if (paletteEntryNames != null) {
-            int[] colors = getAssociatedColors();
-            if (colors != null) {
-                typeface = typeface.getColorInstance(colors);
-            }
-        }
-
-        return typeface;
+        return new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
     }
 
     /**
