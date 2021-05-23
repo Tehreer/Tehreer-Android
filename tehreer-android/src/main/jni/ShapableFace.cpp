@@ -181,15 +181,6 @@ ShapableFace *ShapableFace::create(RenderableFace *renderableFace)
     return nullptr;
 }
 
-ShapableFace *ShapableFace::create(ShapableFace *parent, RenderableFace *renderableFace)
-{
-    if (parent && renderableFace) {
-        return new ShapableFace(parent, renderableFace);
-    }
-
-    return nullptr;
-}
-
 ShapableFace::ShapableFace(RenderableFace *renderableFace)
     : m_rootFace(nullptr)
     , m_renderableFace(renderableFace->retain())
@@ -296,4 +287,9 @@ void ShapableFace::release()
     if (--m_retainCount == 0) {
         delete this;
     }
+}
+
+ShapableFace *ShapableFace::deriveVariation(RenderableFace *renderableFace)
+{
+    return new ShapableFace(this, renderableFace);
 }

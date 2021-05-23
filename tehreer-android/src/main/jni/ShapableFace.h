@@ -28,8 +28,9 @@ namespace Tehreer {
 class ShapableFace {
 public:
     static ShapableFace *create(RenderableFace *renderableFace);
-    static ShapableFace *create(ShapableFace *parent, RenderableFace *renderableFace);
     ~ShapableFace();
+
+    ShapableFace *deriveVariation(RenderableFace *renderableFace);
 
     ShapableFace *retain();
     void release();
