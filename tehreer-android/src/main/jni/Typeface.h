@@ -95,6 +95,7 @@ private:
     Palette m_palette;
 
     Typeface(IntrinsicFace *instance);
+    Typeface(const Typeface &typeface, IntrinsicFace *instance);
     Typeface(const Typeface &typeface, const Palette &palette);
 };
 

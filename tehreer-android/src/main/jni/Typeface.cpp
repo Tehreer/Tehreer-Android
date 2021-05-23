@@ -27,6 +27,7 @@ extern "C" {
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdint>
+#include <cstring>
 #include <jni.h>
 
 #include "Convert.h"
@@ -63,6 +64,15 @@ Typeface::Typeface(IntrinsicFace *instance)
     m_palette = { nullptr, 0 };
 }
 
+Typeface::Typeface(const Typeface &typeface, IntrinsicFace *instance)
+{
+    m_instance = instance->retain();
+    m_palette.count = typeface.m_palette.count;
+    m_palette.colors = new FT_Color[m_palette.count];
+
+    memcpy(m_palette.colors, typeface.m_palette.colors, sizeof(FT_Color) * m_palette.count);
+}
+
 Typeface::Typeface(const Typeface &typeface, const Palette &palette)
 {
     m_instance = typeface.m_instance->retain();
@@ -77,7 +87,9 @@ Typeface::~Typeface()
 Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
     IntrinsicFace *instance = m_instance->deriveVariation(coordArray, coordCount);
-    auto typeface = new Typeface(instance);
+    auto typeface = new Typeface(*this, instance);
+
+    instance->release();
 
     return typeface;
 }
