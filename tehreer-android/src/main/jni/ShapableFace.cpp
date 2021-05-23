@@ -22,11 +22,15 @@ extern "C" {
 #include FT_TRUETYPE_TABLES_H
 }
 
+#include <mutex>
+
 #include "FreeType.h"
 #include "ShapableFace.h"
 
 using namespace std;
 using namespace Tehreer;
+
+using FaceLock = lock_guard<RenderableFace>;
 
 hb_font_funcs_t *ShapableFace::createFontFuncs()
 {
@@ -38,20 +42,18 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                    void *userData) -> hb_bool_t
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
+
         FT_UInt glyphID = FT_Get_Char_Index(ftFace, unicode);
-        bool found = false;
-
-        if (glyphID) {
-            *glyph = glyphID;
-            found = true;
+        if (!glyphID) {
+            return false;
         }
 
-        instance->m_renderableFace->unlock();
-
-        return found;
+        *glyph = glyphID;
+        return true;
     }, nullptr, nullptr);
 
     hb_font_funcs_set_nominal_glyphs_func(funcs, [](hb_font_t *font, void *object,
@@ -63,9 +65,11 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                     void *user_data) -> unsigned int
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
+
         unsigned int done;
 
         auto unicodePtr = reinterpret_cast<const uint8_t *>(firstUnicode);
@@ -87,8 +91,6 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
             glyphPtr += glyphStride;
         }
 
-        instance->m_renderableFace->unlock();
-
         return done;
     }, nullptr, nullptr);
 
@@ -99,20 +101,18 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                      void *userData) -> hb_bool_t
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
+
         FT_UInt glyphID = FT_Face_GetCharVariantIndex(ftFace, unicode, variationSelector);
-        bool found = false;
-
-        if (glyphID) {
-            *glyph = glyphID;
-            found = true;
+        if (!glyphID) {
+            return false;
         }
 
-        instance->m_renderableFace->unlock();
-
-        return found;
+        *glyph = glyphID;
+        return true;
     }, nullptr, nullptr);
 
     hb_font_funcs_set_glyph_h_advance_func(funcs, [](hb_font_t *font, void *object,
@@ -120,14 +120,13 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                      void *userData) -> hb_position_t
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
 
         FT_Fixed advance = 0;
         FT_Get_Advance(ftFace, glyph, FT_LOAD_NO_SCALE, &advance);
-
-        instance->m_renderableFace->unlock();
 
         return advance;
     }, nullptr, nullptr);
@@ -141,9 +140,10 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                       void *user_data) -> void
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
 
         auto glyphPtr = reinterpret_cast<const uint8_t *>(firstGlyph);
         auto advancePtr = reinterpret_cast<uint8_t *>(firstAdvance);
@@ -160,8 +160,6 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
             glyphPtr += glyphStride;
             advancePtr += advanceStride;
         }
-
-        instance->m_renderableFace->unlock();
     }, nullptr, nullptr);
 
     hb_font_funcs_make_immutable(funcs);
@@ -203,29 +201,25 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
                                                      void *object) -> hb_blob_t *
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
-        instance->m_renderableFace->lock();
 
-        FT_Face ftFace = instance->ftFace();
-        void *memory = nullptr;
-        
+        RenderableFace &renderableFace = instance->renderableFace();
+        FaceLock lock(renderableFace);
+        FT_Face ftFace = renderableFace.ftFace();
+
         FT_ULong length = 0;
         FT_Load_Sfnt_Table(ftFace, tag, 0, nullptr, &length);
 
-        if (length > 0) {
-            memory = malloc(length);
-
-            auto buffer = reinterpret_cast<FT_Byte *>(memory);
-            FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, nullptr);
+        if (length == 0) {
+            return nullptr;
         }
 
-        instance->m_renderableFace->unlock();
+        void *memory = malloc(length);
 
-        if (memory) {
-            auto buffer = reinterpret_cast<const char *>(memory);
-            return hb_blob_create(buffer, length, HB_MEMORY_MODE_WRITABLE, nullptr, free);
-        }
+        auto buffer = reinterpret_cast<FT_Byte *>(memory);
+        FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, nullptr);
 
-        return nullptr;
+        return hb_blob_create(reinterpret_cast<const char *>(memory), length,
+                              HB_MEMORY_MODE_WRITABLE, nullptr, free);
     }, this, nullptr);
 
     hb_face_set_index(hbFace, ftFace->face_index);

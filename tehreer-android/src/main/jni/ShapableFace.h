@@ -52,7 +52,7 @@ private:
 
     void setupCoordinates();
 
-    inline FT_Face ftFace() const { return m_renderableFace->ftFace(); }
+    inline RenderableFace &renderableFace() const { return *m_renderableFace; }
 };
 
 }
