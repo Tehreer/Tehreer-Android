@@ -49,14 +49,14 @@ public:
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
-    void lock() { m_instance->renderableFace()->lock(); };
-    void unlock() { m_instance->renderableFace()->unlock(); }
+    void lock() { m_instance->renderableFace().lock(); };
+    void unlock() { m_instance->renderableFace().unlock(); }
 
-    inline FT_Face ftFace() const { return m_instance->renderableFace()->ftFace(); }
+    inline FT_Face ftFace() const { return m_instance->renderableFace().ftFace(); }
     inline FT_Size ftSize() const { return m_instance->ftSize(); }
     inline FT_Stroker ftStroker() { return m_instance->ftStroker(); };
 
-    inline hb_font_t *hbFont() const { return m_instance->shapableFace()->hbFont(); }
+    inline hb_font_t *hbFont() const { return m_instance->shapableFace().hbFont(); }
 
     inline const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
 

@@ -47,13 +47,13 @@ public:
 
     IntrinsicFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
 
-    inline FontFile *fontFile() const { return m_fontFile; }
+    inline FontFile &fontFile() const { return *m_fontFile; }
 
-    inline RenderableFace *renderableFace() const { return m_renderableFace; }
+    inline RenderableFace &renderableFace() const { return *m_renderableFace; }
     inline FT_Size ftSize() const { return m_ftSize; }
     FT_Stroker ftStroker();
 
-    inline ShapableFace *shapableFace() const { return m_shapableFace; }
+    inline ShapableFace &shapableFace() const { return *m_shapableFace; }
 
     inline int32_t familyName() const { return m_description.familyName; }
     inline int32_t styleName() const { return m_description.styleName; }

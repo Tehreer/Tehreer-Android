@@ -327,7 +327,7 @@ void IntrinsicFace::setupVariation()
 void IntrinsicFace::setupHarfBuzz(IntrinsicFace *parent)
 {
     if (parent) {
-        m_shapableFace = parent->shapableFace()->deriveVariation(m_renderableFace);
+        m_shapableFace = parent->shapableFace().deriveVariation(m_renderableFace);
     } else {
         m_shapableFace = ShapableFace::create(m_renderableFace);
     }
