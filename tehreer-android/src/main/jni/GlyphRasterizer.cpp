@@ -265,7 +265,7 @@ jobject GlyphRasterizer::getGlyphPath(const JavaBridge bridge, FT_UInt glyphID)
     FT_Face face = m_typeface.ftFace();
     unsafeActivate(face, &transform);
 
-    jobject glyphPath = m_typeface.getGlyphPathNoLock(bridge, glyphID);
+    jobject glyphPath = m_typeface.unsafeGetGlyphPath(bridge, glyphID);
 
     m_typeface.unlock();
 

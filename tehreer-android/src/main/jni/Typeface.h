@@ -85,7 +85,7 @@ public:
     FT_UInt getGlyphID(FT_ULong codePoint);
     float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);
 
-    jobject getGlyphPathNoLock(JavaBridge bridge, uint16_t glyphID);
+    jobject unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID);
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:

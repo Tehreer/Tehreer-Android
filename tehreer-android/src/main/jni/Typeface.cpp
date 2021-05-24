@@ -124,101 +124,14 @@ float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
     return m_instance->getGlyphAdvance(glyphID, typeSize, vertical);
 }
 
-jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, uint16_t glyphID)
+jobject Typeface::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
 {
-    jobject glyphPath = nullptr;
-
-    FT_Error error = FT_Load_Glyph(ftFace(), glyphID, FT_LOAD_NO_BITMAP);
-    if (error == FT_Err_Ok) {
-        struct PathContext {
-            JavaBridge bridge;
-            jobject path;
-        };
-
-        FT_Outline_Funcs funcs;
-        funcs.move_to = [](const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_moveTo(context->path,
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.line_to = [](const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_lineTo(context->path,
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.conic_to = [](const FT_Vector *control1, const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_quadTo(context->path,
-                                        f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.cubic_to = [](const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_cubicTo(context->path,
-                                         f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                         f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
-                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.shift = 0;
-        funcs.delta = 0;
-
-        PathContext context = { bridge, bridge.Path_construct() };
-
-        FT_Outline *outline = &ftFace()->glyph->outline;
-        error = FT_Outline_Decompose(outline, &funcs, &context);
-        if (error == FT_Err_Ok) {
-            glyphPath = context.path;
-        }
-    }
-
-    return glyphPath;
+    return m_instance->unsafeGetGlyphPath(bridge, glyphID);
 }
 
 jobject Typeface::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
 {
-    jobject glyphPath = nullptr;
-
-    FT_Matrix matrix;
-    FT_Vector delta;
-
-    if (!transform) {
-        matrix = { 0x10000, 0, 0, -0x10000 };
-        delta = { 0, 0 };
-    } else {
-        FT_Matrix actual = {
-            toF16Dot16(transform[0]), toF16Dot16(transform[1]),
-            toF16Dot16(transform[3]), toF16Dot16(transform[4]),
-        };
-        FT_Matrix flip = { 1, 0, 0, -1 };
-
-        matrix = {
-            (actual.xx * flip.xx) + (actual.xy * flip.yx), (actual.xx * flip.xy) + (actual.xy * flip.yy),
-            (actual.yx * flip.xx) + (actual.yy * flip.yx), (actual.yx * flip.xy) + (actual.yy * flip.yy)
-        };
-        delta = {
-            toF26Dot6(transform[2]), toF26Dot6(transform[5]),
-        };
-    }
-
-    lock();
-
-    FT_Activate_Size(ftSize());
-    FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
-    FT_Set_Transform(ftFace(), &matrix, &delta);
-
-    glyphPath = getGlyphPathNoLock(bridge, glyphID);
-
-    unlock();
-
-    return glyphPath;
+    return m_instance->getGlyphPath(bridge, glyphID, typeSize, transform);
 }
 
 static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)
