@@ -124,7 +124,7 @@ float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
     return m_instance->getGlyphAdvance(glyphID, typeSize, vertical);
 }
 
-jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
+jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, uint16_t glyphID)
 {
     jobject glyphPath = nullptr;
 
@@ -182,15 +182,37 @@ jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
     return glyphPath;
 }
 
-jobject Typeface::getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta)
+jobject Typeface::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
 {
     jobject glyphPath = nullptr;
+
+    FT_Matrix matrix;
+    FT_Vector delta;
+
+    if (!transform) {
+        matrix = { 0x10000, 0, 0, -0x10000 };
+        delta = { 0, 0 };
+    } else {
+        FT_Matrix actual = {
+            toF16Dot16(transform[0]), toF16Dot16(transform[1]),
+            toF16Dot16(transform[3]), toF16Dot16(transform[4]),
+        };
+        FT_Matrix flip = { 1, 0, 0, -1 };
+
+        matrix = {
+            (actual.xx * flip.xx) + (actual.xy * flip.yx), (actual.xx * flip.xy) + (actual.xy * flip.yy),
+            (actual.yx * flip.xx) + (actual.yy * flip.yx), (actual.yx * flip.xy) + (actual.yy * flip.yy)
+        };
+        delta = {
+            toF26Dot6(transform[2]), toF26Dot6(transform[5]),
+        };
+    }
 
     lock();
 
     FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
-    FT_Set_Transform(ftFace(), matrix, delta);
+    FT_Set_Transform(ftFace(), &matrix, &delta);
 
     glyphPath = getGlyphPathNoLock(bridge, glyphID);
 
@@ -453,34 +475,13 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     auto glyphIndex = static_cast<FT_UInt>(glyphId);
-    FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
-    FT_Matrix transform;
-    FT_Vector delta;
 
-    if (!matrixArray) {
-        transform = { 0x10000, 0, 0, -0x10000 };
-        delta = { 0, 0 };
-    } else {
-        jfloat *matrixValues = env->GetFloatArrayElements(matrixArray, nullptr);
+    jfloat *transform = env->GetFloatArrayElements(matrixArray, nullptr);
+    jobject glyphPath = typeface->getGlyphPath(JavaBridge(env), glyphIndex, typeSize, transform);
 
-        FT_Matrix actual = {
-            toF16Dot16(matrixValues[0]), toF16Dot16(matrixValues[1]),
-            toF16Dot16(matrixValues[3]), toF16Dot16(matrixValues[4]),
-        };
-        FT_Matrix flip = { 1, 0, 0, -1 };
+    env->ReleaseFloatArrayElements(matrixArray, transform, 0);
 
-        transform = {
-            (actual.xx * flip.xx) + (actual.xy * flip.yx), (actual.xx * flip.xy) + (actual.xy * flip.yy),
-            (actual.yx * flip.xx) + (actual.yy * flip.yx), (actual.yx * flip.xy) + (actual.yy * flip.yy)
-        };
-        delta = {
-            toF26Dot6(matrixValues[2]), toF26Dot6(matrixValues[5]),
-        };
-
-        env->ReleaseFloatArrayElements(matrixArray, matrixValues, 0);
-    }
-
-    return typeface->getGlyphPath(JavaBridge(env), glyphIndex, fixedSize, &transform, &delta);
+    return glyphPath;
 }
 
 static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobject rect)

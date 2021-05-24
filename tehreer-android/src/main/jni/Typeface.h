@@ -85,8 +85,8 @@ public:
     FT_UInt getGlyphID(FT_ULong codePoint);
     float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);
 
-    jobject getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID);
-    jobject getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta);
+    jobject getGlyphPathNoLock(JavaBridge bridge, uint16_t glyphID);
+    jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:
     IntrinsicFace *m_instance;
