@@ -24,8 +24,10 @@ extern "C" {
 #include FT_STROKER_H
 }
 
+#include <cstddef>
 #include <cstdint>
 #include <hb.h>
+#include <vector>
 
 #include "FontFile.h"
 #include "JavaBridge.h"
@@ -37,13 +39,9 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    struct Palette {
-        FT_Color *colors;
-        size_t count;
-    };
+    using Palette = std::vector<FT_Color>;
 
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex);
-
     ~Typeface();
 
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
@@ -58,7 +56,7 @@ public:
 
     inline hb_font_t *hbFont() const { return m_instance->shapableFace().hbFont(); }
 
-    inline const Palette *palette() const { return m_palette.count == 0 ? nullptr : &m_palette; }
+    inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
     inline int32_t familyName() const { return m_instance->familyName(); }
     inline int32_t styleName() const { return m_instance->styleName(); }
@@ -96,7 +94,7 @@ private:
 
     Typeface(IntrinsicFace *instance);
     Typeface(const Typeface &typeface, IntrinsicFace *instance);
-    Typeface(const Typeface &typeface, const Palette &palette);
+    Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount);
 };
 
 }

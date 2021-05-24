@@ -80,7 +80,7 @@ void GlyphRasterizer::unsafeActivate(FT_Face face, FT_Matrix *transform, const T
         FT_Color *colors;
         FT_Palette_Select(face, 0, &colors);
 
-        memcpy(colors, palette->colors, sizeof(FT_Color) * palette->count);
+        memcpy(colors, palette->data(), sizeof(FT_Color) * palette->size());
     }
 }
 

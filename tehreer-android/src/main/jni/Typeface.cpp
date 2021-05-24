@@ -61,22 +61,18 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
 Typeface::Typeface(IntrinsicFace *instance)
 {
     m_instance = instance->retain();
-    m_palette = { nullptr, 0 };
 }
 
 Typeface::Typeface(const Typeface &typeface, IntrinsicFace *instance)
 {
     m_instance = instance->retain();
-    m_palette.count = typeface.m_palette.count;
-    m_palette.colors = new FT_Color[m_palette.count];
-
-    memcpy(m_palette.colors, typeface.m_palette.colors, sizeof(FT_Color) * m_palette.count);
+    m_palette = typeface.m_palette;
 }
 
-Typeface::Typeface(const Typeface &typeface, const Palette &palette)
+Typeface::Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount)
 {
     m_instance = typeface.m_instance->retain();
-    m_palette = palette;
+    m_palette = Palette(colorArray, colorArray + colorCount);
 }
 
 Typeface::~Typeface()
@@ -96,18 +92,17 @@ Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 
 Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
 {
+    FT_Color colors[colorCount];
     Palette palette;
-    palette.colors = new FT_Color[colorCount];
-    palette.count = colorCount;
 
     for (size_t i = 0; i < colorCount; i++) {
-        palette.colors[i].blue = colorArray[i] & 0xFF;
-        palette.colors[i].green = (colorArray[i] >> 8) & 0xFF;
-        palette.colors[i].red = (colorArray[i] >> 16) & 0xFF;
-        palette.colors[i].alpha = colorArray[i] >> 24;
+        colors[i].blue = colorArray[i] & 0xFF;
+        colors[i].green = (colorArray[i] >> 8) & 0xFF;
+        colors[i].red = (colorArray[i] >> 16) & 0xFF;
+        colors[i].alpha = colorArray[i] >> 24;
     }
 
-    return new Typeface(*this, palette);
+    return new Typeface(*this, colors, colorCount);
 }
 
 void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
@@ -327,16 +322,16 @@ static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
 static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    const Typeface::Palette *palette = typeface->palette();
+    const Typeface::Palette &palette = *typeface->palette();
 
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
     auto colorValues = static_cast<jint *>(colorBuffer);
 
-    for (jint i = 0; i < palette->count; i++) {
-        colorValues[i] = (palette->colors[i].alpha << 24)
-                       | (palette->colors[i].red << 16)
-                       | (palette->colors[i].green << 8)
-                       | palette->colors[i].blue;
+    for (jint i = 0; i < palette.size(); i++) {
+        colorValues[i] = (palette[i].alpha << 24)
+                       | (palette[i].red << 16)
+                       | (palette[i].green << 8)
+                       | palette[i].blue;
     }
 
     env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
