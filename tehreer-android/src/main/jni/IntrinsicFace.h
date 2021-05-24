@@ -78,7 +78,9 @@ public:
 
     void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
     int32_t searchNameRecordIndex(uint16_t nameID);
+
     FT_UInt getGlyphID(FT_ULong codePoint);
+    float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);
 
     IntrinsicFace *retain();
     void release();

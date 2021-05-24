@@ -83,7 +83,7 @@ public:
     int32_t searchNameRecordIndex(uint16_t nameID);
 
     FT_UInt getGlyphID(FT_ULong codePoint);
-    FT_Fixed getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical);
+    float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);
 
     jobject getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID);
     jobject getGlyphPath(JavaBridge bridge, FT_UInt glyphID, FT_F26Dot6 typeSize, FT_Matrix *matrix, FT_Vector *delta);

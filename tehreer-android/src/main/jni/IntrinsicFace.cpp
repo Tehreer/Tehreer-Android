@@ -16,6 +16,7 @@
 
 extern "C" {
 #include <ft2build.h>
+#include FT_ADVANCES_H
 #include FT_FREETYPE_H
 #include FT_MULTIPLE_MASTERS_H
 #include FT_SFNT_NAMES_H
@@ -402,6 +403,29 @@ FT_UInt IntrinsicFace::getGlyphID(FT_ULong codePoint)
     m_renderableFace->unlock();
 
     return glyphID;
+}
+
+float IntrinsicFace::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
+{
+    FT_Int32 loadFlags = FT_LOAD_DEFAULT;
+    if (vertical) {
+        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+    }
+
+    m_renderableFace->lock();
+
+    FT_Face ftFace = m_renderableFace->ftFace();
+
+    FT_Activate_Size(ftSize());
+    FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);
+    FT_Set_Transform(ftFace, nullptr, nullptr);
+
+    FT_Fixed advance;
+    FT_Get_Advance(ftFace, glyphID, loadFlags, &advance);
+
+    m_renderableFace->unlock();
+
+    return f16Dot16toFloat(advance);
 }
 
 FT_Stroker IntrinsicFace::ftStroker()

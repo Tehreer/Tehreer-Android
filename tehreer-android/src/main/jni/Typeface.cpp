@@ -16,7 +16,6 @@
 
 extern "C" {
 #include <ft2build.h>
-#include FT_ADVANCES_H
 #include FT_COLOR_H
 #include FT_FREETYPE_H
 #include FT_MULTIPLE_MASTERS_H
@@ -120,25 +119,9 @@ FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
     return m_instance->getGlyphID(codePoint);
 }
 
-FT_Fixed Typeface::getGlyphAdvance(FT_UInt glyphID, FT_F26Dot6 typeSize, bool vertical)
+float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
 {
-    FT_Int32 loadFlags = FT_LOAD_DEFAULT;
-    if (vertical) {
-        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-    }
-
-    lock();
-
-    FT_Activate_Size(ftSize());
-    FT_Set_Char_Size(ftFace(), 0, typeSize, 0, 0);
-    FT_Set_Transform(ftFace(), nullptr, nullptr);
-
-    FT_Fixed advance;
-    FT_Get_Advance(ftFace(), glyphID, loadFlags, &advance);
-
-    unlock();
-
-    return advance;
+    return m_instance->getGlyphAdvance(glyphID, typeSize, vertical);
 }
 
 jobject Typeface::getGlyphPathNoLock(JavaBridge bridge, FT_UInt glyphID)
@@ -458,14 +441,12 @@ static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint code
     return static_cast<jint>(glyphId);
 }
 
-static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jboolean vertical)
+static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle,
+    jint glyphId, jfloat typeSize, jboolean vertical)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto glyphIndex = static_cast<FT_UInt>(glyphId);
-    FT_F26Dot6 fixedSize = toF26Dot6(typeSize);
-    FT_Fixed advance = typeface->getGlyphAdvance(glyphIndex, fixedSize, vertical);
 
-    return f16Dot16toFloat(advance);
+    return typeface->getGlyphAdvance(glyphId, typeSize, vertical);
 }
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
