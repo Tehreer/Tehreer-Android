@@ -19,6 +19,7 @@
 
 extern "C" {
 #include <ft2build.h>
+#include FT_COLOR_H
 #include FT_TYPES_H
 }
 
@@ -40,6 +41,25 @@ static inline float f16Dot16toFloat(FT_Fixed value)
 static inline float f26Dot6PosToFloat(FT_Pos value)
 {
     return static_cast<float>(value / 64.0);
+}
+
+static inline FT_Color toFTColor(uint32_t intColor)
+{
+    FT_Color ftColor;
+    ftColor.blue = intColor & 0xFF;
+    ftColor.green = (intColor >> 8) & 0xFF;
+    ftColor.red = (intColor >> 16) & 0xFF;
+    ftColor.alpha = intColor >> 24;
+
+    return ftColor;
+}
+
+static inline uint32_t toIntColor(FT_Color ftColor)
+{
+    return (ftColor.alpha << 24)
+         | (ftColor.red << 16)
+         | (ftColor.green << 8)
+         | ftColor.blue;
 }
 
 #endif

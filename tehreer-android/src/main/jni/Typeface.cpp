@@ -100,10 +100,7 @@ Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
     Palette palette;
 
     for (size_t i = 0; i < colorCount; i++) {
-        colors[i].blue = colorArray[i] & 0xFF;
-        colors[i].green = (colorArray[i] >> 8) & 0xFF;
-        colors[i].red = (colorArray[i] >> 16) & 0xFF;
-        colors[i].alpha = colorArray[i] >> 24;
+        colors[i] = toFTColor(colorArray[i]);
     }
 
     return new Typeface(*this, colors, colorCount);
@@ -193,10 +190,7 @@ void Tehreer::setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintAr
     FT_Color colorArray[colorCount];
 
     for (jint i = 0; i < colorCount; i++) {
-        colorArray[i].blue = intColors[i] & 0xFF;
-        colorArray[i].green = (intColors[i] >> 8) & 0xFF;
-        colorArray[i].red = (intColors[i] >> 16) & 0xFF;
-        colorArray[i].alpha = intColors[i] >> 24;
+        colorArray[i] = toFTColor(intColors[i]);
     }
 
     typeface->setupColors(colorArray, colorCount);
@@ -273,10 +267,7 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
     auto colorValues = static_cast<jint *>(colorBuffer);
 
     for (jint i = 0; i < palette.size(); i++) {
-        colorValues[i] = (palette[i].alpha << 24)
-                       | (palette[i].red << 16)
-                       | (palette[i].green << 8)
-                       | palette[i].blue;
+        colorValues[i] = toIntColor(palette[i]);
     }
 
     env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
