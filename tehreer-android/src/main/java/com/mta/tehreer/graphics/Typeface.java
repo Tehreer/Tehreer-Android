@@ -166,6 +166,7 @@ public class Typeface {
 
         setupVariations();
         setupPalettes();
+        setupColors();
 	    setupNames();
 	}
 
@@ -280,6 +281,12 @@ public class Typeface {
 
                 paletteEntryNames.add(name);
             }
+        }
+    }
+
+    private void setupColors() {
+        if (predefinedPalettes!= null && predefinedPalettes.size() > 0) {
+            nSetupColors(nativeTypeface, predefinedPalettes.get(0).colors());
         }
     }
 
@@ -695,6 +702,9 @@ public class Typeface {
     private static native long nCreateWithAsset(AssetManager assetManager, String path);
     private static native long nCreateWithFile(String path);
     private static native long nCreateFromStream(InputStream stream);
+
+    private static native void nSetupColors(long nativeTypeface, int[] colors);
+
 	private static native void nDispose(long nativeTypeface);
 
     private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
