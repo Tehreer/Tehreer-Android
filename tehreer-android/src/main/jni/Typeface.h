@@ -26,6 +26,7 @@ extern "C" {
 
 #include <cstddef>
 #include <cstdint>
+#include <jni.h>
 #include <hb.h>
 #include <vector>
 
@@ -95,6 +96,10 @@ private:
     Typeface(IntrinsicFace *instance);
     Typeface(const Typeface &typeface, IntrinsicFace *instance);
     Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount);
+
+    void setupColors(const FT_Color *colorArray, size_t colorCount);
+
+    friend void setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors);
 };
 
 }

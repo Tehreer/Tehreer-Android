@@ -71,6 +71,11 @@ Typeface::Typeface(const Typeface &typeface, IntrinsicFace *instance)
 Typeface::Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount)
 {
     m_instance = typeface.m_instance->retain();
+    setupColors(colorArray, colorCount);
+}
+
+void Typeface::setupColors(const FT_Color *colorArray, size_t colorCount)
+{
     m_palette = Palette(colorArray, colorArray + colorCount);
 }
 
@@ -175,6 +180,28 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
     }
 
     return 0;
+}
+
+void Tehreer::setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+
+    jint colorCount = env->GetArrayLength(colors);
+    void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
+
+    auto *intColors = static_cast<uint32_t *>(colorBuffer);
+    FT_Color colorArray[colorCount];
+
+    for (jint i = 0; i < colorCount; i++) {
+        colorArray[i].blue = intColors[i] & 0xFF;
+        colorArray[i].green = (intColors[i] >> 8) & 0xFF;
+        colorArray[i].red = (intColors[i] >> 16) & 0xFF;
+        colorArray[i].alpha = intColors[i] >> 24;
+    }
+
+    typeface->setupColors(colorArray, colorCount);
+
+    env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
 }
 
 static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -444,6 +471,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
+    { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
