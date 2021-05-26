@@ -40,21 +40,22 @@ using namespace Tehreer;
 
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
 {
-    if (fontFile) {
-        FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
-        if (ftFace) {
-            auto renderableFace = RenderableFace::create(fontFile, ftFace);
-            auto instance = IntrinsicFace::create(renderableFace);
-            auto typeface = new Typeface(instance);
-
-            instance->release();
-            renderableFace->release();
-
-            return typeface;
-        }
+    if (!fontFile) {
+        return nullptr;
     }
 
-    return nullptr;
+    RenderableFace *renderableFace = fontFile->createRenderableFace(faceIndex, instanceIndex);
+    if (!renderableFace) {
+        return nullptr;
+    }
+
+    IntrinsicFace *instance = IntrinsicFace::create(renderableFace);
+    auto typeface = new Typeface(instance);
+
+    instance->release();
+    renderableFace->release();
+
+    return typeface;
 }
 
 Typeface::Typeface(IntrinsicFace *instance)

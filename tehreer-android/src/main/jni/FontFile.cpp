@@ -29,6 +29,7 @@ extern "C" {
 #include "FreeType.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
+#include "RenderableFace.h"
 #include "Typeface.h"
 #include "StreamUtils.h"
 #include "FontFile.h"
@@ -181,7 +182,7 @@ void FontFile::release()
     }
 }
 
-FT_Face FontFile::createFace(FT_Long faceIndex, FT_Long instanceIndex)
+RenderableFace *FontFile::createRenderableFace(FT_Long faceIndex, FT_Long instanceIndex)
 {
     std::mutex &mutex = FreeType::mutex();
     mutex.lock();
@@ -198,7 +199,11 @@ FT_Face FontFile::createFace(FT_Long faceIndex, FT_Long instanceIndex)
 
     mutex.unlock();
 
-    return ftFace;
+    if (ftFace) {
+        return RenderableFace::create(this, ftFace);
+    }
+
+    return nullptr;
 }
 
 static jlong createFromAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)

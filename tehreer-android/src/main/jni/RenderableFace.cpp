@@ -60,7 +60,7 @@ RenderableFace::~RenderableFace()
 RenderableFace *RenderableFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
     FT_Long faceIndex = m_ftFace->face_index;
-    RenderableFace *renderableFace = RenderableFace::create(m_fontFile, m_fontFile->createFace(faceIndex, 0));
+    RenderableFace *renderableFace = m_fontFile->createRenderableFace(faceIndex, 0);
     FT_Face ftFace = renderableFace->ftFace();
 
     FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);

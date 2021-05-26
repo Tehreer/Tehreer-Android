@@ -31,6 +31,8 @@ extern "C" {
 
 namespace Tehreer {
 
+class RenderableFace;
+
 class FontFile {
 public:
     static FontFile *createFromAsset(AAssetManager *assetManager, const char *path);
@@ -40,7 +42,7 @@ public:
     ~FontFile();
 
     FT_Long numFaces() const { return m_numFaces; }
-    FT_Face createFace(FT_Long faceIndex, FT_Long instanceIndex);
+    RenderableFace *createRenderableFace(FT_Long faceIndex, FT_Long instanceIndex);
 
     FontFile *retain();
     void release();
