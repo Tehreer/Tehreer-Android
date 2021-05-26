@@ -158,18 +158,13 @@ static inline IntrinsicFace::Slope variableSlantToSlope(FT_Fixed coordinate)
     return coordinate != 0 ? IntrinsicFace::Slope::OBLIQUE : IntrinsicFace::Slope::PLAIN;
 }
 
-IntrinsicFace *IntrinsicFace::create(FontFile *fontFile, RenderableFace *renderableFace)
+IntrinsicFace *IntrinsicFace::create(RenderableFace *renderableFace)
 {
-    if (fontFile && renderableFace) {
-        return new IntrinsicFace(fontFile, renderableFace);
-    }
-
-    return nullptr;
+    return new IntrinsicFace(renderableFace);
 }
 
-IntrinsicFace::IntrinsicFace(FontFile *fontFile, RenderableFace *renderableFace)
-    : m_fontFile(fontFile->retain())
-    , m_renderableFace(renderableFace->retain())
+IntrinsicFace::IntrinsicFace(RenderableFace *renderableFace)
+    : m_renderableFace(renderableFace->retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
@@ -185,8 +180,7 @@ IntrinsicFace::IntrinsicFace(FontFile *fontFile, RenderableFace *renderableFace)
 }
 
 IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UInt coordCount)
-    : m_fontFile(nullptr)
-    , m_renderableFace(nullptr)
+    : m_renderableFace(nullptr)
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
@@ -194,15 +188,8 @@ IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UIn
     , m_strikeoutThickness(0)
     , m_retainCount(1)
 {
-    FontFile *fontFile = parent->m_fontFile;
-    FT_Long faceIndex = parent->m_renderableFace->ftFace()->face_index;
-
-    m_fontFile = fontFile->retain();
-    m_renderableFace = RenderableFace::create(m_fontFile->createFace(faceIndex, 0));
+    m_renderableFace = parent->renderableFace().deriveVariation(coordArray, coordCount);
     m_defaults = parent->m_defaults;
-
-    FT_Face ftFace = m_renderableFace->ftFace();
-    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
 
     setupSize();
     setupStrikeout();
@@ -351,7 +338,6 @@ IntrinsicFace::~IntrinsicFace()
     }
 
     m_renderableFace->release();
-    m_fontFile->release();
 }
 
 IntrinsicFace *IntrinsicFace::retain()

@@ -17,6 +17,7 @@
 extern "C" {
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_MULTIPLE_MASTERS_H
 }
 
 #include <mutex>
@@ -28,18 +29,19 @@ extern "C" {
 using namespace std;
 using namespace Tehreer;
 
-RenderableFace *RenderableFace::create(FT_Face ftFace)
+RenderableFace *RenderableFace::create(FontFile *fontFile, FT_Face ftFace)
 {
-    if (ftFace) {
-        return new RenderableFace(ftFace);
+    if (fontFile && ftFace) {
+        return new RenderableFace(fontFile, ftFace);
     }
 
     return nullptr;
 }
 
-RenderableFace::RenderableFace(FT_Face ftFace)
-    : m_retainCount(1)
+RenderableFace::RenderableFace(FontFile *fontFile, FT_Face ftFace)
+    : m_fontFile(fontFile->retain())
     , m_ftFace(ftFace)
+    , m_retainCount(1)
 {
 }
 
@@ -51,6 +53,19 @@ RenderableFace::~RenderableFace()
     FT_Done_Face(m_ftFace);
 
     mutex.unlock();
+
+    m_fontFile->release();
+}
+
+RenderableFace *RenderableFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+{
+    FT_Long faceIndex = m_ftFace->face_index;
+    RenderableFace *renderableFace = RenderableFace::create(m_fontFile, m_fontFile->createFace(faceIndex, 0));
+    FT_Face ftFace = renderableFace->ftFace();
+
+    FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);
+
+    return renderableFace;
 }
 
 RenderableFace *RenderableFace::retain()

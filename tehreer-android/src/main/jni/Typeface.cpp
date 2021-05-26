@@ -43,8 +43,8 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
     if (fontFile) {
         FT_Face ftFace = fontFile->createFace(faceIndex, instanceIndex);
         if (ftFace) {
-            auto renderableFace = RenderableFace::create(ftFace);
-            auto instance = IntrinsicFace::create(fontFile, renderableFace);
+            auto renderableFace = RenderableFace::create(fontFile, ftFace);
+            auto instance = IntrinsicFace::create(renderableFace);
             auto typeface = new Typeface(instance);
 
             instance->release();

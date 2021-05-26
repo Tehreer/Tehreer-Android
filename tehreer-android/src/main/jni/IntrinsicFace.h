@@ -43,12 +43,10 @@ public:
         OBLIQUE = 2,
     };
 
-    static IntrinsicFace *create(FontFile *fontFile, RenderableFace *renderableFace);
+    static IntrinsicFace *create(RenderableFace *renderableFace);
     ~IntrinsicFace();
 
     IntrinsicFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
-
-    inline FontFile &fontFile() const { return *m_fontFile; }
 
     inline RenderableFace &renderableFace() const { return *m_renderableFace; }
     inline FT_Size ftSize() const { return m_ftSize; }
@@ -116,7 +114,6 @@ private:
 
     std::mutex m_mutex;
 
-    FontFile *m_fontFile;
     RenderableFace *m_renderableFace;
     FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
@@ -131,7 +128,7 @@ private:
 
     std::atomic_int m_retainCount;
 
-    IntrinsicFace(FontFile *fontFile, RenderableFace *renderableFace);
+    IntrinsicFace(RenderableFace *renderableFace);
     IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UInt coordCount);
 
     void setupSize();

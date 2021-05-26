@@ -26,30 +26,34 @@ extern "C" {
 #include <mutex>
 
 #include "FontFile.h"
-#include "JavaBridge.h"
 
 namespace Tehreer {
 
 class RenderableFace {
 public:
-    static RenderableFace *create(FT_Face ftFace);
+    static RenderableFace *create(FontFile *fontFile, FT_Face ftFace);
     ~RenderableFace();
 
-    RenderableFace *retain();
-    void release();
+    RenderableFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
 
     inline void lock() { m_mutex.lock(); };
     inline void unlock() { m_mutex.unlock(); }
 
+    inline FontFile &fontFile() const { return *m_fontFile; }
     inline FT_Face ftFace() const { return m_ftFace; }
+
+    RenderableFace *retain();
+    void release();
 
 private:
     std::mutex m_mutex;
-    std::atomic_int m_retainCount;
 
+    FontFile *m_fontFile;
     FT_Face m_ftFace;
 
-    RenderableFace(FT_Face ftFace);
+    std::atomic_int m_retainCount;
+
+    RenderableFace(FontFile *fontFile, FT_Face ftFace);
 };
 
 }
