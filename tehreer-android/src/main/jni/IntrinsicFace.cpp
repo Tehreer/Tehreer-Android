@@ -43,6 +43,8 @@ using namespace Tehreer::SFNT::head;
 using namespace Tehreer::SFNT::name;
 using namespace Tehreer::SFNT::OS2;
 
+using FaceLock = lock_guard<RenderableFace>;
+
 /**
  * NOTE: The caller needs to lock the typeface before invoking this function.
  */
@@ -330,11 +332,8 @@ IntrinsicFace::~IntrinsicFace()
         FT_Stroker_Done(m_ftStroker);
     }
     if (m_ftSize) {
-        m_renderableFace->lock();
-
+        FaceLock lock(*m_renderableFace);
         FT_Done_Size(m_ftSize);
-
-        m_renderableFace->unlock();
     }
 
     m_renderableFace->release();
@@ -360,34 +359,28 @@ IntrinsicFace *IntrinsicFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coor
 
 void IntrinsicFace::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
-    m_renderableFace->lock();
+    FaceLock lock(*m_renderableFace);
 
     FT_Face ftFace = m_renderableFace->ftFace();
     FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length);
-
-    m_renderableFace->unlock();
 }
 
 int32_t IntrinsicFace::searchNameRecordIndex(uint16_t nameID)
 {
-    m_renderableFace->lock();
+    FaceLock lock(*m_renderableFace);
 
     FT_Face ftFace = m_renderableFace->ftFace();
     int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
-
-    m_renderableFace->unlock();
 
     return recordIndex;
 }
 
 FT_UInt IntrinsicFace::getGlyphID(FT_ULong codePoint)
 {
-    m_renderableFace->lock();
+    FaceLock lock(*m_renderableFace);
 
     FT_Face ftFace = m_renderableFace->ftFace();
     FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
-
-    m_renderableFace->unlock();
 
     return glyphID;
 }
@@ -399,8 +392,7 @@ float IntrinsicFace::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vert
         loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
     }
 
-    m_renderableFace->lock();
-
+    FaceLock lock(*m_renderableFace);
     FT_Face ftFace = m_renderableFace->ftFace();
 
     FT_Activate_Size(ftSize());
@@ -409,8 +401,6 @@ float IntrinsicFace::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vert
 
     FT_Fixed advance;
     FT_Get_Advance(ftFace, glyphID, loadFlags, &advance);
-
-    m_renderableFace->unlock();
 
     return f16Dot16toFloat(advance);
 }
@@ -475,7 +465,6 @@ jobject IntrinsicFace::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
 
 jobject IntrinsicFace::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
 {
-    jobject glyphPath = nullptr;
     FT_Matrix matrix;
     FT_Vector delta;
 
@@ -498,19 +487,14 @@ jobject IntrinsicFace::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float t
         };
     }
 
-    m_renderableFace->lock();
-
+    FaceLock lock(*m_renderableFace);
     FT_Face ftFace = m_renderableFace->ftFace();
 
     FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);
     FT_Set_Transform(ftFace, &matrix, &delta);
 
-    glyphPath = unsafeGetGlyphPath(bridge, glyphID);
-
-    m_renderableFace->unlock();
-
-    return glyphPath;
+    return unsafeGetGlyphPath(bridge, glyphID);
 }
 
 FT_Stroker IntrinsicFace::ftStroker()
