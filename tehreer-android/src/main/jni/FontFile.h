@@ -44,7 +44,7 @@ public:
     FT_Long numFaces() const { return m_numFaces; }
     RenderableFace *createRenderableFace(FT_Long faceIndex, FT_Long instanceIndex);
 
-    FontFile *retain();
+    FontFile &retain();
     void release();
 
 private:

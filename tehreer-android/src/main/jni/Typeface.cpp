@@ -60,18 +60,18 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
 
 Typeface::Typeface(IntrinsicFace *instance)
 {
-    m_instance = instance->retain();
+    m_instance = &instance->retain();
 }
 
 Typeface::Typeface(const Typeface &typeface, IntrinsicFace *instance)
 {
-    m_instance = instance->retain();
+    m_instance = &instance->retain();
     m_palette = typeface.m_palette;
 }
 
 Typeface::Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount)
 {
-    m_instance = typeface.m_instance->retain();
+    m_instance = &typeface.m_instance->retain();
     setupColors(colorArray, colorCount);
 }
 

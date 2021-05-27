@@ -169,10 +169,10 @@ FontFile::~FontFile()
     }
 }
 
-FontFile *FontFile::retain()
+FontFile &FontFile::retain()
 {
     m_retainCount++;
-    return this;
+    return *this;
 }
 
 void FontFile::release()

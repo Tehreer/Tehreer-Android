@@ -84,7 +84,7 @@ public:
     jobject unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID);
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
-    IntrinsicFace *retain();
+    IntrinsicFace &retain();
     void release();
 
 private:

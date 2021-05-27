@@ -183,7 +183,7 @@ ShapableFace *ShapableFace::create(RenderableFace *renderableFace)
 
 ShapableFace::ShapableFace(RenderableFace *renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(renderableFace->retain())
+    , m_renderableFace(&renderableFace->retain())
     , m_retainCount(1)
 {
     FT_Face ftFace = renderableFace->ftFace();
@@ -226,7 +226,7 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
 
 ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(renderableFace->retain())
+    , m_renderableFace(&renderableFace->retain())
     , m_retainCount(1)
 {
     ShapableFace *rootFace = parent->m_rootFace ?: parent;
@@ -235,7 +235,7 @@ ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
     m_hbFont = hb_font_create_sub_font(rootFont);
     hb_font_set_funcs(m_hbFont, defaultFontFuncs(), this, nullptr);
 
-    m_rootFace = rootFace->retain();
+    m_rootFace = &rootFace->retain();
 
     setupCoordinates();
 }
@@ -276,10 +276,10 @@ ShapableFace::~ShapableFace()
     }
 }
 
-ShapableFace *ShapableFace::retain()
+ShapableFace &ShapableFace::retain()
 {
     m_retainCount++;
-    return this;
+    return *this;
 }
 
 void ShapableFace::release()

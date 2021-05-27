@@ -42,7 +42,7 @@ public:
     inline FontFile &fontFile() const { return *m_fontFile; }
     inline FT_Face ftFace() const { return m_ftFace; }
 
-    RenderableFace *retain();
+    RenderableFace &retain();
     void release();
 
 private:

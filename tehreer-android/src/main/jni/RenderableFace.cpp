@@ -39,7 +39,7 @@ RenderableFace *RenderableFace::create(FontFile *fontFile, FT_Face ftFace)
 }
 
 RenderableFace::RenderableFace(FontFile *fontFile, FT_Face ftFace)
-    : m_fontFile(fontFile->retain())
+    : m_fontFile(&fontFile->retain())
     , m_ftFace(ftFace)
     , m_retainCount(1)
 {
@@ -68,10 +68,10 @@ RenderableFace *RenderableFace::deriveVariation(FT_Fixed *coordArray, FT_UInt co
     return renderableFace;
 }
 
-RenderableFace *RenderableFace::retain()
+RenderableFace &RenderableFace::retain()
 {
     m_retainCount++;
-    return this;
+    return *this;
 }
 
 void RenderableFace::release()

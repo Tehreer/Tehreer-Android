@@ -166,7 +166,7 @@ IntrinsicFace *IntrinsicFace::create(RenderableFace *renderableFace)
 }
 
 IntrinsicFace::IntrinsicFace(RenderableFace *renderableFace)
-    : m_renderableFace(renderableFace->retain())
+    : m_renderableFace(&renderableFace->retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
@@ -339,10 +339,10 @@ IntrinsicFace::~IntrinsicFace()
     m_renderableFace->release();
 }
 
-IntrinsicFace *IntrinsicFace::retain()
+IntrinsicFace &IntrinsicFace::retain()
 {
     m_retainCount++;
-    return this;
+    return *this;
 }
 
 void IntrinsicFace::release()

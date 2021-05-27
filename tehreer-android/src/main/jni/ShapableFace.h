@@ -32,7 +32,7 @@ public:
 
     ShapableFace *deriveVariation(RenderableFace *renderableFace);
 
-    ShapableFace *retain();
+    ShapableFace &retain();
     void release();
 
     inline hb_font_t *hbFont() const { return m_hbFont; }
