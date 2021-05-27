@@ -200,7 +200,7 @@ RenderableFace *FontFile::createRenderableFace(FT_Long faceIndex, FT_Long instan
     mutex.unlock();
 
     if (ftFace) {
-        return RenderableFace::create(this, ftFace);
+        return RenderableFace::create(*this, ftFace);
     }
 
     return nullptr;

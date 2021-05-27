@@ -48,37 +48,37 @@ public:
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
-    void lock() { m_instance->renderableFace().lock(); };
-    void unlock() { m_instance->renderableFace().unlock(); }
+    void lock() { m_instance.renderableFace().lock(); };
+    void unlock() { m_instance.renderableFace().unlock(); }
 
-    inline FT_Face ftFace() const { return m_instance->renderableFace().ftFace(); }
-    inline FT_Size ftSize() const { return m_instance->ftSize(); }
-    inline FT_Stroker ftStroker() { return m_instance->ftStroker(); };
+    inline FT_Face ftFace() const { return m_instance.renderableFace().ftFace(); }
+    inline FT_Size ftSize() const { return m_instance.ftSize(); }
+    inline FT_Stroker ftStroker() { return m_instance.ftStroker(); };
 
-    inline hb_font_t *hbFont() const { return m_instance->shapableFace().hbFont(); }
+    inline hb_font_t *hbFont() const { return m_instance.shapableFace().hbFont(); }
 
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
-    inline int32_t familyName() const { return m_instance->familyName(); }
-    inline int32_t styleName() const { return m_instance->styleName(); }
-    inline int32_t fullName() const { return m_instance->fullName(); }
+    inline int32_t familyName() const { return m_instance.familyName(); }
+    inline int32_t styleName() const { return m_instance.styleName(); }
+    inline int32_t fullName() const { return m_instance.fullName(); }
 
-    inline uint16_t weight() const { return m_instance->weight(); }
-    inline uint16_t width() const { return m_instance->width(); }
-    inline uint16_t slope() const { return m_instance->slope(); }
+    inline uint16_t weight() const { return m_instance.weight(); }
+    inline uint16_t width() const { return m_instance.width(); }
+    inline uint16_t slope() const { return m_instance.slope(); }
 
-    inline uint16_t unitsPerEM() const { return m_instance->unitsPerEM(); }
-    inline int16_t ascent() const { return m_instance->ascent(); }
-    inline int16_t descent() const { return m_instance->descent(); }
-    inline int16_t leading() const { return m_instance->leading(); }
+    inline uint16_t unitsPerEM() const { return m_instance.unitsPerEM(); }
+    inline int16_t ascent() const { return m_instance.ascent(); }
+    inline int16_t descent() const { return m_instance.descent(); }
+    inline int16_t leading() const { return m_instance.leading(); }
 
-    inline int32_t glyphCount() const { return m_instance->glyphCount(); }
+    inline int32_t glyphCount() const { return m_instance.glyphCount(); }
 
-    inline int16_t underlinePosition() const { return m_instance->underlinePosition(); }
-    inline int16_t underlineThickness() const { return m_instance->underlineThickness(); }
+    inline int16_t underlinePosition() const { return m_instance.underlinePosition(); }
+    inline int16_t underlineThickness() const { return m_instance.underlineThickness(); }
 
-    inline int16_t strikeoutPosition() const { return m_instance->strikeoutPosition(); }
-    inline int16_t strikeoutThickness() const { return m_instance->strikeoutThickness(); }
+    inline int16_t strikeoutPosition() const { return m_instance.strikeoutPosition(); }
+    inline int16_t strikeoutThickness() const { return m_instance.strikeoutThickness(); }
 
     void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
     int32_t searchNameRecordIndex(uint16_t nameID);
@@ -90,11 +90,11 @@ public:
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:
-    IntrinsicFace *m_instance;
+    IntrinsicFace &m_instance;
     Palette m_palette;
 
-    Typeface(IntrinsicFace *instance);
-    Typeface(const Typeface &typeface, IntrinsicFace *instance);
+    Typeface(IntrinsicFace &instance);
+    Typeface(const Typeface &typeface, IntrinsicFace &instance);
     Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount);
 
     void setupColors(const FT_Color *colorArray, size_t colorCount);

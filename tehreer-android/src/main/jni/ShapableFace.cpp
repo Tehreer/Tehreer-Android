@@ -172,21 +172,18 @@ hb_font_funcs_t *ShapableFace::defaultFontFuncs() {
     return defaultFontFuncs;
 }
 
-ShapableFace *ShapableFace::create(RenderableFace *renderableFace)
+ShapableFace &ShapableFace::create(RenderableFace &renderableFace)
 {
-    if (renderableFace) {
-        return new ShapableFace(renderableFace);
-    }
-
-    return nullptr;
+    auto instance = new ShapableFace(renderableFace);
+    return *instance;
 }
 
-ShapableFace::ShapableFace(RenderableFace *renderableFace)
+ShapableFace::ShapableFace(RenderableFace &renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(&renderableFace->retain())
+    , m_renderableFace(renderableFace.retain())
     , m_retainCount(1)
 {
-    FT_Face ftFace = renderableFace->ftFace();
+    FT_Face ftFace = renderableFace.ftFace();
 
     hb_face_t *hbFace = hb_face_create_for_tables([](hb_face_t *face, hb_tag_t tag,
                                                      void *object) -> hb_blob_t *
@@ -224,12 +221,12 @@ ShapableFace::ShapableFace(RenderableFace *renderableFace)
     setupCoordinates();
 }
 
-ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
+ShapableFace::ShapableFace(ShapableFace &parent, RenderableFace &renderableFace)
     : m_rootFace(nullptr)
-    , m_renderableFace(&renderableFace->retain())
+    , m_renderableFace(renderableFace.retain())
     , m_retainCount(1)
 {
-    ShapableFace *rootFace = parent->m_rootFace ?: parent;
+    ShapableFace *rootFace = parent.m_rootFace ?: &parent;
     hb_font_t *rootFont = rootFace->hbFont();
 
     m_hbFont = hb_font_create_sub_font(rootFont);
@@ -242,7 +239,7 @@ ShapableFace::ShapableFace(ShapableFace *parent, RenderableFace *renderableFace)
 
 void ShapableFace::setupCoordinates()
 {
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
 
     FT_MM_Var *variation;
     FT_Error error = FT_Get_MM_Var(ftFace, &variation);
@@ -269,7 +266,7 @@ void ShapableFace::setupCoordinates()
 ShapableFace::~ShapableFace()
 {
     hb_font_destroy(m_hbFont);
-    m_renderableFace->release();
+    m_renderableFace.release();
 
     if (m_rootFace) {
         m_rootFace->release();
@@ -289,7 +286,8 @@ void ShapableFace::release()
     }
 }
 
-ShapableFace *ShapableFace::deriveVariation(RenderableFace *renderableFace)
+ShapableFace &ShapableFace::deriveVariation(RenderableFace &renderableFace)
 {
-    return new ShapableFace(this, renderableFace);
+    auto instance = new ShapableFace(*this, renderableFace);
+    return *instance;
 }

@@ -49,29 +49,29 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Lon
         return nullptr;
     }
 
-    IntrinsicFace *instance = IntrinsicFace::create(renderableFace);
+    IntrinsicFace &instance = IntrinsicFace::create(*renderableFace);
     auto typeface = new Typeface(instance);
 
-    instance->release();
+    instance.release();
     renderableFace->release();
 
     return typeface;
 }
 
-Typeface::Typeface(IntrinsicFace *instance)
+Typeface::Typeface(IntrinsicFace &instance)
+    : m_instance(instance.retain())
 {
-    m_instance = &instance->retain();
 }
 
-Typeface::Typeface(const Typeface &typeface, IntrinsicFace *instance)
+Typeface::Typeface(const Typeface &typeface, IntrinsicFace &instance)
+    : m_instance(instance.retain())
 {
-    m_instance = &instance->retain();
     m_palette = typeface.m_palette;
 }
 
 Typeface::Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount)
+    : m_instance(typeface.m_instance.retain())
 {
-    m_instance = &typeface.m_instance->retain();
     setupColors(colorArray, colorCount);
 }
 
@@ -82,13 +82,17 @@ void Typeface::setupColors(const FT_Color *colorArray, size_t colorCount)
 
 Typeface::~Typeface()
 {
-    m_instance->release();
+    m_instance.release();
 }
 
 Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
-    IntrinsicFace *instance = m_instance->deriveVariation(coordArray, coordCount);
-    auto typeface = new Typeface(*this, instance);
+    IntrinsicFace *instance = m_instance.deriveVariation(coordArray, coordCount);
+    if (!instance) {
+        return nullptr;
+    }
+
+    auto typeface = new Typeface(*this, *instance);
 
     instance->release();
 
@@ -109,32 +113,32 @@ Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
 
 void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
-    m_instance->loadSfntTable(tag, buffer, length);
+    m_instance.loadSfntTable(tag, buffer, length);
 }
 
 int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
 {
-    return m_instance->searchNameRecordIndex(nameID);
+    return m_instance.searchNameRecordIndex(nameID);
 }
 
 FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
 {
-    return m_instance->getGlyphID(codePoint);
+    return m_instance.getGlyphID(codePoint);
 }
 
 float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
 {
-    return m_instance->getGlyphAdvance(glyphID, typeSize, vertical);
+    return m_instance.getGlyphAdvance(glyphID, typeSize, vertical);
 }
 
 jobject Typeface::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
 {
-    return m_instance->unsafeGetGlyphPath(bridge, glyphID);
+    return m_instance.unsafeGetGlyphPath(bridge, glyphID);
 }
 
 jobject Typeface::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
 {
-    return m_instance->getGlyphPath(bridge, glyphID, typeSize, transform);
+    return m_instance.getGlyphPath(bridge, glyphID, typeSize, transform);
 }
 
 static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)

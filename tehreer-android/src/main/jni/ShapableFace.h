@@ -27,10 +27,10 @@ namespace Tehreer {
 
 class ShapableFace {
 public:
-    static ShapableFace *create(RenderableFace *renderableFace);
+    static ShapableFace &create(RenderableFace &renderableFace);
     ~ShapableFace();
 
-    ShapableFace *deriveVariation(RenderableFace *renderableFace);
+    ShapableFace &deriveVariation(RenderableFace &renderableFace);
 
     ShapableFace &retain();
     void release();
@@ -43,17 +43,17 @@ private:
 
     ShapableFace *m_rootFace;
 
-    RenderableFace *m_renderableFace;
+    RenderableFace &m_renderableFace;
     hb_font_t *m_hbFont;
 
     std::atomic_int m_retainCount;
 
-    ShapableFace(RenderableFace *renderableFace);
-    ShapableFace(ShapableFace *parent, RenderableFace *renderableFace);
+    ShapableFace(RenderableFace &renderableFace);
+    ShapableFace(ShapableFace &parent, RenderableFace &renderableFace);
 
     void setupCoordinates();
 
-    inline RenderableFace &renderableFace() const { return *m_renderableFace; }
+    inline RenderableFace &renderableFace() const { return m_renderableFace; }
 };
 
 }

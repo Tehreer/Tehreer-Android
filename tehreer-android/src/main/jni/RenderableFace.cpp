@@ -29,17 +29,17 @@ extern "C" {
 using namespace std;
 using namespace Tehreer;
 
-RenderableFace *RenderableFace::create(FontFile *fontFile, FT_Face ftFace)
+RenderableFace *RenderableFace::create(FontFile &fontFile, FT_Face ftFace)
 {
-    if (fontFile && ftFace) {
-        return new RenderableFace(fontFile, ftFace);
+    if (!ftFace) {
+        return nullptr;
     }
 
-    return nullptr;
+    return new RenderableFace(fontFile, ftFace);
 }
 
-RenderableFace::RenderableFace(FontFile *fontFile, FT_Face ftFace)
-    : m_fontFile(&fontFile->retain())
+RenderableFace::RenderableFace(FontFile &fontFile, FT_Face ftFace)
+    : m_fontFile(fontFile.retain())
     , m_ftFace(ftFace)
     , m_retainCount(1)
 {
@@ -54,13 +54,13 @@ RenderableFace::~RenderableFace()
 
     mutex.unlock();
 
-    m_fontFile->release();
+    m_fontFile.release();
 }
 
 RenderableFace *RenderableFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
     FT_Long faceIndex = m_ftFace->face_index;
-    RenderableFace *renderableFace = m_fontFile->createRenderableFace(faceIndex, 0);
+    RenderableFace *renderableFace = m_fontFile.createRenderableFace(faceIndex, 0);
     FT_Face ftFace = renderableFace->ftFace();
 
     FT_Set_Var_Design_Coordinates(ftFace, coordCount, coordArray);

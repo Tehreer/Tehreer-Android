@@ -160,13 +160,14 @@ static inline IntrinsicFace::Slope variableSlantToSlope(FT_Fixed coordinate)
     return coordinate != 0 ? IntrinsicFace::Slope::OBLIQUE : IntrinsicFace::Slope::PLAIN;
 }
 
-IntrinsicFace *IntrinsicFace::create(RenderableFace *renderableFace)
+IntrinsicFace &IntrinsicFace::create(RenderableFace &renderableFace)
 {
-    return new IntrinsicFace(renderableFace);
+    auto instance = new IntrinsicFace(renderableFace);
+    return *instance;
 }
 
-IntrinsicFace::IntrinsicFace(RenderableFace *renderableFace)
-    : m_renderableFace(&renderableFace->retain())
+IntrinsicFace::IntrinsicFace(RenderableFace &renderableFace)
+    : m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
@@ -181,8 +182,8 @@ IntrinsicFace::IntrinsicFace(RenderableFace *renderableFace)
     setupHarfBuzz();
 }
 
-IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UInt coordCount)
-    : m_renderableFace(nullptr)
+IntrinsicFace::IntrinsicFace(const IntrinsicFace &parent, RenderableFace &renderableFace)
+    : m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
@@ -190,8 +191,7 @@ IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UIn
     , m_strikeoutThickness(0)
     , m_retainCount(1)
 {
-    m_renderableFace = parent->renderableFace().deriveVariation(coordArray, coordCount);
-    m_defaults = parent->m_defaults;
+    m_defaults = parent.m_defaults;
 
     setupSize();
     setupStrikeout();
@@ -201,12 +201,12 @@ IntrinsicFace::IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UIn
 
 void IntrinsicFace::setupSize()
 {
-    FT_New_Size(m_renderableFace->ftFace(), &m_ftSize);
+    FT_New_Size(m_renderableFace.ftFace(), &m_ftSize);
 }
 
 void IntrinsicFace::setupDescription()
 {
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
     auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
     auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
@@ -246,7 +246,7 @@ void IntrinsicFace::setupDescription()
 
 void IntrinsicFace::setupStrikeout()
 {
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
     auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
 
     if (os2Table) {
@@ -257,7 +257,7 @@ void IntrinsicFace::setupStrikeout()
 
 void IntrinsicFace::setupVariation()
 {
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
 
     FT_MM_Var *variation;
     FT_Error error = FT_Get_MM_Var(ftFace, &variation);
@@ -318,9 +318,9 @@ void IntrinsicFace::setupVariation()
 void IntrinsicFace::setupHarfBuzz(IntrinsicFace *parent)
 {
     if (parent) {
-        m_shapableFace = parent->shapableFace().deriveVariation(m_renderableFace);
+        m_shapableFace = &parent->shapableFace().deriveVariation(m_renderableFace);
     } else {
-        m_shapableFace = ShapableFace::create(m_renderableFace);
+        m_shapableFace = &ShapableFace::create(m_renderableFace);
     }
 }
 
@@ -332,11 +332,11 @@ IntrinsicFace::~IntrinsicFace()
         FT_Stroker_Done(m_ftStroker);
     }
     if (m_ftSize) {
-        FaceLock lock(*m_renderableFace);
+        FaceLock lock(m_renderableFace);
         FT_Done_Size(m_ftSize);
     }
 
-    m_renderableFace->release();
+    m_renderableFace.release();
 }
 
 IntrinsicFace &IntrinsicFace::retain()
@@ -354,22 +354,31 @@ void IntrinsicFace::release()
 
 IntrinsicFace *IntrinsicFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
 {
-    return new IntrinsicFace(this, coordArray, coordCount);
+    RenderableFace *renderableFace = m_renderableFace.deriveVariation(coordArray, coordCount);
+    if (!renderableFace) {
+        return nullptr;
+    }
+
+    auto instance = new IntrinsicFace(*this, *renderableFace);
+
+    renderableFace->release();
+
+    return instance;
 }
 
 void IntrinsicFace::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
 {
-    FaceLock lock(*m_renderableFace);
+    FaceLock lock(m_renderableFace);
 
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
     FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length);
 }
 
 int32_t IntrinsicFace::searchNameRecordIndex(uint16_t nameID)
 {
-    FaceLock lock(*m_renderableFace);
+    FaceLock lock(m_renderableFace);
 
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
     int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
 
     return recordIndex;
@@ -377,9 +386,9 @@ int32_t IntrinsicFace::searchNameRecordIndex(uint16_t nameID)
 
 FT_UInt IntrinsicFace::getGlyphID(FT_ULong codePoint)
 {
-    FaceLock lock(*m_renderableFace);
+    FaceLock lock(m_renderableFace);
 
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FT_Face ftFace = m_renderableFace.ftFace();
     FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
 
     return glyphID;
@@ -392,8 +401,8 @@ float IntrinsicFace::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vert
         loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
     }
 
-    FaceLock lock(*m_renderableFace);
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FaceLock lock(m_renderableFace);
+    FT_Face ftFace = m_renderableFace.ftFace();
 
     FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);
@@ -487,8 +496,8 @@ jobject IntrinsicFace::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float t
         };
     }
 
-    FaceLock lock(*m_renderableFace);
-    FT_Face ftFace = m_renderableFace->ftFace();
+    FaceLock lock(m_renderableFace);
+    FT_Face ftFace = m_renderableFace.ftFace();
 
     FT_Activate_Size(ftSize());
     FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);

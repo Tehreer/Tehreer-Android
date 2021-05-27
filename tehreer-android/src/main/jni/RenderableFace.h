@@ -31,7 +31,7 @@ namespace Tehreer {
 
 class RenderableFace {
 public:
-    static RenderableFace *create(FontFile *fontFile, FT_Face ftFace);
+    static RenderableFace *create(FontFile &fontFile, FT_Face ftFace);
     ~RenderableFace();
 
     RenderableFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
@@ -39,7 +39,7 @@ public:
     inline void lock() { m_mutex.lock(); };
     inline void unlock() { m_mutex.unlock(); }
 
-    inline FontFile &fontFile() const { return *m_fontFile; }
+    inline FontFile &fontFile() const { return m_fontFile; }
     inline FT_Face ftFace() const { return m_ftFace; }
 
     RenderableFace &retain();
@@ -48,12 +48,12 @@ public:
 private:
     std::mutex m_mutex;
 
-    FontFile *m_fontFile;
+    FontFile &m_fontFile;
     FT_Face m_ftFace;
 
     std::atomic_int m_retainCount;
 
-    RenderableFace(FontFile *fontFile, FT_Face ftFace);
+    RenderableFace(FontFile &fontFile, FT_Face ftFace);
 };
 
 }

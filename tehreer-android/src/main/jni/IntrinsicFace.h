@@ -43,12 +43,12 @@ public:
         OBLIQUE = 2,
     };
 
-    static IntrinsicFace *create(RenderableFace *renderableFace);
+    static IntrinsicFace &create(RenderableFace &renderableFace);
     ~IntrinsicFace();
 
     IntrinsicFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
 
-    inline RenderableFace &renderableFace() const { return *m_renderableFace; }
+    inline RenderableFace &renderableFace() const { return m_renderableFace; }
     inline FT_Size ftSize() const { return m_ftSize; }
     FT_Stroker ftStroker();
 
@@ -114,7 +114,7 @@ private:
 
     std::mutex m_mutex;
 
-    RenderableFace *m_renderableFace;
+    RenderableFace &m_renderableFace;
     FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
 
@@ -128,8 +128,8 @@ private:
 
     std::atomic_int m_retainCount;
 
-    IntrinsicFace(RenderableFace *renderableFace);
-    IntrinsicFace(IntrinsicFace *parent, FT_Fixed *coordArray, FT_UInt coordCount);
+    IntrinsicFace(RenderableFace &renderableFace);
+    IntrinsicFace(const IntrinsicFace &parent, RenderableFace &renderableFace);
 
     void setupSize();
     void setupStrikeout();
@@ -137,7 +137,7 @@ private:
     void setupVariation();
     void setupHarfBuzz(IntrinsicFace *parent = nullptr);
 
-    inline FT_Face ftFace() const { return m_renderableFace->ftFace(); }
+    inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
 };
 
 }
