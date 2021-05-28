@@ -263,7 +263,7 @@ void IntrinsicFace::setupVariation()
     FT_Error error = FT_Get_MM_Var(ftFace, &variation);
 
     if (error == FT_Err_Ok) {
-        Description description;
+        Description description = m_defaults.description;
 
         FT_UInt numCoords = variation->num_axis;
         FT_Fixed fixedCoords[numCoords];
