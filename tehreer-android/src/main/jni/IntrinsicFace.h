@@ -135,7 +135,7 @@ private:
     void setupStrikeout();
     void setupDescription();
     void setupVariation();
-    void setupHarfBuzz(IntrinsicFace *parent = nullptr);
+    void setupHarfBuzz(ShapableFace *parent = nullptr);
 
     inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
 };

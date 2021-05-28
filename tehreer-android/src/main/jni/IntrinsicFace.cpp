@@ -196,7 +196,7 @@ IntrinsicFace::IntrinsicFace(const IntrinsicFace &parent, RenderableFace &render
     setupSize();
     setupStrikeout();
     setupVariation();
-    setupHarfBuzz();
+    setupHarfBuzz(parent.m_shapableFace);
 }
 
 void IntrinsicFace::setupSize()
@@ -315,10 +315,10 @@ void IntrinsicFace::setupVariation()
     }
 }
 
-void IntrinsicFace::setupHarfBuzz(IntrinsicFace *parent)
+void IntrinsicFace::setupHarfBuzz(ShapableFace *parent)
 {
     if (parent) {
-        m_shapableFace = &parent->shapableFace().deriveVariation(m_renderableFace);
+        m_shapableFace = &parent->deriveVariation(m_renderableFace);
     } else {
         m_shapableFace = &ShapableFace::create(m_renderableFace);
     }
