@@ -149,6 +149,16 @@ public class Typeface {
         init(nativeTypeface);
     }
 
+    private Typeface(@NonNull Typeface typeface, long nativeVariation) {
+        this.nativeTypeface = nativeVariation;
+
+        this.variationAxes = typeface.variationAxes;
+        this.paletteEntryNames = typeface.paletteEntryNames;
+        this.predefinedPalettes = typeface.predefinedPalettes;
+
+        setupNames();
+    }
+
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
 
@@ -359,7 +369,7 @@ public class Typeface {
         checkNotNull(coordinates, "coordinates");
         checkArgument(coordinates.length == variationAxes.size(), "The number of coordinates does not match with variation axes.");
 
-        return new Typeface(nGetVariationInstance(nativeTypeface, coordinates));
+        return new Typeface(this, nGetVariationInstance(nativeTypeface, coordinates));
     }
 
     /**
