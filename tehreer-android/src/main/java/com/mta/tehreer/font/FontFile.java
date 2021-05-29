@@ -113,7 +113,7 @@ public final class FontFile {
         int faceCount = nGetFaceCount(nativeFontFile);
 
         for (int i = 0; i < faceCount; i++) {
-            Typeface firstTypeface = nCreateTypeface(nativeFontFile, i, 0);
+            Typeface firstTypeface = nCreateTypeface(nativeFontFile, i);
             List<NamedInstance> namedInstances = firstTypeface.getNamedInstances();
 
             if (namedInstances == null || namedInstances.size() == 0) {
@@ -158,7 +158,5 @@ public final class FontFile {
     private static native void nRelease(long nativeFontFile);
 
     private static native int nGetFaceCount(long nativeFontFile);
-    private static native int nGetInstanceCount(Typeface typeface);
-
-    private static native Typeface nCreateTypeface(long nativeFontFile, int faceIndex, int instanceIndex);
+    private static native Typeface nCreateTypeface(long nativeFontFile, int faceIndex);
 }
