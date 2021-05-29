@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.font.ColorPalette;
+import com.mta.tehreer.font.NamedInstance;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.sfnt.tables.cpal.ColorPaletteTable;
@@ -33,6 +34,7 @@ import com.mta.tehreer.internal.sfnt.tables.cpal.ColorRecordsArray;
 import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteLabelsArray;
 import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteTypesArray;
 import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
+import com.mta.tehreer.internal.sfnt.tables.fvar.InstanceRecord;
 import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
 import com.mta.tehreer.sfnt.tables.NameTable;
@@ -73,6 +75,7 @@ public class Typeface {
     private final @NonNull Finalizable finalizable = new Finalizable();
 
     private @Nullable List<VariationAxis> variationAxes;
+    private @Nullable List<NamedInstance> namedInstances;
 
     private @Nullable List<String> paletteEntryNames;
     private @Nullable List<ColorPalette> predefinedPalettes;
@@ -153,6 +156,8 @@ public class Typeface {
         this.nativeTypeface = nativeVariation;
 
         this.variationAxes = typeface.variationAxes;
+        this.namedInstances = typeface.namedInstances;
+
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
 
@@ -163,6 +168,8 @@ public class Typeface {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
 
         this.variationAxes = typeface.variationAxes;
+        this.namedInstances = typeface.namedInstances;
+
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
 
@@ -188,6 +195,7 @@ public class Typeface {
 
         NameTable nameTable = NameTable.from(this);
         VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
+        InstanceRecord[] instanceRecords = fvarTable.instanceRecords();
 
         variationAxes = new ArrayList<>(axisRecords.length);
 
@@ -212,6 +220,37 @@ public class Typeface {
 
             variationAxes.add(VariationAxis.of(axisTag, axisName, flags,
                                                defaultValue, minValue, maxValue));
+        }
+
+        namedInstances = new ArrayList<>(instanceRecords.length);
+
+        for (InstanceRecord instanceRecord : instanceRecords) {
+            final int styleNameId = instanceRecord.subfamilyNameID();
+            final float[] coordinates = instanceRecord.coordinates();
+            final int postScriptNameId = instanceRecord.postScriptNameID();
+
+            int nameRecordIndex = searchNameRecordIndex(styleNameId);
+            String styleName = null;
+            String postScriptName = null;
+
+            if (nameRecordIndex > -1) {
+                NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
+                styleName = nameRecord.string();
+            }
+            if (styleName == null) {
+                styleName = "";
+            }
+
+            if (postScriptNameId > -1) {
+                nameRecordIndex = searchNameRecordIndex(postScriptNameId);
+
+                if (nameRecordIndex > -1) {
+                    NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
+                    postScriptName = nameRecord.string();
+                }
+            }
+
+            namedInstances.add(NamedInstance.of(styleName, coordinates, postScriptName));
         }
     }
 
@@ -380,6 +419,14 @@ public class Typeface {
     public @Nullable List<VariationAxis> getVariationAxes() {
         if (variationAxes != null) {
             return Collections.unmodifiableList(variationAxes);
+        }
+
+        return null;
+    }
+
+    public @Nullable List<NamedInstance> getNamedInstances() {
+        if (namedInstances != null) {
+            return Collections.unmodifiableList(namedInstances);
         }
 
         return null;
