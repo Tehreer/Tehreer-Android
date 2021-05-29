@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,28 +114,17 @@ public final class FontFile {
 
         for (int i = 0; i < faceCount; i++) {
             Typeface firstTypeface = nCreateTypeface(nativeFontFile, i, 0);
-            int instanceStart = allTypefaces.size();
-            int instanceCount = nGetInstanceCount(firstTypeface);
+            List<NamedInstance> namedInstances = firstTypeface.getNamedInstances();
 
-            allTypefaces.add(firstTypeface);
+            if (namedInstances == null || namedInstances.size() == 0) {
+                allTypefaces.add(firstTypeface);
+            } else {
+                for (NamedInstance namedInstance : namedInstances) {
+                    float[] coordinates = namedInstance.coordinates();
+                    Typeface instanceTypeface = firstTypeface.getVariationInstance(coordinates);
 
-            for (int j = 1; j < instanceCount; j++) {
-                Typeface instanceTypeface = nCreateTypeface(nativeFontFile, i, j);
-                float[] instanceCoords = instanceTypeface.getVariationCoordinates();
-
-                if (instanceCoords != null) {
-                    // Remove existing duplicate instances.
-                    for (int k = allTypefaces.size() - 1; k >= instanceStart; k--) {
-                        Typeface referenceTypeface = allTypefaces.get(k);
-                        float[] referenceCoords = referenceTypeface.getVariationCoordinates();
-
-                        if (Arrays.equals(instanceCoords, referenceCoords)) {
-                            allTypefaces.remove(k);
-                        }
-                    }
+                    allTypefaces.add(instanceTypeface);
                 }
-
-                allTypefaces.add(instanceTypeface);
             }
         }
 
