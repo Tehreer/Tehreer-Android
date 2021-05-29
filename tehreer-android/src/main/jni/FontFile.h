@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ public:
     ~FontFile();
 
     FT_Long numFaces() const { return m_numFaces; }
-    RenderableFace *createRenderableFace(FT_Long faceIndex, FT_Long instanceIndex);
+    RenderableFace *createRenderableFace(FT_Long faceIndex);
 
     FontFile &retain();
     void release();

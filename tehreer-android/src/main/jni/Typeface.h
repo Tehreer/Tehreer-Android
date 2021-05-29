@@ -42,7 +42,7 @@ class Typeface {
 public:
     using Palette = std::vector<FT_Color>;
 
-    static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex);
+    static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
     ~Typeface();
 
     Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);

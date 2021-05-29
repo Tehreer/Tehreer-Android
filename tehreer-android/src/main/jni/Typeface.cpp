@@ -38,13 +38,13 @@ extern "C" {
 using namespace std;
 using namespace Tehreer;
 
-Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex, FT_Long instanceIndex)
+Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
 {
     if (!fontFile) {
         return nullptr;
     }
 
-    RenderableFace *renderableFace = fontFile->createRenderableFace(faceIndex, instanceIndex);
+    RenderableFace *renderableFace = fontFile->createRenderableFace(faceIndex);
     if (!renderableFace) {
         return nullptr;
     }
@@ -147,7 +147,7 @@ static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jst
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         AAssetManager *nativeAssetManager = AAssetManager_fromJava(env, assetManager);
         FontFile *fontFile = FontFile::createFromAsset(nativeAssetManager, utfChars);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -162,7 +162,7 @@ static jlong createWithFile(JNIEnv *env, jobject obj, jstring path)
     if (path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         FontFile *fontFile = FontFile::createFromPath(utfChars);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
 
         env->ReleaseStringUTFChars(path, utfChars);
 
@@ -176,7 +176,7 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
 {
     if (stream) {
         FontFile *fontFile = FontFile::createFromStream(JavaBridge(env), stream);
-        Typeface *typeface = Typeface::createFromFile(fontFile, 0, 0);
+        Typeface *typeface = Typeface::createFromFile(fontFile, 0);
 
         return reinterpret_cast<jlong>(typeface);
     }

@@ -182,14 +182,13 @@ void FontFile::release()
     }
 }
 
-RenderableFace *FontFile::createRenderableFace(FT_Long faceIndex, FT_Long instanceIndex)
+RenderableFace *FontFile::createRenderableFace(FT_Long faceIndex)
 {
     std::mutex &mutex = FreeType::mutex();
     mutex.lock();
 
     FT_Face ftFace = nullptr;
-    FT_Long id = (instanceIndex << 16) + faceIndex;
-    FT_Error error = FT_Open_Face(FreeType::library(), &m_args, id, &ftFace);
+    FT_Error error = FT_Open_Face(FreeType::library(), &m_args, faceIndex, &ftFace);
     if (error == FT_Err_Ok) {
         if (!FT_IS_SCALABLE(ftFace)) {
             FT_Done_Face(ftFace);
@@ -259,21 +258,11 @@ static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
     return static_cast<jint>(numFaces);
 }
 
-static jint getInstanceCount(JNIEnv *env, jobject obj, jobject jtypeface)
-{
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_Long numInstances = baseFace->style_flags >> 16;
-
-    return static_cast<jint>(numInstances);
-}
-
 static jobject createTypeface(JNIEnv *env, jobject obj,
-    jlong fontFileHandle, jint faceIndex, jint instanceIndex)
+    jlong fontFileHandle, jint faceIndex)
 {
     auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
-    Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex, instanceIndex);
+    Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex);
 
     if (typeface) {
         auto typefaceHandle = reinterpret_cast<jlong>(typeface);
@@ -291,8 +280,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nRelease", "(J)V", (void *)release },
     { "nGetFaceCount", "(J)I", (void *)getFaceCount },
-    { "nGetInstanceCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getInstanceCount },
-    { "nCreateTypeface", "(JII)Lcom/mta/tehreer/graphics/Typeface;", (void *)createTypeface },
+    { "nCreateTypeface", "(JI)Lcom/mta/tehreer/graphics/Typeface;", (void *)createTypeface },
 };
 
 jint register_com_mta_tehreer_font_FontFile(JNIEnv *env)
