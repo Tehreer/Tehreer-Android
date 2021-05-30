@@ -27,6 +27,7 @@ extern "C" {
 
 #include <jni.h>
 
+#include "Convert.h"
 #include "FreeType.h"
 #include "JavaBridge.h"
 #include "Miscellaneous.h"
@@ -304,12 +305,8 @@ static jobject getGlyphImage(JNIEnv *env, jobject obj, jlong rasterizerHandle,
 {
     auto glyphRasterizer = reinterpret_cast<GlyphRasterizer *>(rasterizerHandle);
     auto glyphIndex = static_cast<FT_UInt>(glyphId);
-
-    FT_Color ftColor;
-    ftColor.blue = foregroundColor & 0xFF;
-    ftColor.green = (foregroundColor >> 8) & 0xFF;
-    ftColor.red = (foregroundColor >> 16) & 0xFF;
-    ftColor.alpha = foregroundColor >> 24;
+    auto intColor = static_cast<uint32_t>(foregroundColor);
+    FT_Color ftColor = toFTColor(intColor);
 
     return glyphRasterizer->getGlyphImage(JavaBridge(env), glyphIndex, ftColor);
 }
