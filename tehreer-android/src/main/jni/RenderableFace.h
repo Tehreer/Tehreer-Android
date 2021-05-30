@@ -23,24 +23,30 @@ extern "C" {
 }
 
 #include <atomic>
+#include <cstddef>
 #include <mutex>
+#include <vector>
 
 #include "FontFile.h"
 
 namespace Tehreer {
+
+using CoordArray = std::vector<float>;
 
 class RenderableFace {
 public:
     static RenderableFace *create(FontFile &fontFile, FT_Face ftFace);
     ~RenderableFace();
 
-    RenderableFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
+    RenderableFace *deriveVariation(const float *coordArray, size_t coordCount);
 
     inline void lock() { m_mutex.lock(); };
     inline void unlock() { m_mutex.unlock(); }
 
     inline FontFile &fontFile() const { return m_fontFile; }
     inline FT_Face ftFace() const { return m_ftFace; }
+
+    inline const CoordArray *coordinates() const { return m_coordinates.size() == 0 ? nullptr : &m_coordinates; }
 
     RenderableFace &retain();
     void release();
@@ -50,10 +56,12 @@ private:
 
     FontFile &m_fontFile;
     FT_Face m_ftFace;
+    CoordArray m_coordinates;
 
     std::atomic_int m_retainCount;
 
     RenderableFace(FontFile &fontFile, FT_Face ftFace);
+    void setupDefaultCoordinates();
 };
 
 }

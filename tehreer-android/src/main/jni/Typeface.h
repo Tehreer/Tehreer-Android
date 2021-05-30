@@ -45,7 +45,7 @@ public:
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
     ~Typeface();
 
-    Typeface *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
+    Typeface *deriveVariation(const float *coordArray, size_t coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
     void lock() { m_instance.renderableFace().lock(); };
@@ -57,6 +57,7 @@ public:
 
     inline hb_font_t *hbFont() const { return m_instance.shapableFace().hbFont(); }
 
+    inline const CoordArray *coordinates() const { return m_instance.coordinates(); }
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
     inline int32_t familyName() const { return m_instance.familyName(); }

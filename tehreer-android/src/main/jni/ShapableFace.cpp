@@ -239,27 +239,9 @@ ShapableFace::ShapableFace(ShapableFace &parent, RenderableFace &renderableFace)
 
 void ShapableFace::setupCoordinates()
 {
-    FT_Face ftFace = m_renderableFace.ftFace();
-
-    FT_MM_Var *variation;
-    FT_Error error = FT_Get_MM_Var(ftFace, &variation);
-
-    if (error == FT_Err_Ok) {
-        FT_UInt numCoords = variation->num_axis;
-        FT_Fixed ftCoords[numCoords];
-
-        if (FT_Get_Var_Blend_Coordinates(ftFace, numCoords, ftCoords) == FT_Err_Ok) {
-            int coordArray[numCoords];
-
-            // Convert the FreeType's F16DOT16 coordinates to normalized format.
-            for (FT_UInt i = 0; i < numCoords; i++) {
-                coordArray[i] = ftCoords[i] >> 2;
-            }
-
-            hb_font_set_var_coords_normalized(m_hbFont, coordArray, numCoords);
-        }
-
-        FT_Done_MM_Var(FreeType::library(), variation);
+    const CoordArray *coordinates = m_renderableFace.coordinates();
+    if (coordinates) {
+        hb_font_set_var_coords_design(m_hbFont, coordinates->data(), coordinates->size());
     }
 }
 

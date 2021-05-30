@@ -352,7 +352,7 @@ void IntrinsicFace::release()
     }
 }
 
-IntrinsicFace *IntrinsicFace::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+IntrinsicFace *IntrinsicFace::deriveVariation(const float *coordArray, size_t coordCount)
 {
     RenderableFace *renderableFace = m_renderableFace.deriveVariation(coordArray, coordCount);
     if (!renderableFace) {

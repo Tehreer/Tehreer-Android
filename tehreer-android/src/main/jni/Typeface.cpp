@@ -85,7 +85,7 @@ Typeface::~Typeface()
     m_instance.release();
 }
 
-Typeface *Typeface::deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount)
+Typeface *Typeface::deriveVariation(const float *coordArray, size_t coordCount)
 {
     IntrinsicFace *instance = m_instance.deriveVariation(coordArray, coordCount);
     if (!instance) {
@@ -212,19 +212,13 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
 static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+
     jint numCoords = env->GetArrayLength(coordinates);
+    jfloat *coordValues = env->GetFloatArrayElements(coordinates, nullptr);
 
-    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-    auto coordValues = static_cast<jfloat *>(coordBuffer);
-    FT_Fixed fixedCoords[numCoords];
+    Typeface *variationInstance = typeface->deriveVariation(coordValues, numCoords);
 
-    for (jint i = 0; i < numCoords; i++) {
-        fixedCoords[i] = toF16Dot16(coordValues[i]);
-    }
-
-    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
-
-    Typeface *variationInstance = typeface->deriveVariation(fixedCoords, numCoords);
+    env->ReleaseFloatArrayElements(coordinates, coordValues, 0);
 
     return reinterpret_cast<jlong>(variationInstance);
 }
@@ -232,21 +226,16 @@ static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle
 static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face ftFace = typeface->ftFace();
+    const CoordArray *values = typeface->coordinates();
 
-    jint numCoords = env->GetArrayLength(coordinates);
-    FT_Fixed fixedCoords[numCoords];
+    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
+    auto coordValues = static_cast<jfloat *>(coordBuffer);
 
-    if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-        void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-        auto coordValues = static_cast<jfloat *>(coordBuffer);
-
-        for (jint i = 0; i < numCoords; i++) {
-            coordValues[i] = f16Dot16toFloat(fixedCoords[i]);
-        }
-
-        env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
+    for (jint i = 0; i < values->size(); i++) {
+        coordValues[i] = values->at(i);
     }
+
+    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
 }
 
 static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)

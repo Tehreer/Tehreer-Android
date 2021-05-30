@@ -46,13 +46,15 @@ public:
     static IntrinsicFace &create(RenderableFace &renderableFace);
     ~IntrinsicFace();
 
-    IntrinsicFace *deriveVariation(FT_Fixed *coordArray, FT_UInt coordCount);
+    IntrinsicFace *deriveVariation(const float *coordArray, size_t coordCount);
 
     inline RenderableFace &renderableFace() const { return m_renderableFace; }
     inline FT_Size ftSize() const { return m_ftSize; }
     FT_Stroker ftStroker();
 
     inline ShapableFace &shapableFace() const { return *m_shapableFace; }
+
+    inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
 
     inline int32_t familyName() const { return m_description.familyName; }
     inline int32_t styleName() const { return m_description.styleName; }
