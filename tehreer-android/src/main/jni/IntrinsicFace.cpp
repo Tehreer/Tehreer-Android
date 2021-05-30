@@ -51,7 +51,7 @@ using FaceLock = lock_guard<RenderableFace>;
 static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
 {
     FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
-    FT_Int candidate = -1;
+    int32_t candidate = -1;
 
     for (FT_UInt i = 0; i < nameCount; i++) {
         FT_SfntName record;
@@ -68,11 +68,11 @@ static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
             const string *region = locale.region();
 
             if (record.platform_id == PlatformID::WINDOWS && region && *region == "US") {
-                return i;
+                return static_cast<int32_t>(i);
             }
 
             if (candidate == -1 || record.platform_id == PlatformID::MACINTOSH) {
-                candidate = i;
+                candidate = static_cast<int32_t>(i);
             }
         }
     }
@@ -403,7 +403,7 @@ uint16_t IntrinsicFace::getGlyphID(uint32_t codePoint)
     FT_Face ftFace = m_renderableFace.ftFace();
     FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
 
-    return glyphID;
+    return static_cast<uint16_t>(glyphID);
 }
 
 float IntrinsicFace::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)

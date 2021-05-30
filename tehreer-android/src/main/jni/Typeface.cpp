@@ -194,13 +194,15 @@ void Tehreer::setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintAr
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
 
-    jint colorCount = env->GetArrayLength(colors);
+    jint numColors = env->GetArrayLength(colors);
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
 
     auto *intColors = static_cast<uint32_t *>(colorBuffer);
+    auto colorCount = static_cast<size_t>(numColors);
+
     FT_Color colorArray[colorCount];
 
-    for (jint i = 0; i < colorCount; i++) {
+    for (size_t i = 0; i < colorCount; i++) {
         colorArray[i] = toFTColor(intColors[i]);
     }
 
@@ -222,7 +224,8 @@ static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle
     jint numCoords = env->GetArrayLength(coordinates);
     jfloat *coordValues = env->GetFloatArrayElements(coordinates, nullptr);
 
-    Typeface *variationInstance = typeface->deriveVariation(coordValues, numCoords);
+    auto coordCount = static_cast<size_t>(numCoords);
+    Typeface *variationInstance = typeface->deriveVariation(coordValues, coordCount);
 
     env->ReleaseFloatArrayElements(coordinates, coordValues, 0);
 
@@ -237,7 +240,7 @@ static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHand
     void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
     auto coordValues = static_cast<jfloat *>(coordBuffer);
 
-    for (jint i = 0; i < values->size(); i++) {
+    for (size_t i = 0; i < values->size(); i++) {
         coordValues[i] = values->at(i);
     }
 
@@ -247,11 +250,14 @@ static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHand
 static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    jint numColors = env->GetArrayLength(colors);
 
+    jint numColors = env->GetArrayLength(colors);
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
+
     auto colorValues = static_cast<uint32_t *>(colorBuffer);
-    Typeface *variationInstance = typeface->deriveColor(colorValues, numColors);
+    auto colorCount = static_cast<size_t>(numColors);
+
+    Typeface *variationInstance = typeface->deriveColor(colorValues, colorCount);
 
     env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
 
@@ -266,8 +272,9 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
     void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
     auto colorValues = static_cast<jint *>(colorBuffer);
 
-    for (jint i = 0; i < palette.size(); i++) {
-        colorValues[i] = toIntColor(palette[i]);
+    for (size_t i = 0; i < palette.size(); i++) {
+        uint32_t currentColor = toIntColor(palette[i]);
+        colorValues[i] = static_cast<jint>(currentColor);
     }
 
     env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
@@ -276,25 +283,29 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto inputTag = static_cast<uint32_t>(tableTag);
 
-    size_t length = typeface->getTableLength(tableTag);
-    if (length == 0) {
+    size_t tableLength = typeface->getTableLength(inputTag);
+    if (tableLength == 0) {
         return nullptr;
     }
 
-    jbyteArray array = env->NewByteArray(length);
-    void *buffer = env->GetPrimitiveArrayCritical(array, nullptr);
-    typeface->getTableData(tableTag, buffer);
+    jint dataLength = static_cast<jint>(tableLength);
+    jbyteArray dataArray = env->NewByteArray(dataLength);
+    void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-    env->ReleasePrimitiveArrayCritical(array, buffer, 0);
+    typeface->getTableData(inputTag, dataBuffer);
 
-    return array;
+    env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
+
+    return dataArray;
 }
 
 static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t recordIndex = typeface->searchNameRecordIndex(nameID);
+    auto inputID = static_cast<uint16_t>(nameID);
+    int32_t recordIndex = typeface->searchNameRecordIndex(inputID);
 
     return static_cast<jint>(recordIndex);
 }
@@ -383,7 +394,8 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint codePoint)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_UInt glyphId = typeface->getGlyphID(static_cast<FT_ULong>(codePoint));
+    auto charCode = static_cast<uint32_t>(codePoint);
+    uint16_t glyphId = typeface->getGlyphID(charCode);
 
     return static_cast<jint>(glyphId);
 }
@@ -392,14 +404,15 @@ static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle,
     jint glyphId, jfloat typeSize, jboolean vertical)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto glyphIndex = static_cast<uint16_t>(glyphId);
 
-    return typeface->getGlyphAdvance(glyphId, typeSize, vertical);
+    return typeface->getGlyphAdvance(glyphIndex, typeSize, vertical);
 }
 
 static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId, jfloat typeSize, jfloatArray matrixArray)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto glyphIndex = static_cast<FT_UInt>(glyphId);
+    auto glyphIndex = static_cast<uint16_t>(glyphId);
 
     jfloat *transform = env->GetFloatArrayElements(matrixArray, nullptr);
     jobject glyphPath = typeface->getGlyphPath(JavaBridge(env), glyphIndex, typeSize, transform);

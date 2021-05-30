@@ -150,7 +150,7 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
 
         for (unsigned int i = 0; i < count; i++) {
             auto glyphRef = reinterpret_cast<const hb_codepoint_t *>(glyphPtr);
-            auto advanceRef = reinterpret_cast<hb_codepoint_t *>(advancePtr);
+            auto advanceRef = reinterpret_cast<hb_position_t *>(advancePtr);
 
             FT_Fixed advance = 0;
             FT_Get_Advance(ftFace, *glyphRef, FT_LOAD_NO_SCALE, &advance);
@@ -184,6 +184,8 @@ ShapableFace::ShapableFace(RenderableFace &renderableFace)
     , m_retainCount(1)
 {
     FT_Face ftFace = renderableFace.ftFace();
+    auto faceIndex = static_cast<unsigned int>(ftFace->face_index);
+    auto unitsPerEm = static_cast<unsigned int>(ftFace->units_per_EM);
 
     hb_face_t *hbFace = hb_face_create_for_tables([](hb_face_t *face, hb_tag_t tag,
                                                      void *object) -> hb_blob_t *
@@ -210,8 +212,8 @@ ShapableFace::ShapableFace(RenderableFace &renderableFace)
                               HB_MEMORY_MODE_WRITABLE, nullptr, free);
     }, this, nullptr);
 
-    hb_face_set_index(hbFace, ftFace->face_index);
-    hb_face_set_upem(hbFace, ftFace->units_per_EM);
+    hb_face_set_index(hbFace, faceIndex);
+    hb_face_set_upem(hbFace, unitsPerEm);
 
     m_hbFont = hb_font_create(hbFace);
     hb_font_set_funcs(m_hbFont, defaultFontFuncs(), this, nullptr);
