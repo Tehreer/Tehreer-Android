@@ -25,6 +25,7 @@ extern "C" {
 
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <jni.h>
@@ -111,9 +112,14 @@ Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
     return new Typeface(*this, colors, colorCount);
 }
 
-void Typeface::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
+size_t Typeface::getTableLength(uint32_t tag)
 {
-    m_instance.loadSfntTable(tag, buffer, length);
+    return m_instance.getTableLength(tag);
+}
+
+void Typeface::getTableData(uint32_t tag, void *buffer)
+{
+    return m_instance.getTableData(tag, buffer);
 }
 
 int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
@@ -270,25 +276,19 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_ULong inputTag = static_cast<uint32_t>(tableTag);
-    FT_ULong length = 0;
 
-    typeface->loadSfntTable(inputTag, nullptr, &length);
-
-    if (length > 0) {
-        jint dataLength = static_cast<jint>(length);
-        jbyteArray dataArray = env->NewByteArray(dataLength);
-        void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
-
-        auto dataBytes = static_cast<FT_Byte *>(dataBuffer);
-        typeface->loadSfntTable(inputTag, dataBytes, nullptr);
-
-        env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
-
-        return dataArray;
+    size_t length = typeface->getTableLength(tableTag);
+    if (length == 0) {
+        return nullptr;
     }
 
-    return nullptr;
+    jbyteArray array = env->NewByteArray(length);
+    void *buffer = env->GetPrimitiveArrayCritical(array, nullptr);
+    typeface->getTableData(tableTag, buffer);
+
+    env->ReleasePrimitiveArrayCritical(array, buffer, 0);
+
+    return array;
 }
 
 static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)

@@ -81,7 +81,9 @@ public:
     inline int16_t strikeoutPosition() const { return m_instance.strikeoutPosition(); }
     inline int16_t strikeoutThickness() const { return m_instance.strikeoutThickness(); }
 
-    void loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length);
+    size_t getTableLength(uint32_t tag);
+    void getTableData(uint32_t tag, void *buffer);
+
     int32_t searchNameRecordIndex(uint16_t nameID);
 
     FT_UInt getGlyphID(FT_ULong codePoint);

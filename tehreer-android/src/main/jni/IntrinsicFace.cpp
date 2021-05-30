@@ -366,12 +366,24 @@ IntrinsicFace *IntrinsicFace::deriveVariation(const float *coordArray, size_t co
     return instance;
 }
 
-void IntrinsicFace::loadSfntTable(FT_ULong tag, FT_Byte *buffer, FT_ULong *length)
+size_t IntrinsicFace::getTableLength(uint32_t tag)
 {
     FaceLock lock(m_renderableFace);
-
     FT_Face ftFace = m_renderableFace.ftFace();
-    FT_Load_Sfnt_Table(ftFace, tag, 0, buffer, length);
+
+    FT_ULong length = 0;
+    FT_Load_Sfnt_Table(ftFace, tag, 0, nullptr, &length);
+
+    return length;
+}
+
+void IntrinsicFace::getTableData(uint32_t tag, void *buffer)
+{
+    FaceLock lock(m_renderableFace);
+    FT_Face ftFace = m_renderableFace.ftFace();
+
+    auto ftBuffer = reinterpret_cast<FT_Byte *>(buffer);
+    FT_Load_Sfnt_Table(ftFace, tag, 0, ftBuffer, nullptr);
 }
 
 int32_t IntrinsicFace::searchNameRecordIndex(uint16_t nameID)
