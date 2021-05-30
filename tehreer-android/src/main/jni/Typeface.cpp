@@ -127,7 +127,7 @@ int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
     return m_instance.searchNameRecordIndex(nameID);
 }
 
-FT_UInt Typeface::getGlyphID(FT_ULong codePoint)
+uint16_t Typeface::getGlyphID(uint32_t codePoint)
 {
     return m_instance.getGlyphID(codePoint);
 }

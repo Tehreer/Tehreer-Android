@@ -396,7 +396,7 @@ int32_t IntrinsicFace::searchNameRecordIndex(uint16_t nameID)
     return recordIndex;
 }
 
-FT_UInt IntrinsicFace::getGlyphID(FT_ULong codePoint)
+uint16_t IntrinsicFace::getGlyphID(uint32_t codePoint)
 {
     FaceLock lock(m_renderableFace);
 
