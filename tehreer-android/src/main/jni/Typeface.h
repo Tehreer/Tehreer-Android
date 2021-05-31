@@ -43,6 +43,11 @@ public:
     using Palette = std::vector<FT_Color>;
 
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
+
+    void setupCoordinates(const float *coordArray, size_t coordCount);
+    void setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue);
+    void setupColors(const FT_Color *colorArray, size_t colorCount);
+
     ~Typeface();
 
     Typeface *deriveVariation(const float *coordArray, size_t coordCount);
@@ -99,10 +104,6 @@ private:
     Typeface(IntrinsicFace &instance);
     Typeface(const Typeface &typeface, IntrinsicFace &instance);
     Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount);
-
-    void setupColors(const FT_Color *colorArray, size_t colorCount);
-
-    friend void setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors);
 };
 
 }

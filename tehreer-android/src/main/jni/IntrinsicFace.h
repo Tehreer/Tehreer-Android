@@ -45,6 +45,10 @@ public:
     };
 
     static IntrinsicFace &create(RenderableFace &renderableFace);
+
+    void setupCoordinates(const float *coordArray, size_t coordCount);
+    void setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue);
+
     ~IntrinsicFace();
 
     IntrinsicFace *deriveVariation(const float *coordArray, size_t coordCount);
@@ -139,7 +143,6 @@ private:
     void setupSize();
     void setupStrikeout();
     void setupDescription();
-    void setupVariation();
     void setupHarfBuzz(ShapableFace *parent = nullptr);
 
     inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }

@@ -45,28 +45,19 @@ RenderableFace::RenderableFace(FontFile &fontFile, FT_Face ftFace)
     , m_ftFace(ftFace)
     , m_retainCount(1)
 {
-    setupDefaultCoordinates();
 }
 
-void RenderableFace::setupDefaultCoordinates()
+void RenderableFace::setupCoordinates(const float *coordArray, size_t coordCount)
 {
-    FT_MM_Var *variation;
-    if (FT_Get_MM_Var(m_ftFace, &variation) != FT_Err_Ok) {
-        return;
+    m_coordinates = CoordArray(coordArray, coordArray + coordCount);
+
+    FT_Fixed fixedCoords[coordCount];
+
+    for (size_t i = 0; i < coordCount; i++) {
+        fixedCoords[i] = toF16Dot16(coordArray[i]);
     }
 
-    FT_UInt numCoords = variation->num_axis;
-    FT_Fixed fixedCoords[numCoords];
-
-    if (FT_Get_Var_Blend_Coordinates(m_ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-        m_coordinates.reserve(numCoords);
-
-        for (FT_UInt i = 0; i < numCoords; i++) {
-            m_coordinates.push_back(f16Dot16toFloat(fixedCoords[i]));
-        }
-    }
-
-    FT_Done_MM_Var(FreeType::library(), variation);
+    FT_Set_Var_Design_Coordinates(m_ftFace, coordCount, fixedCoords);
 }
 
 RenderableFace::~RenderableFace()
@@ -83,21 +74,14 @@ RenderableFace::~RenderableFace()
 
 RenderableFace *RenderableFace::deriveVariation(const float *coordArray, size_t coordCount)
 {
-    FT_Long faceIndex = m_ftFace->face_index;
-    RenderableFace *renderableFace = m_fontFile.createRenderableFace(faceIndex);
-
-    renderableFace->m_coordinates = CoordArray(coordArray, coordArray + coordCount);
-
-    FT_Face ftFace = renderableFace->ftFace();
-    FT_Fixed fixedCoords[coordCount];
-
-    for (size_t i = 0; i < coordCount; i++) {
-        fixedCoords[i] = toF16Dot16(coordArray[i]);
+    RenderableFace *derivedFace = m_fontFile.createRenderableFace(m_ftFace->face_index);
+    if (derivedFace == nullptr) {
+        return nullptr;
     }
 
-    FT_Set_Var_Design_Coordinates(ftFace, coordCount, fixedCoords);
+    derivedFace->setupCoordinates(coordArray, coordCount);
 
-    return renderableFace;
+    return derivedFace;
 }
 
 RenderableFace &RenderableFace::retain()

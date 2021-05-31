@@ -25,6 +25,7 @@ extern "C" {
 #include FT_TRUETYPE_TABLES_H
 }
 
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
@@ -119,10 +120,8 @@ static int32_t searchFullNameRecordIndex(FT_Face face)
     return searchEnglishNameRecordIndex(face, NameID::FULL);
 }
 
-static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
+static inline uint16_t variableWeightToStandard(float value)
 {
-    float value = f16Dot16toFloat(coordinate);
-
     if (value < 1) {
         return 1;
     }
@@ -133,10 +132,8 @@ static inline uint16_t variableWeightToStandard(FT_Fixed coordinate)
     return static_cast<uint16_t>(value);
 }
 
-static inline uint16_t variableWidthToStandard(FT_Fixed coordinate)
+static inline uint16_t variableWidthToStandard(float value)
 {
-    float value = f16Dot16toFloat(coordinate);
-
     if (value < 50) {
         return 1;
     }
@@ -150,14 +147,14 @@ static inline uint16_t variableWidthToStandard(FT_Fixed coordinate)
     return 9;
 }
 
-static inline IntrinsicFace::Slope variableItalicToSlope(FT_Fixed coordinate)
+static inline IntrinsicFace::Slope variableItalicToSlope(float value)
 {
-    return coordinate >= 0x10000 ? IntrinsicFace::Slope::ITALIC : IntrinsicFace::Slope::PLAIN;
+    return value >= 1.0 ? IntrinsicFace::Slope::ITALIC : IntrinsicFace::Slope::PLAIN;
 }
 
-static inline IntrinsicFace::Slope variableSlantToSlope(FT_Fixed coordinate)
+static inline IntrinsicFace::Slope variableSlantToSlope(float value)
 {
-    return coordinate != 0 ? IntrinsicFace::Slope::OBLIQUE : IntrinsicFace::Slope::PLAIN;
+    return value != 0.0 ? IntrinsicFace::Slope::OBLIQUE : IntrinsicFace::Slope::PLAIN;
 }
 
 IntrinsicFace &IntrinsicFace::create(RenderableFace &renderableFace)
@@ -178,7 +175,6 @@ IntrinsicFace::IntrinsicFace(RenderableFace &renderableFace)
     setupSize();
     setupDescription();
     setupStrikeout();
-    setupVariation();
     setupHarfBuzz();
 }
 
@@ -195,8 +191,12 @@ IntrinsicFace::IntrinsicFace(const IntrinsicFace &parent, RenderableFace &render
 
     setupSize();
     setupStrikeout();
-    setupVariation();
     setupHarfBuzz(parent.m_shapableFace);
+}
+
+void IntrinsicFace::setupCoordinates(const float *coordArray, size_t coordCount)
+{
+    m_renderableFace.setupCoordinates(coordArray, coordCount);
 }
 
 void IntrinsicFace::setupSize()
@@ -255,72 +255,28 @@ void IntrinsicFace::setupStrikeout()
     }
 }
 
-void IntrinsicFace::setupVariation()
-{
-    FT_Face ftFace = m_renderableFace.ftFace();
-
-    FT_MM_Var *variation;
-    FT_Error error = FT_Get_MM_Var(ftFace, &variation);
-
-    if (error == FT_Err_Ok) {
-        Description description = m_defaults.description;
-
-        FT_UInt numCoords = variation->num_axis;
-        FT_Fixed fixedCoords[numCoords];
-
-        if (FT_Get_Var_Design_Coordinates(ftFace, numCoords, fixedCoords) == FT_Err_Ok) {
-            // Reset the style name and the full name.
-            description.styleName = -1;
-            description.fullName = -1;
-
-            // Get the style name of this instance.
-            for (FT_UInt i = 0; i < variation->num_namedstyles; i++) {
-                FT_Var_Named_Style *namedStyle = &variation->namedstyle[i];
-                FT_Fixed *namedCoords = namedStyle->coords;
-
-                int result = memcmp(namedCoords, fixedCoords, sizeof(FT_Fixed) * numCoords);
-                if (result == 0) {
-                    description.styleName = searchEnglishNameRecordIndex(ftFace, static_cast<uint16_t>(namedStyle->strid));
-                    break;
-                }
-            }
-
-            // Get the values of variation axes.
-            for (FT_UInt i = 0; i < numCoords; i++) {
-                FT_Var_Axis *axis = &variation->axis[i];
-
-                switch (axis->tag) {
-                case FT_MAKE_TAG('i', 't', 'a', 'l'):
-                    description.slope = variableItalicToSlope(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('s', 'l', 'n', 't'):
-                    description.slope = variableSlantToSlope(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('w', 'd', 't', 'h'):
-                    description.width = variableWidthToStandard(fixedCoords[i]);
-                    break;
-
-                case FT_MAKE_TAG('w', 'g', 'h', 't'):
-                    description.weight = variableWeightToStandard(fixedCoords[i]);
-                    break;
-                }
-            }
-        }
-
-        FT_Done_MM_Var(FreeType::library(), variation);
-
-        m_description = description;
-    }
-}
-
 void IntrinsicFace::setupHarfBuzz(ShapableFace *parent)
 {
     if (parent) {
         m_shapableFace = &parent->deriveVariation(m_renderableFace);
     } else {
         m_shapableFace = &ShapableFace::create(m_renderableFace);
+    }
+}
+
+void IntrinsicFace::setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue)
+{
+    if (!isnan(italValue)) {
+        m_description.slope = variableItalicToSlope(italValue);
+    }
+    if (!isnan(slntValue)) {
+        m_description.slope = variableSlantToSlope(slntValue);
+    }
+    if (!isnan(wdthValue)) {
+        m_description.width = variableWidthToStandard(wdthValue);
+    }
+    if (!isnan(wghtValue)) {
+        m_description.weight = variableWeightToStandard(wghtValue);
     }
 }
 

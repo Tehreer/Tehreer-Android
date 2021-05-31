@@ -36,6 +36,8 @@ using CoordArray = std::vector<float>;
 class RenderableFace {
 public:
     static RenderableFace *create(FontFile &fontFile, FT_Face ftFace);
+    void setupCoordinates(const float *coordArray, size_t coordCount);
+
     ~RenderableFace();
 
     RenderableFace *deriveVariation(const float *coordArray, size_t coordCount);
@@ -61,7 +63,6 @@ private:
     std::atomic_int m_retainCount;
 
     RenderableFace(FontFile &fontFile, FT_Face ftFace);
-    void setupDefaultCoordinates();
 };
 
 }

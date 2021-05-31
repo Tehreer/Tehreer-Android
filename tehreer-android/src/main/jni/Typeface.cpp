@@ -76,6 +76,16 @@ Typeface::Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t 
     setupColors(colorArray, colorCount);
 }
 
+void Typeface::setupCoordinates(const float *coordArray, size_t coordCount)
+{
+    m_instance.setupCoordinates(coordArray, coordCount);
+}
+
+void Typeface::setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue)
+{
+    m_instance.setupVariation(italValue, slntValue, wdthValue, wghtValue);
+}
+
 void Typeface::setupColors(const FT_Color *colorArray, size_t colorCount)
 {
     m_palette = Palette(colorArray, colorArray + colorCount);
@@ -190,7 +200,29 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
     return 0;
 }
 
-void Tehreer::setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
+void setupCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+
+    jint coordLength = env->GetArrayLength(coordinates);
+    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
+
+    auto *coordArray = static_cast<float *>(coordBuffer);
+    auto coordCount = static_cast<size_t>(coordLength);
+
+    typeface->setupCoordinates(coordArray, coordCount);
+
+    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
+}
+
+void setupVariation(JNIEnv *env, jobject obj, jlong typefaceHandle,
+    jfloat italValue, jfloat slntValue, jfloat wdthValue, jfloat wghtValue)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    typeface->setupVariation(italValue, slntValue, wdthValue, wghtValue);
+}
+
+void setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
 
@@ -469,6 +501,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
+    { "nSetupCoordinates", "(J[F)V", (void *)setupCoordinates },
+    { "nSetupVariation", "(JFFFF)V", (void *)setupVariation },
     { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
