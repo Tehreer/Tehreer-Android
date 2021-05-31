@@ -157,22 +157,23 @@ public class Typeface {
 
         this.variationAxes = typeface.variationAxes;
         this.namedInstances = typeface.namedInstances;
-
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
 
+        // Setup names again, as style name and full name might be different due to variation.
         setupNames();
+        // Setup the variable description reflecting current coordinate values.
+        setupVariableDescription();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
 
+        // In color variation, only color values are changed. All other info remains same.
         this.variationAxes = typeface.variationAxes;
         this.namedInstances = typeface.namedInstances;
-
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
-
         this.familyName = typeface.familyName;
         this.styleName = typeface.styleName;
         this.fullName = typeface.fullName;
@@ -183,8 +184,10 @@ public class Typeface {
 
         setupVariations();
         setupPalettes();
-        setupColors();
 	    setupNames();
+        setupDefaultCoordinates();
+        setupVariableDescription();
+        setupDefaultColors();
 	}
 
     private void setupVariations() {
@@ -333,13 +336,7 @@ public class Typeface {
         }
     }
 
-    private void setupColors() {
-        if (predefinedPalettes!= null && predefinedPalettes.size() > 0) {
-            nSetupColors(nativeTypeface, predefinedPalettes.get(0).colors());
-        }
-    }
-
-	private void setupNames() {
+    private void setupNames() {
         NameTable nameTable = NameTable.from(this);
         if (nameTable == null) {
             return;
@@ -370,14 +367,110 @@ public class Typeface {
                 fullName = recordString;
             }
         } else {
-            if (!familyName.isEmpty()) {
-                fullName = familyName;
-                if (!styleName.isEmpty()) {
-                    fullName += ' ' + styleName;
-                }
-            } else {
-                fullName = styleName;
+            generateFullName();
+        }
+    }
+
+    private void generateFullName() {
+        if (!familyName.isEmpty()) {
+            fullName = familyName;
+            if (!styleName.isEmpty()) {
+                fullName += ' ' + styleName;
             }
+        } else {
+            fullName = styleName;
+        }
+    }
+
+    private void setupDefaultCoordinates() {
+        if (variationAxes != null && variationAxes.size() > 0) {
+            float[] coordinates = new float[variationAxes.size()];
+
+            for (int i = 0; i < coordinates.length; i++) {
+                coordinates[i] = variationAxes.get(i).defaultValue();
+            }
+
+            nSetupCoordinates(nativeTypeface, coordinates);
+        }
+    }
+
+    private void setupVariableDescription() {
+        final float[] coordinates = getVariationCoordinates();
+        if (coordinates == null) {
+            return;
+        }
+
+        if (namedInstances != null && !namedInstances.isEmpty()) {
+            // Reset the style name and the full name.
+            styleName = "";
+            fullName = "";
+
+            final int coordCount = coordinates.length;
+            final float minValue = 1.0f / 0x10000;
+
+            // Get the style name of this instance.
+            for (NamedInstance instance : namedInstances) {
+                final String name = instance.styleName();
+                if (name.isEmpty()) {
+                    continue;
+                }
+
+                final float[] namedCoords = instance.coordinates();
+                boolean matched = true;
+
+                for (int i = 0; i < coordCount; i++) {
+                    if (Math.abs(coordinates[i] - namedCoords[i]) >= minValue) {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if (matched) {
+                    styleName = name;
+                    generateFullName();
+                    break;
+                }
+            }
+        }
+
+        final List<VariationAxis> allAxes = variationAxes;
+        if (allAxes != null && !allAxes.isEmpty()) {
+            final int axisCount = variationAxes.size();
+
+            final int italTag = SfntTag.make("ital");
+            final int slntTag = SfntTag.make("slnt");
+            final int wdthTag = SfntTag.make("wdth");
+            final int wghtTag = SfntTag.make("wght");
+
+            float italValue = Float.NaN;
+            float slntValue = Float.NaN;
+            float wdthValue = Float.NaN;
+            float wghtValue = Float.NaN;
+
+            for (int i = 0; i < axisCount; i++) {
+                final VariationAxis axis = variationAxes.get(i);
+                final int tag = axis.tag();
+
+                if (tag == italTag) {
+                    italValue = coordinates[i];
+                    slntValue = Float.NaN;
+                } else if (tag == slntTag) {
+                    slntValue = coordinates[i];
+                    italValue = Float.NaN;
+                } else if (tag == wdthTag) {
+                    wdthValue = coordinates[i];
+                } else if (tag == wghtTag) {
+                    wghtValue = coordinates[i];
+                }
+            }
+
+            nSetupVariation(nativeTypeface, italValue, slntValue, wdthValue, wghtValue);
+        }
+    }
+
+    private void setupDefaultColors() {
+        if (predefinedPalettes!= null && predefinedPalettes.size() > 0) {
+            nSetupColors(nativeTypeface, predefinedPalettes.get(0).colors());
         }
     }
 
@@ -760,6 +853,9 @@ public class Typeface {
     private static native long nCreateWithFile(String path);
     private static native long nCreateFromStream(InputStream stream);
 
+    private static native void nSetupCoordinates(long nativeTypeface, float[] coordinates);
+    private static native void nSetupVariation(long nativeTypeface, float italValue,
+                                               float slntValue, float wdthValue, float wghtValue);
     private static native void nSetupColors(long nativeTypeface, int[] colors);
 
 	private static native void nDispose(long nativeTypeface);
