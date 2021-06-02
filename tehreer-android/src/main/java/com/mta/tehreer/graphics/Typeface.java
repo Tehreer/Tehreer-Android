@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.font.ColorPalette;
-import com.mta.tehreer.font.NamedInstance;
+import com.mta.tehreer.font.NamedStyle;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.sfnt.tables.cpal.ColorPaletteTable;
@@ -75,7 +75,7 @@ public class Typeface {
     private final @NonNull Finalizable finalizable = new Finalizable();
 
     private @Nullable List<VariationAxis> variationAxes;
-    private @Nullable List<NamedInstance> namedInstances;
+    private @Nullable List<NamedStyle> namedStyles;
 
     private @Nullable List<String> paletteEntryNames;
     private @Nullable List<ColorPalette> predefinedPalettes;
@@ -156,7 +156,7 @@ public class Typeface {
         this.nativeTypeface = nativeVariation;
 
         this.variationAxes = typeface.variationAxes;
-        this.namedInstances = typeface.namedInstances;
+        this.namedStyles = typeface.namedStyles;
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
 
@@ -171,7 +171,7 @@ public class Typeface {
 
         // In color variation, only color values are changed. All other info remains same.
         this.variationAxes = typeface.variationAxes;
-        this.namedInstances = typeface.namedInstances;
+        this.namedStyles = typeface.namedStyles;
         this.paletteEntryNames = typeface.paletteEntryNames;
         this.predefinedPalettes = typeface.predefinedPalettes;
         this.familyName = typeface.familyName;
@@ -225,7 +225,7 @@ public class Typeface {
                                                defaultValue, minValue, maxValue));
         }
 
-        namedInstances = new ArrayList<>(instanceRecords.length);
+        namedStyles = new ArrayList<>(instanceRecords.length);
 
         for (InstanceRecord instanceRecord : instanceRecords) {
             final int styleNameId = instanceRecord.subfamilyNameID();
@@ -253,7 +253,7 @@ public class Typeface {
                 }
             }
 
-            namedInstances.add(NamedInstance.of(styleName, coordinates, postScriptName));
+            namedStyles.add(NamedStyle.of(styleName, coordinates, postScriptName));
         }
     }
 
@@ -400,7 +400,7 @@ public class Typeface {
             return;
         }
 
-        if (namedInstances != null && !namedInstances.isEmpty()) {
+        if (namedStyles != null && !namedStyles.isEmpty()) {
             // Reset the style name and the full name.
             styleName = "";
             fullName = "";
@@ -409,7 +409,7 @@ public class Typeface {
             final float minValue = 1.0f / 0x10000;
 
             // Get the style name of this instance.
-            for (NamedInstance instance : namedInstances) {
+            for (NamedStyle instance : namedStyles) {
                 final String name = instance.styleName();
                 if (name.isEmpty()) {
                     continue;
@@ -517,9 +517,9 @@ public class Typeface {
         return null;
     }
 
-    public @Nullable List<NamedInstance> getNamedInstances() {
-        if (namedInstances != null) {
-            return Collections.unmodifiableList(namedInstances);
+    public @Nullable List<NamedStyle> getNamedStyles() {
+        if (namedStyles != null) {
+            return Collections.unmodifiableList(namedStyles);
         }
 
         return null;

@@ -25,7 +25,6 @@ import com.mta.tehreer.graphics.Typeface;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
@@ -114,13 +113,13 @@ public final class FontFile {
 
         for (int i = 0; i < faceCount; i++) {
             Typeface firstTypeface = nCreateTypeface(nativeFontFile, i);
-            List<NamedInstance> namedInstances = firstTypeface.getNamedInstances();
+            List<NamedStyle> namedStyles = firstTypeface.getNamedStyles();
 
-            if (namedInstances == null || namedInstances.size() == 0) {
+            if (namedStyles == null || namedStyles.size() == 0) {
                 allTypefaces.add(firstTypeface);
             } else {
-                for (NamedInstance namedInstance : namedInstances) {
-                    float[] coordinates = namedInstance.coordinates();
+                for (NamedStyle namedStyle : namedStyles) {
+                    float[] coordinates = namedStyle.coordinates();
                     Typeface instanceTypeface = firstTypeface.getVariationInstance(coordinates);
 
                     allTypefaces.add(instanceTypeface);

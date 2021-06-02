@@ -25,23 +25,23 @@ import java.util.Arrays;
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
-public class NamedInstance {
+public class NamedStyle {
     private final @NonNull String styleName;
     private final @NonNull float[] coordinates;
     private final @Nullable String postScriptName;
 
-    public static @NonNull NamedInstance of(@NonNull String styleName,
-                                            @NonNull @Size(min = 1) float[] coordinates,
-                                            @Nullable String postScriptName) {
+    public static @NonNull NamedStyle of(@NonNull String styleName,
+                                         @NonNull @Size(min = 1) float[] coordinates,
+                                         @Nullable String postScriptName) {
         checkNotNull(styleName, "styleName");
         checkNotNull(coordinates, "coordinates");
         checkArgument(coordinates.length >= 1, "The coordinates array is empty");
 
-        return new NamedInstance(styleName, coordinates, postScriptName);
+        return new NamedStyle(styleName, coordinates, postScriptName);
     }
 
-    private NamedInstance(@NonNull String styleName, @NonNull float[] coordinates,
-                          @Nullable String postScriptName) {
+    private NamedStyle(@NonNull String styleName, @NonNull float[] coordinates,
+                       @Nullable String postScriptName) {
         this.styleName = styleName;
         this.coordinates = coordinates;
         this.postScriptName = postScriptName;
@@ -68,7 +68,7 @@ public class NamedInstance {
             return false;
         }
 
-        NamedInstance other = (NamedInstance) obj;
+        NamedStyle other = (NamedStyle) obj;
 
         return styleName.equals(other.styleName)
             && Arrays.equals(coordinates, other.coordinates)
