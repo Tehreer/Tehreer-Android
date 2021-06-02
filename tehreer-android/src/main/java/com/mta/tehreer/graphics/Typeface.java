@@ -517,6 +517,11 @@ public class Typeface {
         return null;
     }
 
+    /**
+     * Returns the named instance records of this typeface if it supports OpenType font variations.
+     *
+     * @return The named instance records of this typeface if it supports OpenType font variations.
+     */
     public @Nullable List<NamedStyle> getNamedStyles() {
         if (namedStyles != null) {
             return Collections.unmodifiableList(namedStyles);

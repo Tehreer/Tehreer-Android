@@ -35,6 +35,9 @@ import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.layout.ComposedFrame;
 import com.mta.tehreer.layout.Typesetter;
 
+/**
+ * A scrollable, multiline text region.
+ */
 public class TTextView extends ScrollView {
     private TextContainer mTextContainer;
 

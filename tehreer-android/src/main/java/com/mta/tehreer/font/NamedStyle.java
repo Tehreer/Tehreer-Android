@@ -25,11 +25,22 @@ import java.util.Arrays;
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
+/**
+ * Represents font named style.
+ */
 public class NamedStyle {
     private final @NonNull String styleName;
     private final @NonNull float[] coordinates;
     private final @Nullable String postScriptName;
 
+    /**
+     * Returns a named style object with the specified values.
+     *
+     * @param styleName The style name.
+     * @param coordinates The variation coordinates.
+     * @param postScriptName The post script name.
+     * @return A new named style object.
+     */
     public static @NonNull NamedStyle of(@NonNull String styleName,
                                          @NonNull @Size(min = 1) float[] coordinates,
                                          @Nullable String postScriptName) {
@@ -47,14 +58,29 @@ public class NamedStyle {
         this.postScriptName = postScriptName;
     }
 
+    /**
+     * Returns the style name.
+     *
+     * @return The style name.
+     */
     public @NonNull String styleName() {
         return styleName;
     }
 
+    /**
+     * Returns the coordinates.
+     *
+     * @return The coordinates.
+     */
     public @NonNull float[] coordinates() {
         return Arrays.copyOf(coordinates, coordinates.length);
     }
 
+    /**
+     * Returns the post script name.
+     *
+     * @return The post script name.
+     */
     public @Nullable String postScriptName() {
         return postScriptName;
     }

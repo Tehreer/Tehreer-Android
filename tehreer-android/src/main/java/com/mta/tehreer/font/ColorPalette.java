@@ -27,6 +27,9 @@ import java.util.Arrays;
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
+/**
+ * Represents font color palette.
+ */
 public final class ColorPalette {
     public static final int USABLE_WITH_LIGHT_BACKGROUND = 0x0001;
     public static final int USABLE_WITH_DARK_BACKGROUND = 0x0002;
