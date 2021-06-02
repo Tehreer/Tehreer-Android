@@ -21,6 +21,7 @@
 #include <hb.h>
 #include <mutex>
 
+#include "AdvanceCache.h"
 #include "RenderableFace.h"
 
 namespace Tehreer {
@@ -45,6 +46,8 @@ private:
 
     RenderableFace &m_renderableFace;
     hb_font_t *m_hbFont;
+
+    AdvanceCache m_advanceCache;
 
     std::atomic_int m_retainCount;
 

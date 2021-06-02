@@ -125,10 +125,20 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
         FaceLock lock(renderableFace);
         FT_Face ftFace = renderableFace.ftFace();
 
-        FT_Fixed advance = 0;
-        FT_Get_Advance(ftFace, glyph, FT_LOAD_NO_SCALE, &advance);
+        AdvanceCache &cache = instance->m_advanceCache;
+        auto glyphID = static_cast<uint16_t>(glyph);
+        int32_t glyphAdvance = 0;
 
-        return advance;
+        if (cache.get(glyphID, &glyphAdvance)) {
+            return glyphAdvance;
+        }
+
+        FT_Fixed ftAdvance = 0;
+        FT_Get_Advance(ftFace, glyphID, FT_LOAD_NO_SCALE, &ftAdvance);
+
+        cache.put(glyphID, ftAdvance);
+
+        return ftAdvance;
     }, nullptr, nullptr);
 
     hb_font_funcs_set_glyph_h_advances_func(funcs, [](hb_font_t *font, void *object,
@@ -140,6 +150,7 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
                                                       void *user_data) -> void
     {
         auto instance = reinterpret_cast<ShapableFace *>(object);
+        AdvanceCache &cache = instance->m_advanceCache;
 
         RenderableFace &renderableFace = instance->renderableFace();
         FaceLock lock(renderableFace);
@@ -152,10 +163,18 @@ hb_font_funcs_t *ShapableFace::createFontFuncs()
             auto glyphRef = reinterpret_cast<const hb_codepoint_t *>(glyphPtr);
             auto advanceRef = reinterpret_cast<hb_position_t *>(advancePtr);
 
-            FT_Fixed advance = 0;
-            FT_Get_Advance(ftFace, *glyphRef, FT_LOAD_NO_SCALE, &advance);
+            auto glyphID = static_cast<uint16_t>(*glyphRef);
+            int32_t glyphAdvance = 0;
 
-            *advanceRef = advance;
+            if (cache.get(glyphID, &glyphAdvance)) {
+                *advanceRef = glyphAdvance;
+            } else {
+                FT_Fixed ftAdvance = 0;
+                FT_Get_Advance(ftFace, glyphID, FT_LOAD_NO_SCALE, &ftAdvance);
+
+                *advanceRef = ftAdvance;
+                cache.put(glyphID, ftAdvance);
+            }
 
             glyphPtr += glyphStride;
             advancePtr += advanceStride;

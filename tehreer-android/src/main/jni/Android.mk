@@ -136,6 +136,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := tehreerjni
 
 FILE_LIST := \
+    AdvanceCache.cpp \
     BidiAlgorithm.cpp \
     BidiBuffer.cpp \
     BidiLine.cpp \
