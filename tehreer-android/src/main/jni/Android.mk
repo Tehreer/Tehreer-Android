@@ -146,7 +146,6 @@ FILE_LIST := \
     FreeType.cpp \
     GlyphOutline.cpp \
     GlyphRasterizer.cpp \
-    IntrinsicFace.cpp \
     JavaBridge.cpp \
     Raw.cpp \
     RenderableFace.cpp \

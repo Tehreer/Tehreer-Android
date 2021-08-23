@@ -26,20 +26,27 @@ extern "C" {
 
 #include <cstddef>
 #include <cstdint>
-#include <jni.h>
 #include <hb.h>
+#include <jni.h>
+#include <mutex>
 #include <vector>
 
 #include "FontFile.h"
 #include "JavaBridge.h"
-#include "IntrinsicFace.h"
 #include "RenderableFace.h"
+#include "SfntTables.h"
 #include "ShapableFace.h"
 
 namespace Tehreer {
 
 class Typeface {
 public:
+    enum Slope : uint16_t {
+        PLAIN = 0,
+        ITALIC = 1,
+        OBLIQUE = 2,
+    };
+
     using Palette = std::vector<FT_Color>;
 
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
@@ -53,38 +60,40 @@ public:
     Typeface *deriveVariation(const float *coordArray, size_t coordCount);
     Typeface *deriveColor(const uint32_t *colorArray, size_t colorCount);
 
-    void lock() { m_instance.renderableFace().lock(); };
-    void unlock() { m_instance.renderableFace().unlock(); }
+    void lock() { m_renderableFace.lock(); };
+    void unlock() { m_renderableFace.unlock(); }
 
-    inline FT_Face ftFace() const { return m_instance.renderableFace().ftFace(); }
-    inline FT_Size ftSize() const { return m_instance.ftSize(); }
-    inline FT_Stroker ftStroker() { return m_instance.ftStroker(); };
+    inline RenderableFace &renderableFace() const { return m_renderableFace; }
+    inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
+    inline FT_Size ftSize() const { return m_ftSize; }
+    FT_Stroker ftStroker();
 
-    inline hb_font_t *hbFont() const { return m_instance.shapableFace().hbFont(); }
+    inline ShapableFace &shapableFace() const { return *m_shapableFace; }
+    inline hb_font_t *hbFont() const { return shapableFace().hbFont(); }
 
-    inline const CoordArray *coordinates() const { return m_instance.coordinates(); }
+    inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
-    inline int32_t familyName() const { return m_instance.familyName(); }
-    inline int32_t styleName() const { return m_instance.styleName(); }
-    inline int32_t fullName() const { return m_instance.fullName(); }
+    inline int32_t familyName() const { return m_description.familyName; }
+    inline int32_t styleName() const { return m_description.styleName; }
+    inline int32_t fullName() const { return m_description.fullName; }
 
-    inline uint16_t weight() const { return m_instance.weight(); }
-    inline uint16_t width() const { return m_instance.width(); }
-    inline uint16_t slope() const { return m_instance.slope(); }
+    inline uint16_t weight() const { return m_description.weight; }
+    inline uint16_t width() const { return m_description.width; }
+    inline uint16_t slope() const { return m_description.slope; }
 
-    inline uint16_t unitsPerEM() const { return m_instance.unitsPerEM(); }
-    inline int16_t ascent() const { return m_instance.ascent(); }
-    inline int16_t descent() const { return m_instance.descent(); }
-    inline int16_t leading() const { return m_instance.leading(); }
+    inline uint16_t unitsPerEM() const { return ftFace()->units_per_EM; }
+    inline int16_t ascent() const { return ftFace()->ascender; }
+    inline int16_t descent() const { return -ftFace()->descender; }
+    inline int16_t leading() const { return ftFace()->height - (ascent() + descent()); }
 
-    inline int32_t glyphCount() const { return m_instance.glyphCount(); }
+    inline int32_t glyphCount() const { return (int32_t)ftFace()->num_glyphs; }
 
-    inline int16_t underlinePosition() const { return m_instance.underlinePosition(); }
-    inline int16_t underlineThickness() const { return m_instance.underlineThickness(); }
+    inline int16_t underlinePosition() const { return ftFace()->underline_position; }
+    inline int16_t underlineThickness() const { return ftFace()->underline_thickness; }
 
-    inline int16_t strikeoutPosition() const { return m_instance.strikeoutPosition(); }
-    inline int16_t strikeoutThickness() const { return m_instance.strikeoutThickness(); }
+    inline int16_t strikeoutPosition() const { return m_strikeoutPosition; }
+    inline int16_t strikeoutThickness() const { return m_strikeoutThickness; }
 
     size_t getTableLength(uint32_t tag);
     void getTableData(uint32_t tag, void *buffer);
@@ -98,12 +107,54 @@ public:
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:
-    IntrinsicFace &m_instance;
+    struct Description {
+        int32_t familyName;
+        int32_t styleName;
+        int32_t fullName;
+
+        uint16_t weight;
+        uint16_t width;
+        uint16_t slope;
+
+        Description() {
+            familyName = -1;
+            styleName = -1;
+            fullName = -1;
+
+            weight = SFNT::OS2::Weight::REGULAR;
+            width = SFNT::OS2::Width::NORMAL;
+            slope = Slope::PLAIN;
+        }
+    };
+
+    struct DefaultProperties {
+        Description description;
+    };
+
+    std::mutex m_mutex;
+
+    RenderableFace &m_renderableFace;
+    FT_Size m_ftSize;
+    FT_Stroker m_ftStroker;
+
+    ShapableFace *m_shapableFace;
+
+    Description m_description;
+    DefaultProperties m_defaults;
+
+    int16_t m_strikeoutPosition;
+    int16_t m_strikeoutThickness;
+
     Palette m_palette;
 
-    Typeface(IntrinsicFace &instance);
-    Typeface(const Typeface &typeface, IntrinsicFace &instance);
-    Typeface(const Typeface &typeface, const FT_Color *colorArray, size_t colorCount);
+    Typeface(RenderableFace &renderableFace);
+    Typeface(const Typeface &parent, RenderableFace &renderableFace);
+    Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount);
+
+    void setupSize();
+    void setupStrikeout();
+    void setupDescription();
+    void setupHarfBuzz(ShapableFace *parent = nullptr);
 };
 
 }
