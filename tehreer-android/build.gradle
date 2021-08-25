@@ -1,20 +1,16 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 ext {
-    bintrayRepo = 'maven'
-    bintrayName = 'tehreer-android'
-
     publishedGroupId = 'com.github.mta452'
     publishedArtifactId = 'tehreer-android'
 
     libraryName = 'Tehreer-Android'
-    libraryVersion = '2.6'
+    libraryVersion = '2.7'
     libraryDescription = 'A library that gives full control over text related technologies such as bidirectional algorithm, open type shaping, text typesetting and text rendering.'
 
     siteUrl = 'https://github.com/Tehreer/Tehreer-Android'
-    gitUrl = 'https://github.com/Tehreer/Tehreer-Android.git'
 
     developerId = 'mta452'
     developerName = 'Muhammad Tayyab Akram'
@@ -23,10 +19,24 @@ ext {
     licenseName = 'The Apache Software License, Version 2.0'
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = [ 'Apache-2.0' ]
+
+    scmConnection = 'scm:git:github.com/Tehreer/Tehreer-Android.git'
+    scmDeveloperConnection = 'scm:git:ssh://github.com/Tehreer/Tehreer-Android.git'
+    scmUrl = 'https://github.com/Tehreer/Tehreer-Android/tree/master'
+
+    mavenName = 'sonatype'
+    mavenUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 }
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+ext['signing.keyId'] = properties.getProperty('signing.keyId')
+ext['signing.password'] = properties.getProperty('signing.password')
+ext['signing.secretKeyRingFile'] = properties.getProperty('signing.secretKeyRingFile')
+ext['ossrhUsername'] = properties.getProperty('ossrhUsername')
+ext['ossrhPassword'] = properties.getProperty('ossrhPassword')
+ext['sonatypeStagingProfileId'] = properties.getProperty('sonatypeStagingProfileId')
 
 group = publishedGroupId
 version = libraryVersion
@@ -95,7 +105,6 @@ dependencies {
     doclet project(':doclet')
 }
 
-// Configure artifacts
 artifacts {
     task apiDocs(type: Javadoc, dependsOn: configurations.doclet) {
         title = "$libraryName $libraryVersion API"
@@ -110,12 +119,12 @@ artifacts {
     }
 
     task javadocJar(type: Jar, dependsOn: apiDocs) {
-        classifier = 'javadoc'
+        archiveClassifier.set('javadoc')
         from apiDocs.destinationDir
     }
 
     task sourcesJar(type: Jar) {
-        classifier = 'sources'
+        archiveClassifier.set('sources')
         from android.sourceSets.main.java.srcDirs
     }
 
@@ -123,58 +132,61 @@ artifacts {
     archives sourcesJar
 }
 
-// Configure android-maven-gradle-plugin
-install {
-    repositories.mavenInstaller.pom.project {
-        packaging 'aar'
-        groupId publishedGroupId
-        artifactId publishedArtifactId
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId publishedGroupId
+                artifactId publishedArtifactId
+                version libraryVersion
 
-        name libraryName
-        description libraryDescription
-        url siteUrl
+                from components.release
 
-        licenses {
-            license {
-                name licenseName
-                url licenseUrl
+                artifact sourcesJar
+
+                pom {
+                    name = libraryName
+                    description = libraryDescription
+                    url = siteUrl
+
+                    licenses {
+                        license {
+                            name = licenseName
+                            url = licenseUrl
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = developerId
+                            name = developerName
+                            email = developerEmail
+                        }
+                    }
+
+                    scm {
+                        connection = scmConnection
+                        developerConnection = scmDeveloperConnection
+                        url = scmUrl
+                    }
+                }
             }
         }
-        developers {
-            developer {
-                id developerId
-                name developerName
-                email developerEmail
+
+        repositories {
+            maven {
+                name = mavenName
+                url = mavenUrl
+
+                credentials {
+                    username ossrhUsername
+                    password ossrhPassword
+                }
             }
-        }
-        scm {
-            url siteUrl
-            connection gitUrl
-            developerConnection gitUrl
         }
     }
 }
 
-// Configure gradle-bintray-plugin
-bintray {
-    user = properties.getProperty('bintray.user')
-    key = properties.getProperty('bintray.apikey')
-    configurations = ['archives']
-
-    pkg {
-        repo = bintrayRepo
-        name = bintrayName
-        desc = libraryDescription
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        licenses = allLicenses
-        publish = true
-        publicDownloadNumbers = true
-        version {
-            gpg {
-                sign = true
-                passphrase = properties.getProperty('bintray.gpg.password')
-            }
-        }
-    }
+signing {
+    sign publishing.publications
 }
