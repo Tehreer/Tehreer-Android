@@ -152,8 +152,8 @@ public class Typeface {
         init(nativeTypeface);
     }
 
-    private Typeface(@NonNull Typeface typeface, long nativeVariation) {
-        this.nativeTypeface = nativeVariation;
+    private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
+        this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
 
         this.variationAxes = typeface.variationAxes;
         this.namedStyles = typeface.namedStyles;
@@ -501,7 +501,7 @@ public class Typeface {
         checkNotNull(coordinates, "coordinates");
         checkArgument(coordinates.length == variationAxes.size(), "The number of coordinates does not match with variation axes.");
 
-        return new Typeface(this, nGetVariationInstance(nativeTypeface, coordinates));
+        return new Typeface(this, coordinates);
     }
 
     /**
