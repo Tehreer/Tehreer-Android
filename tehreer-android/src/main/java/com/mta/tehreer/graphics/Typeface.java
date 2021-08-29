@@ -184,8 +184,9 @@ public class Typeface {
 
         setupVariations();
         setupPalettes();
-	    setupNames();
         setupDefaultCoordinates();
+        setupStrikeout();
+        setupNames();
         setupVariableDescription();
         setupDefaultColors();
 	}
@@ -392,6 +393,10 @@ public class Typeface {
 
             nSetupCoordinates(nativeTypeface, coordinates);
         }
+    }
+
+    private void setupStrikeout() {
+        nSetupStrikeout(nativeTypeface);
     }
 
     private void setupVariableDescription() {
@@ -859,6 +864,7 @@ public class Typeface {
     private static native long nCreateFromStream(InputStream stream);
 
     private static native void nSetupCoordinates(long nativeTypeface, float[] coordinates);
+    private static native void nSetupStrikeout(long nativeTypeface);
     private static native void nSetupVariation(long nativeTypeface, float italValue,
                                                float slntValue, float wdthValue, float wghtValue);
     private static native void nSetupColors(long nativeTypeface, int[] colors);
