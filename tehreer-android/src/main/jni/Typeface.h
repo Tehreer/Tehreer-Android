@@ -52,6 +52,7 @@ public:
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
 
     void setupCoordinates(const float *coordArray, size_t coordCount);
+    void setupStrikeout();
     void setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue);
     void setupColors(const FT_Color *colorArray, size_t colorCount);
 
@@ -152,7 +153,6 @@ private:
     Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount);
 
     void setupSize();
-    void setupStrikeout();
     void setupDescription();
     void setupHarfBuzz(ShapableFace *parent = nullptr);
 };

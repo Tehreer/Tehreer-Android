@@ -210,7 +210,6 @@ Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
     , m_palette(parent.m_palette)
 {
     setupSize();
-    setupStrikeout();
     setupHarfBuzz(parent.m_shapableFace);
 }
 
@@ -590,6 +589,12 @@ void setupCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArra
     env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
 }
 
+void setupStrikeout(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    typeface->setupStrikeout();
+}
+
 void setupVariation(JNIEnv *env, jobject obj, jlong typefaceHandle,
     jfloat italValue, jfloat slntValue, jfloat wdthValue, jfloat wghtValue)
 {
@@ -877,6 +882,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nSetupCoordinates", "(J[F)V", (void *)setupCoordinates },
+    { "nSetupStrikeout", "(J)V", (void *)setupStrikeout },
     { "nSetupVariation", "(JFFFF)V", (void *)setupVariation },
     { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
