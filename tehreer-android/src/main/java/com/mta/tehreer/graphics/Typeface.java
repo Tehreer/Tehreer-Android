@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.graphics;
 
+import android.annotation.SuppressLint;
 import android.content.res.AssetManager;
 import android.graphics.Matrix;
 import android.graphics.Path;
@@ -191,6 +192,7 @@ public class Typeface {
         setupDefaultColors();
 	}
 
+    @SuppressLint ("Range")
     private void setupVariations() {
         FontVariationsTable fvarTable = FontVariationsTable.from(this);
         if (fvarTable == null) {
@@ -228,6 +230,8 @@ public class Typeface {
 
         namedStyles = new ArrayList<>(instanceRecords.length);
 
+        boolean hasDefaultInstance = false;
+
         for (InstanceRecord instanceRecord : instanceRecords) {
             final int styleNameId = instanceRecord.subfamilyNameID();
             final float[] coordinates = instanceRecord.coordinates();
@@ -254,7 +258,39 @@ public class Typeface {
                 }
             }
 
+            if (!hasDefaultInstance) {
+                final float minValue = 1.0f / 0x10000;
+                final int axesCount = variationAxes.size();
+                boolean matched = true;
+
+                // Check if this is the default instance.
+                for (int i = 0; i < axesCount; i++) {
+                    VariationAxis axis = variationAxes.get(i);
+
+                    if (Math.abs(coordinates[i] - axis.defaultValue()) >= minValue) {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if (matched) {
+                    hasDefaultInstance = true;
+                }
+            }
+
             namedStyles.add(NamedStyle.of(styleName, coordinates, postScriptName));
+        }
+
+        if (!hasDefaultInstance) {
+            final int axesCount = variationAxes.size();
+            final float[] coordinates = new float[axesCount];
+
+            for (int i = 0; i < axesCount; i++) {
+                coordinates[i] = variationAxes.get(i).defaultValue();
+            }
+
+            // FIXME: Provide default style name.
+            namedStyles.add(NamedStyle.of("", coordinates, null));
         }
     }
 
