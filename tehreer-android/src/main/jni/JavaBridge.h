@@ -48,6 +48,7 @@ public:
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;
 
     jobject NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
+    jstring NameTableRecord_string(jobject nameRecord) const;
 
     jobject Path_construct() const;
     void Path_close(jobject path) const;

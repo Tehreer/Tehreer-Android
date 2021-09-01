@@ -41,6 +41,7 @@ static jmethodID INPUT_STREAM__READ;
 
 static jclass    NAME_TABLE_RECORD;
 static jmethodID NAME_TABLE_RECORD__CONSTRUCTOR;
+static jmethodID NAME_TABLE_RECORD__STRING;
 
 static jclass    PATH;
 static jmethodID PATH__CONSTRUCTOR;
@@ -95,6 +96,7 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("com/mta/tehreer/sfnt/tables/NameTable$Record");
     NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
     NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
+    NAME_TABLE_RECORD__STRING = env->GetMethodID(clazz, "string", "()Ljava/lang/String;");
 
     clazz = env->FindClass("android/graphics/Path");
     PATH = (jclass)env->NewGlobalRef(clazz);
@@ -185,6 +187,11 @@ jint JavaBridge::InputStream_read(jobject inputStream, jbyteArray buffer, jint o
 jobject JavaBridge::NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
 {
     return m_env->NewObject(NAME_TABLE_RECORD, NAME_TABLE_RECORD__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
+}
+
+jstring JavaBridge::NameTableRecord_string(jobject nameRecord) const
+{
+    return static_cast<jstring>(m_env->CallObjectMethod(nameRecord, NAME_TABLE_RECORD__STRING));
 }
 
 jobject JavaBridge::Path_construct() const
