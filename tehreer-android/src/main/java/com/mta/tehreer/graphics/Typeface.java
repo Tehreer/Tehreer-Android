@@ -38,7 +38,6 @@ import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
 import com.mta.tehreer.internal.sfnt.tables.fvar.InstanceRecord;
 import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
-import com.mta.tehreer.sfnt.tables.NameTable;
 
 import java.io.File;
 import java.io.InputStream;
@@ -199,7 +198,6 @@ public class Typeface {
             return;
         }
 
-        NameTable nameTable = NameTable.from(this);
         VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
         InstanceRecord[] instanceRecords = fvarTable.instanceRecords();
 
@@ -213,13 +211,7 @@ public class Typeface {
             final int flags = axisRecord.flags();
             final int axisNameId = axisRecord.axisNameId();
 
-            final int nameRecordIndex = searchNameRecordIndex(axisNameId);
-            String axisName = null;
-
-            if (nameRecordIndex > -1) {
-                NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
-                axisName = nameRecord.string();
-            }
+            String axisName = searchNameString(axisNameId);
             if (axisName == null) {
                 axisName = "";
             }
@@ -237,25 +229,14 @@ public class Typeface {
             final float[] coordinates = instanceRecord.coordinates();
             final int postScriptNameId = instanceRecord.postScriptNameID();
 
-            int nameRecordIndex = searchNameRecordIndex(styleNameId);
-            String styleName = null;
-            String postScriptName = null;
-
-            if (nameRecordIndex > -1) {
-                NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
-                styleName = nameRecord.string();
-            }
+            String styleName = searchNameString(styleNameId);
             if (styleName == null) {
                 styleName = "";
             }
 
+            String postScriptName = null;
             if (postScriptNameId > -1) {
-                nameRecordIndex = searchNameRecordIndex(postScriptNameId);
-
-                if (nameRecordIndex > -1) {
-                    NameTable.Record nameRecord = nameTable.recordAt(nameRecordIndex);
-                    postScriptName = nameRecord.string();
-                }
+                postScriptName = searchNameString(postScriptNameId);
             }
 
             if (!hasDefaultInstance) {
@@ -300,8 +281,6 @@ public class Typeface {
             return;
         }
 
-        NameTable nameTable = NameTable.from(this);
-
         final int numPaletteEntries = cpalTable.numPaletteEntries();
         final int numPalettes = cpalTable.numPalettes();
 
@@ -319,14 +298,10 @@ public class Typeface {
             int[] colors = new int[numPaletteEntries];
 
             if (paletteLabels != null) {
-                final int nameID = paletteLabels.get(i);
+                final int nameId = paletteLabels.get(i);
 
-                if (nameID != 0xFFFF) {
-                    final int nameRecordIndex = searchNameRecordIndex(nameID);
-
-                    if (nameRecordIndex > -1) {
-                        name = nameTable.recordAt(nameRecordIndex).string();
-                    }
+                if (nameId != 0xFFFF) {
+                    name = searchNameString(nameId);
                 }
             }
             if (name == null) {
@@ -354,15 +329,11 @@ public class Typeface {
             }
         } else {
             for (int i = 0; i < numPaletteEntries; i++) {
-                final int nameID = paletteEntryLabels.get(i);
+                final int nameId = paletteEntryLabels.get(i);
                 String name = null;
 
-                if (nameID != 0xFFFF) {
-                    final int nameRecordIndex = searchNameRecordIndex(nameID);
-
-                    if (nameRecordIndex > -1) {
-                        name = nameTable.recordAt(nameRecordIndex).string();
-                    }
+                if (nameId != 0xFFFF) {
+                    name = searchNameString(nameId);
                 }
                 if (name == null) {
                     name = "";
@@ -374,11 +345,6 @@ public class Typeface {
     }
 
     private void setupNames() {
-        NameTable nameTable = NameTable.from(this);
-        if (nameTable == null) {
-            return;
-        }
-
         final int[] nameRecordIndexes = new int[3];
         nGetNameRecordIndexes(nativeTypeface, nameRecordIndexes);
 
@@ -387,21 +353,21 @@ public class Typeface {
         final int fullNameIndex = nameRecordIndexes[2];
 
         if (familyNameIndex != -1) {
-            String recordString = nameTable.recordAt(familyNameIndex).string();
-            if (recordString != null) {
-                familyName = recordString;
+            String name = getNameString(familyNameIndex);
+            if (name != null) {
+                familyName = name;
             }
         }
         if (styleNameIndex != -1) {
-            String recordString = nameTable.recordAt(styleNameIndex).string();
-            if (recordString != null) {
-                styleName = recordString;
+            String name = getNameString(styleNameIndex);
+            if (name != null) {
+                styleName = name;
             }
         }
         if (fullNameIndex != -1) {
-            String recordString = nameTable.recordAt(fullNameIndex).string();
-            if (recordString != null) {
-                fullName = recordString;
+            String name = getNameString(fullNameIndex);
+            if (name != null) {
+                fullName = name;
             }
         } else {
             generateFullName();
@@ -731,8 +697,17 @@ public class Typeface {
         return nGetTableData(nativeTypeface, tableTag);
     }
 
-    int searchNameRecordIndex(int nameId) {
-        return nSearchNameRecordIndex(nativeTypeface, nameId);
+    private @Nullable String searchNameString(int nameId) {
+        int index = nSearchNameIndex(nativeTypeface, nameId);
+        if (index > -1) {
+            return getNameString(index);
+        }
+
+        return null;
+    }
+
+    private @Nullable String getNameString(int nameIndex) {
+        return nGetNameString(nativeTypeface, nameIndex);
     }
 
     /**
@@ -914,7 +889,9 @@ public class Typeface {
     private static native void nGetAssociatedColors(long nativeTypeface, int[] colors);
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
-    private static native int nSearchNameRecordIndex(long nativeTypeface, int nameId);
+
+    private static native int nSearchNameIndex(long nativeTypeface, int nameId);
+    private static native String nGetNameString(long nativeTypeface, int nameIndex);
     private static native void nGetNameRecordIndexes(long nativeTypeface, int[] indexes);
 
     private static native int nGetWeight(long nativeTypeface);
