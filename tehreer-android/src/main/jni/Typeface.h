@@ -99,7 +99,9 @@ public:
     size_t getTableLength(uint32_t tag);
     void getTableData(uint32_t tag, void *buffer);
 
-    int32_t searchNameRecordIndex(uint16_t nameID);
+    int32_t searchNameIndex(uint16_t nameID);
+    jobject getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex);
+    jstring getNameString(const JavaBridge &javaBridge, int32_t nameIndex);
 
     uint16_t getGlyphID(uint32_t codePoint);
     float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);

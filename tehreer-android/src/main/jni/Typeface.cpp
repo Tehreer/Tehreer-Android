@@ -399,7 +399,7 @@ void Typeface::getTableData(uint32_t tag, void *buffer)
     FT_Load_Sfnt_Table(ftFace, tag, 0, ftBuffer, nullptr);
 }
 
-int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
+int32_t Typeface::searchNameIndex(uint16_t nameID)
 {
     FaceLock lock(m_renderableFace);
 
@@ -407,6 +407,34 @@ int32_t Typeface::searchNameRecordIndex(uint16_t nameID)
     int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
 
     return recordIndex;
+}
+
+jobject Typeface::getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex)
+{
+    lock();
+
+    FT_SfntName sfntName;
+    FT_Get_Sfnt_Name(ftFace(), static_cast<FT_UInt>(nameIndex), &sfntName);
+
+    unlock();
+
+    auto buffer = reinterpret_cast<jbyte *>(sfntName.string);
+    auto length = static_cast<jint>(sfntName.string_len);
+
+    JNIEnv *env = javaBridge.env();
+    jbyteArray bytes = env->NewByteArray(length);
+    env->SetByteArrayRegion(bytes, 0, length, buffer);
+
+    return javaBridge.NameTableRecord_construct(sfntName.name_id, sfntName.platform_id,
+                                                sfntName.language_id, sfntName.encoding_id, bytes);
+}
+
+jstring Typeface::getNameString(const JavaBridge &javaBridge, int32_t nameIndex)
+{
+    jobject nameRecord = getNameRecord(javaBridge, nameIndex);
+    jstring name = javaBridge.NameTableRecord_string(nameRecord);
+
+    return name;
 }
 
 uint16_t Typeface::getGlyphID(uint32_t codePoint)
@@ -713,13 +741,21 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     return dataArray;
 }
 
-static jint searchNameRecordIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
+static jint searchNameIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     auto inputID = static_cast<uint16_t>(nameID);
-    int32_t recordIndex = typeface->searchNameRecordIndex(inputID);
+    int32_t nameIndex = typeface->searchNameIndex(inputID);
 
-    return static_cast<jint>(recordIndex);
+    return static_cast<jint>(nameIndex);
+}
+
+static jstring getNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameIndex)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto inputIndex = static_cast<int32_t>(nameIndex);
+
+    return typeface->getNameString(JavaBridge(env), inputIndex);
 }
 
 static void getNameRecordIndexes(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray indicesArray)
@@ -891,7 +927,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
     { "nGetAssociatedColors", "(J[I)V", (void *)getAssociatedColors },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
-    { "nSearchNameRecordIndex", "(JI)I", (void *)searchNameRecordIndex },
+    { "nSearchNameIndex", "(JI)I", (void *)searchNameIndex },
+    { "nGetNameString", "(JI)Ljava/lang/String;", (void *)getNameString },
     { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
     { "nGetWeight", "(J)I", (void *)getWeight },
     { "nGetWidth", "(J)I", (void *)getWidth },
