@@ -532,14 +532,6 @@ Encoding::Encoding(uint16_t platformID, uint16_t encodingID)
     }
 }
 
-static jbyteArray createBytes(JNIEnv *env, FT_Byte *buffer, FT_UInt length)
-{
-    jbyteArray bytes = env->NewByteArray(length);
-    env->SetByteArrayRegion(bytes, 0, length, reinterpret_cast<jbyte *>(buffer));
-
-    return bytes;
-}
-
 jobjectArray getNameLocale(JNIEnv *env, jobject obj, jint platformId, jint languageId)
 {
     Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
@@ -584,21 +576,9 @@ jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
 {
     jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
+    auto inputIndex = static_cast<int32_t>(index);
 
-    // Lock the typeface as FreeType loads the name on demand.
-    typeface->lock();
-
-    FT_SfntName sfntName;
-    FT_Get_Sfnt_Name(baseFace, static_cast<FT_UInt>(index), &sfntName);
-
-    typeface->unlock();
-
-    jbyteArray bytes = createBytes(env, sfntName.string, sfntName.string_len);
-
-    return JavaBridge(env).NameTableRecord_construct(sfntName.name_id, sfntName.platform_id,
-                                                     sfntName.language_id, sfntName.encoding_id,
-                                                     bytes);
+    return typeface->getNameRecord(JavaBridge(env), inputIndex);
 }
 
 jstring getGlyphName(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
