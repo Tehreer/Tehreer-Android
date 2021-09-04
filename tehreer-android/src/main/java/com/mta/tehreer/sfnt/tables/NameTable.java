@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -210,6 +210,7 @@ public final class NameTable {
          *
          * @return The decoded string for this record, or <code>null</code>.
          */
+        @Keep
         public @Nullable String string() {
             Charset charset = charset();
             if (charset != null && bytes != null) {
