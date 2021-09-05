@@ -753,7 +753,7 @@ static jstring searchNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->familyName();
+    int32_t nameIndex = typeface->defaultFamilyNameIndex();
 
     return typeface->getNameString(JavaBridge(env), nameIndex);
 }
@@ -761,7 +761,7 @@ static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHand
 static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->styleName();
+    int32_t nameIndex = typeface->defaultStyleNameIndex();
 
     return typeface->getNameString(JavaBridge(env), nameIndex);
 }
@@ -769,7 +769,7 @@ static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandl
 static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->fullName();
+    int32_t nameIndex = typeface->defaultFullNameIndex();
 
     return typeface->getNameString(JavaBridge(env), nameIndex);
 }

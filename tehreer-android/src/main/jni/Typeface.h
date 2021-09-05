@@ -75,9 +75,9 @@ public:
     inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
-    inline int32_t familyName() const { return m_description.familyName; }
-    inline int32_t styleName() const { return m_description.styleName; }
-    inline int32_t fullName() const { return m_description.fullName; }
+    inline int32_t defaultFamilyNameIndex() const { return m_defaults.description.familyName; }
+    inline int32_t defaultStyleNameIndex() const { return m_defaults.description.styleName; }
+    inline int32_t defaultFullNameIndex() const { return m_defaults.description.fullName; }
 
     inline uint16_t weight() const { return m_description.weight; }
     inline uint16_t width() const { return m_description.width; }
