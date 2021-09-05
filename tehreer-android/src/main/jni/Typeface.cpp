@@ -758,21 +758,28 @@ static jstring getNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jin
     return typeface->getNameString(JavaBridge(env), inputIndex);
 }
 
-static void getNameRecordIndexes(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray indicesArray)
+static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    const jint FAMILY_NAME = 0;
-    const jint STYLE_NAME = 1;
-    const jint FULL_NAME = 2;
-
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    void *buffer = env->GetPrimitiveArrayCritical(indicesArray, nullptr);
+    int32_t nameIndex = typeface->familyName();
 
-    jint *values = static_cast<jint *>(buffer);
-    values[FAMILY_NAME] = typeface->familyName();
-    values[STYLE_NAME] = typeface->styleName();
-    values[FULL_NAME] = typeface->fullName();
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
 
-    env->ReleasePrimitiveArrayCritical(indicesArray, buffer, 0);
+static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    int32_t nameIndex = typeface->styleName();
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
+
+static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    int32_t nameIndex = typeface->fullName();
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
 }
 
 static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -929,7 +936,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameIndex", "(JI)I", (void *)searchNameIndex },
     { "nGetNameString", "(JI)Ljava/lang/String;", (void *)getNameString },
-    { "nGetNameRecordIndexes", "(J[I)V", (void *)getNameRecordIndexes },
+    { "nGetDefaultFamilyName", "(J)Ljava/lang/String;", (void *)getDefaultFamilyName },
+    { "nGetDefaultStyleName", "(J)Ljava/lang/String;", (void *)getDefaultStyleName },
+    { "nGetDefaultFullName", "(J)Ljava/lang/String;", (void *)getDefaultFullName },
     { "nGetWeight", "(J)I", (void *)getWeight },
     { "nGetWidth", "(J)I", (void *)getWidth },
     { "nGetSlope", "(J)I", (void *)getSlope },
