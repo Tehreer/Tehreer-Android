@@ -741,21 +741,13 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     return dataArray;
 }
 
-static jint searchNameIndex(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
+static jstring searchNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     auto inputID = static_cast<uint16_t>(nameID);
     int32_t nameIndex = typeface->searchNameIndex(inputID);
 
-    return static_cast<jint>(nameIndex);
-}
-
-static jstring getNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameIndex)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto inputIndex = static_cast<int32_t>(nameIndex);
-
-    return typeface->getNameString(JavaBridge(env), inputIndex);
+    return typeface->getNameString(JavaBridge(env), nameIndex);
 }
 
 static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -934,8 +926,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
     { "nGetAssociatedColors", "(J[I)V", (void *)getAssociatedColors },
     { "nGetTableData", "(JI)[B", (void *)getTableData },
-    { "nSearchNameIndex", "(JI)I", (void *)searchNameIndex },
-    { "nGetNameString", "(JI)Ljava/lang/String;", (void *)getNameString },
+    { "nSearchNameString", "(JI)Ljava/lang/String;", (void *)searchNameString },
     { "nGetDefaultFamilyName", "(J)Ljava/lang/String;", (void *)getDefaultFamilyName },
     { "nGetDefaultStyleName", "(J)Ljava/lang/String;", (void *)getDefaultStyleName },
     { "nGetDefaultFullName", "(J)Ljava/lang/String;", (void *)getDefaultFullName },
