@@ -686,16 +686,7 @@ public class Typeface {
     }
 
     private @Nullable String searchNameString(int nameId) {
-        int index = nSearchNameIndex(nativeTypeface, nameId);
-        if (index > -1) {
-            return getNameString(index);
-        }
-
-        return null;
-    }
-
-    private @Nullable String getNameString(int nameIndex) {
-        return nGetNameString(nativeTypeface, nameIndex);
+        return nSearchNameString(nativeTypeface, nameId);
     }
 
     private @Nullable String getDefaultFamilyName() {
@@ -890,9 +881,7 @@ public class Typeface {
 
     private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
 
-    private static native int nSearchNameIndex(long nativeTypeface, int nameId);
-    private static native String nGetNameString(long nativeTypeface, int nameIndex);
-
+    private static native String nSearchNameString(long nativeTypeface, int nameId);
     private static native String nGetDefaultFamilyName(long nativeTypeface);
     private static native String nGetDefaultStyleName(long nativeTypeface);
     private static native String nGetDefaultFullName(long nativeTypeface);
