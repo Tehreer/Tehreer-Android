@@ -270,8 +270,12 @@ public class Typeface {
                 coordinates[i] = variationAxes.get(i).defaultValue();
             }
 
-            // FIXME: Provide default style name.
-            namedStyles.add(NamedStyle.of("", coordinates, null));
+            String styleName = getDefaultStyleName();
+            if (styleName == null) {
+                styleName = "";
+            }
+
+            namedStyles.add(0, NamedStyle.of(styleName, coordinates, null));
         }
     }
 
