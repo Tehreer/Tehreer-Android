@@ -345,30 +345,18 @@ public class Typeface {
     }
 
     private void setupNames() {
-        final int[] nameRecordIndexes = new int[3];
-        nGetNameRecordIndexes(nativeTypeface, nameRecordIndexes);
+        final String defaultFamilyName = getDefaultFamilyName();
+        final String defaultStyleName = getDefaultStyleName();
+        final String defaultFullName = getDefaultFullName();
 
-        final int familyNameIndex = nameRecordIndexes[0];
-        final int styleNameIndex = nameRecordIndexes[1];
-        final int fullNameIndex = nameRecordIndexes[2];
-
-        if (familyNameIndex != -1) {
-            String name = getNameString(familyNameIndex);
-            if (name != null) {
-                familyName = name;
-            }
+        if (defaultFamilyName != null) {
+            familyName = defaultFamilyName;
         }
-        if (styleNameIndex != -1) {
-            String name = getNameString(styleNameIndex);
-            if (name != null) {
-                styleName = name;
-            }
+        if (defaultStyleName != null) {
+            styleName = defaultStyleName;
         }
-        if (fullNameIndex != -1) {
-            String name = getNameString(fullNameIndex);
-            if (name != null) {
-                fullName = name;
-            }
+        if (defaultFullName != null) {
+            fullName = defaultFullName;
         } else {
             generateFullName();
         }
@@ -710,6 +698,18 @@ public class Typeface {
         return nGetNameString(nativeTypeface, nameIndex);
     }
 
+    private @Nullable String getDefaultFamilyName() {
+        return nGetDefaultFamilyName(nativeTypeface);
+    }
+
+    private @Nullable String getDefaultStyleName() {
+        return nGetDefaultStyleName(nativeTypeface);
+    }
+
+    private @Nullable String getDefaultFullName() {
+        return nGetDefaultFullName(nativeTypeface);
+    }
+
     /**
      * Returns the number of font units per EM square for this typeface.
      *
@@ -892,7 +892,10 @@ public class Typeface {
 
     private static native int nSearchNameIndex(long nativeTypeface, int nameId);
     private static native String nGetNameString(long nativeTypeface, int nameIndex);
-    private static native void nGetNameRecordIndexes(long nativeTypeface, int[] indexes);
+
+    private static native String nGetDefaultFamilyName(long nativeTypeface);
+    private static native String nGetDefaultStyleName(long nativeTypeface);
+    private static native String nGetDefaultFullName(long nativeTypeface);
 
     private static native int nGetWeight(long nativeTypeface);
     private static native int nGetWidth(long nativeTypeface);
