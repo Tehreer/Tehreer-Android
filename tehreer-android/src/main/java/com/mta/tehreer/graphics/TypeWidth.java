@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,5 +56,21 @@ public enum TypeWidth {
         final int index = value - 1;
 
         return ALL_VALUES[Math.max(0, Math.min(8, index))];
+    }
+
+    static @NonNull TypeWidth fromWdth(float wdth) {
+        int value;
+
+        if (wdth < 50) {
+            value = 1;
+        } else if (wdth < 125) {
+            value = (int) (((wdth - 50) / 12.5) + 1);
+        } else if (wdth < 200) {
+            value = (int) (((wdth - 125) / 25) + 7);
+        } else {
+            value = 9;
+        }
+
+        return valueOf(value);
     }
 }
