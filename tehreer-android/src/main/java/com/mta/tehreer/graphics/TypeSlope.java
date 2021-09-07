@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,5 +39,13 @@ public enum TypeSlope {
 
     static @NonNull TypeSlope valueOf(int value) {
         return ALL_VALUES[value];
+    }
+
+    static @NonNull TypeSlope fromItal(float ital) {
+        return ital >= 1.0f ? ITALIC : PLAIN;
+    }
+
+    static @NonNull TypeSlope fromSlnt(int slnt) {
+        return slnt != 0.0 ? OBLIQUE : PLAIN;
     }
 }
