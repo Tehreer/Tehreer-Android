@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,5 +54,19 @@ public enum TypeWeight {
         final int index = (int) ((value / 100.0f) - 0.5f);
 
         return ALL_VALUES[Math.max(0, Math.min(8, index))];
+    }
+
+    static @NonNull TypeWeight fromWght(float wght) {
+        int value;
+
+        if (wght < 1) {
+            value = 1;
+        } else if (wght > 1000) {
+            value = 1000;
+        } else {
+            value = (int) wght;
+        }
+
+        return valueOf(value);
     }
 }
