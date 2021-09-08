@@ -84,6 +84,10 @@ public class Typeface {
     private @NonNull String styleName = "";
     private @NonNull String fullName = "";
 
+    private @NonNull TypeWeight weight = TypeWeight.REGULAR;
+    private @NonNull TypeWidth width = TypeWidth.NORMAL;
+    private @NonNull TypeSlope slope = TypeSlope.PLAIN;
+
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
      * memory. Rather, it is directly read from the stream when needed. So the performance of
@@ -155,6 +159,8 @@ public class Typeface {
     private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
         this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
 
+        setupDefaultDescription();
+
         this.variationAxes = typeface.variationAxes;
         this.namedStyles = typeface.namedStyles;
         this.paletteEntryNames = typeface.paletteEntryNames;
@@ -177,11 +183,15 @@ public class Typeface {
         this.familyName = typeface.familyName;
         this.styleName = typeface.styleName;
         this.fullName = typeface.fullName;
+        this.weight = typeface.weight;
+        this.width = typeface.width;
+        this.slope = typeface.slope;
     }
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
 
+        setupDefaultDescription();
         setupVariations();
         setupPalettes();
         setupDefaultCoordinates();
@@ -190,6 +200,12 @@ public class Typeface {
         setupVariableDescription();
         setupDefaultColors();
 	}
+
+	private void setupDefaultDescription() {
+        weight = getDefaultWeight();
+        width = getDefaultWidth();
+        slope = getDefaultSlope();
+    }
 
     @SuppressLint ("Range")
     private void setupVariations() {
@@ -436,34 +452,25 @@ public class Typeface {
         if (allAxes != null && !allAxes.isEmpty()) {
             final int axisCount = variationAxes.size();
 
-            final int italTag = SfntTag.make("ital");
-            final int slntTag = SfntTag.make("slnt");
-            final int wdthTag = SfntTag.make("wdth");
-            final int wghtTag = SfntTag.make("wght");
-
-            float italValue = Float.NaN;
-            float slntValue = Float.NaN;
-            float wdthValue = Float.NaN;
-            float wghtValue = Float.NaN;
+            final int ital = SfntTag.make("ital");
+            final int slnt = SfntTag.make("slnt");
+            final int wdth = SfntTag.make("wdth");
+            final int wght = SfntTag.make("wght");
 
             for (int i = 0; i < axisCount; i++) {
                 final VariationAxis axis = variationAxes.get(i);
                 final int tag = axis.tag();
 
-                if (tag == italTag) {
-                    italValue = coordinates[i];
-                    slntValue = Float.NaN;
-                } else if (tag == slntTag) {
-                    slntValue = coordinates[i];
-                    italValue = Float.NaN;
-                } else if (tag == wdthTag) {
-                    wdthValue = coordinates[i];
-                } else if (tag == wghtTag) {
-                    wghtValue = coordinates[i];
+                if (tag == ital) {
+                    slope = TypeSlope.fromItal(coordinates[i]);
+                } else if (tag == slnt) {
+                    slope = TypeSlope.fromSlnt(coordinates[i]);
+                } else if (tag == wdth) {
+                    width = TypeWidth.fromWdth(coordinates[i]);
+                } else if (tag == wght) {
+                    weight = TypeWeight.fromWght(coordinates[i]);
                 }
             }
-
-            nSetupVariation(nativeTypeface, italValue, slntValue, wdthValue, wghtValue);
         }
     }
 
@@ -648,9 +655,7 @@ public class Typeface {
      * @return The typographic weight of this typeface.
      */
     public @NonNull TypeWeight getWeight() {
-        final int weight = nGetWeight(nativeTypeface);
-
-        return TypeWeight.valueOf(weight);
+        return weight;
     }
 
     /**
@@ -660,9 +665,7 @@ public class Typeface {
      * @return The typographic width of this typeface.
      */
     public @NonNull TypeWidth getWidth() {
-        final int width = nGetWidth(nativeTypeface);
-
-        return TypeWidth.valueOf(width);
+        return width;
     }
 
     /**
@@ -672,9 +675,7 @@ public class Typeface {
      * @return The typographic slope of this typeface.
      */
     public @NonNull TypeSlope getSlope() {
-        final int slope = nGetSlope(nativeTypeface);
-
-        return TypeSlope.valueOf(slope);
+        return slope;
     }
 
     /**
@@ -703,6 +704,18 @@ public class Typeface {
 
     private @Nullable String getDefaultFullName() {
         return nGetDefaultFullName(nativeTypeface);
+    }
+
+    private @NonNull TypeWeight getDefaultWeight() {
+        return TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
+    }
+
+    private @NonNull TypeWidth getDefaultWidth() {
+        return TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
+    }
+
+    private @NonNull TypeSlope getDefaultSlope() {
+        return TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
     }
 
     /**
@@ -871,8 +884,6 @@ public class Typeface {
 
     private static native void nSetupCoordinates(long nativeTypeface, float[] coordinates);
     private static native void nSetupStrikeout(long nativeTypeface);
-    private static native void nSetupVariation(long nativeTypeface, float italValue,
-                                               float slntValue, float wdthValue, float wghtValue);
     private static native void nSetupColors(long nativeTypeface, int[] colors);
 
 	private static native void nDispose(long nativeTypeface);
@@ -890,9 +901,9 @@ public class Typeface {
     private static native String nGetDefaultStyleName(long nativeTypeface);
     private static native String nGetDefaultFullName(long nativeTypeface);
 
-    private static native int nGetWeight(long nativeTypeface);
-    private static native int nGetWidth(long nativeTypeface);
-    private static native int nGetSlope(long nativeTypeface);
+    private static native int nGetDefaultWeight(long nativeTypeface);
+    private static native int nGetDefaultWidth(long nativeTypeface);
+    private static native int nGetDefaultSlope(long nativeTypeface);
 
 	private static native int nGetUnitsPerEm(long nativeTypeface);
 	private static native int nGetAscent(long nativeTypeface);
