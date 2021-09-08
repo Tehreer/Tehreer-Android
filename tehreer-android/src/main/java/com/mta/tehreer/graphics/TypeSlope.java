@@ -45,7 +45,7 @@ public enum TypeSlope {
         return ital >= 1.0f ? ITALIC : PLAIN;
     }
 
-    static @NonNull TypeSlope fromSlnt(int slnt) {
-        return slnt != 0.0 ? OBLIQUE : PLAIN;
+    static @NonNull TypeSlope fromSlnt(float slnt) {
+        return slnt != 0.0f ? OBLIQUE : PLAIN;
     }
 }
