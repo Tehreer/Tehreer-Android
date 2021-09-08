@@ -126,43 +126,6 @@ static int32_t searchFullNameRecordIndex(FT_Face face)
     return searchEnglishNameRecordIndex(face, NameID::FULL);
 }
 
-static inline uint16_t variableWeightToStandard(float value)
-{
-    if (value < 1) {
-        return 1;
-    }
-    if (value > 1000) {
-        return 1000;
-    }
-
-    return static_cast<uint16_t>(value);
-}
-
-static inline uint16_t variableWidthToStandard(float value)
-{
-    if (value < 50) {
-        return 1;
-    }
-    if (value < 125) {
-        return static_cast<uint16_t>(((value - 50) / 12.5) + 1);
-    }
-    if (value < 200) {
-        return static_cast<uint16_t>(((value - 125) / 25) + 7);
-    }
-
-    return 9;
-}
-
-static inline Typeface::Slope variableItalicToSlope(float value)
-{
-    return value >= 1.0 ? Typeface::Slope::ITALIC : Typeface::Slope::PLAIN;
-}
-
-static inline Typeface::Slope variableSlantToSlope(float value)
-{
-    return value != 0.0 ? Typeface::Slope::OBLIQUE : Typeface::Slope::PLAIN;
-}
-
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
 {
     if (!fontFile) {
@@ -186,7 +149,6 @@ Typeface::Typeface(RenderableFace &renderableFace)
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
-    , m_description(Description())
     , m_defaults(DefaultProperties())
     , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
@@ -203,7 +165,6 @@ Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
-    , m_description(parent.m_defaults.description)
     , m_defaults(parent.m_defaults)
     , m_strikeoutPosition(0)
     , m_strikeoutThickness(0)
@@ -218,7 +179,6 @@ Typeface::Typeface(const Typeface &parent, const FT_Color *colorArray, size_t co
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(&parent.m_shapableFace->retain())
-    , m_description(parent.m_description)
     , m_defaults(parent.m_defaults)
     , m_strikeoutPosition(parent.m_strikeoutPosition)
     , m_strikeoutThickness(parent.m_strikeoutThickness)
@@ -275,7 +235,6 @@ void Typeface::setupDescription()
     }
 
     m_defaults.description = description;
-    m_description = description;
 }
 
 void Typeface::setupStrikeout()
@@ -295,22 +254,6 @@ void Typeface::setupHarfBuzz(ShapableFace *parent)
         m_shapableFace = &parent->deriveVariation(m_renderableFace);
     } else {
         m_shapableFace = &ShapableFace::create(m_renderableFace);
-    }
-}
-
-void Typeface::setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue)
-{
-    if (!isnan(italValue)) {
-        m_description.slope = variableItalicToSlope(italValue);
-    }
-    if (!isnan(slntValue)) {
-        m_description.slope = variableSlantToSlope(slntValue);
-    }
-    if (!isnan(wdthValue)) {
-        m_description.width = variableWidthToStandard(wdthValue);
-    }
-    if (!isnan(wghtValue)) {
-        m_description.weight = variableWeightToStandard(wghtValue);
     }
 }
 
@@ -623,13 +566,6 @@ void setupStrikeout(JNIEnv *env, jobject obj, jlong typefaceHandle)
     typeface->setupStrikeout();
 }
 
-void setupVariation(JNIEnv *env, jobject obj, jlong typefaceHandle,
-    jfloat italValue, jfloat slntValue, jfloat wdthValue, jfloat wghtValue)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    typeface->setupVariation(italValue, slntValue, wdthValue, wghtValue);
-}
-
 void setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -774,26 +710,26 @@ static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle
     return typeface->getNameString(JavaBridge(env), nameIndex);
 }
 
-static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getDefaultWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t weight = typeface->weight();
+    uint16_t weight = typeface->defaultWeight();
 
     return static_cast<jint>(weight);
 }
 
-static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getDefaultWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t width = typeface->width();
+    uint16_t width = typeface->defaultWidth();
 
     return static_cast<jint>(width);
 }
 
-static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getDefaultSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t slope = typeface->slope();
+    uint16_t slope = typeface->defaultSlope();
 
     return static_cast<jint>(slope);
 }
@@ -918,7 +854,6 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nSetupCoordinates", "(J[F)V", (void *)setupCoordinates },
     { "nSetupStrikeout", "(J)V", (void *)setupStrikeout },
-    { "nSetupVariation", "(JFFFF)V", (void *)setupVariation },
     { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
@@ -930,9 +865,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetDefaultFamilyName", "(J)Ljava/lang/String;", (void *)getDefaultFamilyName },
     { "nGetDefaultStyleName", "(J)Ljava/lang/String;", (void *)getDefaultStyleName },
     { "nGetDefaultFullName", "(J)Ljava/lang/String;", (void *)getDefaultFullName },
-    { "nGetWeight", "(J)I", (void *)getWeight },
-    { "nGetWidth", "(J)I", (void *)getWidth },
-    { "nGetSlope", "(J)I", (void *)getSlope },
+    { "nGetDefaultWeight", "(J)I", (void *)getDefaultWeight },
+    { "nGetDefaultWidth", "(J)I", (void *)getDefaultWidth },
+    { "nGetDefaultSlope", "(J)I", (void *)getDefaultSlope },
     { "nGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nGetAscent", "(J)I", (void *)getAscent },
     { "nGetDescent", "(J)I", (void *)getDescent },

@@ -53,7 +53,6 @@ public:
 
     void setupCoordinates(const float *coordArray, size_t coordCount);
     void setupStrikeout();
-    void setupVariation(float italValue, float slntValue, float wdthValue, float wghtValue);
     void setupColors(const FT_Color *colorArray, size_t colorCount);
 
     ~Typeface();
@@ -79,9 +78,9 @@ public:
     inline int32_t defaultStyleNameIndex() const { return m_defaults.description.styleName; }
     inline int32_t defaultFullNameIndex() const { return m_defaults.description.fullName; }
 
-    inline uint16_t weight() const { return m_description.weight; }
-    inline uint16_t width() const { return m_description.width; }
-    inline uint16_t slope() const { return m_description.slope; }
+    inline uint16_t defaultWeight() const { return m_defaults.description.weight; }
+    inline uint16_t defaultWidth() const { return m_defaults.description.width; }
+    inline uint16_t defaultSlope() const { return m_defaults.description.slope; }
 
     inline uint16_t unitsPerEM() const { return ftFace()->units_per_EM; }
     inline int16_t ascent() const { return ftFace()->ascender; }
@@ -142,7 +141,6 @@ private:
 
     ShapableFace *m_shapableFace;
 
-    Description m_description;
     DefaultProperties m_defaults;
 
     int16_t m_strikeoutPosition;
