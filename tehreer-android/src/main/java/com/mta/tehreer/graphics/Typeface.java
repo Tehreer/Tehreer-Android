@@ -480,6 +480,34 @@ public class Typeface {
         }
     }
 
+    private @Nullable String searchNameString(int nameId) {
+        return nSearchNameString(nativeTypeface, nameId);
+    }
+
+    private @Nullable String getDefaultFamilyName() {
+        return nGetDefaultFamilyName(nativeTypeface);
+    }
+
+    private @Nullable String getDefaultStyleName() {
+        return nGetDefaultStyleName(nativeTypeface);
+    }
+
+    private @Nullable String getDefaultFullName() {
+        return nGetDefaultFullName(nativeTypeface);
+    }
+
+    private @NonNull TypeWeight getDefaultWeight() {
+        return TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
+    }
+
+    private @NonNull TypeWidth getDefaultWidth() {
+        return TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
+    }
+
+    private @NonNull TypeSlope getDefaultSlope() {
+        return TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
+    }
+
     /**
      * Returns <code>true</code> if this typeface supports OpenType font variations.
      *
@@ -690,34 +718,6 @@ public class Typeface {
         return nGetTableData(nativeTypeface, tableTag);
     }
 
-    private @Nullable String searchNameString(int nameId) {
-        return nSearchNameString(nativeTypeface, nameId);
-    }
-
-    private @Nullable String getDefaultFamilyName() {
-        return nGetDefaultFamilyName(nativeTypeface);
-    }
-
-    private @Nullable String getDefaultStyleName() {
-        return nGetDefaultStyleName(nativeTypeface);
-    }
-
-    private @Nullable String getDefaultFullName() {
-        return nGetDefaultFullName(nativeTypeface);
-    }
-
-    private @NonNull TypeWeight getDefaultWeight() {
-        return TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
-    }
-
-    private @NonNull TypeWidth getDefaultWidth() {
-        return TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
-    }
-
-    private @NonNull TypeSlope getDefaultSlope() {
-        return TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
-    }
-
     /**
      * Returns the number of font units per EM square for this typeface.
      *
@@ -888,14 +888,6 @@ public class Typeface {
 
 	private static native void nDispose(long nativeTypeface);
 
-    private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
-	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
-
-    private static native long nGetColorInstance(long nativeTypeface, int[] colors);
-    private static native void nGetAssociatedColors(long nativeTypeface, int[] colors);
-
-    private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
-
     private static native String nSearchNameString(long nativeTypeface, int nameId);
     private static native String nGetDefaultFamilyName(long nativeTypeface);
     private static native String nGetDefaultStyleName(long nativeTypeface);
@@ -904,6 +896,14 @@ public class Typeface {
     private static native int nGetDefaultWeight(long nativeTypeface);
     private static native int nGetDefaultWidth(long nativeTypeface);
     private static native int nGetDefaultSlope(long nativeTypeface);
+
+    private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
+	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);
+
+    private static native long nGetColorInstance(long nativeTypeface, int[] colors);
+    private static native void nGetAssociatedColors(long nativeTypeface, int[] colors);
+
+    private static native byte[] nGetTableData(long nativeTypeface, int tableTag);
 
 	private static native int nGetUnitsPerEm(long nativeTypeface);
 	private static native int nGetAscent(long nativeTypeface);
