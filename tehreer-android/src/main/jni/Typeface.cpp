@@ -593,6 +593,63 @@ static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
     delete typeface;
 }
 
+static jstring searchNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    auto inputID = static_cast<uint16_t>(nameID);
+    int32_t nameIndex = typeface->searchNameIndex(inputID);
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
+
+static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    int32_t nameIndex = typeface->defaultFamilyNameIndex();
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
+
+static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    int32_t nameIndex = typeface->defaultStyleNameIndex();
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
+
+static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    int32_t nameIndex = typeface->defaultFullNameIndex();
+
+    return typeface->getNameString(JavaBridge(env), nameIndex);
+}
+
+static jint getDefaultWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t weight = typeface->defaultWeight();
+
+    return static_cast<jint>(weight);
+}
+
+static jint getDefaultWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t width = typeface->defaultWidth();
+
+    return static_cast<jint>(width);
+}
+
+static jint getDefaultSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    uint16_t slope = typeface->defaultSlope();
+
+    return static_cast<jint>(slope);
+}
+
 static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -675,63 +732,6 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 
     return dataArray;
-}
-
-static jstring searchNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto inputID = static_cast<uint16_t>(nameID);
-    int32_t nameIndex = typeface->searchNameIndex(inputID);
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
-}
-
-static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultFamilyNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
-}
-
-static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultStyleNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
-}
-
-static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultFullNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
-}
-
-static jint getDefaultWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t weight = typeface->defaultWeight();
-
-    return static_cast<jint>(weight);
-}
-
-static jint getDefaultWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t width = typeface->defaultWidth();
-
-    return static_cast<jint>(width);
-}
-
-static jint getDefaultSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t slope = typeface->defaultSlope();
-
-    return static_cast<jint>(slope);
 }
 
 static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -856,11 +856,6 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nSetupStrikeout", "(J)V", (void *)setupStrikeout },
     { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
-    { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
-    { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
-    { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
-    { "nGetAssociatedColors", "(J[I)V", (void *)getAssociatedColors },
-    { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nSearchNameString", "(JI)Ljava/lang/String;", (void *)searchNameString },
     { "nGetDefaultFamilyName", "(J)Ljava/lang/String;", (void *)getDefaultFamilyName },
     { "nGetDefaultStyleName", "(J)Ljava/lang/String;", (void *)getDefaultStyleName },
@@ -868,6 +863,11 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetDefaultWeight", "(J)I", (void *)getDefaultWeight },
     { "nGetDefaultWidth", "(J)I", (void *)getDefaultWidth },
     { "nGetDefaultSlope", "(J)I", (void *)getDefaultSlope },
+    { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
+    { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
+    { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
+    { "nGetAssociatedColors", "(J[I)V", (void *)getAssociatedColors },
+    { "nGetTableData", "(JI)[B", (void *)getTableData },
     { "nGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nGetAscent", "(J)I", (void *)getAscent },
     { "nGetDescent", "(J)I", (void *)getDescent },
