@@ -52,10 +52,7 @@ using namespace Tehreer::SFNT::OS2;
 
 using FaceLock = lock_guard<RenderableFace>;
 
-/**
- * NOTE: The caller needs to lock the typeface before invoking this function.
- */
-static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
+static int32_t searchEnglishName(FT_Face face, uint16_t nameID)
 {
     FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
     int32_t candidate = -1;
@@ -87,43 +84,43 @@ static int32_t searchEnglishNameRecordIndex(FT_Face face, uint16_t nameID)
     return candidate;
 }
 
-static int32_t searchFamilyNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+static int32_t searchFamilyName(FT_Face face, TT_OS2 *os2Table)
 {
     int32_t familyName = -1;
 
     if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::WWS_FAMILY);
+        familyName = searchEnglishName(face, NameID::WWS_FAMILY);
     }
     if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_FAMILY);
+        familyName = searchEnglishName(face, NameID::TYPOGRAPHIC_FAMILY);
     }
     if (familyName == -1) {
-        familyName = searchEnglishNameRecordIndex(face, NameID::FONT_FAMILY);
+        familyName = searchEnglishName(face, NameID::FONT_FAMILY);
     }
 
     return familyName;
 }
 
-static int32_t searchStyleNameRecordIndex(FT_Face face, TT_OS2 *os2Table)
+static int32_t searchStyleName(FT_Face face, TT_OS2 *os2Table)
 {
     int32_t styleName = -1;
 
     if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::WWS_SUBFAMILY);
+        styleName = searchEnglishName(face, NameID::WWS_SUBFAMILY);
     }
     if (styleName == -1) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::TYPOGRAPHIC_SUBFAMILY);
+        styleName = searchEnglishName(face, NameID::TYPOGRAPHIC_SUBFAMILY);
     }
     if (styleName == -1) {
-        styleName = searchEnglishNameRecordIndex(face, NameID::FONT_SUBFAMILY);
+        styleName = searchEnglishName(face, NameID::FONT_SUBFAMILY);
     }
 
     return styleName;
 }
 
-static int32_t searchFullNameRecordIndex(FT_Face face)
+static int32_t searchFullName(FT_Face face)
 {
-    return searchEnglishNameRecordIndex(face, NameID::FULL);
+    return searchEnglishName(face, NameID::FULL);
 }
 
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
@@ -205,9 +202,9 @@ void Typeface::setupDescription()
     auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
 
     Description description;
-    description.familyName = searchFamilyNameRecordIndex(ftFace, os2Table);
-    description.styleName = searchStyleNameRecordIndex(ftFace, os2Table);
-    description.fullName = searchFullNameRecordIndex(ftFace);
+    description.familyName = searchFamilyName(ftFace, os2Table);
+    description.styleName = searchStyleName(ftFace, os2Table);
+    description.fullName = searchFullName(ftFace);
 
     if (os2Table) {
         description.weight = os2Table->usWeightClass;
@@ -347,9 +344,9 @@ int32_t Typeface::searchNameIndex(uint16_t nameID)
     FaceLock lock(m_renderableFace);
 
     FT_Face ftFace = m_renderableFace.ftFace();
-    int32_t recordIndex = searchEnglishNameRecordIndex(ftFace, nameID);
+    int32_t nameIndex = searchEnglishName(ftFace, nameID);
 
-    return recordIndex;
+    return nameIndex;
 }
 
 jobject Typeface::getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex)
