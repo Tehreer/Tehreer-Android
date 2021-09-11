@@ -74,7 +74,7 @@ public class Typeface {
     @Nullable Object tag;
     private final @NonNull Finalizable finalizable = new Finalizable();
 
-    private static class Description {
+    private static class DesignCharacteristics {
         @NonNull TypeWeight weight = TypeWeight.REGULAR;
         @NonNull TypeWidth width = TypeWidth.NORMAL;
         @NonNull TypeSlope slope = TypeSlope.PLAIN;
@@ -94,7 +94,7 @@ public class Typeface {
         @NonNull String fullName = "";
     }
 
-    private Description description;
+    private DesignCharacteristics design;
     private DefaultProperties defaults;
     private Names names;
 
@@ -168,29 +168,29 @@ public class Typeface {
 
     private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
         this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
-        this.description = null;
+        this.design = null;
         this.defaults = typeface.defaults;
         this.names = null;
 
-        setupDefaultDescription();
+        setupDefaultDesignCharacteristics();
         setupDefaultNames();
         setupVariableDescription();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
-        this.description = typeface.description;
+        this.design = typeface.design;
         this.defaults = typeface.defaults;
         this.names = typeface.names;
     }
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
-	    this.description = null;
+	    this.design = null;
 	    this.defaults = null;
 	    this.names = null;
 
-        setupDefaultDescription();
+        setupDefaultDesignCharacteristics();
         setupDefaultProperties();
         setupDefaultCoordinates();
         setupStrikeout();
@@ -199,11 +199,11 @@ public class Typeface {
         setupDefaultPalette();
 	}
 
-	private void setupDefaultDescription() {
-        description = new Description();
-        description.weight = getDefaultWeight();
-        description.width = getDefaultWidth();
-        description.slope = getDefaultSlope();
+	private void setupDefaultDesignCharacteristics() {
+        design = new DesignCharacteristics();
+        design.weight = getDefaultWeight();
+        design.width = getDefaultWidth();
+        design.slope = getDefaultSlope();
     }
 
     private void setupDefaultProperties() {
@@ -475,13 +475,13 @@ public class Typeface {
                 final int tag = axis.tag();
 
                 if (tag == ital) {
-                    description.slope = TypeSlope.fromItal(coordinates[i]);
+                    design.slope = TypeSlope.fromItal(coordinates[i]);
                 } else if (tag == slnt) {
-                    description.slope = TypeSlope.fromSlnt(coordinates[i]);
+                    design.slope = TypeSlope.fromSlnt(coordinates[i]);
                 } else if (tag == wdth) {
-                    description.width = TypeWidth.fromWdth(coordinates[i]);
+                    design.width = TypeWidth.fromWdth(coordinates[i]);
                 } else if (tag == wght) {
-                    description.weight = TypeWeight.fromWght(coordinates[i]);
+                    design.weight = TypeWeight.fromWght(coordinates[i]);
                 }
             }
         }
@@ -724,7 +724,7 @@ public class Typeface {
      * @return The typographic weight of this typeface.
      */
     public @NonNull TypeWeight getWeight() {
-        return description.weight;
+        return design.weight;
     }
 
     /**
@@ -734,7 +734,7 @@ public class Typeface {
      * @return The typographic width of this typeface.
      */
     public @NonNull TypeWidth getWidth() {
-        return description.width;
+        return design.width;
     }
 
     /**
@@ -744,7 +744,7 @@ public class Typeface {
      * @return The typographic slope of this typeface.
      */
     public @NonNull TypeSlope getSlope() {
-        return description.slope;
+        return design.slope;
     }
 
     /**
