@@ -153,7 +153,7 @@ private:
     Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount);
 
     void setupSize();
-    void setupDescription();
+    void setupDefaultDescription();
     void setupHarfBuzz(ShapableFace *parent = nullptr);
 };
 

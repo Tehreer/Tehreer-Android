@@ -152,9 +152,9 @@ Typeface::Typeface(RenderableFace &renderableFace)
     , m_palette({})
 {
     setupSize();
-    setupDescription();
-    setupStrikeout();
     setupHarfBuzz();
+    setupDefaultDescription();
+    setupStrikeout();
 }
 
 Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
@@ -169,6 +169,7 @@ Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
 {
     setupSize();
     setupHarfBuzz(parent.m_shapableFace);
+    setupStrikeout();
 }
 
 Typeface::Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount)
@@ -195,7 +196,7 @@ void Typeface::setupSize()
     FT_New_Size(m_renderableFace.ftFace(), &m_ftSize);
 }
 
-void Typeface::setupDescription()
+void Typeface::setupDefaultDescription()
 {
     FT_Face ftFace = m_renderableFace.ftFace();
     auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
