@@ -74,19 +74,29 @@ public class Typeface {
     @Nullable Object tag;
     private final @NonNull Finalizable finalizable = new Finalizable();
 
-    private @Nullable List<VariationAxis> variationAxes;
-    private @Nullable List<NamedStyle> namedStyles;
+    private static class Description {
+        @NonNull TypeWeight weight = TypeWeight.REGULAR;
+        @NonNull TypeWidth width = TypeWidth.NORMAL;
+        @NonNull TypeSlope slope = TypeSlope.PLAIN;
+    }
 
-    private @Nullable List<String> paletteEntryNames;
-    private @Nullable List<ColorPalette> predefinedPalettes;
+    private static class DefaultProperties {
+        @Nullable List<VariationAxis> variationAxes;
+        @Nullable List<NamedStyle> namedStyles;
 
-    private @NonNull String familyName = "";
-    private @NonNull String styleName = "";
-    private @NonNull String fullName = "";
+        @Nullable List<String> paletteEntryNames;
+        @Nullable List<ColorPalette> predefinedPalettes;
+    }
 
-    private @NonNull TypeWeight weight = TypeWeight.REGULAR;
-    private @NonNull TypeWidth width = TypeWidth.NORMAL;
-    private @NonNull TypeSlope slope = TypeSlope.PLAIN;
+    private static class Names {
+        @NonNull String familyName = "";
+        @NonNull String styleName = "";
+        @NonNull String fullName = "";
+    }
+
+    private Description description;
+    private DefaultProperties defaults;
+    private Names names;
 
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
@@ -158,53 +168,49 @@ public class Typeface {
 
     private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
         this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
+        this.description = null;
+        this.defaults = typeface.defaults;
+        this.names = null;
 
         setupDefaultDescription();
-
-        this.variationAxes = typeface.variationAxes;
-        this.namedStyles = typeface.namedStyles;
-        this.paletteEntryNames = typeface.paletteEntryNames;
-        this.predefinedPalettes = typeface.predefinedPalettes;
-
-        // Setup names again, as style name and full name might be different due to variation.
-        setupNames();
-        // Setup the variable description reflecting current coordinate values.
+        setupDefaultNames();
         setupVariableDescription();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
-
-        // In color variation, only color values are changed. All other info remains same.
-        this.variationAxes = typeface.variationAxes;
-        this.namedStyles = typeface.namedStyles;
-        this.paletteEntryNames = typeface.paletteEntryNames;
-        this.predefinedPalettes = typeface.predefinedPalettes;
-        this.familyName = typeface.familyName;
-        this.styleName = typeface.styleName;
-        this.fullName = typeface.fullName;
-        this.weight = typeface.weight;
-        this.width = typeface.width;
-        this.slope = typeface.slope;
+        this.description = typeface.description;
+        this.defaults = typeface.defaults;
+        this.names = typeface.names;
     }
 
 	private void init(long nativeTypeface) {
 	    this.nativeTypeface = nativeTypeface;
+	    this.description = null;
+	    this.defaults = null;
+	    this.names = null;
 
         setupDefaultDescription();
-        setupVariations();
-        setupPalettes();
+        setupDefaultProperties();
         setupDefaultCoordinates();
         setupStrikeout();
-        setupNames();
+        setupDefaultNames();
         setupVariableDescription();
-        setupDefaultColors();
+        setupDefaultPalette();
 	}
 
 	private void setupDefaultDescription() {
-        weight = getDefaultWeight();
-        width = getDefaultWidth();
-        slope = getDefaultSlope();
+        description = new Description();
+        description.weight = getDefaultWeight();
+        description.width = getDefaultWidth();
+        description.slope = getDefaultSlope();
+    }
+
+    private void setupDefaultProperties() {
+        defaults = new DefaultProperties();
+
+        setupVariations();
+        setupPalettes();
     }
 
     @SuppressLint ("Range")
@@ -217,7 +223,7 @@ public class Typeface {
         VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
         InstanceRecord[] instanceRecords = fvarTable.instanceRecords();
 
-        variationAxes = new ArrayList<>(axisRecords.length);
+        List<VariationAxis> variationAxes = new ArrayList<>(axisRecords.length);
 
         for (VariationAxisRecord axisRecord : axisRecords) {
             final int axisTag = axisRecord.axisTag();
@@ -236,8 +242,7 @@ public class Typeface {
                                                defaultValue, minValue, maxValue));
         }
 
-        namedStyles = new ArrayList<>(instanceRecords.length);
-
+        List<NamedStyle> namedStyles = new ArrayList<>(instanceRecords.length);
         boolean hasDefaultInstance = false;
 
         for (InstanceRecord instanceRecord : instanceRecords) {
@@ -293,6 +298,9 @@ public class Typeface {
 
             namedStyles.add(0, NamedStyle.of(styleName, coordinates, null));
         }
+
+        defaults.variationAxes = variationAxes;
+        defaults.namedStyles = namedStyles;
     }
 
     private void setupPalettes() {
@@ -309,7 +317,7 @@ public class Typeface {
         PaletteLabelsArray paletteLabels = cpalTable.paletteLabels();
         PaletteLabelsArray paletteEntryLabels = cpalTable.paletteEntryLabels();
 
-        predefinedPalettes = new ArrayList<>(numPalettes);
+        List<ColorPalette> predefinedPalettes = new ArrayList<>(numPalettes);
 
         /* Populate predefined palettes. */
         for (int i = 0; i < numPalettes; i++) {
@@ -340,7 +348,7 @@ public class Typeface {
             predefinedPalettes.add(ColorPalette.of(name, flags, colors));
         }
 
-        paletteEntryNames = new ArrayList<>(numPaletteEntries);
+        List<String> paletteEntryNames = new ArrayList<>(numPaletteEntries);
 
         /* Populate palette entry names. */
         if (paletteEntryLabels == null) {
@@ -362,45 +370,14 @@ public class Typeface {
                 paletteEntryNames.add(name);
             }
         }
-    }
 
-    private void setupNames() {
-        final String defaultFamilyName = getDefaultFamilyName();
-        final String defaultStyleName = getDefaultStyleName();
-        final String defaultFullName = getDefaultFullName();
-
-        if (defaultFamilyName != null) {
-            familyName = defaultFamilyName;
-        }
-        if (defaultStyleName != null) {
-            styleName = defaultStyleName;
-        }
-        if (defaultFullName != null) {
-            fullName = defaultFullName;
-        } else {
-            generateFullName();
-        }
-    }
-
-    private void generateFullName() {
-        if (!familyName.isEmpty()) {
-            fullName = familyName;
-            if (!styleName.isEmpty()) {
-                fullName += ' ' + styleName;
-            }
-        } else {
-            fullName = styleName;
-        }
+        defaults.predefinedPalettes = predefinedPalettes;
+        defaults.paletteEntryNames = paletteEntryNames;
     }
 
     private void setupDefaultCoordinates() {
-        if (variationAxes != null && variationAxes.size() > 0) {
-            float[] coordinates = new float[variationAxes.size()];
-
-            for (int i = 0; i < coordinates.length; i++) {
-                coordinates[i] = variationAxes.get(i).defaultValue();
-            }
-
+        final float[] coordinates = getDefaultCoordinates();
+        if (coordinates != null) {
             nSetupCoordinates(nativeTypeface, coordinates);
         }
     }
@@ -409,16 +386,52 @@ public class Typeface {
         nSetupStrikeout(nativeTypeface);
     }
 
+    private void setupDefaultNames() {
+        names = new Names();
+
+        final String familyName = getDefaultFamilyName();
+        final String styleName = getDefaultStyleName();
+        final String fullName = getDefaultFullName();
+
+        if (familyName != null) {
+            names.familyName = familyName;
+        }
+        if (styleName != null) {
+            names.styleName = styleName;
+        }
+        if (fullName != null) {
+            names.fullName = fullName;
+        } else {
+            generateFullName();
+        }
+    }
+
+    private void generateFullName() {
+        final String familyName = getFamilyName();
+        final String styleName = getStyleName();
+
+        if (!familyName.isEmpty()) {
+            names.fullName = familyName;
+
+            if (!styleName.isEmpty()) {
+                names.fullName += ' ' + styleName;
+            }
+        } else {
+            names.fullName = getStyleName();
+        }
+    }
+
     private void setupVariableDescription() {
         final float[] coordinates = getVariationCoordinates();
-        if (coordinates == null) {
+        if (coordinates == null || coordinates.length == 0) {
             return;
         }
 
-        if (namedStyles != null && !namedStyles.isEmpty()) {
+        final List<NamedStyle> namedStyles = getNamedStyles();
+        if (namedStyles != null) {
             // Reset the style name and the full name.
-            styleName = "";
-            fullName = "";
+            names.styleName = "";
+            names.fullName = "";
 
             final int coordCount = coordinates.length;
             final float minValue = 1.0f / 0x10000;
@@ -441,15 +454,15 @@ public class Typeface {
                 }
 
                 if (matched) {
-                    styleName = name;
+                    names.styleName = name;
                     generateFullName();
                     break;
                 }
             }
         }
 
-        final List<VariationAxis> allAxes = variationAxes;
-        if (allAxes != null && !allAxes.isEmpty()) {
+        final List<VariationAxis> variationAxes = getVariationAxes();
+        if (variationAxes != null) {
             final int axisCount = variationAxes.size();
 
             final int ital = SfntTag.make("ital");
@@ -462,20 +475,23 @@ public class Typeface {
                 final int tag = axis.tag();
 
                 if (tag == ital) {
-                    slope = TypeSlope.fromItal(coordinates[i]);
+                    description.slope = TypeSlope.fromItal(coordinates[i]);
                 } else if (tag == slnt) {
-                    slope = TypeSlope.fromSlnt(coordinates[i]);
+                    description.slope = TypeSlope.fromSlnt(coordinates[i]);
                 } else if (tag == wdth) {
-                    width = TypeWidth.fromWdth(coordinates[i]);
+                    description.width = TypeWidth.fromWdth(coordinates[i]);
                 } else if (tag == wght) {
-                    weight = TypeWeight.fromWght(coordinates[i]);
+                    description.weight = TypeWeight.fromWght(coordinates[i]);
                 }
             }
         }
     }
 
-    private void setupDefaultColors() {
-        if (predefinedPalettes!= null && predefinedPalettes.size() > 0) {
+    private void setupDefaultPalette() {
+        final List<ColorPalette> predefinedPalettes = getPredefinedPalettes();
+
+        // Select first palette by default.
+        if (predefinedPalettes!= null) {
             nSetupColors(nativeTypeface, predefinedPalettes.get(0).colors());
         }
     }
@@ -514,7 +530,7 @@ public class Typeface {
      * @return <code>true</code> if this typeface supports OpenType font variations.
      */
     public boolean isVariable() {
-        return variationAxes != null;
+        return getVariationAxes() != null;
     }
 
     /**
@@ -529,6 +545,8 @@ public class Typeface {
      *                                  the number of variation axes.
      */
     public @Nullable Typeface getVariationInstance(@NonNull float[] coordinates) {
+        final List<VariationAxis> variationAxes = getVariationAxes();
+
         if (variationAxes == null) {
             throw new IllegalStateException("This typeface does not support variations.");
         }
@@ -544,8 +562,25 @@ public class Typeface {
      * @return The variation axes of this typeface if it supports OpenType font variations.
      */
     public @Nullable List<VariationAxis> getVariationAxes() {
-        if (variationAxes != null) {
+        final List<VariationAxis> variationAxes = defaults.variationAxes;
+        if (variationAxes != null && !variationAxes.isEmpty()) {
             return Collections.unmodifiableList(variationAxes);
+        }
+
+        return null;
+    }
+
+    private @Nullable float[] getDefaultCoordinates() {
+        final List<VariationAxis> variationAxes = getVariationAxes();
+        if (variationAxes != null) {
+            final int coordCount = variationAxes.size();
+            float[] coordinates = new float[coordCount];
+
+            for (int i = 0; i < coordCount; i++) {
+                coordinates[i] = variationAxes.get(i).defaultValue();
+            }
+
+            return coordinates;
         }
 
         return null;
@@ -557,7 +592,8 @@ public class Typeface {
      * @return The named instance records of this typeface if it supports OpenType font variations.
      */
     public @Nullable List<NamedStyle> getNamedStyles() {
-        if (namedStyles != null) {
+        final List<NamedStyle> namedStyles = defaults.namedStyles;
+        if (namedStyles != null && !namedStyles.isEmpty()) {
             return Collections.unmodifiableList(namedStyles);
         }
 
@@ -572,6 +608,7 @@ public class Typeface {
      *         variations.
      */
     public @Nullable float[] getVariationCoordinates() {
+        final List<VariationAxis> variationAxes = getVariationAxes();
         if (variationAxes != null) {
             float[] coordinates = new float[variationAxes.size()];
             nGetVariationCoordinates(nativeTypeface, coordinates);
@@ -590,7 +627,8 @@ public class Typeface {
      * palettes.
      */
     public @Nullable List<String> getPaletteEntryNames() {
-        if (paletteEntryNames != null) {
+        final List<String> paletteEntryNames = defaults.paletteEntryNames;
+        if (paletteEntryNames != null && !paletteEntryNames.isEmpty()) {
             return Collections.unmodifiableList(paletteEntryNames);
         }
 
@@ -603,7 +641,8 @@ public class Typeface {
      * @return The predefined palettes in this typeface if it supports OpenType color palettes.
      */
     public @Nullable List<ColorPalette> getPredefinedPalettes() {
-        if (predefinedPalettes != null) {
+        final List<ColorPalette> predefinedPalettes = defaults.predefinedPalettes;
+        if (predefinedPalettes != null && !predefinedPalettes.isEmpty()) {
             return Collections.unmodifiableList(predefinedPalettes);
         }
 
@@ -616,6 +655,7 @@ public class Typeface {
      * @return The colors associated with this typeface if it supports OpenType color palettes.
      */
     public @Nullable int[] getAssociatedColors() {
+        final List<String> paletteEntryNames = getPaletteEntryNames();
         if (paletteEntryNames != null) {
             int[] colors = new int[paletteEntryNames.size()];
             nGetAssociatedColors(nativeTypeface, colors);
@@ -638,6 +678,7 @@ public class Typeface {
      *                                  of colors in `CPAL` table.
      */
     public @Nullable Typeface getColorInstance(@NonNull int[] colors) {
+        final List<String> paletteEntryNames = getPaletteEntryNames();
         if (paletteEntryNames == null) {
             throw new IllegalStateException("This typeface does not support color palettes");
         }
@@ -655,7 +696,7 @@ public class Typeface {
      * @return The family name of this typeface.
      */
     public String getFamilyName() {
-        return familyName;
+        return names.familyName;
     }
 
     /**
@@ -664,7 +705,7 @@ public class Typeface {
      * @return The style name of this typeface.
      */
     public String getStyleName() {
-        return styleName;
+        return names.styleName;
     }
 
     /**
@@ -673,7 +714,7 @@ public class Typeface {
      * @return The full name of this typeface.
      */
     public String getFullName() {
-        return fullName;
+        return names.fullName;
     }
 
     /**
@@ -683,7 +724,7 @@ public class Typeface {
      * @return The typographic weight of this typeface.
      */
     public @NonNull TypeWeight getWeight() {
-        return weight;
+        return description.weight;
     }
 
     /**
@@ -693,7 +734,7 @@ public class Typeface {
      * @return The typographic width of this typeface.
      */
     public @NonNull TypeWidth getWidth() {
-        return width;
+        return description.width;
     }
 
     /**
@@ -703,7 +744,7 @@ public class Typeface {
      * @return The typographic slope of this typeface.
      */
     public @NonNull TypeSlope getSlope() {
-        return slope;
+        return description.slope;
     }
 
     /**
@@ -919,6 +960,7 @@ public class Typeface {
 
 	private static native int nGetUnderlinePosition(long nativeTypeface);
 	private static native int nGetUnderlineThickness(long nativeTypeface);
+
     private static native int nGetStrikeoutPosition(long nativeTypeface);
     private static native int nGetStrikeoutThickness(long nativeTypeface);
 }
