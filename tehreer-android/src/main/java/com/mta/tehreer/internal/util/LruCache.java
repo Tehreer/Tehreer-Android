@@ -92,10 +92,6 @@ public abstract class LruCache<K> {
         private final @NonNull HashMap<K, Node<K>> map = new HashMap<>();
 
         public Segment(@NonNull LruCache<K> cache) {
-            if (cache == null) {
-                throw new NullPointerException();
-            }
-
             this.cache = cache;
         }
 
