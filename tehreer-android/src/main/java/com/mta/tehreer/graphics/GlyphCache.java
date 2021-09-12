@@ -19,6 +19,7 @@ package com.mta.tehreer.graphics;
 import android.graphics.Bitmap;
 import android.graphics.Path;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -125,6 +126,7 @@ final class GlyphCache extends LruCache<Integer> {
         segments.clear();
     }
 
+    @GuardedBy("this")
     private @NonNull DataSegment secureDataSegment(@NonNull GlyphKey key) {
         DataSegment segment = (DataSegment) segments.get(key);
         if (segment == null) {
@@ -136,6 +138,7 @@ final class GlyphCache extends LruCache<Integer> {
         return segment;
     }
 
+    @GuardedBy("this")
     private @NonNull ImageSegment secureImageSegment(@NonNull GlyphKey key) {
         ImageSegment segment = (ImageSegment) segments.get(key);
         if (segment == null) {
@@ -146,6 +149,7 @@ final class GlyphCache extends LruCache<Integer> {
         return segment;
     }
 
+    @GuardedBy("this")
     private @NonNull Glyph secureGlyph(@NonNull DataSegment segment, int glyphId) {
         Glyph glyph = (Glyph) segment.get(glyphId);
         if (glyph == null) {
