@@ -21,8 +21,7 @@ import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
-public abstract class LruCache {
+public abstract class LruCache<K> {
     //
     // HashMap:
     //  - 1 pointer for map entry
@@ -40,44 +39,44 @@ public abstract class LruCache {
     //
     protected static final int NODE_OVERHEAD = 40;
 
-    private static class Node<K, V> {
-        public final Segment<K, V> segment;
+    private static class Node<K> {
+        public final Segment<K> segment;
         public final K key;
-        public V value;
-        public Node<K, V> previous;
-        public Node<K, V> next;
+        public Object value;
+        public Node<K> previous;
+        public Node<K> next;
 
-        public Node(Segment<K, V> segment, K key, V value) {
+        public Node(Segment<K> segment, K key, Object value) {
             this.segment = segment;
             this.key = key;
             this.value = value;
         }
     }
 
-    private static class List {
-        final @NonNull Node header = new Node(null, null, null);
+    private static class List<K> {
+        final @NonNull Node<K> header = new Node<>(null, null, null);
 
         public List() {
             header.previous = header.next = header;
         }
 
-        public Node last() {
+        public Node<K> last() {
             return header.previous;
         }
 
-        public void makeFirst(@NonNull Node node) {
+        public void makeFirst(@NonNull Node<K> node) {
             remove(node);
             addFirst(node);
         }
 
-        public void addFirst(@NonNull Node node) {
+        public void addFirst(@NonNull Node<K> node) {
             node.previous = header;
             node.next = header.next;
             header.next.previous = node;
             header.next = node;
         }
 
-        public void remove(@NonNull Node node) {
+        public void remove(@NonNull Node<K> node) {
             node.previous.next = node.next;
             node.next.previous = node.previous;
             node.next = node.previous = null;
@@ -88,11 +87,11 @@ public abstract class LruCache {
         }
     }
 
-    protected static class Segment<K, V> {
-        protected final @NonNull LruCache cache;
-        private final @NonNull HashMap<K, Node<K, V>> map = new HashMap<>();
+    protected static class Segment<K> {
+        protected final @NonNull LruCache<K> cache;
+        private final @NonNull HashMap<K, Node<K>> map = new HashMap<>();
 
-        public Segment(@NonNull LruCache cache) {
+        public Segment(@NonNull LruCache<K> cache) {
             if (cache == null) {
                 throw new NullPointerException();
             }
@@ -100,13 +99,13 @@ public abstract class LruCache {
             this.cache = cache;
         }
 
-        protected int sizeOf(@NonNull K key, @NonNull V value) {
+        protected int sizeOf(@NonNull K key, @NonNull Object value) {
             return 1;
         }
 
-        public final @Nullable V get(@NonNull K key) {
+        public final @Nullable Object get(@NonNull K key) {
             synchronized (cache) {
-                Node<K, V> node = map.get(key);
+                Node<K> node = map.get(key);
                 if (node != null) {
                     cache.list.makeFirst(node);
                     return node.value;
@@ -116,10 +115,10 @@ public abstract class LruCache {
             return null;
         }
 
-        public final void put(@NonNull K key, @NonNull V value) {
+        public final void put(@NonNull K key, @NonNull Object value) {
             synchronized (cache) {
-                Node<K, V> newNode = new Node<>(this, key, value);
-                Node<K, V> oldNode = map.put(key, newNode);
+                Node<K> newNode = new Node<>(this, key, value);
+                Node<K> oldNode = map.put(key, newNode);
                 if (oldNode != null) {
                     throw new IllegalArgumentException("An entry with same key has already been added");
                 }
@@ -133,7 +132,7 @@ public abstract class LruCache {
 
         public final void remove(@NonNull K key) {
             synchronized (cache) {
-                Node<K, V> node = map.remove(key);
+                Node<K> node = map.remove(key);
                 if (node != null) {
                     cache.size -= sizeOf(key, node.value);
                     cache.list.remove(node);
@@ -142,7 +141,7 @@ public abstract class LruCache {
         }
     }
 
-    private final @NonNull List list;
+    private final @NonNull List<K> list;
     private int capacity;
     private int size;
 
@@ -151,7 +150,7 @@ public abstract class LruCache {
             throw new IllegalArgumentException("Invalid Capacity: " + capacity);
         }
 
-        this.list = new List();
+        this.list = new List<>();
         this.capacity = capacity;
         this.size = 0;
     }
@@ -175,13 +174,13 @@ public abstract class LruCache {
                     break;
                 }
 
-                Node toEvict = list.last();
+                Node<K> toEvict = list.last();
                 if (toEvict == list.header) {
                     break;
                 }
 
-                Segment segment = toEvict.segment;
-                Object key = toEvict.key;
+                Segment<K> segment = toEvict.segment;
+                K key = toEvict.key;
                 segment.remove(key);
             }
         }

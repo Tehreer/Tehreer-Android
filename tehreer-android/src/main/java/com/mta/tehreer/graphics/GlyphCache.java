@@ -27,7 +27,7 @@ import com.mta.tehreer.internal.util.LruCache;
 import java.util.HashMap;
 import java.util.Map;
 
-final class GlyphCache extends LruCache {
+final class GlyphCache extends LruCache<Integer> {
     //
     // GlyphImage:
     //  - 1 pointer for bitmap
@@ -46,36 +46,36 @@ final class GlyphCache extends LruCache {
     //
     private static final int GLYPH_OVERHEAD = 16;
 
-    private static class DataSegment extends Segment<Integer, Glyph> {
+    private static class DataSegment extends Segment<Integer> {
         private static final int ESTIMATED_OVERHEAD = GLYPH_IMAGE_OVERHEAD + GLYPH_OVERHEAD
                                                     + NODE_OVERHEAD;
 
         public final @NonNull GlyphRasterizer rasterizer;
 
-        public DataSegment(@NonNull LruCache cache, @NonNull GlyphRasterizer rasterizer) {
+        public DataSegment(@NonNull LruCache<Integer> cache, @NonNull GlyphRasterizer rasterizer) {
             super(cache);
             this.rasterizer = rasterizer;
         }
 
         @Override
-        protected int sizeOf(@NonNull Integer key, @NonNull Glyph value) {
-            GlyphImage glyphImage = value.getImage();
+        protected int sizeOf(@NonNull Integer key, @NonNull Object value) {
+            GlyphImage glyphImage = ((Glyph) value).getImage();
             int size = (glyphImage != null ? GlyphCache.sizeOf(glyphImage.bitmap()) : 0);
 
             return size + ESTIMATED_OVERHEAD;
         }
     }
 
-    private static class ImageSegment extends Segment<Integer, GlyphImage> {
+    private static class ImageSegment extends Segment<Integer> {
         private static final int ESTIMATED_OVERHEAD = GLYPH_IMAGE_OVERHEAD + NODE_OVERHEAD;
 
-        public ImageSegment(@NonNull LruCache cache) {
+        public ImageSegment(@NonNull LruCache<Integer> cache) {
             super(cache);
         }
 
         @Override
-        protected int sizeOf(@NonNull Integer key, @NonNull GlyphImage value) {
-            return GlyphCache.sizeOf(value.bitmap()) + ESTIMATED_OVERHEAD;
+        protected int sizeOf(@NonNull Integer key, @NonNull Object value) {
+            return GlyphCache.sizeOf(((GlyphImage) value).bitmap()) + ESTIMATED_OVERHEAD;
         }
     }
 
@@ -88,7 +88,7 @@ final class GlyphCache extends LruCache {
         }
     }
 
-    private final @NonNull HashMap<GlyphKey, Segment<Integer, ?>> segments = new HashMap<>();
+    private final @NonNull HashMap<GlyphKey, Segment<Integer>> segments = new HashMap<>();
 
     public static @NonNull GlyphCache getInstance() {
         return Holder.INSTANCE;
@@ -113,8 +113,8 @@ final class GlyphCache extends LruCache {
         super.clear();
 
         // Dispose all glyph rasterizers.
-        for (Map.Entry<GlyphKey, Segment<Integer, ?>> entry : segments.entrySet()) {
-            Segment<Integer, ?> value = entry.getValue();
+        for (Map.Entry<GlyphKey, Segment<Integer>> entry : segments.entrySet()) {
+            Segment<Integer> value = entry.getValue();
 
             if (value instanceof DataSegment) {
                 DataSegment segment = (DataSegment) value;
@@ -147,7 +147,7 @@ final class GlyphCache extends LruCache {
     }
 
     private @NonNull Glyph secureGlyph(@NonNull DataSegment segment, int glyphId) {
-        Glyph glyph = segment.get(glyphId);
+        Glyph glyph = (Glyph) segment.get(glyphId);
         if (glyph == null) {
             glyph = new Glyph();
         }
@@ -163,7 +163,7 @@ final class GlyphCache extends LruCache {
 
         synchronized (this) {
             segment = secureImageSegment(key);
-            coloredImage = segment.get(glyphId);
+            coloredImage = (GlyphImage) segment.get(glyphId);
         }
 
         if (coloredImage == null) {
@@ -224,7 +224,7 @@ final class GlyphCache extends LruCache {
 
         synchronized (this) {
             segment = secureImageSegment(key);
-            strokeImage = segment.get(glyphId);
+            strokeImage = (GlyphImage) segment.get(glyphId);
         }
 
         if (strokeImage == null) {
