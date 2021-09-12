@@ -88,7 +88,7 @@ public class Typeface {
         @Nullable List<ColorPalette> predefinedPalettes;
     }
 
-    private static class Names {
+    private static class StandardNames {
         @NonNull String familyName = "";
         @NonNull String styleName = "";
         @NonNull String fullName = "";
@@ -96,7 +96,7 @@ public class Typeface {
 
     private DesignCharacteristics design;
     private DefaultProperties defaults;
-    private Names names;
+    private StandardNames names;
 
     /**
      * Constructs a typeface from the specified asset. The data of the asset is not copied into the
@@ -387,7 +387,7 @@ public class Typeface {
     }
 
     private void setupDefaultNames() {
-        names = new Names();
+        names = new StandardNames();
 
         final String familyName = getDefaultFamilyName();
         final String styleName = getDefaultStyleName();
