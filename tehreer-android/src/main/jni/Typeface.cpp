@@ -154,7 +154,6 @@ Typeface::Typeface(RenderableFace &renderableFace)
     setupSize();
     setupHarfBuzz();
     setupDefaultDescription();
-    setupStrikeout();
 }
 
 Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
@@ -169,7 +168,6 @@ Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
 {
     setupSize();
     setupHarfBuzz(parent.m_shapableFace);
-    setupStrikeout();
 }
 
 Typeface::Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount)
