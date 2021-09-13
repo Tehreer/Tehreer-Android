@@ -94,8 +94,8 @@ public class Typeface {
         @NonNull String fullName = "";
     }
 
-    private DesignCharacteristics design;
     private DefaultProperties defaults;
+    private DesignCharacteristics design;
     private StandardNames names;
 
     /**
@@ -166,44 +166,38 @@ public class Typeface {
         init(nativeTypeface);
     }
 
-    private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
-        this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
+    private void init(long nativeTypeface) {
+        this.nativeTypeface = nativeTypeface;
+        this.defaults = null;
         this.design = null;
-        this.defaults = typeface.defaults;
         this.names = null;
 
-        setupDefaultDesignCharacteristics();
-        setupDefaultNames();
+        setupDefaultProperties();
+        setupDefaultCoordinates();
+        setupStrikeout();
+        setupDesignCharacteristics();
+        setupNames();
+        setupVariableDescription();
+        setupDefaultPalette();
+    }
+
+    private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
+        this.nativeTypeface = nGetVariationInstance(typeface.nativeTypeface, coordinates);
+        this.defaults = typeface.defaults;
+        this.design = null;
+        this.names = null;
+
+        setupStrikeout();
+        setupDesignCharacteristics();
+        setupNames();
         setupVariableDescription();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
         this.nativeTypeface = nGetColorInstance(typeface.nativeTypeface, colors);
-        this.design = typeface.design;
         this.defaults = typeface.defaults;
+        this.design = typeface.design;
         this.names = typeface.names;
-    }
-
-	private void init(long nativeTypeface) {
-	    this.nativeTypeface = nativeTypeface;
-	    this.design = null;
-	    this.defaults = null;
-	    this.names = null;
-
-        setupDefaultDesignCharacteristics();
-        setupDefaultProperties();
-        setupDefaultCoordinates();
-        setupStrikeout();
-        setupDefaultNames();
-        setupVariableDescription();
-        setupDefaultPalette();
-	}
-
-	private void setupDefaultDesignCharacteristics() {
-        design = new DesignCharacteristics();
-        design.weight = getDefaultWeight();
-        design.width = getDefaultWidth();
-        design.slope = getDefaultSlope();
     }
 
     private void setupDefaultProperties() {
@@ -291,7 +285,7 @@ public class Typeface {
                 coordinates[i] = variationAxes.get(i).defaultValue();
             }
 
-            String styleName = getDefaultStyleName();
+            String styleName = nGetDefaultStyleName(nativeTypeface);
             if (styleName == null) {
                 styleName = "";
             }
@@ -386,12 +380,19 @@ public class Typeface {
         nSetupStrikeout(nativeTypeface);
     }
 
-    private void setupDefaultNames() {
+    private void setupDesignCharacteristics() {
+        design = new DesignCharacteristics();
+        design.weight = TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
+        design.width = TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
+        design.slope = TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
+    }
+
+    private void setupNames() {
         names = new StandardNames();
 
-        final String familyName = getDefaultFamilyName();
-        final String styleName = getDefaultStyleName();
-        final String fullName = getDefaultFullName();
+        final String familyName = nGetDefaultFamilyName(nativeTypeface);
+        final String styleName = nGetDefaultStyleName(nativeTypeface);
+        final String fullName = nGetDefaultFullName(nativeTypeface);
 
         if (familyName != null) {
             names.familyName = familyName;
@@ -470,6 +471,7 @@ public class Typeface {
             final int wdth = SfntTag.make("wdth");
             final int wght = SfntTag.make("wght");
 
+            // Get the values of variation axes.
             for (int i = 0; i < axisCount; i++) {
                 final VariationAxis axis = variationAxes.get(i);
                 final int tag = axis.tag();
@@ -498,30 +500,6 @@ public class Typeface {
 
     private @Nullable String searchNameString(int nameId) {
         return nSearchNameString(nativeTypeface, nameId);
-    }
-
-    private @Nullable String getDefaultFamilyName() {
-        return nGetDefaultFamilyName(nativeTypeface);
-    }
-
-    private @Nullable String getDefaultStyleName() {
-        return nGetDefaultStyleName(nativeTypeface);
-    }
-
-    private @Nullable String getDefaultFullName() {
-        return nGetDefaultFullName(nativeTypeface);
-    }
-
-    private @NonNull TypeWeight getDefaultWeight() {
-        return TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
-    }
-
-    private @NonNull TypeWidth getDefaultWidth() {
-        return TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
-    }
-
-    private @NonNull TypeSlope getDefaultSlope() {
-        return TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
     }
 
     /**
