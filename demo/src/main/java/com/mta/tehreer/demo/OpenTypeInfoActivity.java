@@ -55,7 +55,6 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     public static final String SOURCE_TEXT = "source_text";
 
     private static class ClusterHolder {
-
         final ViewGroup charDetail;
         final ViewGroup glyphDetail;
 
@@ -86,8 +85,8 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     }
 
     private static class GlyphSpan extends ReplacementSpan {
-        static final PointList OFFSET = PointList.of(new float[] { 0, 0 });
-        static final FloatList ADVANCE = FloatList.of(new float[] { 0 });
+        static final PointList OFFSET = PointList.of(0, 0);
+        static final FloatList ADVANCE = FloatList.of(0);
         static final int PADDING = 4;
 
         final Renderer renderer;
@@ -99,8 +98,8 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
             RectF bbox = renderer.computeBoundingBox(glyphId);
 
             this.renderer = renderer;
-            this.glyphId = IntList.of(new int[] { glyphId });
-            this.glyphX = -bbox.left + (PADDING / 2);
+            this.glyphId = IntList.of(glyphId);
+            this.glyphX = -bbox.left + (PADDING / 2.0f);
             this.spanWidth = (int) (bbox.width() + 0.5f) + PADDING;
         }
 
@@ -122,7 +121,6 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
     }
 
     private static class ClusterAdapter extends BaseAdapter {
-
         final Context context;
         final Renderer renderer;
         final String sourceText;
