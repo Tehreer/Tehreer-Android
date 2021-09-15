@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.graphics.TypefaceManager;
 import com.mta.tehreer.sfnt.ShapingEngine;
 import com.mta.tehreer.sfnt.ShapingResult;
+import com.mta.tehreer.sfnt.WritingDirection;
 
 public class OpenTypeInfoActivity extends AppCompatActivity {
 
@@ -286,6 +287,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         int scriptTag = intent.getIntExtra(SCRIPT_TAG, 0);
         int languageTag = intent.getIntExtra(LANGUAGE_TAG, 0);
         String sourceText = intent.getCharSequenceExtra(SOURCE_TEXT).toString();
+        WritingDirection writingDirection = ShapingEngine.getScriptDirection(scriptTag);
 
         Typeface typeface = TypefaceManager.getTypefaceByName(typefaceName);
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
@@ -303,6 +305,7 @@ public class OpenTypeInfoActivity extends AppCompatActivity {
         shapingEngine.setTypeSize(typeSize);
         shapingEngine.setScriptTag(scriptTag);
         shapingEngine.setLanguageTag(languageTag);
+        shapingEngine.setWritingDirection(writingDirection);
 
         ShapingResult shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length()));
         IntList clusterMap = shapingResult.getClusterMap();
