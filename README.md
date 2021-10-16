@@ -18,7 +18,7 @@ It is a wrapper over C libraries, [FreeType](https://www.freetype.org), [SheenBi
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-compile 'com.github.mta452:tehreer-android:2.6'
+implementation 'com.github.mta452:tehreer-android:2.7'
 ```
 
 ## Proguard
