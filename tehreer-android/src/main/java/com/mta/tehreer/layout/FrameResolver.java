@@ -404,7 +404,7 @@ public class FrameResolver {
             context.endIndex = segmentEnd;
             context.baseLevel = paragraph.getBaseLevel();
 
-            addParagraphLines(context);
+            resolveParagraphLines(context);
 
             if (context.isFilled) {
                 break;
@@ -450,6 +450,11 @@ public class FrameResolver {
         int leadingLineCount = 1;
         Paint.FontMetricsInt fontMetrics;
 
+        float leadingLineExtent = 0.0f;
+        float trailingLineExtent = 0.0f;
+
+        float flushFactor = 0.0f;
+
         // endregion
 
         // region Line Properties
@@ -489,65 +494,65 @@ public class FrameResolver {
         return -1;
     }
 
-    private float computeFlushFactor(@NonNull FrameContext context) {
-        final ParagraphStyle[] paragraphSpans = context.paragraphSpans;
-        Layout.Alignment alignment = null;
+    private void resolveParagraphLines(@NonNull FrameContext context) {
+        setupParagraphSpans(context);
+        setupLineHeightSpans(context);
 
-        // Get the top most alignment.
-        for (int i = paragraphSpans.length - 1; i >= 0; i--) {
-            if (paragraphSpans[i] instanceof AlignmentSpan) {
-                alignment = ((AlignmentSpan) paragraphSpans[i]).getAlignment();
-                break;
+        resolveLeadingMargins(context);
+        resolveFlushFactor(context);
+        resolveLineMargins(context, true);
+
+        // Iterate over each line of this paragraph.
+        int lineStart = context.startIndex;
+        while (lineStart != context.endIndex) {
+            final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, context.lineExtent, BreakMode.LINE);
+            final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
+            prepareLine(context, composedLine, context.flushFactor);
+
+            final float lineHeight = composedLine.getHeight();
+
+            // Make sure that at least one line is added even if frame is smaller in height.
+            if ((context.lineTop + lineHeight) > context.layoutHeight && context.textLines.size() > 0) {
+                context.isFilled = true;
+                return;
             }
-        }
 
-        return getFlushFactor(alignment, context.baseLevel);
+            context.textLines.add(composedLine);
+            context.lastFlushFactor = context.flushFactor;
+
+            // Stop the filling process if maximum lines have been added.
+            if (context.textLines.size() == context.maxLines) {
+                context.isFilled = true;
+                return;
+            }
+
+            resolveLineMargins(context, false);
+
+            lineStart = lineEnd;
+            context.lineTop += lineHeight;
+        }
     }
 
-    private void resolveLeadingOffset(@NonNull FrameContext context) {
-        if ((context.baseLevel & 1) == 0) {
-            context.leadingOffset = context.layoutWidth - context.lineExtent;
-        }
-    }
-
-    private void addParagraphLines(@NonNull FrameContext context) {
-        float leadingLineExtent = context.layoutWidth;
-        float trailingLineExtent = context.layoutWidth;
-
+    private void setupParagraphSpans(@NonNull FrameContext context) {
         // Extract all spans of this paragraph.
         context.paragraphSpans = mSpanned.getSpans(context.startIndex, context.endIndex, ParagraphStyle.class);
+    }
 
-        // Compute margins for leading and trailing lines.
-        for (ParagraphStyle style : context.paragraphSpans) {
-            if (style instanceof LeadingMarginSpan) {
-                final LeadingMarginSpan span = (LeadingMarginSpan) style;
-                leadingLineExtent -= span.getLeadingMargin(true);
-                trailingLineExtent -= span.getLeadingMargin(false);
-
-                if (span instanceof LeadingMarginSpan2) {
-                    final LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
-                    final int spanTotalLines = span2.getLeadingMarginLineCount();
-                    if (spanTotalLines > context.leadingLineCount) {
-                        context.leadingLineCount = spanTotalLines;
-                    }
-                }
-            }
-        }
-
+    private void setupLineHeightSpans(@NonNull FrameContext context) {
         // Extract line height spans and create font metrics if necessary.
         context.pickHeightSpans = mSpanned.getSpans(context.startIndex, context.endIndex, LineHeightSpan.class);
-        final int chooseHeightCount = context.pickHeightSpans.length;
-        if (chooseHeightCount > 0 && context.fontMetrics == null) {
+        final int spanCount = context.pickHeightSpans.length;
+        if (spanCount > 0 && context.fontMetrics == null) {
             context.fontMetrics = new Paint.FontMetricsInt();
         }
 
         // Setup array for caching top of first line related to each line height span.
-        if (context.pickHeightTops == null || context.pickHeightTops.length < chooseHeightCount) {
-            context.pickHeightTops = new int[chooseHeightCount];
+        if (context.pickHeightTops == null || context.pickHeightTops.length < spanCount) {
+            context.pickHeightTops = new int[spanCount];
         }
 
         // Compute top of first line related to each line height span.
-        for (int i = 0; i < chooseHeightCount; i++) {
+        for (int i = 0; i < spanCount; i++) {
             final int spanStart = mSpanned.getSpanStart(context.pickHeightSpans[i]);
             int spanTop = (int) (context.lineTop + 0.5f);
 
@@ -560,43 +565,60 @@ public class FrameResolver {
 
             context.pickHeightTops[i] = spanTop;
         }
+    }
 
-        final float flushFactor = computeFlushFactor(context);
-        context.lineExtent = leadingLineExtent;
-        resolveLeadingOffset(context);
+    private void resolveLeadingMargins(@NonNull FrameContext context) {
+        context.leadingLineExtent = context.layoutWidth;
+        context.trailingLineExtent = context.layoutWidth;
 
-        // Iterate over each line of this paragraph.
-        int lineStart = context.startIndex;
-        while (lineStart != context.endIndex) {
-            final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, context.lineExtent, BreakMode.LINE);
-            final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
-            prepareLine(context, composedLine, flushFactor);
+        // Compute margins for leading and trailing lines.
+        for (ParagraphStyle style : context.paragraphSpans) {
+            if (style instanceof LeadingMarginSpan) {
+                final LeadingMarginSpan span = (LeadingMarginSpan) style;
+                context.leadingLineExtent -= span.getLeadingMargin(true);
+                context.trailingLineExtent -= span.getLeadingMargin(false);
 
-            final float lineHeight = composedLine.getHeight();
-
-            // Make sure that at least one line is added even if frame is smaller in height.
-            if ((context.lineTop + lineHeight) > context.layoutHeight && context.textLines.size() > 0) {
-                context.isFilled = true;
-                return;
+                if (span instanceof LeadingMarginSpan2) {
+                    final LeadingMarginSpan2 span2 = (LeadingMarginSpan2) span;
+                    final int lineCount = span2.getLeadingMarginLineCount();
+                    if (lineCount > context.leadingLineCount) {
+                        context.leadingLineCount = lineCount;
+                    }
+                }
             }
+        }
+    }
 
-            context.textLines.add(composedLine);
-            context.lastFlushFactor = flushFactor;
+    private void resolveFlushFactor(@NonNull FrameContext context) {
+        final ParagraphStyle[] paragraphSpans = context.paragraphSpans;
+        Layout.Alignment alignment = null;
 
-            // Stop the filling process if maximum lines have been added.
-            if (context.textLines.size() == context.maxLines) {
-                context.isFilled = true;
-                return;
+        // Get the top most alignment.
+        for (int i = paragraphSpans.length - 1; i >= 0; i--) {
+            if (paragraphSpans[i] instanceof AlignmentSpan) {
+                alignment = ((AlignmentSpan) paragraphSpans[i]).getAlignment();
+                break;
             }
+        }
 
-            // Find out extent of next line.
+        context.flushFactor = getFlushFactor(alignment, context.baseLevel);
+    }
+
+    private void resolveLineMargins(@NonNull FrameContext context, boolean isInitial) {
+        if (isInitial) {
+            context.lineExtent = context.leadingLineExtent;
+            resolveLeadingOffset(context);
+        } else {
             if (--context.leadingLineCount <= 0) {
-                context.lineExtent = trailingLineExtent;
+                context.lineExtent = context.trailingLineExtent;
                 resolveLeadingOffset(context);
             }
+        }
+    }
 
-            lineStart = lineEnd;
-            context.lineTop += lineHeight;
+    private void resolveLeadingOffset(@NonNull FrameContext context) {
+        if ((context.baseLevel & 1) == 0) {
+            context.leadingOffset = context.layoutWidth - context.lineExtent;
         }
     }
 
