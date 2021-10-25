@@ -414,7 +414,7 @@ public class FrameResolver {
             paragraphIndex++;
         } while (segmentStart < charEnd);
 
-        handleTruncation(context, charEnd);
+        resolveTruncation(context, charEnd);
         resolveAlignments(context);
 
         ComposedFrame frame = new ComposedFrame(mSpanned, charStart, context.frameEnd(), context.textLines);
@@ -461,9 +461,7 @@ public class FrameResolver {
 
         float lineExtent = 0.0f;
         float leadingOffset = 0.0f;
-
         float lineTop = 0.0f;
-        float lastFlushFactor = 0.0f;
 
         // endregion
 
@@ -507,7 +505,7 @@ public class FrameResolver {
         while (lineStart != context.endIndex) {
             final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, context.lineExtent, BreakMode.LINE);
             final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
-            prepareLine(context, composedLine, context.flushFactor);
+            resolveAttributes(context, composedLine);
 
             final float lineHeight = composedLine.getHeight();
 
@@ -518,7 +516,6 @@ public class FrameResolver {
             }
 
             context.textLines.add(composedLine);
-            context.lastFlushFactor = context.flushFactor;
 
             // Stop the filling process if maximum lines have been added.
             if (context.textLines.size() == context.maxLines) {
@@ -622,65 +619,71 @@ public class FrameResolver {
         }
     }
 
-    private void prepareLine(@NonNull FrameContext context, @NonNull ComposedLine composedLine, float flushFactor) {
+    private void resolveAttributes(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
+        resolveCustomHeight(context, textLine);
+        resolveLineHeightMultiplier(context, textLine);
+        resolveExtraLineSpacing(context, textLine);
+
+        // Compute the origin of line.
+        textLine.setOriginX(context.leadingOffset + textLine.getFlushPenOffset(context.flushFactor, context.lineExtent));
+        textLine.setOriginY(context.lineTop + textLine.getAscent());
+
+        // Set supporting properties of line.
+        textLine.setSpans(context.paragraphSpans);
+        textLine.setFirst(context.leadingLineCount > 0);
+        textLine.setIntrinsicMargin(context.layoutWidth - context.lineExtent);
+        textLine.setFlushFactor(context.flushFactor);
+    }
+
+    private void resolveCustomHeight(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
         final LineHeightSpan[] pickHeightSpans = context.pickHeightSpans;
         final Paint.FontMetricsInt fontMetrics = context.fontMetrics;
 
         // Resolve line height spans.
-        final int chooseHeightCount = pickHeightSpans.length;
-        for (int i = 0; i < chooseHeightCount; i++) {
-            fontMetrics.ascent = (int) -(composedLine.getAscent() + 0.5f);
-            fontMetrics.descent = (int) (composedLine.getDescent() + 0.5f);
-            fontMetrics.leading = (int) (composedLine.getLeading() + 0.5f);
+        final int spanCount = pickHeightSpans.length;
+        for (int i = 0; i < spanCount; i++) {
+            fontMetrics.ascent = (int) -(textLine.getAscent() + 0.5f);
+            fontMetrics.descent = (int) (textLine.getDescent() + 0.5f);
+            fontMetrics.leading = (int) (textLine.getLeading() + 0.5f);
             fontMetrics.top = fontMetrics.ascent;
             fontMetrics.bottom = fontMetrics.descent;
 
             final LineHeightSpan span = pickHeightSpans[i];
-            final int lineStart = composedLine.getCharStart();
-            final int lineEnd = composedLine.getCharEnd();
+            final int lineStart = textLine.getCharStart();
+            final int lineEnd = textLine.getCharEnd();
             final int lineTop = (int) (context.lineTop + 0.5f);
             final int spanTop = context.pickHeightTops[i];
 
             span.chooseHeight(mSpanned, lineStart, lineEnd, spanTop, lineTop, fontMetrics);
 
             // Override the line metrics.
-            composedLine.setAscent(-fontMetrics.ascent);
-            composedLine.setDescent(fontMetrics.descent);
-            composedLine.setLeading(fontMetrics.leading);
+            textLine.setAscent(-fontMetrics.ascent);
+            textLine.setDescent(fontMetrics.descent);
+            textLine.setLeading(fontMetrics.leading);
         }
+    }
 
+    private void resolveLineHeightMultiplier(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
         // Resolve line height multiplier.
         if (mLineHeightMultiplier != 0.0f) {
-            final float oldHeight = composedLine.getHeight();
+            final float oldHeight = textLine.getHeight();
             final float newHeight = oldHeight * mLineHeightMultiplier;
             final float midOffset = (newHeight - oldHeight) / 2.0f;
 
             // Adjust metrics in such a way that text remains in the middle of line.
-            composedLine.setAscent(composedLine.getAscent() + midOffset);
-            composedLine.setDescent(composedLine.getDescent() + midOffset);
+            textLine.setAscent(textLine.getAscent() + midOffset);
+            textLine.setDescent(textLine.getDescent() + midOffset);
         }
-
-        // Resolve extra line spacing.
-        if (mExtraLineSpacing != 0.0f) {
-            composedLine.setLeading(composedLine.getLeading() + mExtraLineSpacing);
-        }
-
-        // Compute the origin of line.
-        final float originX = context.leadingOffset + composedLine.getFlushPenOffset(flushFactor, context.lineExtent);
-        final float originY = context.lineTop + composedLine.getAscent();
-
-        // Set the origin of line.
-        composedLine.setOriginX(originX);
-        composedLine.setOriginY(originY);
-
-        // Set supporting properties of line.
-        composedLine.setSpans(context.paragraphSpans);
-        composedLine.setFirst(context.leadingLineCount > 0);
-        composedLine.setIntrinsicMargin(context.layoutWidth - context.lineExtent);
-        composedLine.setFlushFactor(flushFactor);
     }
 
-    private void handleTruncation(@NonNull FrameContext context, int frameEnd) {
+    private void resolveExtraLineSpacing(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
+        // Resolve extra line spacing.
+        if (mExtraLineSpacing != 0.0f) {
+            textLine.setLeading(textLine.getLeading() + mExtraLineSpacing);
+        }
+    }
+
+    private void resolveTruncation(@NonNull FrameContext context, int frameEnd) {
         if (mTruncationPlace != null) {
             final List<ComposedLine> textLines = context.textLines;
             final int lastIndex = textLines.size() - 1;
@@ -696,7 +699,7 @@ public class FrameResolver {
 
             // Create the truncated line.
             ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, context.lineExtent, mTruncationMode, mTruncationPlace);
-            prepareLine(context, truncatedLine, context.lastFlushFactor);
+            resolveAttributes(context, truncatedLine);
 
             // Replace the last line with truncated one.
             textLines.set(lastIndex, truncatedLine);
