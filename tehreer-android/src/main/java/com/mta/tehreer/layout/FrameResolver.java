@@ -470,27 +470,7 @@ public class FrameResolver {
         }
     }
 
-    private int binarySearch(@NonNull FrameContext context, int charIndex) {
-        final List<ComposedLine> textLines = context.textLines;
-
-        int low = 0;
-        int high = textLines.size() - 1;
-
-        while (low <= high) {
-            int mid = (low + high) >>> 1;
-            ComposedLine value = textLines.get(mid);
-
-            if (charIndex >= value.getCharEnd()) {
-                low = mid + 1;
-            } else if (charIndex < value.getCharStart()) {
-                high = mid - 1;
-            } else {
-                return mid;
-            }
-        }
-
-        return -1;
-    }
+    // region Paragraph Handling
 
     private void resolveParagraphLines(@NonNull FrameContext context) {
         setupParagraphSpans(context);
@@ -555,13 +535,35 @@ public class FrameResolver {
 
             // Fix span top in case it starts in a previous paragraph.
             if (spanStart < context.startIndex) {
-                final int lineIndex = binarySearch(context, spanStart);
+                final int lineIndex = searchLineIndex(context, spanStart);
                 final ComposedLine spanLine = context.textLines.get(lineIndex);
                 spanTop = (int) (spanLine.getTop() + 0.5f);
             }
 
             context.pickHeightTops[i] = spanTop;
         }
+    }
+
+    private int searchLineIndex(@NonNull FrameContext context, int charIndex) {
+        final List<ComposedLine> textLines = context.textLines;
+
+        int low = 0;
+        int high = textLines.size() - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            ComposedLine value = textLines.get(mid);
+
+            if (charIndex >= value.getCharEnd()) {
+                low = mid + 1;
+            } else if (charIndex < value.getCharStart()) {
+                high = mid - 1;
+            } else {
+                return mid;
+            }
+        }
+
+        return -1;
     }
 
     private void resolveLeadingMargins(@NonNull FrameContext context) {
@@ -618,6 +620,10 @@ public class FrameResolver {
             context.leadingOffset = context.layoutWidth - context.lineExtent;
         }
     }
+
+    // endregion
+
+    // region Line Handling
 
     private void resolveAttributes(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
         resolveCustomHeight(context, textLine);
@@ -682,6 +688,10 @@ public class FrameResolver {
             textLine.setLeading(textLine.getLeading() + mExtraLineSpacing);
         }
     }
+
+    // endregion
+
+    // region Layout Handling
 
     private void resolveTruncation(@NonNull FrameContext context, int frameEnd) {
         if (mTruncationPlace != null) {
@@ -768,4 +778,6 @@ public class FrameResolver {
             context.layoutWidth = occupiedWidth;
         }
     }
+
+    // endregion
 }
