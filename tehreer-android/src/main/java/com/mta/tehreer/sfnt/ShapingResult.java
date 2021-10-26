@@ -26,6 +26,7 @@ import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Raw;
+import com.mta.tehreer.internal.layout.CaretEdgesBuilder;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
 import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
@@ -432,76 +433,6 @@ public class ShapingResult implements Disposable {
         return getCaretEdges(null);
     }
 
-    private @NonNull float[] getCaretAdvances(@Nullable boolean[] caretStops) {
-        int codeUnitCount = getCharCount();
-        float[] caretAdvances = new float[codeUnitCount + 1];
-
-        boolean isBackward = isBackward();
-        FloatList glyphAdvances = getGlyphAdvances();
-        IntList clusterMap = getClusterMap();
-
-        int glyphIndex = clusterMap.get(0) + 1;
-        int refIndex = glyphIndex;
-        int totalStops = 0;
-        int clusterStart = 0;
-
-        for (int codeUnitIndex = 1; codeUnitIndex <= codeUnitCount; codeUnitIndex++) {
-            int oldIndex = glyphIndex;
-
-            if (codeUnitIndex != codeUnitCount) {
-                glyphIndex = clusterMap.get(codeUnitIndex) + 1;
-
-                if (caretStops != null && !caretStops[codeUnitIndex - 1]) {
-                    continue;
-                }
-
-                totalStops += 1;
-            } else {
-                totalStops += 1;
-                glyphIndex = (isBackward ? 0 : getGlyphCount() + 1);
-            }
-
-            if (glyphIndex != oldIndex) {
-                float clusterAdvance = 0;
-                float distance = 0;
-                int counter = 1;
-
-                /* Find the advance of current cluster. */
-                if (isBackward) {
-                    while (refIndex > glyphIndex) {
-                        clusterAdvance += glyphAdvances.get(refIndex - 1);
-                        refIndex -= 1;
-                    }
-                } else {
-                    while (refIndex < glyphIndex) {
-                        clusterAdvance += glyphAdvances.get(refIndex - 1);
-                        refIndex += 1;
-                    }
-                }
-
-                /* Divide the advance evenly between cluster length. */
-                while (clusterStart < codeUnitIndex) {
-                    float advance = 0;
-
-                    if (caretStops == null || caretStops[clusterStart] || clusterStart == codeUnitCount - 1) {
-                        float previous = distance;
-
-                        distance = (clusterAdvance * counter) / totalStops;
-                        advance = distance - previous;
-                        counter += 1;
-                    }
-
-                    caretAdvances[clusterStart] = advance;
-                    clusterStart += 1;
-                }
-
-                totalStops = 0;
-            }
-        }
-
-        return caretAdvances;
-    }
-
     /**
      * Returns a list of caret edges.
      *
@@ -516,35 +447,13 @@ public class ShapingResult implements Disposable {
             }
         }
 
-        int codeUnitCount = getCharCount();
-        boolean isRTL = isRTL();
-
-        float[] caretEdges = getCaretAdvances(caretStops);
-        float distance = 0;
-
-        if (isRTL) {
-            /* Last edge should be zero. */
-            caretEdges[codeUnitCount] = 0;
-
-            /* Iterate in reverse direction. */
-            for (int i = codeUnitCount - 1; i >= 0; i--) {
-                distance += caretEdges[i];
-                caretEdges[i] = distance;
-            }
-        } else {
-            float advance = caretEdges[0];
-
-            /* First edge should be zero. */
-            caretEdges[0] = 0;
-
-            for (int i = 1; i <= codeUnitCount; i++) {
-                distance += advance;
-                advance = caretEdges[i];
-                caretEdges[i] = distance;
-            }
-        }
-
-        return FloatList.of(caretEdges);
+        return new CaretEdgesBuilder()
+                .setBackward(isBackward())
+                .setRTL(isRTL())
+                .setGlyphAdvances(getGlyphAdvances())
+                .setClusterMap(getClusterMap())
+                .setCaretStops(caretStops)
+                .build();
     }
 
 	@Override
