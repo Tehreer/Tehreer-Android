@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 
-public class IntrinsicRun extends TextRun {
+public final class IntrinsicRun extends TextRun {
     public final int charStart;
     public final int charEnd;
     public final boolean isBackward;
@@ -86,10 +86,6 @@ public class IntrinsicRun extends TextRun {
         return bidiLevel;
     }
 
-    private boolean isRTL() {
-        return (bidiLevel & 1) == 1;
-    }
-
     @Override
     public @NonNull Typeface getTypeface() {
         return typeface;
@@ -128,6 +124,11 @@ public class IntrinsicRun extends TextRun {
     @Override
     public @NonNull IntList getClusterMap() {
         return IntList.of(clusterMap);
+    }
+
+    @Override
+    public @NonNull FloatList getCaretEdges() {
+        return caretEdges;
     }
 
     @Override
@@ -232,20 +233,19 @@ public class IntrinsicRun extends TextRun {
         return isBackward ? clusterMap[arrayIndex] : forwardGlyphIndex(arrayIndex);
     }
 
+    @Override
     public float getCaretBoundary(int fromIndex, int toIndex) {
-        final int firstIndex = fromIndex - charStart;
-        final int lastIndex = toIndex - charStart;
-
-        return CaretUtils.getLeftMargin(caretEdges, isRTL(), firstIndex, lastIndex);
+        return super.getCaretBoundary(fromIndex, toIndex);
     }
 
     @Override
     public float getCaretEdge(int charIndex) {
-        return getCaretEdge(charIndex, 0.0f);
+        return super.getCaretEdge(charIndex);
     }
 
+    @Override
     public float getCaretEdge(int charIndex, float caretBoundary) {
-        return caretEdges.get(charIndex - charStart) - caretBoundary;
+        return super.getCaretEdge(charIndex, caretBoundary);
     }
 
     private float getLeadingEdge(int fromIndex, int toIndex, float caretBoundary) {
@@ -254,25 +254,17 @@ public class IntrinsicRun extends TextRun {
 
     @Override
     public float getRangeDistance(int fromIndex, int toIndex) {
-        final int firstIndex = fromIndex - charStart;
-        final int lastIndex = toIndex - charStart;
-
-        return CaretUtils.getRangeDistance(caretEdges, isRTL(), firstIndex, lastIndex);
+        return super.getRangeDistance(fromIndex, toIndex);
     }
 
     @Override
     public int computeNearestCharIndex(float distance) {
-        return computeNearestCharIndex(distance, charStart, charEnd);
+        return super.computeNearestCharIndex(distance);
     }
 
+    @Override
     public int computeNearestCharIndex(float distance, int fromIndex, int toIndex) {
-        final int firstIndex = fromIndex - charStart;
-        final int lastIndex = toIndex - charStart;
-
-        int nearestIndex = CaretUtils.computeNearestIndex(caretEdges, isRTL(),
-                                                          firstIndex, lastIndex, distance);
-
-        return nearestIndex + charStart;
+        return super.computeNearestCharIndex(distance, fromIndex, toIndex);
     }
 
     private @Nullable ClusterRange getClusterRange(int charIndex, @Nullable ClusterRange exclusion) {

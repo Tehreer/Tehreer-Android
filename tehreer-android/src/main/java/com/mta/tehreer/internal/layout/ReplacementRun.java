@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import com.mta.tehreer.graphics.Typeface;
 import java.util.Collections;
 import java.util.List;
 
-public class ReplacementRun extends TextRun {
+public final class ReplacementRun extends TextRun {
     public final @NonNull CharSequence charSequence;
     public final int charStart;
     public final int charEnd;
@@ -81,10 +81,6 @@ public class ReplacementRun extends TextRun {
         return bidiLevel;
     }
 
-    private boolean isRTL() {
-        return (bidiLevel & 1) == 1;
-    }
-
     @Override
     public @NonNull List<Object> getSpans() {
         return Collections.singletonList((Object) replacement);
@@ -98,6 +94,11 @@ public class ReplacementRun extends TextRun {
     @Override
     public float getTypeSize() {
         return typeSize;
+    }
+
+    @Override
+    public @NonNull FloatList getCaretEdges() {
+        return caretEdges;
     }
 
     @Override

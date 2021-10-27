@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,11 @@ public abstract class TextRun {
 
     public abstract byte getBidiLevel();
 
-    public  @NonNull List<Object> getSpans() {
+    public boolean isRTL() {
+        return (getBidiLevel() & 1) == 1;
+    }
+
+    public @NonNull List<Object> getSpans() {
         return Collections.emptyList();
     }
 
@@ -80,6 +84,8 @@ public abstract class TextRun {
         return IntList.of(new int[getCharEnd() - getCharStart()]);
     }
 
+    public abstract @NonNull FloatList getCaretEdges();
+
     public abstract float getAscent();
     public abstract float getDescent();
     public abstract float getLeading();
@@ -108,11 +114,44 @@ public abstract class TextRun {
         return 1;
     }
 
-    public abstract float getCaretEdge(int charIndex);
+    protected float getCaretBoundary(int fromIndex, int toIndex) {
+        final int charStart = getCharStart();
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
 
-    public abstract float getRangeDistance(int fromIndex, int toIndex);
+        return CaretUtils.getLeftMargin(getCaretEdges(), isRTL(), firstIndex, lastIndex);
+    }
 
-    public abstract int computeNearestCharIndex(float distance);
+    public float getCaretEdge(int charIndex) {
+        return getCaretEdge(charIndex, 0.0f);
+    }
+
+    protected float getCaretEdge(int charIndex, float caretBoundary) {
+        return getCaretEdges().get(charIndex - getCharStart()) - caretBoundary;
+    }
+
+    public float getRangeDistance(int fromIndex, int toIndex) {
+        final int charStart = getCharStart();
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
+
+        return CaretUtils.getRangeDistance(getCaretEdges(), isRTL(), firstIndex, lastIndex);
+    }
+
+    public int computeNearestCharIndex(float distance) {
+        return computeNearestCharIndex(distance, getCharStart(), getCharEnd());
+    }
+
+    protected int computeNearestCharIndex(float distance, int fromIndex, int toIndex) {
+        final int charStart = getCharStart();
+        final int firstIndex = fromIndex - charStart;
+        final int lastIndex = toIndex - charStart;
+
+        int nearestIndex = CaretUtils.computeNearestIndex(getCaretEdges(), isRTL(),
+                                                          firstIndex, lastIndex, distance);
+
+        return nearestIndex + charStart;
+    }
 
     public float computeTypographicExtent(int glyphStart, int glyphEnd) {
         FloatList glyphAdvances = getGlyphAdvances();

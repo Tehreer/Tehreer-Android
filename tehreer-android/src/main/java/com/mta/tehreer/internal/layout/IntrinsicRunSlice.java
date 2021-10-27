@@ -16,6 +16,10 @@
 
 package com.mta.tehreer.internal.layout;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
+import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
+import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
+
 import android.graphics.Canvas;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ScaleXSpan;
@@ -31,7 +35,7 @@ import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.List;
 
-public class IntrinsicRunSlice extends TextRun {
+public final class IntrinsicRunSlice extends TextRun {
     private final @NonNull IntrinsicRun intrinsicRun;
     private final int charStart;
     private final int charEnd;
@@ -123,6 +127,66 @@ public class IntrinsicRunSlice extends TextRun {
         final int actualLength = actualEnd - actualStart;
 
         return new ClusterMap(intrinsicRun.clusterMap, actualStart, actualLength, glyphOffset);
+    }
+
+    static class CaretEdges extends FloatList {
+        final @NonNull FloatList parentEdges;
+        final int offset;
+        final int size;
+        final float boundary;
+
+        static @NonNull CaretEdges of(@NonNull IntrinsicRun intrinsicRun, int charStart, int charEnd) {
+            final int actualStart = intrinsicRun.getClusterStart(charStart);
+            final int actualEnd = intrinsicRun.getClusterEnd(charEnd - 1);
+
+            final int offset = actualStart - intrinsicRun.getCharStart();
+            final int size = actualEnd - actualStart + 1;
+
+            final FloatList caretEdges = intrinsicRun.getCaretEdges();
+            final float caretBoundary = intrinsicRun.getCaretBoundary(actualStart, actualEnd);
+
+            return new CaretEdges(caretEdges, offset, size, caretBoundary);
+        }
+
+        CaretEdges(@NonNull FloatList parentEdges, int offset, int size, float boundary) {
+            this.parentEdges = parentEdges;
+            this.offset = offset;
+            this.size = size;
+            this.boundary = boundary;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public float get(int index) {
+            checkElementIndex(index, size);
+
+            return parentEdges.get(index + offset) - boundary;
+        }
+
+        @Override
+        public void copyTo(@NonNull float[] array, int atIndex) {
+            checkNotNull(array);
+
+            for (int i = 0; i < size; i++) {
+                array[i + atIndex] = parentEdges.get(i + offset) - boundary;
+            }
+        }
+
+        @Override
+        public @NonNull FloatList subList(int fromIndex, int toIndex) {
+            checkIndexRange(fromIndex, toIndex, size);
+
+            return new CaretEdges(parentEdges, offset + fromIndex, toIndex - fromIndex, boundary);
+        }
+    }
+
+    @Override
+    public @NonNull FloatList getCaretEdges() {
+        return CaretEdges.of(intrinsicRun, charStart, charEnd);
     }
 
     @Override
