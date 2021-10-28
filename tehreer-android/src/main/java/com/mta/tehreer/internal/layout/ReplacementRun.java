@@ -24,13 +24,16 @@ import android.text.style.ReplacementSpan;
 import androidx.annotation.NonNull;
 
 import com.mta.tehreer.collections.FloatList;
+import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class ReplacementRun extends TextRun {
+public final class ReplacementRun implements TextRun {
     public final @NonNull CharSequence charSequence;
     public final int charStart;
     public final int charEnd;
@@ -81,11 +84,26 @@ public final class ReplacementRun extends TextRun {
         return bidiLevel;
     }
 
+    private boolean isRTL() {
+        return (bidiLevel & 1) == 1;
+    }
+
     @Override
     public @NonNull List<Object> getSpans() {
         return Collections.singletonList((Object) replacement);
     }
 
+    @Override
+    public int getStartExtraLength() {
+        return 0;
+    }
+
+    @Override
+    public int getEndExtraLength() {
+        return 0;
+    }
+
+    @NonNull
     @Override
     public Typeface getTypeface() {
         return typeface;
@@ -94,6 +112,40 @@ public final class ReplacementRun extends TextRun {
     @Override
     public float getTypeSize() {
         return typeSize;
+    }
+
+    @Override
+    public @NonNull WritingDirection getWritingDirection() {
+        return WritingDirection.LEFT_TO_RIGHT;
+    }
+
+    @Override
+    public int getGlyphCount() {
+        return 1;
+    }
+
+    private int getSpaceGlyphId() {
+        return typeface.getGlyphId(' ');
+    }
+
+    @Override
+    public @NonNull IntList getGlyphIds() {
+        return IntList.of(getSpaceGlyphId());
+    }
+
+    @Override
+    public @NonNull PointList getGlyphOffsets() {
+        return PointList.of(0, 0);
+    }
+
+    @Override
+    public @NonNull FloatList getGlyphAdvances() {
+        return FloatList.of(getWidth());
+    }
+
+    @Override
+    public @NonNull IntList getClusterMap() {
+        return IntList.of(new int[charEnd - charStart]);
     }
 
     @Override
@@ -127,6 +179,26 @@ public final class ReplacementRun extends TextRun {
     }
 
     @Override
+    public int getClusterStart(int charIndex) {
+        return charStart;
+    }
+
+    @Override
+    public int getClusterEnd(int charIndex) {
+        return charEnd;
+    }
+
+    @Override
+    public int getLeadingGlyphIndex(int charIndex) {
+        return 0;
+    }
+
+    @Override
+    public int getTrailingGlyphIndex(int charIndex) {
+        return 1;
+    }
+
+    @Override
     public float getCaretEdge(int charIndex) {
         return caretEdges.get(charIndex - charStart);
     }
@@ -142,6 +214,11 @@ public final class ReplacementRun extends TextRun {
     @Override
     public int computeNearestCharIndex(float distance) {
         return CaretUtils.computeNearestIndex(caretEdges, isRTL(), distance) + charStart;
+    }
+
+    @Override
+    public float computeTypographicExtent(int glyphStart, int glyphEnd) {
+        return getWidth();
     }
 
     @Override

@@ -29,7 +29,10 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.sfnt.WritingDirection;
 
-public final class IntrinsicRun extends TextRun {
+import java.util.Collections;
+import java.util.List;
+
+public final class IntrinsicRun extends AbstractTextRun {
     public final int charStart;
     public final int charEnd;
     public final boolean isBackward;
@@ -84,6 +87,21 @@ public final class IntrinsicRun extends TextRun {
     @Override
     public byte getBidiLevel() {
         return bidiLevel;
+    }
+
+    @Override
+    public @NonNull List<Object> getSpans() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public int getStartExtraLength() {
+        return 0;
+    }
+
+    @Override
+    public int getEndExtraLength() {
+        return 0;
     }
 
     @Override

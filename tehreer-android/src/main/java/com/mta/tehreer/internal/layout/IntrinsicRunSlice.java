@@ -21,6 +21,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ScaleXSpan;
 
@@ -35,7 +36,7 @@ import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.List;
 
-public final class IntrinsicRunSlice extends TextRun {
+public final class IntrinsicRunSlice implements TextRun {
     private final @NonNull IntrinsicRun intrinsicRun;
     private final int charStart;
     private final int charEnd;
@@ -250,6 +251,22 @@ public final class IntrinsicRunSlice extends TextRun {
     @Override
     public int computeNearestCharIndex(float distance) {
         return intrinsicRun.computeNearestCharIndex(distance, charStart, charEnd);
+    }
+
+    @Override
+    public float computeTypographicExtent(int glyphStart, int glyphEnd) {
+        final int actualStart = glyphStart + glyphOffset;
+        final int actualEnd = glyphEnd + glyphOffset;
+
+        return intrinsicRun.computeTypographicExtent(actualStart, actualEnd);
+    }
+
+    @Override
+    public @NonNull RectF computeBoundingBox(@NonNull Renderer renderer, int glyphStart, int glyphEnd) {
+        final int actualStart = glyphStart + glyphOffset;
+        final int actualEnd = glyphEnd + glyphOffset;
+
+        return intrinsicRun.computeBoundingBox(renderer, actualStart, actualEnd);
     }
 
     @Override
