@@ -20,6 +20,7 @@ import android.graphics.Canvas;
 import android.graphics.RectF;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Size;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -33,6 +34,7 @@ import java.util.List;
 public interface TextRun {
     int getCharStart();
     int getCharEnd();
+    boolean isBackward();
     byte getBidiLevel();
     @NonNull List<Object> getSpans();
 
@@ -61,10 +63,13 @@ public interface TextRun {
     int getClusterStart(int charIndex);
     int getClusterEnd(int charIndex);
 
+    @NonNull @Size(2) int[] getGlyphRangeForChars(int fromIndex, int toIndex);
     int getLeadingGlyphIndex(int charIndex);
     int getTrailingGlyphIndex(int charIndex);
 
+    float getCaretBoundary(int fromIndex, int toIndex);
     float getCaretEdge(int charIndex);
+
     float getRangeDistance(int fromIndex, int toIndex);
     int computeNearestCharIndex(float distance);
 

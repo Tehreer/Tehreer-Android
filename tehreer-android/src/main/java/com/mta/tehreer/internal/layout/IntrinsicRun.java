@@ -85,6 +85,11 @@ public final class IntrinsicRun extends AbstractTextRun {
     }
 
     @Override
+    public boolean isBackward() {
+        return isBackward;
+    }
+
+    @Override
     public byte getBidiLevel() {
         return bidiLevel;
     }
@@ -220,6 +225,7 @@ public final class IntrinsicRun extends AbstractTextRun {
         return glyphIds.length - 1;
     }
 
+    @Override
     public @NonNull @Size(2) int[] getGlyphRangeForChars(int fromIndex, int toIndex) {
         final int firstIndex = fromIndex - charStart;
         final int lastIndex = (toIndex - 1) - charStart;

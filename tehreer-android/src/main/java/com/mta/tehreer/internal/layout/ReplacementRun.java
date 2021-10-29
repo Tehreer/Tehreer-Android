@@ -80,6 +80,11 @@ public final class ReplacementRun implements TextRun {
     }
 
     @Override
+    public boolean isBackward() {
+        return false;
+    }
+
+    @Override
     public byte getBidiLevel() {
         return bidiLevel;
     }
@@ -189,6 +194,11 @@ public final class ReplacementRun implements TextRun {
     }
 
     @Override
+    public @NonNull int[] getGlyphRangeForChars(int fromIndex, int toIndex) {
+        return new int[] { 0, 1 };
+    }
+
+    @Override
     public int getLeadingGlyphIndex(int charIndex) {
         return 0;
     }
@@ -196,6 +206,11 @@ public final class ReplacementRun implements TextRun {
     @Override
     public int getTrailingGlyphIndex(int charIndex) {
         return 1;
+    }
+
+    @Override
+    public float getCaretBoundary(int fromIndex, int toIndex) {
+        return 0;
     }
 
     @Override

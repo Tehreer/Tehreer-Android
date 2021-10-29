@@ -38,7 +38,8 @@ public abstract class AbstractTextRun implements TextRun {
         return getAscent() + getDescent() + getLeading();
     }
 
-    protected float getCaretBoundary(int fromIndex, int toIndex) {
+    @Override
+    public float getCaretBoundary(int fromIndex, int toIndex) {
         final int charStart = getCharStart();
         final int firstIndex = fromIndex - charStart;
         final int lastIndex = toIndex - charStart;

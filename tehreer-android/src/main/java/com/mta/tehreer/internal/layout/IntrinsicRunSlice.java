@@ -67,6 +67,11 @@ public final class IntrinsicRunSlice implements TextRun {
     }
 
     @Override
+    public boolean isBackward() {
+        return intrinsicRun.isBackward();
+    }
+
+    @Override
     public byte getBidiLevel() {
         return intrinsicRun.bidiLevel;
     }
@@ -226,6 +231,15 @@ public final class IntrinsicRunSlice implements TextRun {
     }
 
     @Override
+    public @NonNull int[] getGlyphRangeForChars(int fromIndex, int toIndex) {
+        int[] glyphRange = intrinsicRun.getGlyphRangeForChars(fromIndex, toIndex);
+        glyphRange[0] -= glyphOffset;
+        glyphRange[1] -= glyphOffset;
+
+        return glyphRange;
+    }
+
+    @Override
     public int getLeadingGlyphIndex(int charIndex) {
         return intrinsicRun.getLeadingGlyphIndex(charIndex) - glyphOffset;
     }
@@ -233,6 +247,12 @@ public final class IntrinsicRunSlice implements TextRun {
     @Override
     public int getTrailingGlyphIndex(int charIndex) {
         return intrinsicRun.getTrailingGlyphIndex(charIndex) - glyphOffset;
+    }
+
+    @Override
+    public float getCaretBoundary(int fromIndex, int toIndex) {
+        // FIXME: Test Logic.
+        return intrinsicRun.getCaretBoundary(fromIndex, toIndex);
     }
 
     @Override
