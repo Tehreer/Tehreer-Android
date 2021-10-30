@@ -53,7 +53,10 @@ public abstract class AbstractTextRun implements TextRun {
     }
 
     protected float getCaretEdge(int charIndex, float caretBoundary) {
-        return getCaretEdges().get(charIndex - getCharStart()) - caretBoundary;
+        final int charStart = getCharStart();
+        final int actualStart = getClusterStart(charStart);
+
+        return getCaretEdges().get(charIndex - actualStart) - caretBoundary;
     }
 
     @Override
@@ -76,7 +79,7 @@ public abstract class AbstractTextRun implements TextRun {
         final int lastIndex = toIndex - charStart;
 
         int nearestIndex = CaretUtils.computeNearestIndex(getCaretEdges(), isRTL(),
-                firstIndex, lastIndex, distance);
+                                                          firstIndex, lastIndex, distance);
 
         return nearestIndex + charStart;
     }

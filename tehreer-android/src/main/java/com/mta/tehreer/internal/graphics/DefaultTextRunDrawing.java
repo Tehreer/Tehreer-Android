@@ -27,19 +27,11 @@ import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.internal.layout.ClusterRange;
 import com.mta.tehreer.internal.layout.TextRun;
 
-import java.util.List;
-
 public final class DefaultTextRunDrawing implements TextRunDrawing {
     private final TextRun textRun;
-    private final int charStart;
-    private final int charEnd;
-    private final List<Object> spans;
 
-    public DefaultTextRunDrawing(TextRun textRun, int charStart, int charEnd, List<Object> spans) {
+    public DefaultTextRunDrawing(TextRun textRun) {
         this.textRun = textRun;
-        this.charStart = charStart;
-        this.charEnd = charEnd;
-        this.spans = spans;
     }
 
     private boolean isRTL() {
@@ -116,7 +108,7 @@ public final class DefaultTextRunDrawing implements TextRunDrawing {
 
         int defaultFillColor = renderer.getFillColor();
 
-        for (Object span : spans) {
+        for (Object span : textRun.getSpans()) {
             if (span instanceof ForegroundColorSpan) {
                 renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
             } else if (span instanceof ScaleXSpan) {
@@ -124,7 +116,7 @@ public final class DefaultTextRunDrawing implements TextRunDrawing {
             }
         }
 
-        draw(renderer, canvas, charStart, charEnd);
+        draw(renderer, canvas, textRun.getCharStart(), textRun.getCharEnd());
 
         renderer.setFillColor(defaultFillColor);
     }
@@ -150,7 +142,7 @@ public final class DefaultTextRunDrawing implements TextRunDrawing {
 
         final boolean isBackward = textRun.isBackward();
         final float caretBoundary = textRun.getCaretBoundary(fromIndex, toIndex);
-        final int glyphRange[] = textRun.getGlyphRangeForChars(actualStart, actualEnd);
+        final int[] glyphRange = textRun.getGlyphRangeForChars(actualStart, actualEnd);
 
         int glyphStart = glyphRange[0];
         int glyphEnd = glyphRange[1];

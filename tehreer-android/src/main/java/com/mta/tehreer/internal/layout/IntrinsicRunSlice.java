@@ -43,6 +43,7 @@ public final class IntrinsicRunSlice implements TextRun {
     private final @NonNull List<Object> spans;
     private final int glyphOffset;
     private final int glyphCount;
+    private final float caretBoundary;
 
     public IntrinsicRunSlice(@NonNull IntrinsicRun intrinsicRun, int charStart, int charEnd,
                              @NonNull List<Object> spans) {
@@ -54,6 +55,7 @@ public final class IntrinsicRunSlice implements TextRun {
         this.spans = spans;
         this.glyphOffset = glyphRange[0];
         this.glyphCount = glyphRange[1] - glyphRange[0];
+        this.caretBoundary = intrinsicRun.getCaretBoundary(charStart, charEnd);
     }
 
     @Override
@@ -68,7 +70,7 @@ public final class IntrinsicRunSlice implements TextRun {
 
     @Override
     public boolean isBackward() {
-        return intrinsicRun.isBackward();
+        return intrinsicRun.isBackward;
     }
 
     @Override
@@ -141,19 +143,6 @@ public final class IntrinsicRunSlice implements TextRun {
         final int size;
         final float boundary;
 
-        static @NonNull CaretEdges of(@NonNull IntrinsicRun intrinsicRun, int charStart, int charEnd) {
-            final int actualStart = intrinsicRun.getClusterStart(charStart);
-            final int actualEnd = intrinsicRun.getClusterEnd(charEnd - 1);
-
-            final int offset = actualStart - intrinsicRun.getCharStart();
-            final int size = actualEnd - actualStart + 1;
-
-            final FloatList caretEdges = intrinsicRun.getCaretEdges();
-            final float caretBoundary = intrinsicRun.getCaretBoundary(actualStart, actualEnd);
-
-            return new CaretEdges(caretEdges, offset, size, caretBoundary);
-        }
-
         CaretEdges(@NonNull FloatList parentEdges, int offset, int size, float boundary) {
             this.parentEdges = parentEdges;
             this.offset = offset;
@@ -192,7 +181,13 @@ public final class IntrinsicRunSlice implements TextRun {
 
     @Override
     public @NonNull FloatList getCaretEdges() {
-        return CaretEdges.of(intrinsicRun, charStart, charEnd);
+        final int actualStart = intrinsicRun.getClusterStart(charStart);
+        final int actualEnd = intrinsicRun.getClusterEnd(charEnd - 1);
+
+        final int offset = actualStart - intrinsicRun.charStart;
+        final int size = actualEnd - actualStart + 1;
+
+        return new CaretEdges(intrinsicRun.caretEdges, offset, size, caretBoundary);
     }
 
     @Override
@@ -251,16 +246,12 @@ public final class IntrinsicRunSlice implements TextRun {
 
     @Override
     public float getCaretBoundary(int fromIndex, int toIndex) {
-        // FIXME: Test Logic.
-        return intrinsicRun.getCaretBoundary(fromIndex, toIndex);
+        return intrinsicRun.getCaretBoundary(fromIndex, toIndex) - caretBoundary;
     }
 
     @Override
     public float getCaretEdge(int charIndex) {
-        final float caretBoundary = intrinsicRun.getCaretBoundary(charStart, charEnd);
-        final float caretEdge = intrinsicRun.getCaretEdge(charIndex, caretBoundary);
-
-        return caretEdge;
+        return intrinsicRun.getCaretEdge(charIndex) - caretBoundary;
     }
 
     @Override
@@ -291,7 +282,7 @@ public final class IntrinsicRunSlice implements TextRun {
 
     @Override
     public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas) {
-        TextRunDrawing drawing = new DefaultTextRunDrawing(intrinsicRun, charStart, charEnd, spans);
+        TextRunDrawing drawing = new DefaultTextRunDrawing(this);
         drawing.draw(renderer, canvas);
     }
 }
