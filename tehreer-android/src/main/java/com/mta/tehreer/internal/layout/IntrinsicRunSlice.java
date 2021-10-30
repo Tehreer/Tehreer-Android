@@ -22,8 +22,6 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
 import android.graphics.Canvas;
 import android.graphics.RectF;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.ScaleXSpan;
 
 import androidx.annotation.NonNull;
 
@@ -32,6 +30,8 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Renderer;
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.graphics.DefaultTextRunDrawing;
+import com.mta.tehreer.internal.graphics.TextRunDrawing;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 import java.util.List;
@@ -291,20 +291,7 @@ public final class IntrinsicRunSlice implements TextRun {
 
     @Override
     public void draw(@NonNull Renderer renderer, @NonNull Canvas canvas) {
-        renderer.setScaleX(1.0f);
-
-        int defaultFillColor = renderer.getFillColor();
-
-        for (Object span : spans) {
-            if (span instanceof ForegroundColorSpan) {
-                renderer.setFillColor(((ForegroundColorSpan) span).getForegroundColor());
-            } else if (span instanceof ScaleXSpan) {
-                renderer.setScaleX(((ScaleXSpan) span).getScaleX());
-            }
-        }
-
-        intrinsicRun.draw(renderer, canvas, charStart, charEnd);
-
-        renderer.setFillColor(defaultFillColor);
+        TextRunDrawing drawing = new DefaultTextRunDrawing(intrinsicRun, charStart, charEnd, spans);
+        drawing.draw(renderer, canvas);
     }
 }
