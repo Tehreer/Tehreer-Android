@@ -132,9 +132,11 @@ public final class IntrinsicRunSlice implements TextRun {
     public @NonNull IntList getClusterMap() {
         final int actualStart = intrinsicRun.getClusterStart(charStart);
         final int actualEnd = intrinsicRun.getClusterEnd(charEnd - 1);
-        final int actualLength = actualEnd - actualStart;
 
-        return new ClusterMap(intrinsicRun.clusterMap, actualStart, actualLength, glyphOffset);
+        final int offset = actualStart - intrinsicRun.charStart;
+        final int size = actualEnd - actualStart;
+
+        return new ClusterMap(intrinsicRun.clusterMap, offset, size, glyphOffset);
     }
 
     static class CaretEdges extends FloatList {
