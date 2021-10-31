@@ -19,7 +19,6 @@ package com.mta.tehreer.internal.layout;
 import android.graphics.Canvas;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
 import com.mta.tehreer.collections.FloatList;
@@ -270,10 +269,6 @@ public final class IntrinsicRun extends AbstractTextRun {
     @Override
     public float getCaretEdge(int charIndex, float caretBoundary) {
         return super.getCaretEdge(charIndex, caretBoundary);
-    }
-
-    private float getLeadingEdge(int fromIndex, int toIndex, float caretBoundary) {
-        return getCaretEdge(!isBackward ? fromIndex : toIndex, caretBoundary);
     }
 
     @Override
