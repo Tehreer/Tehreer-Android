@@ -108,9 +108,8 @@ public final class ReplacementRun implements TextRun {
         return 0;
     }
 
-    @NonNull
     @Override
-    public Typeface getTypeface() {
+    public @NonNull Typeface getTypeface() {
         return typeface;
     }
 
