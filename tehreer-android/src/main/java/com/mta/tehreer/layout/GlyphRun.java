@@ -38,7 +38,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
  * and direction.
  */
 public class GlyphRun {
-    private final TextRun textRun;
+    private TextRun textRun;
     private float originX;
     private float originY;
 
@@ -50,6 +50,14 @@ public class GlyphRun {
         this.textRun = otherRun.textRun;
         this.originX = otherRun.originX;
         this.originY = otherRun.originY;
+    }
+
+    TextRun getTextRun() {
+        return textRun;
+    }
+
+    void setTextRun(TextRun textRun) {
+        this.textRun = textRun;
     }
 
     private void checkCharIndex(int charIndex) {

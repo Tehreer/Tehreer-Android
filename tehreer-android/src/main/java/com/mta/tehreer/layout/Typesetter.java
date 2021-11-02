@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -317,6 +317,18 @@ public class Typesetter {
 
         return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode,
                                           truncationPlace, truncationToken);
+    }
+
+    public @NonNull ComposedLine createJustifiedLine(int charStart, int charEnd,
+                                                     float justificationFactor,
+                                                     float justificationWidth) {
+        checkSubRange(charStart, charEnd);
+
+        LineResolver resolver = new LineResolver();
+        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+
+        return resolver.createJustifiedLine(charStart, charEnd, justificationFactor,
+                                            justificationWidth);
     }
 
     /**

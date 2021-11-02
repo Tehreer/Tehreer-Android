@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ import android.text.Spanned;
 
 import androidx.annotation.NonNull;
 
+import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
+import com.mta.tehreer.internal.layout.JustifiedRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.internal.layout.RunCollection;
 import com.mta.tehreer.internal.layout.IntrinsicRunSlice;
@@ -337,5 +339,87 @@ class LineResolver {
                 visualStart = feasibleEnd;
             } while (visualStart != visualEnd);
         }
+    }
+
+    public ComposedLine createJustifiedLine(int charStart, int charEnd,
+                                            float justificationFactor,
+                                            float justificationWidth) {
+        final int wordStart = StringUtils.getLeadingWhitespaceEnd(mSpanned, charStart, charEnd);
+        final int wordEnd = StringUtils.getTrailingWhitespaceStart(mSpanned, charStart, charEnd);
+
+        final float actualWidth = mIntrinsicRuns.measureChars(charStart, charEnd);
+        final float extraWidth = justificationWidth - actualWidth;
+        final float availableWidth = extraWidth * justificationFactor;
+
+        final int innerSpaceCount = computeSpaceCount(wordStart, wordEnd);
+        final float spaceAddition = availableWidth / innerSpaceCount;
+
+        final List<GlyphRun> runList = new ArrayList<>();
+        mBidiParagraphs.forEachLineRun(charStart, charEnd, new ParagraphCollection.RunConsumer() {
+            @Override
+            public void accept(@NonNull BidiRun bidiRun) {
+                addVisualRuns(bidiRun.charStart, bidiRun.charEnd, runList);
+            }
+        });
+
+        final int runCount = runList.size();
+        for (int i = 0; i < runCount; i++) {
+            final GlyphRun glyphRun = runList.get(i);
+            final TextRun textRun = glyphRun.getTextRun();
+            float[] glyphAdvances = glyphRun.getGlyphAdvances().toArray();
+
+            final int runStart = Math.max(wordStart, glyphRun.getCharStart());
+            final int runEnd = Math.min(wordEnd, glyphRun.getCharEnd());
+
+            for (int j = runStart; j < runEnd;) {
+                final int spaceStart = StringUtils.getNextSpace(mSpanned, j, runEnd);
+                final int spaceEnd = StringUtils.getLeadingWhitespaceEnd(mSpanned, spaceStart, runEnd);
+
+                j = spaceEnd;
+
+                if (spaceStart == spaceEnd) {
+                    continue;
+                }
+
+                final int[] glyphRange = textRun.getGlyphRangeForChars(spaceStart, spaceEnd);
+                final int glyphStart = glyphRange[0];
+                final int glyphEnd = glyphRange[1];
+
+                final int spaceCount = spaceEnd - spaceStart;
+                final int glyphCount = glyphEnd - glyphStart;
+
+                final float distribution = (float) spaceCount / glyphCount;
+                final float advanceAddition = spaceAddition * distribution;
+
+                for (int k = glyphStart; k < glyphEnd; k++) {
+                    glyphAdvances[k] += advanceAddition;
+                }
+            }
+
+            final FloatList justifiedAdvances = FloatList.of(glyphAdvances);
+            final TextRun justifiedRun = new JustifiedRun(textRun, justifiedAdvances);
+            glyphRun.setTextRun(justifiedRun);
+        }
+
+        final byte paragraphLevel = mBidiParagraphs.charLevel(charStart);
+
+        return createComposedLine(mSpanned, charStart, charEnd, runList, paragraphLevel);
+    }
+
+    private int computeSpaceCount(int startIndex, int endIndex) {
+        int spaceCount = 0;
+
+        // FIXME: Exclude replacement runs.
+
+        for (int i = startIndex; i < endIndex; i++) {
+            final int spaceStart = StringUtils.getNextSpace(mSpanned, i, endIndex);
+            final int spaceEnd = StringUtils.getLeadingWhitespaceEnd(mSpanned, spaceStart, endIndex);
+
+            spaceCount += spaceEnd - spaceStart;
+
+            i = spaceEnd;
+        }
+
+        return spaceCount;
     }
 }
