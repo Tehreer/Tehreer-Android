@@ -58,6 +58,7 @@ public class FrameResolver {
     private @NonNull VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private @NonNull BreakMode mTruncationMode = BreakMode.LINE;
     private @Nullable TruncationPlace mTruncationPlace = null;
+    private boolean mJustificationEnabled = false;
     private int mMaxLines = 0;
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
@@ -240,6 +241,23 @@ public class FrameResolver {
     }
 
     /**
+     * Returns whether or not to justify the lines in a frame. The default value is
+     * <code>false</code>.
+     */
+    public boolean isJustificationEnabled() {
+        return mJustificationEnabled;
+    }
+
+    /**
+     * Sets whether or not to justify the lines in a frame. The default value is <code>false</code>.
+     *
+     * @param justificationEnabled A boolean value specifying the justification enabled state.
+     */
+    public void setJustificationEnabled(boolean justificationEnabled) {
+        mJustificationEnabled = justificationEnabled;
+    }
+
+    /**
      * Returns the maximum number of lines that a frame should consist of.
      *
      * @return The current max lines.
@@ -416,6 +434,7 @@ public class FrameResolver {
 
         resolveTruncation(context, charEnd);
         resolveAlignments(context);
+        resolveJustification(context);
 
         ComposedFrame frame = new ComposedFrame(mSpanned, charStart, context.frameEnd(), context.textLines);
         frame.setContainerRect(mFrameBounds.left, mFrameBounds.top, context.layoutWidth, context.layoutHeight);
@@ -776,6 +795,51 @@ public class FrameResolver {
 
             // Update the layout width to occupied width.
             context.layoutWidth = occupiedWidth;
+        }
+    }
+
+    private void resolveJustification(@NonNull FrameContext context) {
+        if (mJustificationEnabled) {
+            final List<ComposedLine> textLines = context.textLines;
+            final int lineCount = textLines.size();
+
+            for (int i = 0; i < lineCount; i++) {
+                final ComposedLine textLine = textLines.get(i);
+                final int charStart = textLine.getCharStart();
+                final int charEnd = textLine.getCharEnd();
+
+                // Skip the last line of paragraph.
+                if (charEnd == mSpanned.length() || mSpanned.charAt(charEnd - 1) == '\n') {
+                    continue;
+                }
+
+                ComposedLine justifiedLine = mTypesetter.createJustifiedLine(charStart, charEnd, 1.0f, context.layoutWidth);
+
+                final float intrinsicMargin = textLine.getIntrinsicMargin();
+                final float flushFactor = textLine.getFlushFactor();
+                final float availableWidth = context.layoutWidth - intrinsicMargin;
+                final float alignedLeft = justifiedLine.getFlushPenOffset(flushFactor, availableWidth);
+                float marginalLeft = 0.0f;
+
+                final byte paragraphLevel = justifiedLine.getParagraphLevel();
+                if ((paragraphLevel & 1) == 0) {
+                    marginalLeft = intrinsicMargin;
+                }
+
+                justifiedLine.setOriginX(marginalLeft + alignedLeft);
+                justifiedLine.setOriginY(textLine.getOriginY());
+                justifiedLine.setSpans(textLine.getSpans());
+                justifiedLine.setFirst(textLine.isFirst());
+                justifiedLine.setIntrinsicMargin(textLine.getIntrinsicMargin());
+                justifiedLine.setFlushFactor(textLine.getFlushFactor());
+
+                // Setup the line metrics.
+                justifiedLine.setAscent(textLine.getAscent());
+                justifiedLine.setDescent(textLine.getDescent());
+                justifiedLine.setLeading(textLine.getLeading());
+
+                textLines.set(i, justifiedLine);
+            }
         }
     }
 
