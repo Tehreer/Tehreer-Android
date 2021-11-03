@@ -63,6 +63,7 @@ class TextContainer extends ViewGroup {
     private @NonNull TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
+    private boolean mJustificationEnabled = false;
 
     private int mLayoutWidth = 0;
     private @Nullable ComposedFrame mComposedFrame = null;
@@ -184,6 +185,7 @@ class TextContainer extends ViewGroup {
         TextAlignment textAlignment;
         float extraLineSpacing;
         float lineHeightMultiplier;
+        boolean justificationEnabled;
 
         Typesetter typesetter;
         ComposedFrame composedFrame;
@@ -280,6 +282,7 @@ class TextContainer extends ViewGroup {
                 resolver.setTextAlignment(context.textAlignment);
                 resolver.setExtraLineSpacing(context.extraLineSpacing);
                 resolver.setLineHeightMultiplier(context.lineHeightMultiplier);
+                resolver.setJustificationEnabled(context.justificationEnabled);
 
                 context.composedFrame = resolver.createFrame(0, typesetter.getSpanned().length());
             }
@@ -405,6 +408,7 @@ class TextContainer extends ViewGroup {
         context.textAlignment = mTextAlignment;
         context.textColor = mTextColor;
         context.extraLineSpacing = mExtraLineSpacing;
+        context.justificationEnabled = mJustificationEnabled;
         context.lineHeightMultiplier = mLineHeightMultiplier;
         context.typesetter = mTypesetter;
 
@@ -709,6 +713,15 @@ class TextContainer extends ViewGroup {
 
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mLineHeightMultiplier = lineHeightMultiplier;
+        requestComposedFrame();
+    }
+
+    public boolean isJustificationEnabled() {
+        return mJustificationEnabled;
+    }
+
+    public void setJustificationEnabled(boolean justificationEnabled) {
+        mJustificationEnabled = justificationEnabled;
         requestComposedFrame();
     }
 }

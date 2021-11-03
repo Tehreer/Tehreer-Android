@@ -322,4 +322,20 @@ public class TTextView extends ScrollView {
     public void setLineHeightMultiplier(float lineHeightMultiplier) {
         mTextContainer.setLineHeightMultiplier(lineHeightMultiplier);
     }
+
+    /**
+     * Returns whether or not to justify the text lines. The default value is <code>false</code>.
+     */
+    public boolean isJustificationEnabled() {
+        return mTextContainer.isJustificationEnabled();
+    }
+
+    /**
+     * Sets whether or not to justify the text lines. The default value is <code>false</code>.
+     *
+     * @param justificationEnabled A boolean value specifying the justification enabled state.
+     */
+    public void setJustificationEnabled(boolean justificationEnabled) {
+        mTextContainer.setJustificationEnabled(justificationEnabled);
+    }
 }
