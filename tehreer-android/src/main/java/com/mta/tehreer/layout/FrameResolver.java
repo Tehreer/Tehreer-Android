@@ -59,6 +59,7 @@ public class FrameResolver {
     private @NonNull BreakMode mTruncationMode = BreakMode.LINE;
     private @Nullable TruncationPlace mTruncationPlace = null;
     private boolean mJustificationEnabled = false;
+    private float mJustificationLevel = 1.0f;
     private int mMaxLines = 0;
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
@@ -257,6 +258,14 @@ public class FrameResolver {
         mJustificationEnabled = justificationEnabled;
     }
 
+    public float getJustificationLevel() {
+        return mJustificationLevel;
+    }
+
+    public void setJustificationLevel(float justificationLevel) {
+        mJustificationLevel = justificationLevel;
+    }
+
     /**
      * Returns the maximum number of lines that a frame should consist of.
      *
@@ -403,9 +412,9 @@ public class FrameResolver {
         checkSubRange(charStart, charEnd);
 
         FrameContext context = new FrameContext();
-        context.layoutWidth = mFrameBounds.width();
-        context.layoutHeight = mFrameBounds.height();
-        context.maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
+        setupLayoutSize(context);
+        setupMaxLines(context);
+        setupJustificationMultiplier(context);
 
         int paragraphIndex = mParagraphs.binarySearch(charStart);
 
@@ -449,6 +458,8 @@ public class FrameResolver {
         float layoutHeight = 0.0f;
 
         int maxLines = 0;
+        float justificationMultiplier = 0.0f;
+        float extraWidth = 0.0f;
 
         final List<ComposedLine> textLines = new ArrayList<>();
         boolean isFilled = false;
@@ -489,6 +500,21 @@ public class FrameResolver {
         }
     }
 
+    private void setupLayoutSize(@NonNull FrameContext context) {
+        context.layoutWidth = mFrameBounds.width();
+        context.layoutHeight = mFrameBounds.height();
+    }
+
+    private void setupMaxLines(@NonNull FrameContext context) {
+        context.maxLines = (mMaxLines > 0 ? mMaxLines : Integer.MAX_VALUE);
+    }
+
+    private void setupJustificationMultiplier(@NonNull FrameContext context) {
+        if (mJustificationEnabled) {
+            context.justificationMultiplier = 1.0f - Math.max(0.0f, Math.min(1.0f, mJustificationLevel));
+        }
+    }
+
     // region Paragraph Handling
 
     private void resolveParagraphLines(@NonNull FrameContext context) {
@@ -502,7 +528,8 @@ public class FrameResolver {
         // Iterate over each line of this paragraph.
         int lineStart = context.startIndex;
         while (lineStart != context.endIndex) {
-            final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, context.lineExtent, BreakMode.LINE);
+            final float breakExtent = context.lineExtent + context.extraWidth;
+            final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, breakExtent, BreakMode.LINE);
             final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
             resolveAttributes(context, composedLine);
 
@@ -625,13 +652,20 @@ public class FrameResolver {
     private void resolveLineMargins(@NonNull FrameContext context, boolean isInitial) {
         if (isInitial) {
             context.lineExtent = context.leadingLineExtent;
+            resolveExtraWidth(context);
             resolveLeadingOffset(context);
         } else {
             if (--context.leadingLineCount <= 0) {
                 context.lineExtent = context.trailingLineExtent;
+                resolveExtraWidth(context);
                 resolveLeadingOffset(context);
             }
         }
+    }
+
+    private void resolveExtraWidth(@NonNull FrameContext context) {
+        float adjustableWidth = context.lineExtent / 4.0f;
+        context.extraWidth = adjustableWidth * context.justificationMultiplier;
     }
 
     private void resolveLeadingOffset(@NonNull FrameContext context) {
@@ -727,7 +761,8 @@ public class FrameResolver {
             context.lineTop = lastLine.getTop();
 
             // Create the truncated line.
-            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, context.lineExtent, mTruncationMode, mTruncationPlace);
+            final float breakExtent = context.lineExtent + context.extraWidth;
+            ComposedLine truncatedLine = mTypesetter.createTruncatedLine(lastLine.getCharStart(), frameEnd, breakExtent, mTruncationMode, mTruncationPlace);
             resolveAttributes(context, truncatedLine);
 
             // Replace the last line with truncated one.
