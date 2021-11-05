@@ -843,8 +843,9 @@ public class FrameResolver {
                 final int charStart = textLine.getCharStart();
                 final int charEnd = textLine.getCharEnd();
 
-                // Skip the last line of paragraph.
-                if (charEnd == mSpanned.length() || mSpanned.charAt(charEnd - 1) == '\n') {
+                // Skip the last line of paragraph if it's smaller in width.
+                if ((charEnd == mSpanned.length() || mSpanned.charAt(charEnd - 1) == '\n')
+                        && textLine.getWidth() <= context.layoutWidth) {
                     continue;
                 }
 
