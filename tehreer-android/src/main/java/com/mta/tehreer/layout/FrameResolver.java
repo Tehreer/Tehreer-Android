@@ -26,6 +26,7 @@ import android.text.style.LeadingMarginSpan.LeadingMarginSpan2;
 import android.text.style.LineHeightSpan;
 import android.text.style.ParagraphStyle;
 
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -258,11 +259,25 @@ public class FrameResolver {
         mJustificationEnabled = justificationEnabled;
     }
 
-    public float getJustificationLevel() {
+    /**
+     * Returns the justification level which can range from 0.0 to 1.0. A lower value increases the
+     * tightness between words while a higher value decreases it. The default value is
+     * <code>1.0f</code>.
+     *
+     * @return The current justification level.
+     */
+    public @FloatRange(from = 0.0, to = 1.0) float getJustificationLevel() {
         return mJustificationLevel;
     }
 
-    public void setJustificationLevel(float justificationLevel) {
+    /**
+     * Sets the justification level which can range from 0.0 to 1.0. A lower value increases the
+     * tightness between words while a higher value decreases it. The default value is
+     * <code>1.0f</code>.
+     *
+     * @param justificationLevel Justification level.
+     */
+    public void setJustificationLevel(@FloatRange(from = 0.0, to = 1.0) float justificationLevel) {
         mJustificationLevel = justificationLevel;
     }
 

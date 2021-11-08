@@ -64,6 +64,7 @@ class TextContainer extends ViewGroup {
     private float mExtraLineSpacing = 0.0f;
     private float mLineHeightMultiplier = 0.0f;
     private boolean mJustificationEnabled = false;
+    private @FloatRange(from = 0.0, to = 1.0) float mJustificationLevel = 1.0f;
 
     private int mLayoutWidth = 0;
     private @Nullable ComposedFrame mComposedFrame = null;
@@ -186,6 +187,7 @@ class TextContainer extends ViewGroup {
         float extraLineSpacing;
         float lineHeightMultiplier;
         boolean justificationEnabled;
+        float justificationLevel;
 
         Typesetter typesetter;
         ComposedFrame composedFrame;
@@ -283,6 +285,7 @@ class TextContainer extends ViewGroup {
                 resolver.setExtraLineSpacing(context.extraLineSpacing);
                 resolver.setLineHeightMultiplier(context.lineHeightMultiplier);
                 resolver.setJustificationEnabled(context.justificationEnabled);
+                resolver.setJustificationLevel(context.justificationLevel);
 
                 context.composedFrame = resolver.createFrame(0, typesetter.getSpanned().length());
             }
@@ -409,6 +412,7 @@ class TextContainer extends ViewGroup {
         context.textColor = mTextColor;
         context.extraLineSpacing = mExtraLineSpacing;
         context.justificationEnabled = mJustificationEnabled;
+        context.justificationLevel = mJustificationLevel;
         context.lineHeightMultiplier = mLineHeightMultiplier;
         context.typesetter = mTypesetter;
 
@@ -722,6 +726,15 @@ class TextContainer extends ViewGroup {
 
     public void setJustificationEnabled(boolean justificationEnabled) {
         mJustificationEnabled = justificationEnabled;
+        requestComposedFrame();
+    }
+
+    public @FloatRange(from = 0.0, to = 1.0) float getJustificationLevel() {
+        return mJustificationLevel;
+    }
+
+    public void setJustificationLevel(@FloatRange(from = 0.0, to = 1.0) float justificationLevel) {
+        mJustificationLevel = justificationLevel;
         requestComposedFrame();
     }
 }

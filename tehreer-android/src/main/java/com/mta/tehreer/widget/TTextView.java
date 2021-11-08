@@ -26,6 +26,7 @@ import android.view.Gravity;
 import android.widget.ScrollView;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
@@ -337,5 +338,27 @@ public class TTextView extends ScrollView {
      */
     public void setJustificationEnabled(boolean justificationEnabled) {
         mTextContainer.setJustificationEnabled(justificationEnabled);
+    }
+
+    /**
+     * Returns the justification level which can range from 0.0 to 1.0. A lower value increases the
+     * tightness between words while a higher value decreases it. The default value is
+     * <code>1.0f</code>.
+     *
+     * @return The current justification level.
+     */
+    public @FloatRange(from = 0.0, to = 1.0) float getJustificationLevel() {
+        return mTextContainer.getJustificationLevel();
+    }
+
+    /**
+     * Sets the justification level which can range from 0.0 to 1.0. A lower value increases the
+     * tightness between words while a higher value decreases it. The default value is
+     * <code>1.0f</code>.
+     *
+     * @param justificationLevel Justification level.
+     */
+    public void setJustificationLevel(@FloatRange(from = 0.0, to = 1.0) float justificationLevel) {
+        mTextContainer.setJustificationLevel(justificationLevel);
     }
 }
