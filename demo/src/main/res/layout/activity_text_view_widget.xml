@@ -14,13 +14,66 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:app="http://schemas.android.com/apk/res-auto"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              android:orientation="vertical"
              tools:ignore="MissingDefaultResource">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:weightSum="8">
+
+        <TextView
+            android:id="@+id/text_view_jstf_level_name"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:text="Justification Level"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="6"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/text_view_jstf_level_min_value"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="left|center_vertical"
+                android:lines="1"
+                android:text="Low"
+                android:textColor="#444"
+                android:textSize="12sp"/>
+
+            <SeekBar
+                android:id="@+id/seek_bar_justification_level"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="4"
+                android:progress="4"/>
+
+            <TextView
+                android:id="@+id/text_view_jstf_level_max_value"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="left|center_vertical"
+                android:lines="1"
+                android:text="High"
+                android:textColor="#444"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <com.mta.tehreer.widget.TTextView
         android:id="@+id/text_view"
@@ -32,4 +85,4 @@
         app:textColor="@android:color/black"
         app:textSize="32sp"
         app:typeface="@id/typeface_noorehuda" />
-</FrameLayout>
+</LinearLayout>

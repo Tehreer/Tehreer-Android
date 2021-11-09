@@ -23,6 +23,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
+import android.widget.SeekBar;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -55,6 +56,21 @@ public class TextViewWidgetActivity extends AppCompatActivity {
         textView.setGravity(Gravity.CENTER_HORIZONTAL);
         textView.setSpanned(parseSurah());
         textView.setLineHeightMultiplier(0.80f);
+        textView.setJustificationEnabled(true);
+
+        final SeekBar justificationLevelBar = findViewById(R.id.seek_bar_justification_level);
+        justificationLevelBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                textView.setJustificationLevel(((i / 4.0f) * 0.35f) + 0.65f);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+        });
     }
 
     @Override
