@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -319,6 +319,21 @@ public class Typesetter {
                                           truncationPlace, truncationToken);
     }
 
+    /**
+     * Creates a justified line of specified string range.
+     *
+     * @param charStart The index to first character of the line in source text.
+     * @param charEnd The index after the last character of the line in source text.
+     * @param justificationFactor The factor that specifies the full or partial justification. When
+     *                            set to 1.0 or greater, full justification is performed. If this
+     *                            parameter is set to less than 1.0, varying degrees of partial
+     *                            justification are performed. If it is set to 0 or less, no
+     *                            justification is performed.
+     * @param justificationWidth The width at which the line should be justified. If it is less than
+     *                           the actual width of the line, then negative justification is
+     *                           performed (that is, words are squeezed together).
+     * @return The new justified line.
+     */
     public @NonNull ComposedLine createJustifiedLine(int charStart, int charEnd,
                                                      float justificationFactor,
                                                      float justificationWidth) {
