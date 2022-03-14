@@ -115,7 +115,7 @@ artifacts {
         options.doclet = "ExcludeDoclet"
         options.docletpath = configurations.doclet.files.asType(List)
         options.links("https://developer.android.com/reference/")
-        options.addStringOption("bottom", "Copyright &copy; 2021 $developerName. All rights reserved.")
+        options.addStringOption("bottom", "Copyright &copy; 2022 $developerName. All rights reserved.")
     }
 
     task javadocJar(type: Jar, dependsOn: apiDocs) {
