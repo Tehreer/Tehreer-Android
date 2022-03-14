@@ -1,1 +1,1 @@
-include ':doclet', ':demo', ':tehreer-android'
+include /* ':doclet', */ ':demo', ':tehreer-android'
