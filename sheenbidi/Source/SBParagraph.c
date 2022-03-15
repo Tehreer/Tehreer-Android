@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2014-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ typedef struct _ParagraphContext {
 } ParagraphContext, *ParagraphContextRef;
 
 static void PopulateBidiChain(BidiChainRef chain, const SBBidiType *types, SBUInteger length);
-static void ProcessRun(ParagraphContextRef context, const LevelRunRef levelRun, SBBoolean forceFinish);
+static SBBoolean ProcessRun(ParagraphContextRef context, const LevelRunRef levelRun, SBBoolean forceFinish);
 
 static ParagraphContextRef CreateParagraphContext(const SBBidiType *types, SBLevel *levels, SBUInteger length)
 {
@@ -49,23 +49,29 @@ static ParagraphContextRef CreateParagraphContext(const SBBidiType *types, SBLev
     const SBUInteger sizeTypes   = sizeof(SBBidiType) * (length + 2);
     const SBUInteger sizeMemory  = sizeContext + sizeLinks + sizeTypes;
 
-    const SBUInteger offsetContext = 0;
-    const SBUInteger offsetLinks   = offsetContext + sizeContext;
-    const SBUInteger offsetTypes   = offsetLinks + sizeLinks;
+    void *pointer = malloc(sizeMemory);
 
-    SBUInt8 *memory = (SBUInt8 *)malloc(sizeMemory);
-    ParagraphContextRef context = (ParagraphContextRef)(memory + offsetContext);
-    BidiLink *fixedLinks = (BidiLink *)(memory + offsetLinks);
-    SBBidiType *fixedTypes = (SBBidiType *)(memory + offsetTypes);
+    if (pointer) {
+        const SBUInteger offsetContext = 0;
+        const SBUInteger offsetLinks   = offsetContext + sizeContext;
+        const SBUInteger offsetTypes   = offsetLinks + sizeLinks;
 
-    BidiChainInitialize(&context->bidiChain, fixedTypes, levels, fixedLinks);
-    StatusStackInitialize(&context->statusStack);
-    RunQueueInitialize(&context->runQueue);
-    IsolatingRunInitialize(&context->isolatingRun);
+        SBUInt8 *memory = (SBUInt8 *)pointer;
+        ParagraphContextRef context = (ParagraphContextRef)(memory + offsetContext);
+        BidiLink *fixedLinks = (BidiLink *)(memory + offsetLinks);
+        SBBidiType *fixedTypes = (SBBidiType *)(memory + offsetTypes);
 
-    PopulateBidiChain(&context->bidiChain, types, length);
+        BidiChainInitialize(&context->bidiChain, fixedTypes, levels, fixedLinks);
+        StatusStackInitialize(&context->statusStack);
+        RunQueueInitialize(&context->runQueue);
+        IsolatingRunInitialize(&context->isolatingRun);
 
-    return context;
+        PopulateBidiChain(&context->bidiChain, types, length);
+
+        return context;
+    }
+
+    return NULL;
 }
 
 static void DisposeParagraphContext(ParagraphContextRef context)
@@ -76,22 +82,33 @@ static void DisposeParagraphContext(ParagraphContextRef context)
     free(context);
 }
 
-static SBParagraphRef ParagraphAllocate(SBUInteger length)
+static SBParagraphRef AllocateParagraph(SBUInteger length)
 {
     const SBUInteger sizeParagraph = sizeof(SBParagraph);
     const SBUInteger sizeLevels    = sizeof(SBLevel) * (length + 2);
     const SBUInteger sizeMemory    = sizeParagraph + sizeLevels;
 
-    const SBUInteger offsetParagraph = 0;
-    const SBUInteger offsetLevels    = offsetParagraph + sizeParagraph;
+    void *pointer = malloc(sizeMemory);
 
-    SBUInt8 *memory = (SBUInt8 *)malloc(sizeMemory);
-    SBParagraphRef paragraph = (SBParagraphRef)(memory + offsetParagraph);
-    SBLevel *levels = (SBLevel *)(memory + offsetLevels);
+    if (pointer) {
+        const SBUInteger offsetParagraph = 0;
+        const SBUInteger offsetLevels    = offsetParagraph + sizeParagraph;
 
-    paragraph->fixedLevels = levels;
+        SBUInt8 *memory = (SBUInt8 *)pointer;
+        SBParagraphRef paragraph = (SBParagraphRef)(memory + offsetParagraph);
+        SBLevel *levels = (SBLevel *)(memory + offsetLevels);
 
-    return paragraph;
+        paragraph->fixedLevels = levels;
+
+        return paragraph;
+    }
+
+    return NULL;
+}
+
+static void DisposeParagraph(SBParagraphRef paragraph)
+{
+    free(paragraph);
 }
 
 static SBUInteger DetermineBoundary(SBAlgorithmRef algorithm, SBUInteger paragraphOffset, SBUInteger suggestedLength)
@@ -235,7 +252,7 @@ static SBLevel DetermineParagraphLevel(BidiChainRef chain, SBLevel baseLevel)
     return baseLevel;
 }
 
-static void DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
+static SBBoolean DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
 {
     BidiChainRef chain = &context->bidiChain;
     StatusStackRef stack = &context->statusStack;
@@ -299,7 +316,9 @@ static void DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
         bnEquivalent = SBTrue;                                              \
                                                                             \
         if (newLevel <= SBLevelMax && !overIsolate && !overEmbedding) {     \
-            StatusStackPush(stack, newLevel, o, SBFalse);                   \
+            if (!StatusStackPush(stack, newLevel, o, SBFalse)) {            \
+                return SBFalse;                                             \
+            }                                                               \
         } else {                                                            \
             if (!overIsolate) {                                             \
                 overEmbedding += 1;                                         \
@@ -317,7 +336,10 @@ static void DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
                                                                             \
         if (newLevel <= SBLevelMax && !overIsolate && !overEmbedding) {     \
             validIsolate += 1;                                              \
-            StatusStackPush(stack, newLevel, o, SBTrue);                    \
+                                                                            \
+            if (!StatusStackPush(stack, newLevel, o, SBTrue)) {             \
+                return SBFalse;                                             \
+            }                                                               \
         } else {                                                            \
             overIsolate += 1;                                               \
         }                                                                   \
@@ -476,7 +498,10 @@ static void DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
             eor = SBLevelAsNormalBidiType(SBNumberGetMax(priorLevel, currentLevel));
 
             LevelRunInitialize(&levelRun, chain, firstLink, lastLink, sor, eor);
-            ProcessRun(context, &levelRun, forceFinish);
+
+            if (!ProcessRun(context, &levelRun, forceFinish)) {
+                return SBFalse;
+            }
 
             /* The sor of next run (if any) should be technically equal to eor of this run. */
             sor = eor;
@@ -488,12 +513,17 @@ static void DetermineLevels(ParagraphContextRef context, SBLevel baseLevel)
 
         priorLink = link;
     }
+
+    return SBTrue;
 }
 
-static void ProcessRun(ParagraphContextRef context, const LevelRunRef levelRun, SBBoolean forceFinish)
+static SBBoolean ProcessRun(ParagraphContextRef context, const LevelRunRef levelRun, SBBoolean forceFinish)
 {
     RunQueueRef queue = &context->runQueue;
-    RunQueueEnqueue(queue, levelRun);
+
+    if (!RunQueueEnqueue(queue, levelRun)) {
+        return SBFalse;
+    }
 
     if (queue->shouldDequeue || forceFinish) {
         IsolatingRunRef isolatingRun = &context->isolatingRun;
@@ -507,9 +537,14 @@ static void ProcessRun(ParagraphContextRef context, const LevelRunRef levelRun, 
             }
 
             isolatingRun->baseLevelRun = peek;
-            IsolatingRunResolve(isolatingRun);
+
+            if (!IsolatingRunResolve(isolatingRun)) {
+                return SBFalse;
+            }
         }
     }
+
+    return SBTrue;
 }
 
 static void SaveLevels(BidiChainRef chain, SBLevel *levels, SBLevel baseLevel)
@@ -531,6 +566,52 @@ static void SaveLevels(BidiChainRef chain, SBLevel *levels, SBLevel baseLevel)
     }
 }
 
+static SBBoolean ResolveParagraph(SBParagraphRef paragraph,
+    SBAlgorithmRef algorithm, SBUInteger offset, SBUInteger length, SBLevel baseLevel)
+{
+    const SBBidiType *bidiTypes = algorithm->fixedTypes + offset;
+    SBBoolean isSucceeded = SBFalse;
+    ParagraphContextRef context;
+    SBLevel resolvedLevel;
+
+    context = CreateParagraphContext(bidiTypes, paragraph->fixedLevels, length);
+
+    if (context) {
+        resolvedLevel = DetermineParagraphLevel(&context->bidiChain, baseLevel);
+
+        SB_LOG_BLOCK_OPENER("Determined Paragraph Level");
+        SB_LOG_STATEMENT("Base Level", 1, SB_LOG_LEVEL(resolvedLevel));
+        SB_LOG_BLOCK_CLOSER();
+
+        context->isolatingRun.codepointSequence = &algorithm->codepointSequence;
+        context->isolatingRun.bidiTypes = bidiTypes;
+        context->isolatingRun.bidiChain = &context->bidiChain;
+        context->isolatingRun.paragraphOffset = offset;
+        context->isolatingRun.paragraphLevel = resolvedLevel;
+
+        if (DetermineLevels(context, resolvedLevel)) {
+            SaveLevels(&context->bidiChain, ++paragraph->fixedLevels, resolvedLevel);
+
+            SB_LOG_BLOCK_OPENER("Determined Embedding Levels");
+            SB_LOG_STATEMENT("Levels", 1, SB_LOG_LEVELS_ARRAY(paragraph->fixedLevels, length));
+            SB_LOG_BLOCK_CLOSER();
+
+            paragraph->algorithm = SBAlgorithmRetain(algorithm);
+            paragraph->refTypes = bidiTypes;
+            paragraph->offset = offset;
+            paragraph->length = length;
+            paragraph->baseLevel = resolvedLevel;
+            paragraph->retainCount = 1;
+
+            isSucceeded = SBTrue;
+        }
+
+        DisposeParagraphContext(context);
+    }
+
+    return isSucceeded;
+}
+
 SB_INTERNAL SBParagraphRef SBParagraphCreate(SBAlgorithmRef algorithm,
     SBUInteger paragraphOffset, SBUInteger suggestedLength, SBLevel baseLevel)
 {
@@ -539,8 +620,6 @@ SB_INTERNAL SBParagraphRef SBParagraphCreate(SBAlgorithmRef algorithm,
     SBUInteger actualLength;
 
     SBParagraphRef paragraph;
-    ParagraphContextRef context;
-    SBLevel resolvedLevel;
 
     /* The given range MUST be valid. */
     SBAssert(SBUIntegerVerifyRange(stringLength, paragraphOffset, suggestedLength) && suggestedLength > 0);
@@ -557,41 +636,19 @@ SB_INTERNAL SBParagraphRef SBParagraphCreate(SBAlgorithmRef algorithm,
     SB_LOG_STATEMENT("Actual Length", 1, SB_LOG_NUMBER(actualLength));
     SB_LOG_BLOCK_CLOSER();
 
-    paragraph = ParagraphAllocate(actualLength);
-    paragraph->refTypes = algorithm->fixedTypes + paragraphOffset;
+    paragraph = AllocateParagraph(actualLength);
 
-    context = CreateParagraphContext(paragraph->refTypes, paragraph->fixedLevels, actualLength);
-    
-    resolvedLevel = DetermineParagraphLevel(&context->bidiChain, baseLevel);
-    
-    SB_LOG_BLOCK_OPENER("Determined Paragraph Level");
-    SB_LOG_STATEMENT("Base Level", 1, SB_LOG_LEVEL(resolvedLevel));
-    SB_LOG_BLOCK_CLOSER();
+    if (paragraph) {
+        if (ResolveParagraph(paragraph, algorithm, paragraphOffset, actualLength, baseLevel)) {
+            return paragraph;
+        }
 
-    context->isolatingRun.codepointSequence = codepointSequence;
-    context->isolatingRun.bidiTypes = paragraph->refTypes;
-    context->isolatingRun.bidiChain = &context->bidiChain;
-    context->isolatingRun.paragraphOffset = paragraphOffset;
-    context->isolatingRun.paragraphLevel = resolvedLevel;
-    
-    DetermineLevels(context, resolvedLevel);
-    SaveLevels(&context->bidiChain, ++paragraph->fixedLevels, resolvedLevel);
-    
-    SB_LOG_BLOCK_OPENER("Determined Embedding Levels");
-    SB_LOG_STATEMENT("Levels",  1, SB_LOG_LEVELS_ARRAY(paragraph->fixedLevels, actualLength));
-    SB_LOG_BLOCK_CLOSER();
+        DisposeParagraph(paragraph);
+    }
 
-    paragraph->algorithm = SBAlgorithmRetain(algorithm);
-    paragraph->offset = paragraphOffset;
-    paragraph->length = actualLength;
-    paragraph->baseLevel = resolvedLevel;
-    paragraph->retainCount = 1;
-    
-    DisposeParagraphContext(context);
-    
     SB_LOG_BREAKER();
-    
-    return paragraph;
+
+    return NULL;
 }
 
 SBUInteger SBParagraphGetOffset(SBParagraphRef paragraph)
@@ -641,6 +698,6 @@ void SBParagraphRelease(SBParagraphRef paragraph)
 {
     if (paragraph && --paragraph->retainCount == 0) {
         SBAlgorithmRelease(paragraph->algorithm);
-        free(paragraph);
+        DisposeParagraph(paragraph);
     }
 }

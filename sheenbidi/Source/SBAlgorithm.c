@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,23 +25,33 @@
 #include "SBParagraph.h"
 #include "SBAlgorithm.h"
 
-static SBAlgorithmRef AlgorithmAllocate(SBUInteger stringLength)
+static SBAlgorithmRef AllocateAlgorithm(SBUInteger stringLength)
 {
     const SBUInteger sizeAlgorithm = sizeof(SBAlgorithm);
     const SBUInteger sizeTypes     = sizeof(SBBidiType) * stringLength;
+    const SBUInteger sizeMemory    = sizeAlgorithm + sizeTypes;
 
-    const SBUInteger sizeMemory    = sizeAlgorithm
-                                   + sizeTypes;
+    void *pointer = malloc(sizeMemory);
 
-    SBUInt8 *memory = (SBUInt8 *)malloc(sizeMemory);
+    if (pointer) {
+        const SBUInteger offsetAlgorithm = 0;
+        const SBUInteger offsetTypes     = offsetAlgorithm + sizeAlgorithm;
 
-    SBUInteger offset = 0;
-    SBAlgorithmRef algorithm = (SBAlgorithmRef)(memory + offset);
+        SBUInt8 *memory = (SBUInt8 *)pointer;
+        SBAlgorithmRef algorithm = (SBAlgorithmRef)(memory + offsetAlgorithm);
+        SBLevel *fixedTypes = (SBLevel *)(memory + offsetTypes);
 
-    offset += sizeAlgorithm;
-    algorithm->fixedTypes = (SBBidiType *)(memory + offset);
+        algorithm->fixedTypes = fixedTypes;
 
-    return algorithm;
+        return algorithm;
+    }
+
+    return NULL;
+}
+
+static void DisposeAlgorithm(SBAlgorithmRef algorithm)
+{
+    free(algorithm);
 }
 
 static void DetermineBidiTypes(const SBCodepointSequence *sequence, SBBidiType *types)
@@ -60,17 +70,18 @@ static void DetermineBidiTypes(const SBCodepointSequence *sequence, SBBidiType *
     }
 }
 
-SBAlgorithmRef SBAlgorithmCreate(const SBCodepointSequence *codepointSequence)
+static SBAlgorithmRef CreateAlgorithm(const SBCodepointSequence *codepointSequence)
 {
-    if (SBCodepointSequenceIsValid(codepointSequence)) {
-        SBUInteger stringLength = codepointSequence->stringLength;
-        SBAlgorithmRef algorithm;
+    SBUInteger stringLength = codepointSequence->stringLength;
+    SBAlgorithmRef algorithm;
 
-        SB_LOG_BLOCK_OPENER("Algorithm Input");
-        SB_LOG_STATEMENT("Codepoints", 1, SB_LOG_CODEPOINT_SEQUENCE(codepointSequence));
-        SB_LOG_BLOCK_CLOSER();
+    SB_LOG_BLOCK_OPENER("Algorithm Input");
+    SB_LOG_STATEMENT("Codepoints", 1, SB_LOG_CODEPOINT_SEQUENCE(codepointSequence));
+    SB_LOG_BLOCK_CLOSER();
 
-        algorithm = AlgorithmAllocate(stringLength);
+    algorithm = AllocateAlgorithm(stringLength);
+
+    if (algorithm) {
         algorithm->codepointSequence = *codepointSequence;
         algorithm->retainCount = 1;
 
@@ -81,8 +92,15 @@ SBAlgorithmRef SBAlgorithmCreate(const SBCodepointSequence *codepointSequence)
         SB_LOG_BLOCK_CLOSER();
 
         SB_LOG_BREAKER();
-        
-        return algorithm;
+    }
+
+    return algorithm;
+}
+
+SBAlgorithmRef SBAlgorithmCreate(const SBCodepointSequence *codepointSequence)
+{
+    if (SBCodepointSequenceIsValid(codepointSequence)) {
+        return CreateAlgorithm(codepointSequence);
     }
 
     return NULL;
@@ -172,6 +190,6 @@ SBAlgorithmRef SBAlgorithmRetain(SBAlgorithmRef algorithm)
 void SBAlgorithmRelease(SBAlgorithmRef algorithm)
 {
     if (algorithm && --algorithm->retainCount == 0) {
-        free(algorithm);
+        DisposeAlgorithm(algorithm);
     }
 }
