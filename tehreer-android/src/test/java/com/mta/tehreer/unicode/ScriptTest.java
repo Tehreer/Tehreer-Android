@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -172,5 +172,18 @@ public class ScriptTest {
         assertEquals(Script.HANIFI_ROHINGYA, 0x93);
         assertEquals(Script.SOGDIAN, 0x94);
         assertEquals(Script.OLD_SOGDIAN, 0x95);
+        assertEquals(Script.ELYMAIC, 0x96);
+        assertEquals(Script.NYIAKENG_PUACHUE_HMONG, 0x97);
+        assertEquals(Script.NANDINAGARI, 0x98);
+        assertEquals(Script.WANCHO, 0x99);
+        assertEquals(Script.CHORASMIAN, 0x9A);
+        assertEquals(Script.DIVES_AKURU, 0x9B);
+        assertEquals(Script.KHITAN_SMALL_SCRIPT, 0x9C);
+        assertEquals(Script.YEZIDI, 0x9D);
+        assertEquals(Script.CYPRO_MINOAN, 0x9E);
+        assertEquals(Script.OLD_UYGHUR, 0x9F);
+        assertEquals(Script.TANGSA, 0xA0);
+        assertEquals(Script.TOTO, 0xA1);
+        assertEquals(Script.VITHKUQI, 0xA2);
     }
 }

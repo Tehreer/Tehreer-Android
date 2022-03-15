@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -180,6 +180,19 @@ public final class Script {
         HANIFI_ROHINGYA,
         SOGDIAN,
         OLD_SOGDIAN,
+        ELYMAIC,
+        NYIAKENG_PUACHUE_HMONG,
+        NANDINAGARI,
+        WANCHO,
+        CHORASMIAN,
+        DIVES_AKURU,
+        KHITAN_SMALL_SCRIPT,
+        YEZIDI,
+        CYPRO_MINOAN,
+        OLD_UYGHUR,
+        TANGSA,
+        TOTO,
+        VITHKUQI,
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Value { }
@@ -928,6 +941,71 @@ public final class Script {
      * Script "Old_Sogdian".
      */
     public static final int OLD_SOGDIAN = 0x95;
+
+    /**
+     * Script "Elymaic".
+     **/
+    public static final int ELYMAIC = 0x96;
+
+    /**
+     * Script "Nyiakeng_Puachue_Hmong".
+     **/
+    public static final int NYIAKENG_PUACHUE_HMONG = 0x97;
+
+    /**
+     * Script "Nandinagari".
+     **/
+    public static final int NANDINAGARI = 0x98;
+
+    /**
+     * Script "Wancho".
+     **/
+    public static final int WANCHO = 0x99;
+
+    /**
+     * Script "Chorasmian".
+     **/
+    public static final int CHORASMIAN = 0x9A;
+
+    /**
+     * Script "Dives_Akuru".
+     **/
+    public static final int DIVES_AKURU = 0x9B;
+
+    /**
+     * Script "Khitan_Small_Script".
+     **/
+    public static final int KHITAN_SMALL_SCRIPT = 0x9C;
+
+    /**
+     * Script "Yezidi".
+     **/
+    public static final int YEZIDI = 0x9D;
+
+    /**
+     * Script "Cypro_Minoan".
+     **/
+    public static final int CYPRO_MINOAN = 0x9E;
+
+    /**
+     * Script "Old_Uyghur".
+     **/
+    public static final int OLD_UYGHUR = 0x9F;
+
+    /**
+     * Script "Tangsa".
+     **/
+    public static final int TANGSA = 0xA0;
+
+    /**
+     * Script "Toto".
+     **/
+    public static final int TOTO = 0xA1;
+
+    /**
+     * Script "Vithkuqi".
+     **/
+    public static final int VITHKUQI = 0xA2;
 
     private Script() {
     }
