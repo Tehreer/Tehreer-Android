@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ public class ScriptClassifier {
 
     private static native void nClassify(String text, byte[] scripts);
 
-    private static class RunIterator implements Iterator<ScriptRun> {
+    static class RunIterator implements Iterator<ScriptRun> {
         final byte[] scripts;
         final int end;
         int index;
@@ -143,7 +143,7 @@ public class ScriptClassifier {
         }
     }
 
-    private static class RunIterable implements Iterable<ScriptRun> {
+    static class RunIterable implements Iterable<ScriptRun> {
         final byte[] scripts;
         final int start;
         final int end;
