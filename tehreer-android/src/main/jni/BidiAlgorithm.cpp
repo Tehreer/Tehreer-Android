@@ -47,6 +47,14 @@ static void dispose(JNIEnv *env, jobject obj, jlong algorithmHandle)
     SBAlgorithmRelease(bidiAlgorithm);
 }
 
+static jlong getCharBidiClassesPtr(JNIEnv *env, jobject obj, jlong algorithmHandle)
+{
+    auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
+    const SBBidiType *bidiClasses = SBAlgorithmGetBidiTypesPtr(bidiAlgorithm);
+
+    return reinterpret_cast<jlong>(bidiClasses);
+}
+
 static jint getParagraphBoundary(JNIEnv *env, jobject obj,
     jlong algorithmHandle, jint charStart, jint charEnd)
 {
@@ -80,6 +88,7 @@ static jlong createParagraph(JNIEnv *env, jobject obj,
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "(J)J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
+    { "nGetCharBidiClassesPtr", "(J)J", (void *)getCharBidiClassesPtr },
     { "nGetParagraphBoundary", "(JII)I", (void *)getParagraphBoundary },
     { "nCreateParagraph", "(JIII)J", (void *)createParagraph },
 };
