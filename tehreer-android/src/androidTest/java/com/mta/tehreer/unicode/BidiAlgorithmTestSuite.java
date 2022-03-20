@@ -37,7 +37,7 @@ import org.junit.Test;
 public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlgorithm, BidiAlgorithm.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
 
-    private static class BidiAlgorithmBuilder extends UnsafeSUTBuilder<BidiAlgorithm, BidiAlgorithm.Finalizable> {
+    protected static class BidiAlgorithmBuilder extends UnsafeSUTBuilder<BidiAlgorithm, BidiAlgorithm.Finalizable> {
         String text = DEFAULT_TEXT;
 
         protected BidiAlgorithmBuilder() {
@@ -65,176 +65,127 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
         });
     }
 
-    public static class StaticTest extends StaticTestSuite<BidiAlgorithm, BidiAlgorithm.Finalizable> {
-        public StaticTest() {
-            super(new BidiAlgorithmBuilder());
-        }
-
-        @Test
-        public void testMaxLevel() {
-            assertEquals(BidiAlgorithm.MAX_LEVEL, 125);
-        }
+    @Test
+    public void testNativePointers() {
+        buildSUT((sut) -> {
+            assertNotEquals(sut.nativeBuffer, 0);
+            assertNotEquals(sut.nativeAlgorithm, 0);
+        });
     }
 
-    public static class DisposableTest extends GeneralTestSuite {
-        public DisposableTest() {
-            super(DefaultMode.DISPOSABLE);
-        }
-
-        @Test
-        public void testConstructorForNullText() {
-            // Given
-            text = null;
+    @Test
+    public void testGetCharBidiClasses() {
+        buildSUT((sut) -> {
+            // When
+            IntList bidiClasses = sut.getCharBidiClasses();
 
             // Then
-            assertThrows(NullPointerException.class, "text",
-                         () -> buildSUT((sut) -> { }));
-        }
+            assertTrue(bidiClasses instanceof UInt8BufferIntList);
+            assertEquals(bidiClasses.size(), text.length());
+            assertArrayEquals(bidiClasses.toArray(), values);
+        });
+    }
 
-        @Test
-        public void testConstructorForEmptyText() {
+    private interface RangeConsumer {
+        void accept(int startIndex, int endIndex);
+    }
+
+    private void testRangeExceptions(@NonNull RangeConsumer consumer) {
+        // Invalid Start
+        assertThrows(IllegalArgumentException.class, "Char Start: -1",
+                     () -> consumer.accept(-1, 8));
+
+        // Invalid End
+        assertThrows(IllegalArgumentException.class, "Char End: 9, Text Length: 8",
+                     () -> consumer.accept(0, 9));
+
+        // Empty Range
+        assertThrows(IllegalArgumentException.class, "Bad Range: [0, 0)",
+                     () -> consumer.accept(0, 0));
+    }
+
+    @Test
+    public void testGetParagraphBoundaryForInvalidRange() {
+        buildSUT((sut) -> {
+            testRangeExceptions(sut::getParagraphBoundary);
+        });
+    }
+
+    @Test
+    public void testGetParagraphBoundaryForFullRange() {
+        buildSUT((sut) -> {
             // Given
-            text = "";
+            int startIndex = 0;
+            int endIndex = text.length();
+
+            // When
+            int paragraphBoundary = sut.getParagraphBoundary(startIndex, endIndex);
 
             // Then
-            assertThrows(IllegalArgumentException.class, "Text is empty",
-                         () -> buildSUT((sut) -> { }));
-        }
+            assertEquals(paragraphBoundary, endIndex);
+        });
     }
 
-    public static class FinalizableTest extends GeneralTestSuite {
-        public FinalizableTest() {
-            super(DefaultMode.SAFE);
-        }
+    @Test
+    public void testCreateParagraphWithBaseDirectionForInvalidRange() {
+        buildSUT((sut) -> {
+            testRangeExceptions((startIndex, endIndex) -> {
+                sut.createParagraph(startIndex, endIndex, BaseDirection.LEFT_TO_RIGHT);
+            });
+        });
     }
 
-    public static abstract class GeneralTestSuite extends BidiAlgorithmTestSuite {
-        protected GeneralTestSuite(DefaultMode defaultMode) {
-            super(defaultMode);
-        }
+    @Test
+    public void testCreateParagraphForFullRangeAndLTRBaseDirection() {
+        buildSUT((sut) -> {
+            // Given
+            int startIndex = 0;
+            int endIndex = text.length();
+            BaseDirection baseDirection = BaseDirection.LEFT_TO_RIGHT;
 
-        @Test
-        public void testNativePointers() {
-            buildSUT((sut) -> {
-                assertNotEquals(sut.nativeBuffer, 0);
-                assertNotEquals(sut.nativeAlgorithm, 0);
+            // When
+            BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseDirection);
+
+            // Then
+            assertNotNull(paragraph);
+        });
+    }
+
+    @Test
+    public void testCreateParagraphWithBaseLevelForInvalidRange() {
+        buildSUT((sut) -> {
+            testRangeExceptions((startIndex, endIndex) -> {
+                sut.createParagraph(startIndex, endIndex, (byte) 0);
             });
-        }
+        });
+    }
 
-        @Test
-        public void testGetCharBidiClasses() {
-            buildSUT((sut) -> {
-                // When
-                IntList bidiClasses = sut.getCharBidiClasses();
+    @Test
+    public void testCreateParagraphForInvalidBaseLevel() {
+        buildSUT((sut) -> {
+            // Negative Value
+            assertThrows(IllegalArgumentException.class, "Base Level: -1",
+                         () -> sut.createParagraph(0, text.length(), (byte) -1));
 
-                // Then
-                assertTrue(bidiClasses instanceof UInt8BufferIntList);
-                assertEquals(bidiClasses.size(), text.length());
-                assertArrayEquals(bidiClasses.toArray(), values);
-            });
-        }
+            // > MAX Value
+            assertThrows(IllegalArgumentException.class, "Base Level: 126",
+                         () -> sut.createParagraph(0, text.length(), (byte) 126));
+        });
+    }
 
-        private interface RangeConsumer {
-            void accept(int startIndex, int endIndex);
-        }
+    @Test
+    public void testCreateParagraphForFullRangeAndZeroBaseLevel() {
+        buildSUT((sut) -> {
+            // Given
+            int startIndex = 0;
+            int endIndex = text.length();
+            byte baseLevel = 0;
 
-        private void testRangeExceptions(@NonNull RangeConsumer consumer) {
-            // Invalid Start
-            assertThrows(IllegalArgumentException.class, "Char Start: -1",
-                         () -> consumer.accept(-1, 8));
+            // When
+            BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseLevel);
 
-            // Invalid End
-            assertThrows(IllegalArgumentException.class, "Char End: 9, Text Length: 8",
-                         () -> consumer.accept(0, 9));
-
-            // Empty Range
-            assertThrows(IllegalArgumentException.class, "Bad Range: [0, 0)",
-                         () -> consumer.accept(0, 0));
-        }
-
-        @Test
-        public void testGetParagraphBoundaryForInvalidRange() {
-            buildSUT((sut) -> {
-                testRangeExceptions(sut::getParagraphBoundary);
-            });
-        }
-
-        @Test
-        public void testGetParagraphBoundaryForFullRange() {
-            buildSUT((sut) -> {
-                // Given
-                int startIndex = 0;
-                int endIndex = text.length();
-
-                // When
-                int paragraphBoundary = sut.getParagraphBoundary(startIndex, endIndex);
-
-                // Then
-                assertEquals(paragraphBoundary, endIndex);
-            });
-        }
-
-        @Test
-        public void testCreateParagraphWithBaseDirectionForInvalidRange() {
-            buildSUT((sut) -> {
-                testRangeExceptions((startIndex, endIndex) -> {
-                    sut.createParagraph(startIndex, endIndex, BaseDirection.LEFT_TO_RIGHT);
-                });
-            });
-        }
-
-        @Test
-        public void testCreateParagraphForFullRangeAndLTRBaseDirection() {
-            buildSUT((sut) -> {
-                // Given
-                int startIndex = 0;
-                int endIndex = text.length();
-                BaseDirection baseDirection = BaseDirection.LEFT_TO_RIGHT;
-
-                // When
-                BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseDirection);
-
-                // Then
-                assertNotNull(paragraph);
-            });
-        }
-
-        @Test
-        public void testCreateParagraphWithBaseLevelForInvalidRange() {
-            buildSUT((sut) -> {
-                testRangeExceptions((startIndex, endIndex) -> {
-                    sut.createParagraph(startIndex, endIndex, (byte) 0);
-                });
-            });
-        }
-
-        @Test
-        public void testCreateParagraphForInvalidBaseLevel() {
-            buildSUT((sut) -> {
-                // Negative Value
-                assertThrows(IllegalArgumentException.class, "Base Level: -1",
-                             () -> sut.createParagraph(0, text.length(), (byte) -1));
-
-                // > MAX Value
-                assertThrows(IllegalArgumentException.class, "Base Level: 126",
-                             () -> sut.createParagraph(0, text.length(), (byte) 126));
-            });
-        }
-
-        @Test
-        public void testCreateParagraphForFullRangeAndZeroBaseLevel() {
-            buildSUT((sut) -> {
-                // Given
-                int startIndex = 0;
-                int endIndex = text.length();
-                byte baseLevel = 0;
-
-                // When
-                BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseLevel);
-
-                // Then
-                assertNotNull(paragraph);
-            });
-        }
+            // Then
+            assertNotNull(paragraph);
+        });
     }
 }
