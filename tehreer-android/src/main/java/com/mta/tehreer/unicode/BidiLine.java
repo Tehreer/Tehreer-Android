@@ -160,7 +160,7 @@ public class BidiLine implements Disposable {
      * @return An iterable of mirroring pairs in this line.
      */
     public @NonNull Iterable<BidiPair> getMirroringPairs() {
-        return new MirrorIterable();
+        return new MirrorIterable(this);
     }
 
     @Override
@@ -208,13 +208,20 @@ public class BidiLine implements Disposable {
         }
     }
 
-    private class MirrorIterator implements Iterator<BidiPair> {
-        BidiMirrorLocator locator;
+    static final class MirrorIterator implements Iterator<BidiPair> {
+        final BidiLine owner;
+        final BidiMirrorLocator locator;
         BidiPair pair;
 
-        MirrorIterator() {
-            locator = new BidiMirrorLocator();
-            locator.loadLine(BidiLine.this);
+        MirrorIterator(BidiLine owner) {
+            this(owner, new BidiMirrorLocator());
+        }
+
+        MirrorIterator(BidiLine owner, BidiMirrorLocator locator) {
+            this.owner = owner;
+            this.locator = locator;
+
+            locator.loadLine(owner);
 
             pair = locator.nextPair();
         }
@@ -250,10 +257,16 @@ public class BidiLine implements Disposable {
         }
     }
 
-    private class MirrorIterable implements Iterable<BidiPair> {
+    static final class MirrorIterable implements Iterable<BidiPair> {
+        final BidiLine owner;
+
+        MirrorIterable(BidiLine owner) {
+            this.owner = owner;
+        }
+
         @Override
         public @NonNull Iterator<BidiPair> iterator() {
-            return new MirrorIterator();
+            return new MirrorIterator(owner);
         }
     }
 }
