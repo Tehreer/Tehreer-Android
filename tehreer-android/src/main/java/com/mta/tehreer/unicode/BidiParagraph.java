@@ -17,6 +17,7 @@
 package com.mta.tehreer.unicode;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.collections.ByteList;
@@ -152,6 +153,10 @@ public class BidiParagraph implements Disposable {
                                       nGetCharCount(nativeParagraph));
 	}
 
+	@Nullable BidiRun getOnwardRun(int charIndex) {
+        return nGetOnwardRun(nativeParagraph, charIndex);
+    }
+
     /**
      * Returns an iterable of logically ordered runs in this paragraph.
      * <p>
@@ -161,7 +166,7 @@ public class BidiParagraph implements Disposable {
      * @return An iterable of logically ordered runs in this paragraph.
      */
     public @NonNull Iterable<BidiRun> getLogicalRuns() {
-        return new RunIterable();
+        return new RunIterable(this);
     }
 
     private void checkSubRange(int charStart, int charEnd) {
@@ -220,11 +225,13 @@ public class BidiParagraph implements Disposable {
 
 	private static native long nCreateLine(long nativeParagraph, int charStart, int charEnd);
 
-    private class RunIterator implements Iterator<BidiRun> {
+    static final class RunIterator implements Iterator<BidiRun> {
+        final BidiParagraph owner;
         BidiRun run;
 
-        RunIterator() {
-            run = nGetOnwardRun(nativeParagraph, getCharStart());
+        RunIterator(BidiParagraph owner) {
+            this.owner = owner;
+            this.run = owner.getOnwardRun(owner.getCharStart());
         }
 
         @Override
@@ -238,7 +245,7 @@ public class BidiParagraph implements Disposable {
             if (current == null) {
                 throw new NoSuchElementException();
             }
-            run = nGetOnwardRun(nativeParagraph, current.charEnd);
+            run = owner.getOnwardRun(current.charEnd);
 
             return current;
         }
@@ -249,10 +256,16 @@ public class BidiParagraph implements Disposable {
         }
     }
 
-    private class RunIterable implements Iterable<BidiRun> {
+    static final class RunIterable implements Iterable<BidiRun> {
+        final BidiParagraph owner;
+
+        RunIterable(BidiParagraph owner) {
+            this.owner = owner;
+        }
+
         @Override
         public @NonNull Iterator<BidiRun> iterator() {
-            return new RunIterator();
+            return new RunIterator(owner);
         }
     }
 }
