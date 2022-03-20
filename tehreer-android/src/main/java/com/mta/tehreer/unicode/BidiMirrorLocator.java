@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.mta.tehreer.unicode;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.internal.JniBridge;
@@ -27,18 +28,16 @@ class BidiMirrorLocator implements Disposable {
     }
 
     long nativeMirrorLocator;
-    long nativeBuffer;
 
 	public BidiMirrorLocator() {
 		nativeMirrorLocator = nCreate();
 	}
 
     public void loadLine(@NonNull BidiLine line) {
-        nativeBuffer = line.nativeBuffer;
-        nLoadLine(nativeMirrorLocator, line.nativeLine, nativeBuffer);
+        nLoadLine(nativeMirrorLocator, line.nativeLine, line.nativeBuffer);
     }
 
-    public @NonNull BidiPair nextPair() {
+    public @Nullable BidiPair nextPair() {
         return nGetNextPair(nativeMirrorLocator);
     }
 
