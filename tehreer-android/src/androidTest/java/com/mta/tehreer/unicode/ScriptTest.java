@@ -16,9 +16,11 @@
 
 package com.mta.tehreer.unicode;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import com.mta.tehreer.sfnt.SfntTag;
+
+import org.junit.Test;
 
 public class ScriptTest {
     @Test
@@ -185,5 +187,12 @@ public class ScriptTest {
         assertEquals(Script.TANGSA, 0xA0);
         assertEquals(Script.TOTO, 0xA1);
         assertEquals(Script.VITHKUQI, 0xA2);
+    }
+
+    @Test
+    public void testGetOpenTypeTag() {
+        assertEquals(Script.getOpenTypeTag(Script.COMMON), SfntTag.make("DFLT"));
+        assertEquals(Script.getOpenTypeTag(Script.ARABIC), SfntTag.make("arab"));
+        assertEquals(Script.getOpenTypeTag(Script.LATIN), SfntTag.make("latn"));
     }
 }
