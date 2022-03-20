@@ -130,6 +130,14 @@ public class BidiLine implements Disposable {
 		return nGetCharEnd(nativeLine);
 	}
 
+	int getRunCount() {
+	    return nGetRunCount(nativeLine);
+    }
+
+    BidiRun getVisualRun(int runIndex) {
+	    return nGetVisualRun(nativeLine, runIndex);
+    }
+
     /**
      * Returns an unmodifiable list of visually ordered runs in this line.
      * <p>
@@ -139,7 +147,7 @@ public class BidiLine implements Disposable {
      * @return An unmodifiable list of visually ordered runs in this line.
      */
     public @NonNull List<BidiRun> getVisualRuns() {
-        return new RunList();
+        return new RunList(this);
     }
 
     /**
@@ -178,8 +186,14 @@ public class BidiLine implements Disposable {
 	private static native int nGetRunCount(long nativeLine);
 	private static native BidiRun nGetVisualRun(long nativeLine, int runIndex);
 
-    private class RunList extends AbstractList<BidiRun> {
-        int size = nGetRunCount(nativeLine);
+    static final class RunList extends AbstractList<BidiRun> {
+        final BidiLine owner;
+        final int size;
+
+        RunList(BidiLine owner) {
+            this.owner = owner;
+            this.size = owner.getRunCount();
+        }
 
         @Override
         public int size() {
@@ -190,7 +204,7 @@ public class BidiLine implements Disposable {
         public @NonNull BidiRun get(int index) {
             checkElementIndex(index, size);
 
-            return nGetVisualRun(nativeLine, index);
+            return owner.getVisualRun(index);
         }
     }
 
