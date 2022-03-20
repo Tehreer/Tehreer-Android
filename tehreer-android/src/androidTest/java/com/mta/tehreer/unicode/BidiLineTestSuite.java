@@ -18,9 +18,11 @@ package com.mta.tehreer.unicode;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.mta.tehreer.DisposableTestSuite;
@@ -32,7 +34,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, BidiLine.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
@@ -198,6 +202,18 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
                 assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
             });
         }
+
+        @Test
+        public void testGetMirroringPairs() {
+            buildSUT((sut) -> {
+                // When
+                Iterable<BidiPair> mirroringPairs = sut.getMirroringPairs();
+
+                // Then
+                assertTrue(mirroringPairs instanceof BidiLine.MirrorIterable);
+                assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, sut);
+            });
+        }
     }
 
     @RunWith(MockitoJUnitRunner.class)
@@ -258,6 +274,98 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
 
             // Then
             assertSame(run, anyRun);
+        }
+    }
+
+    @RunWith(MockitoJUnitRunner.class)
+    public static class MirrorIteratorTest {
+        @Mock
+        private BidiLine line;
+        @Mock
+        private BidiMirrorLocator locator;
+        private BidiLine.MirrorIterator sut;
+
+        @Before
+        public void setUp() {
+            sut = new BidiLine.MirrorIterator(line, locator);
+        }
+
+        @Test
+        public void testHasNextForAvailablePair() {
+            // Given
+            sut.pair = mock(BidiPair.class);
+
+            // When
+            boolean hasNext = sut.hasNext();
+
+            // Then
+            assertTrue(hasNext);
+        }
+
+        @Test
+        public void testHasNextForNoAvailablePair() {
+            // Given
+            sut.pair = null;
+
+            // When
+            boolean hasNext = sut.hasNext();
+
+            // Then
+            assertFalse(hasNext);
+        }
+
+        @Test
+        public void testNextForAvailablePair() {
+            BidiPair firstPair = new BidiPair(0, '(', ')');
+            BidiPair secondPair = new BidiPair(1, ')', '(');
+
+            when(locator.nextPair()).thenReturn(secondPair);
+
+            // Given
+            sut.pair = firstPair;
+
+            // When
+            BidiPair bidiPair = sut.next();
+
+            // Then
+            assertSame(bidiPair, firstPair);
+            assertSame(sut.pair, secondPair);
+        }
+
+        @Test(expected = NoSuchElementException.class)
+        public void testNextForNoAvailablePair() {
+            // Given
+            sut.pair = null;
+
+            // When
+            sut.next();
+        }
+
+        @Test(expected = UnsupportedOperationException.class)
+        public void testRemove() {
+            sut.remove();
+        }
+    }
+
+    @RunWith(MockitoJUnitRunner.class)
+    public static class MirrorIterableTest {
+        @Mock
+        private BidiLine line;
+        private BidiLine.MirrorIterable sut;
+
+        @Before
+        public void setUp() {
+            sut = new BidiLine.MirrorIterable(line);
+        }
+
+        @Test
+        public void testIterator() {
+            // When
+            Iterator<BidiPair> iterator = sut.iterator();
+
+            // Then
+            assertTrue(iterator instanceof BidiLine.MirrorIterator);
+            assertSame(((BidiLine.MirrorIterator) iterator).owner, line);
         }
     }
 }
