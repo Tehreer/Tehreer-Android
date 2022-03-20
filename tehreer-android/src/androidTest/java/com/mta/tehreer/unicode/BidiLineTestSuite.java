@@ -18,25 +18,16 @@ package com.mta.tehreer.unicode;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, BidiLine.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
@@ -45,7 +36,7 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         new BidiRun(4, 8, (byte) 1),
     };
 
-    private static class BidiLineBuilder extends UnsafeSUTBuilder<BidiLine, BidiLine.Finalizable> {
+    protected static class BidiLineBuilder extends UnsafeSUTBuilder<BidiLine, BidiLine.Finalizable> {
         String text = DEFAULT_TEXT;
         int startIndex = 0;
         int endIndex = text.length();
@@ -82,290 +73,113 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         });
     }
 
-    public static class StaticTest extends DisposableTestSuite.StaticTestSuite<BidiLine, BidiLine.Finalizable> {
-        public StaticTest() {
-            super(new BidiLineBuilder());
-        }
+    @Test
+    public void testCreatorForLeftToRightHalf() {
+        // Given
+        startIndex = 0;
+        endIndex = 4;
+        baseLevel = 0;
+
+        // When
+        buildSUT((sut) -> {
+            // Then
+            assertEquals(sut.getCharStart(), startIndex);
+            assertEquals(sut.getCharEnd(), endIndex);
+        });
     }
 
-    public static class DisposableTest extends GeneralTestSuite {
-        public DisposableTest() {
-            super(DefaultMode.DISPOSABLE);
-        }
+    @Test
+    public void testCreatorForRightToLeftHalf() {
+        // Given
+        startIndex = 4;
+        endIndex = 8;
+        baseLevel = 1;
+
+        // When
+        buildSUT((sut) -> {
+            // Then
+            assertEquals(sut.getCharStart(), startIndex);
+            assertEquals(sut.getCharEnd(), endIndex);
+        });
     }
 
-    public static class FinalizableTest extends GeneralTestSuite {
-        public FinalizableTest() {
-            super(DefaultMode.SAFE);
-        }
+    @Test
+    public void testCreatorForMixedDirectionHalf() {
+        // Given
+        startIndex = 2;
+        endIndex = 6;
+        baseLevel = 0;
+
+        // When
+        buildSUT((sut) -> {
+            // Then
+            assertEquals(sut.getCharStart(), startIndex);
+            assertEquals(sut.getCharEnd(), endIndex);
+        });
     }
 
-    public static abstract class GeneralTestSuite extends BidiLineTestSuite {
-        protected GeneralTestSuite(DefaultMode defaultMode) {
-            super(defaultMode);
-        }
-
-        @Test
-        public void testCreatorForLeftToRightHalf() {
-            // Given
-            startIndex = 0;
-            endIndex = 4;
-            baseLevel = 0;
-
+    @Test
+    public void testGetRunCount() {
+        buildSUT((sut) -> {
             // When
-            buildSUT((sut) -> {
-                // Then
-                assertEquals(sut.getCharStart(), startIndex);
-                assertEquals(sut.getCharEnd(), endIndex);
-            });
-        }
+            int runCount = sut.getRunCount();
 
-        @Test
-        public void testCreatorForRightToLeftHalf() {
-            // Given
-            startIndex = 4;
-            endIndex = 8;
-            baseLevel = 1;
-
-            // When
-            buildSUT((sut) -> {
-                // Then
-                assertEquals(sut.getCharStart(), startIndex);
-                assertEquals(sut.getCharEnd(), endIndex);
-            });
-        }
-
-        @Test
-        public void testCreatorForMixedDirectionHalf() {
-            // Given
-            startIndex = 2;
-            endIndex = 6;
-            baseLevel = 0;
-
-            // When
-            buildSUT((sut) -> {
-                // Then
-                assertEquals(sut.getCharStart(), startIndex);
-                assertEquals(sut.getCharEnd(), endIndex);
-            });
-        }
-
-        @Test
-        public void testGetRunCount() {
-            buildSUT((sut) -> {
-                // When
-                int runCount = sut.getRunCount();
-
-                // Then
-                assertEquals(runCount, 2);
-            });
-        }
-
-        @Test
-        public void testGetVisualRunForFirstIndex() {
-            buildSUT((sut) -> {
-                // When
-                BidiRun run = sut.getVisualRun(0);
-
-                // Then
-                assertNotNull(run);
-                assertEquals(run.charStart, 0);
-                assertEquals(run.charEnd, 4);
-                assertEquals(run.embeddingLevel, 0);
-            });
-        }
-
-        @Test
-        public void testGetVisualRunForLastIndex() {
-            buildSUT((sut) -> {
-                // When
-                BidiRun run = sut.getVisualRun(1);
-
-                // Then
-                assertNotNull(run);
-                assertEquals(run.charStart, 4);
-                assertEquals(run.charEnd, 8);
-                assertEquals(run.embeddingLevel, 1);
-            });
-        }
-
-        @Test
-        public void testGetVisualRuns() {
-            buildSUT((sut) -> {
-                // When
-                List<BidiRun> visualRuns = sut.getVisualRuns();
-
-                // Then
-                assertTrue(visualRuns instanceof BidiLine.RunList);
-                assertSame(((BidiLine.RunList) visualRuns).owner, sut);
-                assertSame(((BidiLine.RunList) visualRuns).size, sut.getRunCount());
-                assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
-            });
-        }
-
-        @Test
-        public void testGetMirroringPairs() {
-            buildSUT((sut) -> {
-                // When
-                Iterable<BidiPair> mirroringPairs = sut.getMirroringPairs();
-
-                // Then
-                assertTrue(mirroringPairs instanceof BidiLine.MirrorIterable);
-                assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, sut);
-            });
-        }
+            // Then
+            assertEquals(runCount, 2);
+        });
     }
 
-    @RunWith(MockitoJUnitRunner.class)
-    public static class RunListTest {
-        private static final int DEFAULT_SIZE = 2;
-
-        @Mock
-        private BidiLine line;
-        private BidiLine.RunList sut;
-
-        @Before
-        public void setUp() {
-            when(line.getRunCount()).thenReturn(DEFAULT_SIZE);
-
-            sut = new BidiLine.RunList(line);
-        }
-
-        @Test
-        public void testSize() {
+    @Test
+    public void testGetVisualRunForFirstIndex() {
+        buildSUT((sut) -> {
             // When
-            int size = sut.size();
+            BidiRun run = sut.getVisualRun(0);
 
             // Then
-            assertEquals(size, DEFAULT_SIZE);
-        }
-
-        @Test(expected = IndexOutOfBoundsException.class)
-        public void testGetForNegativeIndex() {
-            // When
-            sut.get(-1);
-        }
-
-        @Test(expected = IndexOutOfBoundsException.class)
-        public void testGetForLimitIndex() {
-            // When
-            sut.get(DEFAULT_SIZE);
-        }
-
-        @Test
-        public void testGetForFirstIndex() {
-            BidiRun anyRun = new BidiRun();
-            when(line.getVisualRun(0)).thenReturn(anyRun);
-
-            // When
-            BidiRun run = sut.get(0);
-
-            // Then
-            assertSame(run, anyRun);
-        }
-
-        @Test
-        public void testGetForLastIndex() {
-            BidiRun anyRun = new BidiRun();
-            when(line.getVisualRun(1)).thenReturn(anyRun);
-
-            // When
-            BidiRun run = sut.get(1);
-
-            // Then
-            assertSame(run, anyRun);
-        }
+            assertNotNull(run);
+            assertEquals(run.charStart, 0);
+            assertEquals(run.charEnd, 4);
+            assertEquals(run.embeddingLevel, 0);
+        });
     }
 
-    @RunWith(MockitoJUnitRunner.class)
-    public static class MirrorIteratorTest {
-        @Mock
-        private BidiLine line;
-        @Mock
-        private BidiMirrorLocator locator;
-        private BidiLine.MirrorIterator sut;
-
-        @Before
-        public void setUp() {
-            sut = new BidiLine.MirrorIterator(line, locator);
-        }
-
-        @Test
-        public void testHasNextForAvailablePair() {
-            // Given
-            sut.pair = mock(BidiPair.class);
-
+    @Test
+    public void testGetVisualRunForLastIndex() {
+        buildSUT((sut) -> {
             // When
-            boolean hasNext = sut.hasNext();
+            BidiRun run = sut.getVisualRun(1);
 
             // Then
-            assertTrue(hasNext);
-        }
-
-        @Test
-        public void testHasNextForNoAvailablePair() {
-            // Given
-            sut.pair = null;
-
-            // When
-            boolean hasNext = sut.hasNext();
-
-            // Then
-            assertFalse(hasNext);
-        }
-
-        @Test
-        public void testNextForAvailablePair() {
-            BidiPair firstPair = new BidiPair(0, '(', ')');
-            BidiPair secondPair = new BidiPair(1, ')', '(');
-
-            when(locator.nextPair()).thenReturn(secondPair);
-
-            // Given
-            sut.pair = firstPair;
-
-            // When
-            BidiPair bidiPair = sut.next();
-
-            // Then
-            assertSame(bidiPair, firstPair);
-            assertSame(sut.pair, secondPair);
-        }
-
-        @Test(expected = NoSuchElementException.class)
-        public void testNextForNoAvailablePair() {
-            // Given
-            sut.pair = null;
-
-            // When
-            sut.next();
-        }
-
-        @Test(expected = UnsupportedOperationException.class)
-        public void testRemove() {
-            sut.remove();
-        }
+            assertNotNull(run);
+            assertEquals(run.charStart, 4);
+            assertEquals(run.charEnd, 8);
+            assertEquals(run.embeddingLevel, 1);
+        });
     }
 
-    @RunWith(MockitoJUnitRunner.class)
-    public static class MirrorIterableTest {
-        @Mock
-        private BidiLine line;
-        private BidiLine.MirrorIterable sut;
-
-        @Before
-        public void setUp() {
-            sut = new BidiLine.MirrorIterable(line);
-        }
-
-        @Test
-        public void testIterator() {
+    @Test
+    public void testGetVisualRuns() {
+        buildSUT((sut) -> {
             // When
-            Iterator<BidiPair> iterator = sut.iterator();
+            List<BidiRun> visualRuns = sut.getVisualRuns();
 
             // Then
-            assertTrue(iterator instanceof BidiLine.MirrorIterator);
-            assertSame(((BidiLine.MirrorIterator) iterator).owner, line);
-        }
+            assertTrue(visualRuns instanceof BidiLine.RunList);
+            assertSame(((BidiLine.RunList) visualRuns).owner, sut);
+            assertSame(((BidiLine.RunList) visualRuns).size, sut.getRunCount());
+            assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
+        });
+    }
+
+    @Test
+    public void testGetMirroringPairs() {
+        buildSUT((sut) -> {
+            // When
+            Iterable<BidiPair> mirroringPairs = sut.getMirroringPairs();
+
+            // Then
+            assertTrue(mirroringPairs instanceof BidiLine.MirrorIterable);
+            assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, sut);
+        });
     }
 }
