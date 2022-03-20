@@ -21,11 +21,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 
@@ -192,6 +197,67 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
                 assertSame(((BidiLine.RunList) visualRuns).size, sut.getRunCount());
                 assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
             });
+        }
+    }
+
+    @RunWith(MockitoJUnitRunner.class)
+    public static class RunListTest {
+        private static final int DEFAULT_SIZE = 2;
+
+        @Mock
+        private BidiLine line;
+        private BidiLine.RunList sut;
+
+        @Before
+        public void setUp() {
+            when(line.getRunCount()).thenReturn(DEFAULT_SIZE);
+
+            sut = new BidiLine.RunList(line);
+        }
+
+        @Test
+        public void testSize() {
+            // When
+            int size = sut.size();
+
+            // Then
+            assertEquals(size, DEFAULT_SIZE);
+        }
+
+        @Test(expected = IndexOutOfBoundsException.class)
+        public void testGetForNegativeIndex() {
+            // When
+            sut.get(-1);
+        }
+
+        @Test(expected = IndexOutOfBoundsException.class)
+        public void testGetForLimitIndex() {
+            // When
+            sut.get(DEFAULT_SIZE);
+        }
+
+        @Test
+        public void testGetForFirstIndex() {
+            BidiRun anyRun = new BidiRun();
+            when(line.getVisualRun(0)).thenReturn(anyRun);
+
+            // When
+            BidiRun run = sut.get(0);
+
+            // Then
+            assertSame(run, anyRun);
+        }
+
+        @Test
+        public void testGetForLastIndex() {
+            BidiRun anyRun = new BidiRun();
+            when(line.getVisualRun(1)).thenReturn(anyRun);
+
+            // When
+            BidiRun run = sut.get(1);
+
+            // Then
+            assertSame(run, anyRun);
         }
     }
 }
