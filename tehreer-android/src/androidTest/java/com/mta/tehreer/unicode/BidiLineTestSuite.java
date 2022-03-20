@@ -16,11 +16,25 @@
 
 package com.mta.tehreer.unicode;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
 
+import org.junit.Test;
+
+import java.util.List;
+
 public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, BidiLine.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
+    private static final BidiRun[] DEFAULT_VISUAL_RUNS = {
+        new BidiRun(0, 4, (byte) 0),
+        new BidiRun(4, 8, (byte) 1),
+    };
 
     private static class BidiLineBuilder extends UnsafeSUTBuilder<BidiLine, BidiLine.Finalizable> {
         String text = DEFAULT_TEXT;
@@ -80,6 +94,104 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
     public static abstract class GeneralTestSuite extends BidiLineTestSuite {
         protected GeneralTestSuite(DefaultMode defaultMode) {
             super(defaultMode);
+        }
+
+        @Test
+        public void testCreatorForLeftToRightHalf() {
+            // Given
+            startIndex = 0;
+            endIndex = 4;
+            baseLevel = 0;
+
+            // When
+            buildSUT((sut) -> {
+                // Then
+                assertEquals(sut.getCharStart(), startIndex);
+                assertEquals(sut.getCharEnd(), endIndex);
+            });
+        }
+
+        @Test
+        public void testCreatorForRightToLeftHalf() {
+            // Given
+            startIndex = 4;
+            endIndex = 8;
+            baseLevel = 1;
+
+            // When
+            buildSUT((sut) -> {
+                // Then
+                assertEquals(sut.getCharStart(), startIndex);
+                assertEquals(sut.getCharEnd(), endIndex);
+            });
+        }
+
+        @Test
+        public void testCreatorForMixedDirectionHalf() {
+            // Given
+            startIndex = 2;
+            endIndex = 6;
+            baseLevel = 0;
+
+            // When
+            buildSUT((sut) -> {
+                // Then
+                assertEquals(sut.getCharStart(), startIndex);
+                assertEquals(sut.getCharEnd(), endIndex);
+            });
+        }
+
+        @Test
+        public void testGetRunCount() {
+            buildSUT((sut) -> {
+                // When
+                int runCount = sut.getRunCount();
+
+                // Then
+                assertEquals(runCount, 2);
+            });
+        }
+
+        @Test
+        public void testGetVisualRunForFirstIndex() {
+            buildSUT((sut) -> {
+                // When
+                BidiRun run = sut.getVisualRun(0);
+
+                // Then
+                assertNotNull(run);
+                assertEquals(run.charStart, 0);
+                assertEquals(run.charEnd, 4);
+                assertEquals(run.embeddingLevel, 0);
+            });
+        }
+
+        @Test
+        public void testGetVisualRunForLastIndex() {
+            buildSUT((sut) -> {
+                // When
+                BidiRun run = sut.getVisualRun(1);
+
+                // Then
+                assertNotNull(run);
+                assertEquals(run.charStart, 4);
+                assertEquals(run.charEnd, 8);
+                assertEquals(run.embeddingLevel, 1);
+            });
+        }
+
+        @Test
+        public void testGetVisualRuns() {
+            buildSUT((sut) -> {
+                // When
+                List<BidiRun> visualRuns = sut.getVisualRuns();
+
+                // Then
+                assertTrue(visualRuns instanceof BidiLine.RunList);
+                assertSame(((BidiLine.RunList) visualRuns).owner, sut);
+                assertSame(((BidiLine.RunList) visualRuns).size, sut.getRunCount());
+                assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
+            });
         }
     }
 }
