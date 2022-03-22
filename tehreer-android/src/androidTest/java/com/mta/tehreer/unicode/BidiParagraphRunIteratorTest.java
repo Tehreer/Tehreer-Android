@@ -91,4 +91,9 @@ public class BidiParagraphRunIteratorTest {
         // When
         sut.next();
     }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testRemove() {
+        sut.remove();
+    }
 }
