@@ -22,20 +22,30 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Iterator;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BidiLineMirrorIterableTest {
-    @Mock
-    private BidiLine line;
+    private static final String DEFAULT_TEXT = "یہ ایک (car) ہے۔";
+
+    private BidiLine bidiLine;
     private BidiLine.MirrorIterable sut;
 
     @Before
     public void setUp() {
-        sut = new BidiLine.MirrorIterable(line);
+        String text = DEFAULT_TEXT;
+        BidiAlgorithm bidiAlgorithm = BidiAlgorithm.finalizable(
+            new BidiAlgorithm(text)
+        );
+        BidiParagraph bidiParagraph = BidiParagraph.finalizable(
+            bidiAlgorithm.createParagraph(0, text.length(), BaseDirection.DEFAULT_LEFT_TO_RIGHT)
+        );
+        bidiLine = BidiLine.finalizable(
+            bidiParagraph.createLine(0, text.length())
+        );
+        sut = new BidiLine.MirrorIterable(bidiLine);
     }
 
     @Test
@@ -45,6 +55,6 @@ public class BidiLineMirrorIterableTest {
 
         // Then
         assertTrue(iterator instanceof BidiLine.MirrorIterator);
-        assertSame(((BidiLine.MirrorIterator) iterator).owner, line);
+        assertSame(((BidiLine.MirrorIterator) iterator).owner, bidiLine);
     }
 }
