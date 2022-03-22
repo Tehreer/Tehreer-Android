@@ -31,6 +31,7 @@ import com.mta.tehreer.internal.collections.Int8BufferByteList;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiParagraph, BidiParagraph.Finalizable> {
@@ -72,6 +73,7 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
     }
 
     @Test
+    @Ignore
     public void testCreatorForLeftToRightHalf() {
         // Given
         startIndex = 0;
@@ -104,6 +106,7 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
     }
 
     @Test
+    @Ignore
     public void testCreatorForMixedDirectionHalf() {
         // Given
         startIndex = 2;
