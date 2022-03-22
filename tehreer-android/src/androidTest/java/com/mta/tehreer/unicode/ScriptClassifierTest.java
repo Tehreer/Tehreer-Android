@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.collections.JByteArrayIntList;
+import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -95,4 +96,19 @@ public class ScriptClassifierTest {
         assertEquals(runIterable.end, 8);
     }
 
+    @Test
+    public void testToString() {
+        String description = DescriptionBuilder
+                .of(ScriptClassifier.class)
+                .put("text", text)
+                .put("charScripts", sut.getCharScripts())
+                .put("scriptRuns", sut.getScriptRuns())
+                .build();
+
+        // When
+        String string = sut.toString();
+
+        // Then
+        assertEquals(string, description);
+    }
 }

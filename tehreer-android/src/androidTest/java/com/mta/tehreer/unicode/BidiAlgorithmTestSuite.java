@@ -31,6 +31,7 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.collections.UInt8BufferIntList;
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Test;
 
@@ -186,6 +187,23 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
 
             // Then
             assertNotNull(paragraph);
+        });
+    }
+
+    @Test
+    public void testToString() {
+        buildSUT((sut) -> {
+            String description = DescriptionBuilder
+                    .of(BidiAlgorithm.class)
+                    .put("text", text)
+                    .put("charBidiClasses", values)
+                    .build();
+
+            // When
+            String string = sut.toString();
+
+            // Then
+            assertEquals(string, description);
         });
     }
 }

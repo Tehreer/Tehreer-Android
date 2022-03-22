@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Test;
 
@@ -180,6 +181,25 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
             // Then
             assertTrue(mirroringPairs instanceof BidiLine.MirrorIterable);
             assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, sut);
+        });
+    }
+
+    @Test
+    public void testToString() {
+        buildSUT((sut) -> {
+            String description = DescriptionBuilder
+                    .of(BidiLine.class)
+                    .put("charStart", startIndex)
+                    .put("charEnd", endIndex)
+                    .put("visualRuns", DEFAULT_VISUAL_RUNS)
+                    .put("mirroringPairs", sut.getMirroringPairs())
+                    .build();
+
+            // When
+            String string = sut.toString();
+
+            // Then
+            assertEquals(string, description);
         });
     }
 }
