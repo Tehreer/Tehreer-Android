@@ -16,6 +16,11 @@
 
 package com.mta.tehreer.unicode;
 
+import static com.mta.tehreer.util.Assert.assertThrows;
+
+import com.mta.tehreer.internal.Constants;
+
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -23,5 +28,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class BidiLineFinalizableTest extends BidiLineTestSuite {
     public BidiLineFinalizableTest() {
         super(DefaultMode.SAFE);
+    }
+
+    @Test
+    public void testDispose() {
+        buildSUT((sut) -> {
+            assertThrows(UnsupportedOperationException.class,
+                         Constants.EXCEPTION_FINALIZABLE_OBJECT,
+                         sut::dispose);
+        });
     }
 }

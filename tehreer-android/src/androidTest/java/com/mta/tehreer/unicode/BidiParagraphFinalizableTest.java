@@ -16,8 +16,23 @@
 
 package com.mta.tehreer.unicode;
 
+import static com.mta.tehreer.util.Assert.assertThrows;
+
+import com.mta.tehreer.internal.Constants;
+
+import org.junit.Test;
+
 public class BidiParagraphFinalizableTest extends BidiParagraphTestSuite {
     public BidiParagraphFinalizableTest() {
         super(DefaultMode.SAFE);
+    }
+
+    @Test
+    public void testDispose() {
+        buildSUT((sut) -> {
+            assertThrows(UnsupportedOperationException.class,
+                         Constants.EXCEPTION_FINALIZABLE_OBJECT,
+                         sut::dispose);
+        });
     }
 }
