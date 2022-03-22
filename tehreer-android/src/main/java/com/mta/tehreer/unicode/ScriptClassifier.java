@@ -19,6 +19,7 @@ package com.mta.tehreer.unicode;
 import androidx.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
+import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.collections.JByteArrayIntList;
 
@@ -99,6 +100,14 @@ public class ScriptClassifier {
         checkSubRange(charStart, charEnd);
 
         return new RunIterable(scripts, charStart, charEnd);
+    }
+
+    @Override
+    public String toString() {
+        return "ScriptClassifier{text=" + text
+                + ", charScripts=" + Description.forIntList(getCharScripts())
+                + ", scriptRuns=" + Description.forIterable(getScriptRuns())
+                + "}";
     }
 
     private static native void nClassify(String text, byte[] scripts);
