@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.mta.tehreer.collections.IntList;
 
+import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
 import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
 import static com.mta.tehreer.internal.util.Preconditions.checkIndexRange;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
@@ -52,6 +53,7 @@ public class ClusterMap extends IntList {
     @Override
     public void copyTo(@NonNull int[] array, int atIndex) {
         checkNotNull(array);
+        checkArrayBounds(array, atIndex, size);
 
         for (int i = 0; i < size; i++) {
             array[i + atIndex] = this.array[i + offset] - difference;

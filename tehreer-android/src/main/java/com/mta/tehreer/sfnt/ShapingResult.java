@@ -365,10 +365,10 @@ public class ShapingResult implements Disposable {
         return new GlyphAdvanceList(this);
     }
 
-    private static class ClusterMap extends IntList {
-        private final @Nullable Object owner;
-        private final long pointer;
-        private final int size;
+    static final class ClusterMap extends IntList {
+        final @Nullable Object owner;
+        final long pointer;
+        final int size;
 
         public ClusterMap(@Nullable Object owner, long pointer, int size) {
             this.owner = owner;
@@ -391,6 +391,7 @@ public class ShapingResult implements Disposable {
         @Override
         public void copyTo(@NonNull int[] array, int atIndex) {
             checkNotNull(array);
+            checkArrayBounds(array, atIndex, size);
 
             for (int i = 0; i < size; i++) {
                 array[i + atIndex] = Raw.getInt32Value(pointer + (i * Raw.INT32_SIZE));
