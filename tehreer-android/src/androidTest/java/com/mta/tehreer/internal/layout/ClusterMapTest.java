@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,26 @@
 
 package com.mta.tehreer.internal.layout;
 
+import androidx.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntListTestSuite;
 
 import org.junit.Before;
 
-public class ClusterMapTest extends IntListTestSuite {
+public class ClusterMapTest extends IntListTestSuite<ClusterMap> {
+    public ClusterMapTest() {
+        super(ClusterMap.class);
+    }
+
+    private @NonNull ClusterMap buildList(@NonNull int[] values, int difference) {
+        return new ClusterMap(values, 0, values.length, difference);
+    }
+
+    @Override
+    protected @NonNull ClusterMap buildIdentical(@NonNull ClusterMap list) {
+        return buildList(list.toArray(), 0);
+    }
+
     @Before
     public void setUp() {
         int[] sample = new int[] {
@@ -29,10 +44,10 @@ public class ClusterMapTest extends IntListTestSuite {
         };
         int difference = 0xFFFF;
 
-        this.expected = new int[] {
+        values = new int[] {
             0x00000000, 0x1C71AAAA, 0x38E35554, 0x5554FFFE, 0x71C6AAA8,
             0x8E385552, 0xAAA9FFFC, 0xC71BAAA6, 0xE38D5550, 0xFFFEFFFA
         };
-        this.actual = new ClusterMap(sample, 0, sample.length, difference);
+        sut = buildList(sample, difference);
     }
 }

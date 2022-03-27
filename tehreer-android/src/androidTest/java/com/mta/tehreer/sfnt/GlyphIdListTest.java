@@ -24,16 +24,22 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import androidx.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntListTestSuite;
+import com.mta.tehreer.sfnt.ShapingResult.GlyphIdList;
 
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class GlyphIdListTest extends IntListTestSuite {
-    @Before
-    public void setUp() {
+public class GlyphIdListTest extends IntListTestSuite<GlyphIdList> {
+    public GlyphIdListTest() {
+        super(GlyphIdList.class);
+    }
+
+    private @NonNull GlyphIdList buildList(@NonNull int[] values) {
         int[] sample = {
             0x00000000, 0x1C71C71C, 0x38E38E38, 0x55555554, 0x71C71C70,
             0x8E38E38C, 0xAAAAAAA8, 0xC71C71C4, 0xE38E38E0, 0xFFFFFFFC
@@ -68,7 +74,20 @@ public class GlyphIdListTest extends IntListTestSuite {
             return null;
         })).when(shapingResult).copyGlyphIds(anyInt(), anyInt(), any(), anyInt());
 
-        this.expected = sample;
-        this.actual = new ShapingResult.GlyphIdList(shapingResult);
+        return new GlyphIdList(shapingResult);
+    }
+
+    @Override
+    protected @NonNull GlyphIdList buildIdentical(@NonNull GlyphIdList list) {
+        return buildList(list.toArray());
+    }
+
+    @Before
+    public void setUp() {
+        values = new int[] {
+            0x00000000, 0x1C71C71C, 0x38E38E38, 0x55555554, 0x71C71C70,
+            0x8E38E38C, 0xAAAAAAA8, 0xC71C71C4, 0xE38E38E0, 0xFFFFFFFC
+        };
+        sut = buildList(values);
     }
 }

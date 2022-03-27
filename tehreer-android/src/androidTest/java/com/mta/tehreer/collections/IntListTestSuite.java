@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,181 +16,273 @@
 
 package com.mta.tehreer.collections;
 
+import static com.mta.tehreer.util.Assert.assertThrows;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+import androidx.annotation.NonNull;
+
+import com.mta.tehreer.test.HashableTestSuite;
+
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+public abstract class IntListTestSuite<T extends IntList> extends HashableTestSuite<T> {
+    protected int[] values;
 
-public abstract class IntListTestSuite {
-    protected IntList actual;
-    protected int[] expected;
+    private static class SubListTestSuite extends IntListTestSuite<IntList> {
+        SubListTestSuite(IntList subList, int[] values) {
+            super(IntList.class);
 
-    private static class SubListTestSuite extends IntListTestSuite {
-        SubListTestSuite(IntList subList, int[] expected) {
-            this.actual = subList;
-            this.expected = expected;
+            this.values = values;
+            this.sut = subList;
+        }
+
+        @Override
+        protected @NonNull
+        IntList buildIdentical(@NonNull IntList object) {
+            return IntList.of(object.toArray());
         }
     }
 
-    protected IntListTestSuite() {
+    protected IntListTestSuite(Class<T> clazz) {
+        super(clazz);
     }
 
     @Test
     public void testSize() {
-        assertEquals(actual.size(), expected.length);
+        // When
+        int size = sut.size();
+
+        // Then
+        assertEquals(size, values.length);
     }
 
     @Test
-    public void testElements() {
-        int length = expected.length;
+    public void testGetForNegativeIndex() {
+        // Given
+        int index = -1;
+
+        // Then
+        assertThrows(IndexOutOfBoundsException.class,
+                     () -> sut.get(index));
+    }
+
+    @Test()
+    public void testGetForLimitIndex() {
+        // Given
+        int index = values.length;
+
+        // Then
+        assertThrows(IndexOutOfBoundsException.class,
+                     () -> sut.get(index));
+    }
+
+    @Test
+    public void testGetForAllIndexes() {
+        int length = values.length;
         for (int i = 0; i < length; i++) {
-            assertEquals(actual.get(i), expected[i]);
+            assertEquals(sut.get(i), values[i], 0.0f);
         }
     }
 
     @Test
-    public void testGetAtMinusOne() {
-        try {
-            actual.get(-1);
-            fail();
-        } catch (IndexOutOfBoundsException ignored) { }
+    public void testCopyToForInvalidIndexes() {
+        int[] array = new int[values.length];
+
+        // Invalid Start
+        assertThrows(ArrayIndexOutOfBoundsException.class,
+                     () -> sut.copyTo(array, -1));
+
+        // Exceeding Length
+        assertThrows(ArrayIndexOutOfBoundsException.class,
+                     () -> sut.copyTo(array, 1));
     }
 
     @Test
-    public void testGetAtLength() {
-        try {
-            actual.get(expected.length);
-            fail();
-        } catch (IndexOutOfBoundsException ignored) { }
+    public void testCopyToOnNullArray() {
+        // Given
+        int[] array = null;
+
+        // Then
+        assertThrows(NullPointerException.class,
+                     () -> sut.copyTo(array, 0));
     }
 
     @Test
-    public void testCopyFull() {
-        int[] array = new int[expected.length];
-        actual.copyTo(array, 0);
-
-        assertArrayEquals(array, expected);
-    }
-
-    @Test
-    public void testCopyAtStart() {
-        int actualLength = expected.length;
-        int extraLength = actualLength / 2;
-
-        int[] extra = new int[extraLength];
-        int[] array = new int[actualLength + extraLength];
-        actual.copyTo(array, 0);
-
-        int[] copiedChunk = Arrays.copyOfRange(array, 0, actualLength);
-        int[] lastChunk = Arrays.copyOfRange(array, actualLength, array.length);
-
-        assertArrayEquals(copiedChunk, expected);
-        assertArrayEquals(lastChunk, extra);
-    }
-
-    @Test
-    public void testCopyAtEnd() {
-        int actualLength = expected.length;
-        int extraLength = actualLength / 2;
-
-        int[] extra = new int[extraLength];
-        int[] array = new int[actualLength + extraLength];
-        actual.copyTo(array, extraLength);
-
-        int[] firstChunk = Arrays.copyOfRange(array, 0, extraLength);
-        int[] copiedChunk = Arrays.copyOfRange(array, extraLength, array.length);
-
-        assertArrayEquals(firstChunk, extra);
-        assertArrayEquals(copiedChunk, expected);
-    }
-
-    @Test
-    public void testCopyToNullArray() {
-        try {
-            actual.copyTo(null, 0);
-            fail();
-        } catch (NullPointerException ignored) { }
-    }
-
-    @Test
-    public void testCopyToSmallArray() {
-        if (expected.length == 0) {
+    public void testCopyToOnSmallArray() {
+        if (values.length == 0) {
             return;
         }
 
-        try {
-            int[] array = new int[expected.length / 2];
-            actual.copyTo(array, 0);
-            fail();
-        } catch (ArrayIndexOutOfBoundsException ignored) { }
-    }
+        // Given
+        int[] array = new int[values.length / 2];
 
-    private static void testSubList(IntList subList, int[] expected) {
-        SubListTestSuite suite = new SubListTestSuite(subList, expected);
-        suite.testSize();
-        suite.testElements();
-        suite.testGetAtMinusOne();
-        suite.testGetAtLength();
-        suite.testCopyFull();
-        suite.testCopyAtStart();
-        suite.testCopyAtEnd();
-        suite.testCopyToNullArray();
-        suite.testCopyToSmallArray();
-        suite.testToArray();
-        suite.testEquals();
+        // When
+        assertThrows(ArrayIndexOutOfBoundsException.class,
+                     () -> sut.copyTo(array, 0));
     }
 
     @Test
-    public void testSubListEmpty() {
-        int fullLength = expected.length;
+    public void testCopyToOnMatchingArray() {
+        int[] array = new int[values.length];
+
+        // When
+        sut.copyTo(array, 0);
+
+        // Then
+        assertArrayEquals(array, values);
+    }
+
+    @Test
+    public void testCopyToOnLargeArrayAtStart() {
+        int actualLength = values.length;
+        int extraLength = actualLength / 2;
+        int finalLength = actualLength + extraLength;
+
+        int[] array = new int[finalLength];
+        Arrays.fill(array, -1);
+
+        int[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
+
+        // When
+        sut.copyTo(array, 0);
+
+        int[] copiedChunk = Arrays.copyOfRange(array, 0, actualLength);
+        int[] remainingChunk = Arrays.copyOfRange(array, actualLength, finalLength);
+
+        // Then
+        assertArrayEquals(copiedChunk, values);
+        assertArrayEquals(remainingChunk, extraChunk);
+    }
+
+    @Test
+    public void testCopyToOnLargeArrayAtEnd() {
+        int actualLength = values.length;
+        int extraLength = actualLength / 2;
+        int finalLength = actualLength + extraLength;
+
+        int[] array = new int[finalLength];
+        Arrays.fill(array, -1);
+
+        int[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
+
+        // When
+        sut.copyTo(array, extraLength);
+
+        int[] firstChunk = Arrays.copyOfRange(array, 0, extraLength);
+        int[] copiedChunk = Arrays.copyOfRange(array, extraLength, finalLength);
+
+        // Then
+        assertArrayEquals(firstChunk, extraChunk);
+        assertArrayEquals(copiedChunk, values);
+    }
+
+
+    private static void testSubList(IntList subList, int[] values) {
+        SubListTestSuite suite = new SubListTestSuite(subList, values);
+
+        // equals()
+        suite.testEqualsWithSelf();
+        suite.testEqualsWithNull();
+        suite.testEqualsWithIdenticalObject();
+
+        // hashCode()
+        suite.testHashCodeByMatchingWithIdenticalObject();
+        suite.testHashCodeByGeneratingItFiveTimes();
+
+        // size()
+        suite.testSize();
+
+        // get()
+        suite.testGetForNegativeIndex();
+        suite.testGetForLimitIndex();
+        suite.testGetForAllIndexes();
+
+        // copyTo()
+        suite.testCopyToForInvalidIndexes();
+        suite.testCopyToOnNullArray();
+        suite.testCopyToOnSmallArray();
+        suite.testCopyToOnMatchingArray();
+        suite.testCopyToOnLargeArrayAtStart();
+        suite.testCopyToOnLargeArrayAtEnd();
+
+        // toArray()
+        suite.testToArray();
+    }
+
+    @Test
+    public void testSubListForInvalidRanges() {
+        // Invalid Start
+        assertThrows(IndexOutOfBoundsException.class,
+                     () -> sut.subList(-1, values.length));
+
+        // Invalid End
+        assertThrows(IndexOutOfBoundsException.class,
+                     () -> sut.subList(0, values.length + 1));
+
+        // Bad Range
+        assertThrows(IndexOutOfBoundsException.class,
+                     () -> sut.subList(values.length, -1));
+    }
+
+    @Test
+    public void testSubListForEmptyRanges() {
+        int fullLength = values.length;
         int halfLength = fullLength / 2;
 
-        testSubList(actual.subList(0, 0), new int[0]);
-        testSubList(actual.subList(halfLength, halfLength), new int[0]);
-        testSubList(actual.subList(fullLength, fullLength), new int[0]);
+        testSubList(sut.subList(0, 0), new int[0]);
+        testSubList(sut.subList(halfLength, halfLength), new int[0]);
+        testSubList(sut.subList(fullLength, fullLength), new int[0]);
     }
 
     @Test
-    public void testSubListFirstHalf() {
-        int firstStart = 0;
-        int firstEnd = expected.length / 2;
-        int[] firstHalf = Arrays.copyOfRange(expected, firstStart, firstEnd);
-        IntList subList = actual.subList(firstStart, firstEnd);
+    public void testSubListForFirstHalf() {
+        int startIndex = 0;
+        int endIndex = values.length / 2;
+        int[] firstHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
+        // When
+        IntList subList = sut.subList(startIndex, endIndex);
+
+        // Then
         testSubList(subList, firstHalf);
     }
 
     @Test
-    public void testSubListSecondHalf() {
-        int secondStart = expected.length / 2;
-        int secondEnd = expected.length;
-        int[] secondHalf = Arrays.copyOfRange(expected, secondStart, secondEnd);
-        IntList subList = actual.subList(secondStart, secondEnd);
+    public void testSubListForSecondHalf() {
+        int startIndex = values.length / 2;
+        int endIndex = values.length;
+        int[] secondHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
+        // When
+        IntList subList = sut.subList(startIndex, endIndex);
+
+        // Then
         testSubList(subList, secondHalf);
     }
 
     @Test
-    public void testSubListMidHalf() {
-        int halfLength = expected.length / 2;
-        int midStart = halfLength / 2;
-        int midEnd = midStart + halfLength;
-        int[] midHalf = Arrays.copyOfRange(expected, midStart, midEnd);
-        IntList subList = actual.subList(midStart, midEnd);
+    public void testSubListForMidHalf() {
+        int halfLength = values.length / 2;
+        int startIndex = halfLength / 2;
+        int endIndex = startIndex + halfLength;
+        int[] midHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
+        // When
+        IntList subList = sut.subList(startIndex, endIndex);
+
+        // Then
         testSubList(subList, midHalf);
     }
 
     @Test
     public void testToArray() {
-        assertArrayEquals(actual.toArray(), expected);
-    }
+        // When
+        int[] array = sut.toArray();
 
-    @Test
-    public void testEquals() {
-        assertEquals(actual, IntList.of(expected));
+        // Then
+        assertArrayEquals(array, values);
     }
 }

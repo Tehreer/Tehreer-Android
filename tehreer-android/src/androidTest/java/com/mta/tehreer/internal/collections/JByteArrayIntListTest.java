@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,42 @@
  */
 package com.mta.tehreer.internal.collections;
 
+import androidx.annotation.NonNull;
+
 import com.mta.tehreer.collections.IntListTestSuite;
 
-public class JByteArrayIntListTest extends IntListTestSuite {
+import org.junit.Before;
+
+public class JByteArrayIntListTest extends IntListTestSuite<JByteArrayIntList> {
     public JByteArrayIntListTest() {
-        byte[] sample = new byte[] { 0, 28, 56, 84, 112, -116, -88, -60, -32, -4 };
-        this.expected = new int[] { 0, 28, 56, 84, 112, -116, -88, -60, -32, -4 };
-        this.actual = new JByteArrayIntList(sample, 0, sample.length);
+        super(JByteArrayIntList.class);
+    }
+
+    private @NonNull byte[] toByteArray(@NonNull int[] values) {
+        int length = values.length;
+        byte[] array = new byte[length];
+
+        for (int i = 0; i < length; i++) {
+            array[i] = (byte) values[i];
+        }
+
+        return array;
+    }
+
+    private @NonNull JByteArrayIntList buildList(@NonNull int[] values) {
+        return new JByteArrayIntList(toByteArray(values), 0, values.length);
+    }
+
+    @Override
+    protected @NonNull JByteArrayIntList buildIdentical(@NonNull JByteArrayIntList list) {
+        return buildList(list.toArray());
+    }
+
+    @Before
+    public void setUp() {
+        values = new int[] {
+            0, 28, 56, 84, 112, -116, -88, -60, -32, -4
+        };
+        sut = buildList(values);
     }
 }
