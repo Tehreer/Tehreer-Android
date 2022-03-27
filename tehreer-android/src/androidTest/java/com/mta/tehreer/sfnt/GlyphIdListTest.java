@@ -40,20 +40,15 @@ public class GlyphIdListTest extends IntListTestSuite<GlyphIdList> {
     }
 
     private @NonNull GlyphIdList buildList(@NonNull int[] values) {
-        int[] sample = {
-            0x00000000, 0x1C71C71C, 0x38E38E38, 0x55555554, 0x71C71C70,
-            0x8E38E38C, 0xAAAAAAA8, 0xC71C71C4, 0xE38E38E0, 0xFFFFFFFC
-        };
-
         ShapingResult shapingResult = mock(ShapingResult.class);
-        when(shapingResult.getGlyphCount()).thenReturn(sample.length);
+        when(shapingResult.getGlyphCount()).thenReturn(values.length);
         when(shapingResult.getGlyphId(anyInt())).thenAnswer((invocation) -> {
             int index = invocation.getArgument(0);
 
             assertTrue(index >= 0);
-            assertTrue(index < sample.length);
+            assertTrue(index < values.length);
 
-            return sample[index];
+            return values[index];
         });
 
         doAnswer((invocation -> {
@@ -66,10 +61,10 @@ public class GlyphIdListTest extends IntListTestSuite<GlyphIdList> {
             assertTrue(length >= 0);
             assertNotNull(destination);
             assertTrue(index >= 0);
-            assertTrue(offset + length <= sample.length);
+            assertTrue(offset + length <= values.length);
             assertTrue(index + length <= destination.length);
 
-            System.arraycopy(sample, offset, destination, index, length);
+            System.arraycopy(values, offset, destination, index, length);
 
             return null;
         })).when(shapingResult).copyGlyphIds(anyInt(), anyInt(), any(), anyInt());
