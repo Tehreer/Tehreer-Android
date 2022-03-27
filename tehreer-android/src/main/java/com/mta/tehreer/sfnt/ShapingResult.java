@@ -297,24 +297,27 @@ public class ShapingResult implements Disposable {
         return new GlyphOffsetList();
     }
 
-    private float getGlyphAdvance(int index) {
+    float getGlyphAdvance(int index) {
         return nGetGlyphAdvance(nativeResult, index);
     }
 
-    private void copyGlyphAdvances(int offset, int length, @NonNull float[] destination, int index) {
+    void copyGlyphAdvances(int offset, int length, @NonNull float[] destination, int index) {
         nCopyGlyphAdvances(nativeResult, offset, length, destination, index);
     }
 
-    private class GlyphAdvanceList extends FloatList {
-        private final int offset;
-        private final int size;
+    static class GlyphAdvanceList extends FloatList {
+        final @NonNull ShapingResult owner;
+        final int offset;
+        final int size;
 
-        public GlyphAdvanceList() {
+        public GlyphAdvanceList(@NonNull ShapingResult owner) {
+            this.owner = owner;
             this.offset = 0;
-            this.size = getGlyphCount();
+            this.size = owner.getGlyphCount();
         }
 
-        private GlyphAdvanceList(int offset, int size) {
+        private GlyphAdvanceList(@NonNull ShapingResult owner, int offset, int size) {
+            this.owner = owner;
             this.offset = offset;
             this.size = size;
         }
@@ -328,7 +331,7 @@ public class ShapingResult implements Disposable {
         public float get(int index) {
             checkElementIndex(index, size);
 
-            return getGlyphAdvance(index + offset);
+            return owner.getGlyphAdvance(index + offset);
         }
 
         @Override
@@ -336,14 +339,14 @@ public class ShapingResult implements Disposable {
             checkNotNull(array);
             checkArrayBounds(array, atIndex, size);
 
-            copyGlyphAdvances(offset, size, array, atIndex);
+            owner.copyGlyphAdvances(offset, size, array, atIndex);
         }
 
         @Override
         public @NonNull FloatList subList(int fromIndex, int toIndex) {
             checkIndexRange(fromIndex, toIndex, size);
 
-            return new GlyphAdvanceList(offset + fromIndex, toIndex - fromIndex);
+            return new GlyphAdvanceList(owner, offset + fromIndex, toIndex - fromIndex);
         }
     }
 
@@ -356,7 +359,7 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph advances.
      */
     public @NonNull FloatList getGlyphAdvances() {
-        return new GlyphAdvanceList();
+        return new GlyphAdvanceList(this);
     }
 
     private static class ClusterMap extends IntList {
