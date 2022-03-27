@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -159,24 +159,27 @@ public class ShapingResult implements Disposable {
 		return nGetGlyphCount(nativeResult);
 	}
 
-	private int getGlyphId(int index) {
+	int getGlyphId(int index) {
 	    return nGetGlyphId(nativeResult, index);
     }
 
-    private void copyGlyphIds(int offset, int length, @NonNull int[] destination, int index) {
+    void copyGlyphIds(int offset, int length, @NonNull int[] destination, int index) {
 	    nCopyGlyphIds(nativeResult, offset, length, destination, index);
     }
 
-    private class GlyphIdList extends IntList {
-        private final int offset;
-        private final int size;
+    static final class GlyphIdList extends IntList {
+	    final @NonNull ShapingResult owner;
+        final int offset;
+        final int size;
 
-        public GlyphIdList() {
+        GlyphIdList(@NonNull ShapingResult owner) {
+            this.owner = owner;
             this.offset = 0;
-            this.size = getGlyphCount();
+            this.size = owner.getGlyphCount();
         }
 
-        private GlyphIdList(int offset, int size) {
+        private GlyphIdList(@NonNull ShapingResult owner, int offset, int size) {
+            this.owner = owner;
             this.offset = offset;
             this.size = size;
         }
@@ -190,7 +193,7 @@ public class ShapingResult implements Disposable {
         public int get(int index) {
             checkElementIndex(index, size);
 
-            return getGlyphId(index + offset);
+            return owner.getGlyphId(index + offset);
         }
 
         @Override
@@ -198,14 +201,14 @@ public class ShapingResult implements Disposable {
             checkNotNull(array);
             checkArrayBounds(array, atIndex, size);
 
-            copyGlyphIds(offset, size, array, atIndex);
+            owner.copyGlyphIds(offset, size, array, atIndex);
         }
 
         @Override
         public @NonNull IntList subList(int fromIndex, int toIndex) {
             checkIndexRange(fromIndex, toIndex, size);
 
-            return new GlyphIdList(offset + fromIndex, toIndex - fromIndex);
+            return new GlyphIdList(owner, offset + fromIndex, toIndex - fromIndex);
         }
     }
 
@@ -218,7 +221,7 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph IDs.
      */
     public @NonNull IntList getGlyphIds() {
-        return new GlyphIdList();
+        return new GlyphIdList(this);
     }
 
     private float getGlyphXOffset(int index) {
