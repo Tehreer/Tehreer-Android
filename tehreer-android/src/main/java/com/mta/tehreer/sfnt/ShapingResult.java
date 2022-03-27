@@ -224,28 +224,31 @@ public class ShapingResult implements Disposable {
         return new GlyphIdList(this);
     }
 
-    private float getGlyphXOffset(int index) {
+    float getGlyphXOffset(int index) {
         return nGetGlyphXOffset(nativeResult, index);
     }
 
-    private float getGlyphYOffset(int index) {
+    float getGlyphYOffset(int index) {
         return nGetGlyphYOffset(nativeResult, index);
     }
 
-    private void copyGlyphOffsets(int offset, int length, @NonNull float[] destination, int index) {
+    void copyGlyphOffsets(int offset, int length, @NonNull float[] destination, int index) {
         nCopyGlyphOffsets(nativeResult, offset, length, destination, index);
     }
 
-    private class GlyphOffsetList extends PointList {
-        private final int offset;
-        private final int size;
+    static final class GlyphOffsetList extends PointList {
+        final @NonNull ShapingResult owner;
+        final int offset;
+        final int size;
 
-        public GlyphOffsetList() {
+        public GlyphOffsetList(@NonNull ShapingResult owner) {
+            this.owner = owner;
             this.offset = 0;
-            this.size = getGlyphCount();
+            this.size = owner.getGlyphCount();
         }
 
-        private GlyphOffsetList(int offset, int size) {
+        private GlyphOffsetList(@NonNull ShapingResult owner, int offset, int size) {
+            this.owner = owner;
             this.offset = offset;
             this.size = size;
         }
@@ -259,14 +262,14 @@ public class ShapingResult implements Disposable {
         public float getX(int index) {
             checkElementIndex(index, size);
 
-            return getGlyphXOffset(index + offset);
+            return owner.getGlyphXOffset(index + offset);
         }
 
         @Override
         public float getY(int index) {
             checkElementIndex(index, size);
 
-            return getGlyphYOffset(index + offset);
+            return owner.getGlyphYOffset(index + offset);
         }
 
         @Override
@@ -274,14 +277,14 @@ public class ShapingResult implements Disposable {
             checkNotNull(array);
             checkArrayBounds(array, atIndex, size * 2);
 
-            copyGlyphOffsets(offset, size, array, atIndex);
+            owner.copyGlyphOffsets(offset, size, array, atIndex);
         }
 
         @Override
         public @NonNull PointList subList(int fromIndex, int toIndex) {
             checkIndexRange(fromIndex, toIndex, size);
 
-            return new GlyphOffsetList(offset + fromIndex, toIndex - fromIndex);
+            return new GlyphOffsetList(owner, offset + fromIndex, toIndex - fromIndex);
         }
     }
 
@@ -294,7 +297,7 @@ public class ShapingResult implements Disposable {
      * @return A list of glyph offsets.
      */
     public @NonNull PointList getGlyphOffsets() {
-        return new GlyphOffsetList();
+        return new GlyphOffsetList(this);
     }
 
     float getGlyphAdvance(int index) {
@@ -305,7 +308,7 @@ public class ShapingResult implements Disposable {
         nCopyGlyphAdvances(nativeResult, offset, length, destination, index);
     }
 
-    static class GlyphAdvanceList extends FloatList {
+    static final class GlyphAdvanceList extends FloatList {
         final @NonNull ShapingResult owner;
         final int offset;
         final int size;
