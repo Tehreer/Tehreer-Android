@@ -21,6 +21,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class Assert {
+    public static <T extends Throwable> void assertThrows(Class<T> clazz, Runnable runnable) {
+        try {
+            runnable.run();
+            fail();
+        } catch (Throwable throwable) {
+            assertTrue(clazz.isInstance(throwable));
+        }
+    }
+
     public static <T extends Throwable> void assertThrows(Class<T> clazz, String message, Runnable runnable) {
         try {
             runnable.run();
