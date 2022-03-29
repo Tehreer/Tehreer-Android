@@ -48,7 +48,8 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
     private final DefaultMode defaultMode;
     private final UnsafeSUTBuilder<T, F> sutBuilder;
 
-    private Consumer<SUTBuilder<?>> builderUpdater;
+    private Consumer<SUTBuilder<?>> onPreBuildSUT;
+    private Consumer<SUTBuilder<?>> onPostBuildSUT;
 
     protected DisposableTestSuite(@NonNull UnsafeSUTBuilder<T, F> sutBuilder) {
         this(sutBuilder, DefaultMode.NONE);
@@ -68,33 +69,50 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
         return sutBuilder.getSafeClass();
     }
 
-    protected void setOnPreBuildSUT(@Nullable Consumer<SUTBuilder<?>> builderUpdater) {
-        this.builderUpdater = builderUpdater;
+    protected void setOnPreBuildSUT(@Nullable Consumer<SUTBuilder<?>> onPreBuildSUT) {
+        this.onPreBuildSUT = onPreBuildSUT;
     }
 
-    private void updateSUTBuilder() {
-        if (builderUpdater != null) {
-            builderUpdater.accept(sutBuilder);
+    protected void setOnPostBuildSUT(@Nullable Consumer<SUTBuilder<?>> onPostBuildSUT) {
+        this.onPostBuildSUT = onPostBuildSUT;
+    }
+
+    private void onPreBuildSUT() {
+        if (onPreBuildSUT != null) {
+            onPreBuildSUT.accept(sutBuilder);
+        }
+    }
+
+    private void onPostBuildSUT() {
+        if (onPostBuildSUT != null) {
+            onPostBuildSUT.accept(sutBuilder);
         }
     }
 
     protected T buildUnsafeSUT() {
-        updateSUTBuilder();
-        return sutBuilder.buildSUT();
+        onPreBuildSUT();
+        T sut = sutBuilder.buildSUT();
+        onPostBuildSUT();
+
+        return sut;
     }
 
     protected F buildSafeSUT() {
-        updateSUTBuilder();
-        return sutBuilder.getFinalizableBuilder().buildSUT();
+        onPreBuildSUT();
+        F sut = sutBuilder.getFinalizableBuilder().buildSUT();
+        onPostBuildSUT();
+
+        return sut;
     }
 
     protected void buildDisposableSUT(@Nullable Consumer<T> consumer) {
-        updateSUTBuilder();
+        onPreBuildSUT();
         sutBuilder.getDisposableBuilder().buildSUT(consumer);
+        onPostBuildSUT();
     }
 
     protected void buildSafeSUT(@Nullable Consumer<T> consumer) {
-        updateSUTBuilder();
+        onPreBuildSUT();
 
         SUTBuilder<F> builder = sutBuilder.getFinalizableBuilder();
         builder.buildSUT((sut) -> {
@@ -102,6 +120,8 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
                 consumer.accept(sut);
             }
         });
+
+        onPostBuildSUT();
     }
 
     protected void buildSUT(@Nullable Consumer<T> consumer) {
