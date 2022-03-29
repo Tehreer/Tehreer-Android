@@ -39,7 +39,7 @@ public class ShapingEngine implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    private static final class Finalizable extends ShapingEngine {
+    static final class Finalizable extends ShapingEngine {
         Finalizable(@NonNull ShapingEngine parent) {
             super(parent);
         }
