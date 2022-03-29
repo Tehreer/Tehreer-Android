@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import com.mta.tehreer.Disposable;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.Constants;
+import com.mta.tehreer.internal.Description;
 import com.mta.tehreer.internal.JniBridge;
 
 import java.util.Collections;
@@ -337,7 +338,7 @@ public class ShapingEngine implements Disposable {
 
     @Override
     public String toString() {
-        return "ShapingEngine{typeface=" + getTypeface().toString()
+        return "ShapingEngine{typeface=" + Description.forObject(getTypeface())
                 + ", typeSize=" + String.valueOf(getTypeSize())
                 + ", scriptTag=" + SfntTag.toString(getScriptTag())
                 + ", languageTag=" + SfntTag.toString(getLanguageTag())
