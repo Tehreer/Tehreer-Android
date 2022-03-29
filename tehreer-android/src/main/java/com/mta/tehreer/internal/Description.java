@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ import java.util.Iterator;
 
 public class Description {
     private static final String NULL = "null";
+
+    public static @NonNull String forObject(@Nullable Object object) {
+        return object == null ? NULL : object.toString();
+    }
 
     public static @NonNull String forByteArray(@NonNull byte[] array) {
         return forByteList(new JByteArrayList(array, 0, array.length));
