@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,5 +83,12 @@ public final class OpenTypeFeature {
         result = 31 * result + value;
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "OpenTypeFeature{tag=" + SfntTag.toString(tag)
+                + ", value=" + String.valueOf(value)
+                + "}";
     }
 }
