@@ -43,7 +43,7 @@ public class ShapingResult implements Disposable {
         JniBridge.loadLibrary();
     }
 
-    private static final class Finalizable extends ShapingResult {
+    static final class Finalizable extends ShapingResult {
         Finalizable(@NonNull ShapingResult parent) {
             super(parent);
         }
@@ -122,7 +122,7 @@ public class ShapingResult implements Disposable {
 	    return nIsBackward(nativeResult);
 	}
 
-	private boolean isRTL() {
+	boolean isRTL() {
 	    return nIsRTL(nativeResult);
     }
 
@@ -443,6 +443,10 @@ public class ShapingResult implements Disposable {
         return getCaretEdges(null);
     }
 
+    CaretEdgesBuilder createCaretEdgesBuilder() {
+        return new CaretEdgesBuilder();
+    }
+
     /**
      * Returns a list of caret edges.
      *
@@ -457,7 +461,7 @@ public class ShapingResult implements Disposable {
             }
         }
 
-        return new CaretEdgesBuilder()
+        return createCaretEdgesBuilder()
                 .setBackward(isBackward())
                 .setRTL(isRTL())
                 .setGlyphAdvances(getGlyphAdvances())
