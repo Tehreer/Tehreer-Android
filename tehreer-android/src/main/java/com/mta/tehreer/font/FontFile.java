@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import android.content.res.AssetManager;
 import androidx.annotation.NonNull;
 
 import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.JniBridge;
 
 import java.io.File;
 import java.io.InputStream;
@@ -33,6 +34,10 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  * A <code>FontFile</code> object represents the file of a specific font format.
  */
 public final class FontFile {
+    static {
+        JniBridge.loadLibrary();
+    }
+
     long nativeFontFile;
     private final Finalizer finalizer = new Finalizer();
     private List<Typeface> mTypefaces;
