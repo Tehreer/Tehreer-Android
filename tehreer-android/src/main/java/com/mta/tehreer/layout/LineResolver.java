@@ -25,6 +25,7 @@ import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.IntrinsicRun;
 import com.mta.tehreer.internal.layout.JustifiedRun;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
+import com.mta.tehreer.internal.layout.ReplacementRun;
 import com.mta.tehreer.internal.layout.RunCollection;
 import com.mta.tehreer.internal.layout.IntrinsicRunSlice;
 import com.mta.tehreer.internal.layout.TextRun;
@@ -366,6 +367,10 @@ class LineResolver {
         for (int i = 0; i < runCount; i++) {
             final GlyphRun glyphRun = runList.get(i);
             final TextRun textRun = glyphRun.getTextRun();
+            if (textRun instanceof ReplacementRun) {
+                continue;
+            }
+
             float[] glyphAdvances = glyphRun.getGlyphAdvances().toArray();
 
             final int runStart = Math.max(wordStart, glyphRun.getCharStart());
