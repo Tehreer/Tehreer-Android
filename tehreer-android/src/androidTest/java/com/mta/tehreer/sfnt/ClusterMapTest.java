@@ -25,8 +25,7 @@ import com.mta.tehreer.sfnt.ShapingResult.ClusterMap;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.Ignore;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -34,7 +33,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class ClusterMapTest extends IntListTestSuite<ClusterMap> {
     private final List<Long> pointers = new ArrayList<>();
 

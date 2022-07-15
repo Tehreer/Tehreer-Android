@@ -23,11 +23,13 @@ import com.mta.tehreer.internal.Memory;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+@Ignore
 public class UInt8BufferIntListTest extends IntListTestSuite<UInt8BufferIntList> {
     private final List<Long> pointers = new ArrayList<>();
 
