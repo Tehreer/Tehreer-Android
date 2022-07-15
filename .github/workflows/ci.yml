@@ -30,7 +30,7 @@ jobs:
         run: "echo 'ndk.path=/usr/local/lib/android/sdk/ndk/21.2.6472646/' >> local.properties"
 
       - name: Assemble Android Test 
-      - run: ./gradlew assembleAndroidTest --stacktrace
+        run: ./gradlew assembleAndroidTest --stacktrace
 
       - name: Run Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
