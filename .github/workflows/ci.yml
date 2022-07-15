@@ -29,5 +29,11 @@ jobs:
       - name: Register NDK
         run: "echo 'ndk.path=/usr/local/lib/android/sdk/ndk/21.2.6472646/' >> local.properties"
 
-      - name: Run Tests
-        run: ./gradlew connectedAndroidTest --stacktrace
+      - name: Assemble Android Test 
+      - run: ./gradlew assembleAndroidTest --stacktrace
+
+      - name: Run Instrumentation Tests
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          script: ./gradlew connectedCheck --stacktrace
