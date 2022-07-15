@@ -31,6 +31,7 @@ import com.mta.tehreer.sut.UnsafeSUTBuilder;
 import com.mta.tehreer.util.DisposableUtils;
 import com.mta.tehreer.sut.SUTBuilder;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -187,6 +188,7 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
         }
 
         @Test
+        @Ignore
         public void testFinalizableForMockInstance() {
             // Given
             T mock = mock(getUnsafeClass());
