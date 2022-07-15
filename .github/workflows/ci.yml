@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [ master, develop ]
+
   workflow_dispatch:
 
 jobs:
@@ -23,11 +24,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-      - name: Install NDK
-        run: echo "y" | sudo /usr/local/lib/android/sdk/tools/bin/sdkmanager --install "ndk;21.2.6472646" --sdk_root=${ANDROID_SDK_ROOT}
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21e
 
       - name: Register NDK
-        run: "echo 'ndk.path=/usr/local/lib/android/sdk/ndk/21.2.6472646/' >> local.properties"
+        run: "echo 'ndk.path=${{ steps.setup-ndk.outputs.ndk-path }}' >> local.properties"
 
       - name: Assemble Android Test 
         run: ./gradlew assembleAndroidTest --stacktrace
