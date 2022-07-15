@@ -29,14 +29,11 @@ jobs:
         with:
           ndk-version: r21e
 
-      - name: Register NDK
-        run: "echo 'ndk.path=${{ steps.setup-ndk.outputs.ndk-path }}' >> local.properties"
-
       - name: Assemble Android Test 
         run: ./gradlew assembleAndroidTest --stacktrace
 
       - name: Run Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
+          api-level: 29
           script: ./gradlew connectedCheck --stacktrace
