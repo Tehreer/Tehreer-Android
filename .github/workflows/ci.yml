@@ -40,3 +40,9 @@ jobs:
         with:
           api-level: 29
           script: ./gradlew connectedCheck --stacktrace
+
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v3
+        with:
+          files: "tehreer-android/build/reports/coverage/androidTest/debug/report.xml"
+          verbose: true
