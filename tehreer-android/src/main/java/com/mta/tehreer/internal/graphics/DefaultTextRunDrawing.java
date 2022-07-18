@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,15 +83,15 @@ public final class DefaultTextRunDrawing implements TextRunDrawing {
         final boolean isRTL = isRTL();
 
         if (!isRTL) {
-            clipLeft = (startClipped ? textRun.getCaretEdge(fromIndex) - caretBoundary : Float.NEGATIVE_INFINITY);
-            clipRight = (endClipped ? textRun.getCaretEdge(toIndex) - caretBoundary : Float.POSITIVE_INFINITY);
+            clipLeft = (startClipped ? textRun.getCaretEdge(fromIndex) - caretBoundary : -Float.MAX_VALUE);
+            clipRight = (endClipped ? textRun.getCaretEdge(toIndex) - caretBoundary : Float.MAX_VALUE);
         } else {
-            clipRight = (startClipped ? textRun.getCaretEdge(fromIndex) - caretBoundary : Float.POSITIVE_INFINITY);
-            clipLeft = (endClipped ? textRun.getCaretEdge(toIndex) - caretBoundary : Float.NEGATIVE_INFINITY);
+            clipRight = (startClipped ? textRun.getCaretEdge(fromIndex) - caretBoundary : Float.MAX_VALUE);
+            clipLeft = (endClipped ? textRun.getCaretEdge(toIndex) - caretBoundary : -Float.MAX_VALUE);
         }
 
         canvas.save();
-        canvas.clipRect(clipLeft, Float.NEGATIVE_INFINITY, clipRight, Float.POSITIVE_INFINITY);
+        canvas.clipRect(clipLeft, -Float.MAX_VALUE, clipRight, Float.MAX_VALUE);
         canvas.translate(getLeadingEdge(cluster.actualStart, cluster.actualEnd, isBackward, caretBoundary), 0.0f);
 
         renderer.drawGlyphs(canvas,
