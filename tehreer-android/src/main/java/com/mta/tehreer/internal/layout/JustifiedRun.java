@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021-2022 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,17 +36,26 @@ public class JustifiedRun extends AbstractTextRun {
     private final @NonNull TextRun textRun;
     private final @NonNull FloatList justifiedAdvances;
     private final @NonNull FloatList justifiedEdges;
+    private float caretBoundary = 0.0f;
 
     public JustifiedRun(@NonNull TextRun textRun, @NonNull FloatList justifiedAdvances) {
+        boolean isRTL = (textRun.getBidiLevel() & 1) == 1;
+
         this.textRun = textRun;
         this.justifiedAdvances = justifiedAdvances;
         this.justifiedEdges = new CaretEdgesBuilder()
                 .setBackward(textRun.isBackward())
-                .setRTL((textRun.getBidiLevel() & 1) == 1)
+                .setRTL(isRTL)
                 .setGlyphAdvances(justifiedAdvances)
                 .setClusterMap(textRun.getClusterMap())
                 .setCaretStops(null)
                 .build();
+
+        if (isRTL) {
+            if (textRun.getStartExtraLength() > 0) {
+                caretBoundary = getCaretBoundary(textRun.getCharStart(), textRun.getCharEnd());
+            }
+        }
     }
 
     @Override
@@ -181,7 +190,7 @@ public class JustifiedRun extends AbstractTextRun {
 
     @Override
     public float getCaretBoundary(int fromIndex, int toIndex) {
-        return super.getCaretBoundary(fromIndex, toIndex);
+        return super.getCaretBoundary(fromIndex, toIndex) - caretBoundary;
     }
 
     @Override
