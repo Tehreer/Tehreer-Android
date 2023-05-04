@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal;
+package com.mta.tehreer.internal
 
-public class JniBridge {
+import kotlin.jvm.Volatile
 
-    private static boolean loaded = false;
+internal object JniBridge {
+    @Volatile
+    private var loaded = false
 
-    public static void loadLibrary() {
+    @JvmStatic
+    fun loadLibrary() {
         if (!loaded) {
-            synchronized (JniBridge.class) {
+            synchronized(JniBridge::class.java) {
                 if (!loaded) {
-                    System.loadLibrary("tehreerjni");
-                    loaded = true;
+                    System.loadLibrary("tehreerjni")
+                    loaded = true
                 }
             }
         }
-    }
-
-    private JniBridge() {
     }
 }
