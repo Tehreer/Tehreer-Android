@@ -21,6 +21,8 @@ import android.graphics.Paint.FontMetricsInt
 import android.text.Spanned
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.internal.util.Preconditions
+import com.mta.tehreer.internal.util.isEven
+import com.mta.tehreer.internal.util.isOdd
 import com.mta.tehreer.sfnt.ShapingEngine
 import com.mta.tehreer.sfnt.ShapingOrder
 import com.mta.tehreer.sfnt.ShapingResult
@@ -68,7 +70,7 @@ internal object ShapeResolver {
                         val scriptTag = Script.getOpenTypeTag(scriptRun.script)
                         val writingDirection = ShapingEngine.getScriptDirection(scriptTag)
 
-                        val isOddLevel = (bidiRun.embeddingLevel.toInt() and 1) == 1
+                        val isOddLevel = bidiRun.embeddingLevel.isOdd()
                         val isBackward =
                             ((isOddLevel && writingDirection == WritingDirection.LEFT_TO_RIGHT)
                                     or (!isOddLevel && writingDirection == WritingDirection.RIGHT_TO_LEFT))
@@ -191,7 +193,7 @@ internal object ShapeResolver {
 
                 val caretEdges = FloatArray(runLength + 1)
 
-                if ((bidiLevel.toInt() and 1) == 0) {
+                if (bidiLevel.isEven()) {
                     caretEdges[runLength] = extent.toFloat()
                 } else {
                     caretEdges[0] = extent.toFloat()

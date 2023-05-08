@@ -25,6 +25,7 @@ import android.graphics.RectF
 import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.graphics.DefaultTextRunDrawing
+import com.mta.tehreer.internal.util.isOdd
 
 internal class JustifiedRun(
     private val textRun: TextRun,
@@ -35,7 +36,7 @@ internal class JustifiedRun(
     private var caretBoundary = 0.0f
 
     init {
-        val isRTL = (textRun.bidiLevel.toInt() and 1) == 1
+        val isRTL = textRun.bidiLevel.isOdd()
 
         glyphAdvances = justifiedAdvances
         caretEdges = CaretEdgesBuilder()

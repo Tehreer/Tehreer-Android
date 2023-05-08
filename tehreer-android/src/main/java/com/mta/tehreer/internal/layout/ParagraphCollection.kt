@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.layout
 
+import com.mta.tehreer.internal.util.isOdd
 import com.mta.tehreer.unicode.BidiParagraph
 import com.mta.tehreer.unicode.BidiRun
 import java.util.ArrayList
@@ -55,7 +56,7 @@ internal class ParagraphCollection : ArrayList<BidiParagraph>() {
     fun forEachLineRun(lineStart: Int, lineEnd: Int, runConsumer: RunConsumer) {
         var paragraphIndex = binarySearch(lineStart)
         val directionalParagraph = this[paragraphIndex]
-        val isRTL = (directionalParagraph.baseLevel.toInt() and 1) == 1
+        val isRTL = directionalParagraph.baseLevel.isOdd()
 
         if (isRTL) {
             val paragraphEnd = directionalParagraph.charEnd

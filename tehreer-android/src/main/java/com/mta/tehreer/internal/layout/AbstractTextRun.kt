@@ -18,10 +18,11 @@ package com.mta.tehreer.internal.layout
 
 import android.graphics.RectF
 import com.mta.tehreer.graphics.Renderer
+import com.mta.tehreer.internal.util.isOdd
 
 internal abstract class AbstractTextRun : TextRun {
     val isRTL: Boolean
-        get() = (bidiLevel.toInt() and 1) == 1
+        get() = bidiLevel.isOdd()
 
     override val width: Float
         get() = getRangeDistance(charStart, charEnd)
