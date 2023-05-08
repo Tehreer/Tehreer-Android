@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.graphics;
+package com.mta.tehreer.internal.graphics
 
-import android.graphics.Canvas;
+import android.graphics.Canvas
+import com.mta.tehreer.graphics.Renderer
 
-import androidx.annotation.NonNull;
-
-import com.mta.tehreer.graphics.Renderer;
-
-public interface TextRunDrawing {
-    void draw(@NonNull Renderer renderer, @NonNull Canvas canvas);
+internal interface TextRunDrawing {
+    fun draw(renderer: Renderer, canvas: Canvas)
 }
