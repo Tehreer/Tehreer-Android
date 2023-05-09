@@ -17,14 +17,20 @@
 package com.mta.tehreer.internal.graphics
 
 import android.graphics.Canvas
-import com.mta.tehreer.internal.layout.TextRun
-import com.mta.tehreer.internal.layout.ClusterRange
 import android.text.style.ForegroundColorSpan
 import android.text.style.ScaleXSpan
 import com.mta.tehreer.graphics.Renderer
+import com.mta.tehreer.internal.layout.TextRun
 import com.mta.tehreer.internal.util.isOdd
 import kotlin.math.max
 import kotlin.math.min
+
+private class ClusterRange(
+    var actualStart: Int = 0,
+    var actualEnd: Int = 0,
+    var glyphStart: Int = 0,
+    var glyphEnd:Int = 0,
+)
 
 internal class DefaultTextRunDrawing(
     private val textRun: TextRun
@@ -48,11 +54,12 @@ internal class DefaultTextRunDrawing(
         val leadingIndex = textRun.getLeadingGlyphIndex(charIndex)
         val trailingIndex = textRun.getTrailingGlyphIndex(charIndex)
 
-        val cluster = ClusterRange()
-        cluster.actualStart = actualStart
-        cluster.actualEnd = actualEnd
-        cluster.glyphStart = min(leadingIndex, trailingIndex)
-        cluster.glyphEnd = max(leadingIndex, trailingIndex) + 1
+        val cluster = ClusterRange(
+            actualStart = actualStart,
+            actualEnd = actualEnd,
+            glyphStart = min(leadingIndex, trailingIndex),
+            glyphEnd = max(leadingIndex, trailingIndex) + 1
+        )
 
         if (exclusion != null) {
             val minStart = min(exclusion.glyphStart, cluster.glyphEnd)
