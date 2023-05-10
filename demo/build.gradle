@@ -1,13 +1,14 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     buildToolsVersion '31.0.0'
 
     defaultConfig {
         applicationId "com.mta.tehreer.demo"
         minSdkVersion 15
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
@@ -23,4 +24,5 @@ android {
 dependencies {
     implementation project(':tehreer-android')
     implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.core:core-ktx:1.10.0'
 }
