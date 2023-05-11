@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.sfnt;
+package com.mta.tehreer.internal.sfnt
 
-import androidx.annotation.NonNull;
+internal abstract class AbstractSfntTable() : SfntTable {
+    override fun readFixed(offset: Int): Float {
+        return readInt32(offset) / 65536.0f
+    }
 
-public interface SfntTable {
-    @NonNull byte[] readBytes(int offset, int count);
+    override fun readOffset32(offset: Int): Int {
+        return (readUInt32(offset) and (-0x80000000).inv()).toInt()
+    }
 
-    byte readInt8(int offset);
-    short readUInt8(int offset);
-
-    short readInt16(int offset);
-    int readInt32(int offset);
-
-    int readUInt16(int offset);
-    long readUInt32(int offset);
-
-    long readInt64(int offset);
-
-    float readFixed(int offset);
-
-    int readOffset32(int offset);
-
-    SfntTable subTable(int offset);
+    override fun subTable(offset: Int): SfntTable {
+        return SubTable(this, offset)
+    }
 }

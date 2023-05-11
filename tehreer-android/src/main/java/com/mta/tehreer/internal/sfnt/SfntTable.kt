@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2020 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.mta.tehreer.internal.sfnt
 
-package com.mta.tehreer.internal.sfnt;
+internal interface SfntTable {
+    fun readBytes(offset: Int, count: Int): ByteArray
 
-public abstract class AbstractSfntTable implements SfntTable {
-    protected AbstractSfntTable() { }
+    fun readInt8(offset: Int): Byte
+    fun readUInt8(offset: Int): Short
 
-    public float readFixed(int offset) {
-        return readInt32(offset) / 65536.0f;
-    }
+    fun readInt16(offset: Int): Short
+    fun readInt32(offset: Int): Int
 
-    public int readOffset32(int offset) {
-        return ((int) readUInt32(offset)) & ~0x80000000;
-    }
+    fun readUInt16(offset: Int): Int
+    fun readUInt32(offset: Int): Long
 
-    public SfntTable subTable(int offset) {
-        return new SubTable(this, offset);
-    }
+    fun readInt64(offset: Int): Long
+
+    fun readFixed(offset: Int): Float
+
+    fun readOffset32(offset: Int): Int
+
+    fun subTable(offset: Int): SfntTable
 }
