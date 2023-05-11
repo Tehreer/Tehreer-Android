@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal;
+package com.mta.tehreer.internal
 
-public class Constants {
-
-    public static final String EXCEPTION_FINALIZABLE_OBJECT = "Attempt to dispose a finalizable object";
-    public static final String EXCEPTION_SUBCLASS_NOT_SUPPORTED = "The object of a subclass is not supported";
+internal object Constants {
+    const val EXCEPTION_FINALIZABLE_OBJECT = "Attempt to dispose a finalizable object"
+    const val EXCEPTION_SUBCLASS_NOT_SUPPORTED = "The object of a subclass is not supported"
 }
