@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.sfnt.tables.cpal;
+package com.mta.tehreer.internal.sfnt.tables.cpal
 
-import androidx.annotation.NonNull;
+import com.mta.tehreer.internal.sfnt.SfntTable
 
-import com.mta.tehreer.internal.sfnt.SfntTable;
-
-public final class PaletteLabelsArray {
-    private final @NonNull SfntTable data;
-
-    PaletteLabelsArray(@NonNull SfntTable data) {
-        this.data = data;
-    }
-
-    public int get(int index) {
-        return data.readUInt16(index * 2);
-    }
+internal class PaletteLabelsArray(
+    private val data: SfntTable
+) {
+    operator fun get(index: Int) = data.readUInt16(index * 2)
 }
