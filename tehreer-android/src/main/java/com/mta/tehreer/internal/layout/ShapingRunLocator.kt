@@ -55,39 +55,50 @@ private fun resolveInitial(spans: Array<Any>): ShapingRun {
 
 private fun resolveSpans(shapingRun: ShapingRun, spans: Array<Any>) {
     for (span in spans) {
-        if (span is TypefaceSpan) {
-            val typeface = span.typeface
-            shapingRun.typeface = typeface
-            shapingRun.typeWeight = typeface.weight
-            shapingRun.typeSlope = typeface.slope
-        } else if (span is TypeSizeSpan) {
-            shapingRun.typeSize = span.size
-        } else if (span is android.text.style.TypefaceSpan) {
-            resolveTypeface(shapingRun, span.family ?: "", TypeWidth.NORMAL)
-        } else if (span is AbsoluteSizeSpan) {
-            shapingRun.typeSize = span.size.toFloat()
-        } else if (span is RelativeSizeSpan) {
-            shapingRun.typeSize *= span.sizeChange
-        } else if (span is StyleSpan) {
-            resolveStyle(shapingRun, span.style)
-            updateTypeface(shapingRun)
-        } else if (span is TextAppearanceSpan) {
-            shapingRun.typeSize = span.textSize.toFloat()
-            resolveStyle(shapingRun, span.textStyle)
-            val familyName = span.family
-            if (familyName != null) {
-                resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL)
-            } else {
+        when (span) {
+            is TypefaceSpan -> {
+                val typeface = span.typeface
+                shapingRun.typeface = typeface
+                shapingRun.typeWeight = typeface.weight
+                shapingRun.typeSlope = typeface.slope
+            }
+            is TypeSizeSpan -> {
+                shapingRun.typeSize = span.size
+            }
+            is android.text.style.TypefaceSpan -> {
+                resolveTypeface(shapingRun, span.family ?: "", TypeWidth.NORMAL)
+            }
+            is AbsoluteSizeSpan -> {
+                shapingRun.typeSize = span.size.toFloat()
+            }
+            is RelativeSizeSpan -> {
+                shapingRun.typeSize *= span.sizeChange
+            }
+            is StyleSpan -> {
+                resolveStyle(shapingRun, span.style)
                 updateTypeface(shapingRun)
             }
-        } else if (span is ScaleXSpan) {
-            shapingRun.scaleX = span.scaleX
-        } else if (span is SuperscriptSpan) {
-            resolveBaselineShift(shapingRun, 0.5f)
-        } else if (span is SubscriptSpan) {
-            resolveBaselineShift(shapingRun, -0.5f)
-        } else if (span is ReplacementSpan) {
-            shapingRun.replacement = span
+            is TextAppearanceSpan -> {
+                shapingRun.typeSize = span.textSize.toFloat()
+                resolveStyle(shapingRun, span.textStyle)
+                val familyName = span.family
+                if (familyName != null) {
+                    resolveTypeface(shapingRun, familyName, TypeWidth.NORMAL)
+                } else {
+                    updateTypeface(shapingRun)
+                }
+            }
+            is ScaleXSpan -> {
+                shapingRun.scaleX = span.scaleX
+            }
+            is SuperscriptSpan -> {
+                resolveBaselineShift(shapingRun, 0.5f)
+            }
+            is SubscriptSpan -> {
+                resolveBaselineShift(shapingRun, -0.5f)
+            } is ReplacementSpan -> {
+                shapingRun.replacement = span
+            }
         }
     }
 

@@ -158,6 +158,7 @@ internal object BreakResolver {
                     }
                     break
                 }
+
                 backwardBreak = charIndex
             }
 
@@ -262,12 +263,12 @@ internal object BreakResolver {
         start: Int, end: Int, extent: Float, mode: BreakMode
     ): Int {
         return when (mode) {
-            BreakMode.CHARACTER -> suggestForwardCharBreak(
-                text, runs, breaks, start, end, extent
-            )
-            BreakMode.LINE -> suggestForwardLineBreak(
-                text, runs, breaks, start, end, extent
-            )
+            BreakMode.CHARACTER -> {
+                suggestForwardCharBreak(text, runs, breaks, start, end, extent)
+            }
+            BreakMode.LINE -> {
+                suggestForwardLineBreak(text, runs, breaks, start, end, extent)
+            }
         }
     }
 
@@ -278,12 +279,12 @@ internal object BreakResolver {
         start: Int, end: Int, extent: Float, mode: BreakMode
     ): Int {
         return when (mode) {
-            BreakMode.CHARACTER -> suggestBackwardCharBreak(
-                text, runs, breaks, start, end, extent
-            )
-            BreakMode.LINE -> suggestBackwardLineBreak(
-                text, runs, breaks, start, end, extent
-            )
+            BreakMode.CHARACTER -> {
+                suggestBackwardCharBreak(text, runs, breaks, start, end, extent)
+            }
+            BreakMode.LINE -> {
+                suggestBackwardLineBreak(text, runs, breaks, start, end, extent)
+            }
         }
     }
 }

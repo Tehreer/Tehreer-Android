@@ -118,7 +118,7 @@ internal class CaretEdgesBuilder {
     }
 
     fun build(): FloatList {
-        val codeUnitCount = clusterMap!!.size()
+        val codeUnitCount = clusterMap.size()
         val caretEdges = buildCaretAdvances()
         var distance = 0f
 
