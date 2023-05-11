@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.util;
+package com.mta.tehreer.internal.util
 
-public abstract class SmartRunnable implements Runnable {
-    private volatile boolean mIsCancelled = false;
+import kotlin.jvm.Volatile
 
-    public boolean isCancelled() {
-        return mIsCancelled;
-    }
+internal abstract class SmartRunnable : Runnable {
+    @Volatile
+    var isCancelled = false
+        private set
 
-    public void cancel() {
-        mIsCancelled = true;
+    open fun cancel() {
+        isCancelled = true
     }
 }
