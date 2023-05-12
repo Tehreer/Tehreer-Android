@@ -18,6 +18,36 @@ package com.mta.tehreer.internal.util
 
 import android.text.GetChars
 
+internal fun CharSequence.getLeadingWhitespaceEnd(charStart: Int, charEnd: Int): Int {
+    for (i in charStart until charEnd) {
+        if (!Character.isWhitespace(this[i])) {
+            return i
+        }
+    }
+
+    return charEnd
+}
+
+internal fun CharSequence.getTrailingWhitespaceStart(charStart: Int, charEnd: Int): Int {
+    for (i in charEnd - 1 downTo charStart) {
+        if (!Character.isWhitespace(this[i])) {
+            return i + 1
+        }
+    }
+
+    return charStart
+}
+
+internal fun CharSequence.getNextSpace(charStart: Int, charEnd: Int): Int {
+    for (i in charStart until charEnd) {
+        if (Character.isWhitespace(this[i])) {
+            return i
+        }
+    }
+
+    return charEnd
+}
+
 internal object StringUtils {
     @JvmStatic
     fun copyString(charSequence: CharSequence): String {
@@ -33,38 +63,5 @@ internal object StringUtils {
         }
 
         return String(chars)
-    }
-
-    @JvmStatic
-    fun getLeadingWhitespaceEnd(charSequence: CharSequence, charStart: Int, charEnd: Int): Int {
-        for (i in charStart until charEnd) {
-            if (!Character.isWhitespace(charSequence[i])) {
-                return i
-            }
-        }
-
-        return charEnd
-    }
-
-    @JvmStatic
-    fun getTrailingWhitespaceStart(charSequence: CharSequence, charStart: Int, charEnd: Int): Int {
-        for (i in charEnd - 1 downTo charStart) {
-            if (!Character.isWhitespace(charSequence[i])) {
-                return i + 1
-            }
-        }
-
-        return charStart
-    }
-
-    @JvmStatic
-    fun getNextSpace(charSequence: CharSequence, charStart: Int, charEnd: Int): Int {
-        for (i in charStart until charEnd) {
-            if (Character.isWhitespace(charSequence[i])) {
-                return i
-            }
-        }
-
-        return charEnd
     }
 }

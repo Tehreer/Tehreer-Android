@@ -22,9 +22,9 @@ import com.mta.tehreer.internal.layout.*
 import com.mta.tehreer.internal.layout.BreakResolver.suggestBackwardBreak
 import com.mta.tehreer.internal.layout.BreakResolver.suggestForwardBreak
 import com.mta.tehreer.internal.layout.ParagraphCollection.RunConsumer
-import com.mta.tehreer.internal.util.StringUtils.getLeadingWhitespaceEnd
-import com.mta.tehreer.internal.util.StringUtils.getNextSpace
-import com.mta.tehreer.internal.util.StringUtils.getTrailingWhitespaceStart
+import com.mta.tehreer.internal.util.getLeadingWhitespaceEnd
+import com.mta.tehreer.internal.util.getNextSpace
+import com.mta.tehreer.internal.util.getTrailingWhitespaceStart
 import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.unicode.BidiRun
 import java.util.*
@@ -53,7 +53,7 @@ private fun createComposedLine(
     var lineLeading = 0.0f
     var lineExtent = 0.0f
 
-    val trailingWhitespaceStart = getTrailingWhitespaceStart(text, charStart, charEnd)
+    val trailingWhitespaceStart = text.getTrailingWhitespaceStart(charStart, charEnd)
     var trailingWhitespaceExtent = 0.0f
 
     for (glyphRun in runList) {
@@ -233,8 +233,8 @@ internal class LineResolver {
 
         if (firstMidEnd < secondMidStart) {
             // Exclude inner whitespaces as truncation token replaces them.
-            firstMidEnd = getTrailingWhitespaceStart(spanned, start, firstMidEnd)
-            secondMidStart = getLeadingWhitespaceEnd(spanned, secondMidStart, end)
+            firstMidEnd = spanned.getTrailingWhitespaceStart(start, firstMidEnd)
+            secondMidStart = spanned.getLeadingWhitespaceEnd(secondMidStart, end)
 
             val runList = mutableListOf<GlyphRun>()
             var tokenInsertIndex = 0
@@ -267,7 +267,7 @@ internal class LineResolver {
         )
         if (truncatedEnd < end) {
             // Exclude trailing whitespaces as truncation token replaces them.
-            truncatedEnd = getTrailingWhitespaceStart(spanned, start, truncatedEnd)
+            truncatedEnd = spanned.getTrailingWhitespaceStart(start, truncatedEnd)
 
             val runList = mutableListOf<GlyphRun>()
             var tokenInsertIndex = 0
@@ -352,8 +352,8 @@ internal class LineResolver {
         justificationFactor: Float,
         justificationWidth: Float
     ): ComposedLine {
-        val wordStart = getLeadingWhitespaceEnd(spanned, charStart, charEnd)
-        val wordEnd = getTrailingWhitespaceStart(spanned, charStart, charEnd)
+        val wordStart = spanned.getLeadingWhitespaceEnd(charStart, charEnd)
+        val wordEnd = spanned.getTrailingWhitespaceStart(charStart, charEnd)
 
         val actualWidth = intrinsicRuns.measureChars(charStart, charEnd)
         val extraWidth = justificationWidth - actualWidth
@@ -384,8 +384,8 @@ internal class LineResolver {
 
             var j = runStart
             while (j < runEnd) {
-                val spaceStart = getNextSpace(spanned, j, runEnd)
-                val spaceEnd = getLeadingWhitespaceEnd(spanned, spaceStart, runEnd)
+                val spaceStart = spanned.getNextSpace(j, runEnd)
+                val spaceEnd = spanned.getLeadingWhitespaceEnd(spaceStart, runEnd)
 
                 j = spaceEnd
 
@@ -426,8 +426,8 @@ internal class LineResolver {
 
         var i = startIndex
         while (i < endIndex) {
-            val spaceStart = getNextSpace(spanned, i, endIndex)
-            val spaceEnd = getLeadingWhitespaceEnd(spanned, spaceStart, endIndex)
+            val spaceStart = spanned.getNextSpace(i, endIndex)
+            val spaceEnd = spanned.getLeadingWhitespaceEnd(spaceStart, endIndex)
 
             spaceCount += spaceEnd - spaceStart
             i = spaceEnd + 1
