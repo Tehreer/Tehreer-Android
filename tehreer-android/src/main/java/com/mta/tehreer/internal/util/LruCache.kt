@@ -20,7 +20,7 @@ import java.util.HashMap
 import kotlin.jvm.Synchronized
 
 internal abstract class LruCache<K>(capacity: Int) {
-    private class Node<K>(
+    private data class Node<K>(
         val segment: Segment<K>?,
         val key: K?,
         var value: Any?
@@ -87,7 +87,7 @@ internal abstract class LruCache<K>(capacity: Int) {
             return null
         }
 
-        fun put(key: K, value: Any) {
+        fun put(key: K, value: Any?) {
             synchronized(cache) {
                 val newNode = Node(this, key, value)
                 val oldNode = map.put(key, newNode)
@@ -173,6 +173,6 @@ internal abstract class LruCache<K>(capacity: Int) {
         //
         // Size: (9 * 4) + (1 * 4) = 40
         //
-        protected const val NODE_OVERHEAD = 40
+        const val NODE_OVERHEAD = 40
     }
 }
