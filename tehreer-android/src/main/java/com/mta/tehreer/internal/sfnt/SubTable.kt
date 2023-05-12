@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.sfnt
 internal class SubTable(
     private val table: SfntTable,
     private val globalOffset: Int
-) : AbstractSfntTable() {
+) : SfntTable {
     override fun readBytes(offset: Int, count: Int): ByteArray {
         return table.readBytes(globalOffset + offset, count)
     }

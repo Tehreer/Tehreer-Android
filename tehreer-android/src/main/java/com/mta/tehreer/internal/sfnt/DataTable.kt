@@ -18,7 +18,7 @@ package com.mta.tehreer.internal.sfnt
 
 internal class DataTable(
     private val data: ByteArray
-) : AbstractSfntTable() {
+) : SfntTable {
     override fun readBytes(offset: Int, count: Int): ByteArray {
         val array = ByteArray(count)
         System.arraycopy(data, offset, array, 0, count)

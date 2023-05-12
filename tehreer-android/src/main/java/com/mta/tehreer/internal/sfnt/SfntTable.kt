@@ -29,9 +29,15 @@ internal interface SfntTable {
 
     fun readInt64(offset: Int): Long
 
-    fun readFixed(offset: Int): Float
+    fun readFixed(offset: Int): Float {
+        return readInt32(offset) / 65536.0f
+    }
 
-    fun readOffset32(offset: Int): Int
+    fun readOffset32(offset: Int): Int {
+        return (readUInt32(offset) and (-0x80000000).inv()).toInt()
+    }
 
-    fun subTable(offset: Int): SfntTable
+    fun subTable(offset: Int): SfntTable {
+        return SubTable(this, offset)
+    }
 }

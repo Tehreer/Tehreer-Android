@@ -31,7 +31,7 @@ internal open class StructTable(
      * Represents the pointer to a native struct modeling an open type table.
      */
     protected val pointer: Long
-) : AbstractSfntTable() {
+) : SfntTable {
     protected open fun pointerOf(offset: Int): Long {
         return pointer + offset
     }
