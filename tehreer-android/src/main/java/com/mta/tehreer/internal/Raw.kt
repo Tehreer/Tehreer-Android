@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.mta.tehreer.internal
 
 import com.mta.tehreer.internal.JniBridge.loadLibrary
 
-object Raw {
+internal object Raw {
     init {
         loadLibrary()
     }
@@ -29,17 +30,17 @@ object Raw {
 
     private external fun sizeOfIntPtr(): Int
 
-    @JvmStatic
-    external fun getInt8Value(pointer: Long): Byte
-    @JvmStatic
-    external fun getInt16Value(pointer: Long): Short
-    @JvmStatic
-    external fun getInt32Value(pointer: Long): Int
-    @JvmStatic
-    external fun getIntPtrValue(pointer: Long): Long
+    @JvmStatic external fun getInt8Value(pointer: Long): Byte
+    @JvmStatic external fun getInt16Value(pointer: Long): Short
+    @JvmStatic external fun getInt32Value(pointer: Long): Int
+    @JvmStatic external fun getIntPtrValue(pointer: Long): Long
 
-    @JvmStatic
-    external fun copyInt8Buffer(pointer: Long, destination: ByteArray, start: Int, length: Int)
-    @JvmStatic
-    external fun copyUInt8Buffer(pointer: Long, destination: IntArray, start: Int, length: Int)
+    @JvmStatic external fun copyInt8Buffer(
+        pointer: Long,
+        destination: ByteArray, start: Int, length: Int
+    )
+    @JvmStatic external fun copyUInt8Buffer(
+        pointer: Long,
+        destination: IntArray, start: Int, length: Int
+    )
 }
