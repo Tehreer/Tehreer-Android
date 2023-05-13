@@ -16,7 +16,7 @@
 
 package com.mta.tehreer.internal.layout
 
-import com.mta.tehreer.internal.util.StringUtils
+import com.mta.tehreer.internal.util.getTrailingWhitespaceStart
 import com.mta.tehreer.layout.BreakMode
 import java.text.BreakIterator
 import kotlin.experimental.and
@@ -99,8 +99,7 @@ internal object BreakResolver {
 
                 measurement += runs.measureChars(forwardBreak, segmentEnd)
                 if (measurement > extent) {
-                    val whitespaceStart =
-                        StringUtils.getTrailingWhitespaceStart(text, forwardBreak, segmentEnd)
+                    val whitespaceStart = text.getTrailingWhitespaceStart(forwardBreak, segmentEnd)
                     val whitespaceWidth = runs.measureChars(whitespaceStart, segmentEnd)
 
                     // Break if excluding whitespaces width helps.
@@ -148,8 +147,7 @@ internal object BreakResolver {
             if (charType and type == type) {
                 measurement += runs.measureChars(charIndex, backwardBreak)
                 if (measurement > extent) {
-                    val whitespaceStart =
-                        StringUtils.getTrailingWhitespaceStart(text, charIndex, backwardBreak)
+                    val whitespaceStart = text.getTrailingWhitespaceStart(charIndex, backwardBreak)
                     val whitespaceWidth = runs.measureChars(whitespaceStart, backwardBreak)
 
                     // Break if excluding trailing whitespaces helps.
