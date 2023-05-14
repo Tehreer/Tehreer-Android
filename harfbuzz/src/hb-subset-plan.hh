@@ -31,64 +31,121 @@
 
 #include "hb-subset.h"
 #include "hb-subset-input.hh"
+#include "hb-subset-accelerator.hh"
 
 #include "hb-map.hh"
+#include "hb-bimap.hh"
 #include "hb-set.hh"
+
+namespace OT {
+struct Feature;
+}
+
+struct head_maxp_info_t
+{
+  head_maxp_info_t ()
+      :xMin (0x7FFF), xMax (-0x7FFF), yMin (0x7FFF), yMax (-0x7FFF),
+      maxPoints (0), maxContours (0),
+      maxCompositePoints (0),
+      maxCompositeContours (0),
+      maxComponentElements (0),
+      maxComponentDepth (0),
+      allXMinIsLsb (true) {}
+
+  int xMin;
+  int xMax;
+  int yMin;
+  int yMax;
+  unsigned maxPoints;
+  unsigned maxContours;
+  unsigned maxCompositePoints;
+  unsigned maxCompositeContours;
+  unsigned maxComponentElements;
+  unsigned maxComponentDepth;
+  bool allXMinIsLsb;
+};
+
+typedef struct head_maxp_info_t head_maxp_info_t;
 
 struct hb_subset_plan_t
 {
+  HB_INTERNAL hb_subset_plan_t (hb_face_t *,
+				const hb_subset_input_t *input);
+
+  ~hb_subset_plan_t()
+  {
+    hb_face_destroy (source);
+    hb_face_destroy (dest);
+
+    hb_map_destroy (codepoint_to_glyph);
+    hb_map_destroy (glyph_map);
+    hb_map_destroy (reverse_glyph_map);
+
+#ifdef HB_EXPERIMENTAL_API
+    for (auto _ : name_table_overrides)
+      _.second.fini ();
+#endif
+
+    if (inprogress_accelerator)
+      hb_subset_accelerator_t::destroy ((void*) inprogress_accelerator);
+  }
+
   hb_object_header_t header;
 
-  bool successful : 1;
-  bool drop_hints : 1;
-  bool desubroutinize : 1;
-  bool retain_gids : 1;
-  bool name_legacy : 1;
-
-  // For each cp that we'd like to retain maps to the corresponding gid.
-  hb_set_t *unicodes;
-
-  // name_ids we would like to retain
-  hb_set_t *name_ids;
-
-  // name_languages we would like to retain
-  hb_set_t *name_languages;
-
-  //glyph ids requested to retain
-  hb_set_t *glyphs_requested;
-
-  // Tables which should be dropped.
-  hb_set_t *drop_tables;
+  bool successful;
+  unsigned flags;
+  bool attach_accelerator_data = false;
+  bool force_long_loca = false;
 
   // The glyph subset
-  hb_map_t *codepoint_to_glyph;
+  hb_map_t *codepoint_to_glyph; // Needs to be heap-allocated
 
   // Old -> New glyph id mapping
-  hb_map_t *glyph_map;
-  hb_map_t *reverse_glyph_map;
+  hb_map_t *glyph_map; // Needs to be heap-allocated
+  hb_map_t *reverse_glyph_map; // Needs to be heap-allocated
 
   // Plan is only good for a specific source/dest so keep them with it
   hb_face_t *source;
   hb_face_t *dest;
 
   unsigned int _num_output_glyphs;
-  hb_set_t *_glyphset;
-  hb_set_t *_glyphset_gsub;
 
-  //active lookups we'd like to retain
-  hb_map_t *gsub_lookups;
-  hb_map_t *gpos_lookups;
+  bool all_axes_pinned;
+  bool pinned_at_default;
+  bool has_seac;
 
-  //active features we'd like to retain
-  hb_map_t *gsub_features;
-  hb_map_t *gpos_features;
+#define HB_SUBSET_PLAN_MEMBER(Type, Name) Type Name;
+#include "hb-subset-plan-member-list.hh"
+#undef HB_SUBSET_PLAN_MEMBER
 
-  //The set of layout item variation store delta set indices to be retained
-  hb_set_t *layout_variation_indices;
-  //Old -> New layout item variation store delta set index mapping
-  hb_map_t *layout_variation_idx_map;
+  //recalculated head/maxp table info after instancing
+  mutable head_maxp_info_t head_maxp_info;
+
+  const hb_subset_accelerator_t* accelerator;
+  hb_subset_accelerator_t* inprogress_accelerator;
 
  public:
+
+  template<typename T>
+  hb_blob_ptr_t<T> source_table()
+  {
+    hb_lock_t lock (accelerator ? &accelerator->sanitized_table_cache_lock : nullptr);
+
+    auto *cache = accelerator ? &accelerator->sanitized_table_cache : &sanitized_table_cache;
+    if (cache
+        && !cache->in_error ()
+        && cache->has (+T::tableTag)) {
+      return hb_blob_reference (cache->get (+T::tableTag).get ());
+    }
+
+    hb::unique_ptr<hb_blob_t> table_blob {hb_sanitize_context_t ().reference_table<T> (source)};
+    hb_blob_t* ret = hb_blob_reference (table_blob.get ());
+
+    if (likely (cache))
+      cache->set (+T::tableTag, std::move (table_blob));
+
+    return ret;
+  }
 
   bool in_error () const { return !successful; }
 
@@ -106,7 +163,7 @@ struct hb_subset_plan_t
   inline const hb_set_t *
   glyphset () const
   {
-    return _glyphset;
+    return &_glyphset;
   }
 
   /*
@@ -115,7 +172,7 @@ struct hb_subset_plan_t
   inline const hb_set_t *
   glyphset_gsub () const
   {
-    return _glyphset_gsub;
+    return &_glyphset_gsub;
   }
 
   /*
@@ -133,7 +190,7 @@ struct hb_subset_plan_t
    */
   inline bool is_empty_glyph (hb_codepoint_t gid) const
   {
-    return !_glyphset->has (gid);
+    return !_glyphset.has (gid);
   }
 
   inline bool new_gid_for_codepoint (hb_codepoint_t codepoint,
@@ -175,7 +232,7 @@ struct hb_subset_plan_t
     if (HB_DEBUG_SUBSET)
     {
       hb_blob_t *source_blob = source->reference_table (tag);
-      DEBUG_MSG(SUBSET, nullptr, "add table %c%c%c%c, dest %d bytes, source %d bytes",
+      DEBUG_MSG(SUBSET, nullptr, "add table %c%c%c%c, dest %u bytes, source %u bytes",
 		HB_UNTAG(tag),
 		hb_blob_get_length (contents),
 		hb_blob_get_length (source_blob));
@@ -184,14 +241,5 @@ struct hb_subset_plan_t
     return hb_face_builder_add_table (dest, tag, contents);
   }
 };
-
-typedef struct hb_subset_plan_t hb_subset_plan_t;
-
-HB_INTERNAL hb_subset_plan_t *
-hb_subset_plan_create (hb_face_t           *face,
-		       hb_subset_input_t   *input);
-
-HB_INTERNAL void
-hb_subset_plan_destroy (hb_subset_plan_t *plan);
 
 #endif /* HB_SUBSET_PLAN_HH */
