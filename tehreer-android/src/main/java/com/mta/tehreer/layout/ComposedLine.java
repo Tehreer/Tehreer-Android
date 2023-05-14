@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -410,7 +410,7 @@ public class ComposedLine {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "ComposedLine{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", originX=" + getOriginX()

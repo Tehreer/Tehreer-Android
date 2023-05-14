@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public final class FontFile {
 
     long nativeFontFile;
     private final Finalizer finalizer = new Finalizer();
-    private List<Typeface> mTypefaces;
+    private volatile List<Typeface> mTypefaces;
 
     private class Finalizer {
         @Override

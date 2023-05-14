@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -474,12 +474,12 @@ public class GlyphRun {
         return "GlyphRun{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", bidiLevel=" + getBidiLevel()
-                + ", writingDirection=" + getWritingDirection().toString()
+                + ", writingDirection=" + getWritingDirection()
                 + ", glyphCount=" + getGlyphCount()
-                + ", glyphIds=" + getGlyphIds().toString()
-                + ", glyphOffsets=" + getGlyphOffsets().toString()
-                + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", clusterMap=" + getClusterMap().toString()
+                + ", glyphIds=" + getGlyphIds()
+                + ", glyphOffsets=" + getGlyphOffsets()
+                + ", glyphAdvances=" + getGlyphAdvances()
+                + ", clusterMap=" + getClusterMap()
                 + ", originX=" + originX
                 + ", originY=" + originY
                 + ", ascent=" + getAscent()

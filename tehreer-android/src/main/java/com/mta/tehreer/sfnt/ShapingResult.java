@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -476,15 +476,15 @@ public class ShapingResult implements Disposable {
     }
 
     @Override
-    public String toString() {
-        return "ShapingResult{isBackward=" + Boolean.toString(isBackward())
+    public @NonNull String toString() {
+        return "ShapingResult{isBackward=" + isBackward()
                 + ", charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", glyphCount=" + getGlyphCount()
-                + ", glyphIds=" + getGlyphIds().toString()
-                + ", glyphOffsets=" + getGlyphOffsets().toString()
-                + ", glyphAdvances=" + getGlyphAdvances().toString()
-                + ", clusterMap=" + getClusterMap().toString()
+                + ", glyphIds=" + getGlyphIds()
+                + ", glyphOffsets=" + getGlyphOffsets()
+                + ", glyphAdvances=" + getGlyphAdvances()
+                + ", clusterMap=" + getClusterMap()
                 + "}";
     }
 

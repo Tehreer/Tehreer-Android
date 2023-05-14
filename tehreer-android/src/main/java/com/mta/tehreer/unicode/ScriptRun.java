@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package com.mta.tehreer.unicode;
+
+import androidx.annotation.NonNull;
 
 /**
  * A <code>ScriptRun</code> object represents a sequence of characters which have the same script.
@@ -80,7 +82,7 @@ public class ScriptRun {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "ScriptRun{charStart=" + charStart
                 + ", charEnd=" + charEnd
                 + ", script=" + script

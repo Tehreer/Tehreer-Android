@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -386,7 +386,7 @@ public class ComposedFrame {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "ComposedFrame{charStart=" + frameStart
                 + ", charEnd=" + frameEnd
                 + ", originX=" + mOriginX

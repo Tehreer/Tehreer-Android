@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.mta.tehreer.unicode;
 
 import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
 
 /**
  * A <code>BidiRun</code> object represents a sequence of characters which have the same embedding
@@ -90,7 +91,7 @@ public class BidiRun {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "BidiRun{charStart=" + charStart
                 + ", charEnd=" + charEnd
                 + ", embeddingLevel=" + embeddingLevel

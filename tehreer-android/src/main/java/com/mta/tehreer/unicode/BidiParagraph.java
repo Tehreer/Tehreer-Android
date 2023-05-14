@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ public class BidiParagraph implements Disposable {
 
 	BidiParagraph(long nativeBuffer, long nativeParagraph) {
         this.nativeBuffer = BidiBuffer.retain(nativeBuffer);
-	    this.nativeParagraph = nativeParagraph;
+        this.nativeParagraph = nativeParagraph;
 	}
 
     BidiParagraph(@NonNull BidiParagraph other) {
@@ -204,7 +204,7 @@ public class BidiParagraph implements Disposable {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "BidiParagraph{charStart=" + getCharStart()
                 + ", charEnd=" + getCharEnd()
                 + ", baseLevel=" + getBaseLevel()

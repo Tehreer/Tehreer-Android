@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -209,12 +209,7 @@ class TextContainer extends ViewGroup {
 
         private void notifyUpdateIfNeeded() {
             if (!isCancelled()) {
-                context.handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onUpdate(context.typesetter);
-                    }
-                });
+                context.handler.post(() -> listener.onUpdate(context.typesetter));
             }
         }
 
@@ -262,12 +257,7 @@ class TextContainer extends ViewGroup {
 
         private void notifyUpdateIfNeeded() {
             if (!isCancelled()) {
-                context.handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onUpdate(context.composedFrame);
-                    }
-                });
+                context.handler.post(() -> listener.onUpdate(context.composedFrame));
             }
         }
 
@@ -310,12 +300,7 @@ class TextContainer extends ViewGroup {
             if (!isCancelled()) {
                 final List<Rect> array = new ArrayList<>(lineBoxes);
 
-                context.handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onUpdate(array);
-                    }
-                });
+                context.handler.post(() -> listener.onUpdate(array));
             }
         }
 
@@ -419,27 +404,18 @@ class TextContainer extends ViewGroup {
         Queue<SmartRunnable> subTasks = new ArrayDeque<>();
 
         if (!mIsTypesetterResolved) {
-            subTasks.add(new TypesettingTask(context, new OnTaskUpdateListener<Typesetter>() {
-                @Override
-                public void onUpdate(Typesetter typesetter) {
-                    updateTypesetter(context.layoutID, typesetter);
-                }
-            }));
+            subTasks.add(new TypesettingTask(context, typesetter ->
+                updateTypesetter(context.layoutID, typesetter)
+            ));
         }
 
-        subTasks.add(new FrameResolvingTask(context, new OnTaskUpdateListener<ComposedFrame>() {
-            @Override
-            public void onUpdate(ComposedFrame composedFrame) {
-                updateComposedFrame(context.layoutID, composedFrame);
-            }
+        subTasks.add(new FrameResolvingTask(context, composedFrame -> {
+            updateComposedFrame(context.layoutID, composedFrame);
         }));
 
-        subTasks.add(new LineBoxesTask(context, new OnTaskUpdateListener<List<Rect>>() {
-            @Override
-            public void onUpdate(List<Rect> lineBoxes) {
-                updateLineBoxes(context.layoutID, lineBoxes);
-            }
-        }));
+        subTasks.add(new LineBoxesTask(context, lineBoxes ->
+            updateLineBoxes(context.layoutID, lineBoxes)
+        ));
 
         mTextTask = new TextResolvingTask(subTasks);
         mExecutor.execute(mTextTask);

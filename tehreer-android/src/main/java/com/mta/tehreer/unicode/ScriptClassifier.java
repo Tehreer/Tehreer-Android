@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ public class ScriptClassifier {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "ScriptClassifier{text=" + text
                 + ", charScripts=" + Description.forIntList(getCharScripts())
                 + ", scriptRuns=" + Description.forIterable(getScriptRuns())
