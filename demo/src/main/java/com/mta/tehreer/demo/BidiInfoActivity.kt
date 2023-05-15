@@ -31,6 +31,22 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.mta.tehreer.unicode.*
 
+private fun SpannableStringBuilder.append(
+    text: CharSequence,
+    spans: Array<Any>? = null
+) : SpannableStringBuilder {
+    val start = length
+    val end = start + text.length
+
+    append(text)
+
+    for (s in spans.orEmpty()) {
+        setSpan(s, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+
+    return this
+}
+
 class BidiInfoActivity : AppCompatActivity() {
     private lateinit var bidiText: String
     private var density = 0f
@@ -71,23 +87,6 @@ class BidiInfoActivity : AppCompatActivity() {
             StyleSpan(Typeface.ITALIC),
             UnderlineSpan()
         )
-    }
-
-    private fun appendText(
-        builder: SpannableStringBuilder,
-        text: CharSequence,
-        spans: Array<Any>? = null
-    ): BidiInfoActivity {
-        val start = builder.length
-        val end = start + text.length
-
-        builder.append(text)
-
-        for (s in spans.orEmpty()) {
-            builder.setSpan(s, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        return this
     }
 
     private fun writeBidiText(builder: SpannableStringBuilder) {
@@ -148,13 +147,13 @@ class BidiInfoActivity : AppCompatActivity() {
         val paragraphLength = paragraphEnd - paragraphStart
         val paragraphText = (if (paragraph.baseLevel.toInt() and 1 == 1) RLI else LRI).toString() + bidiText.substring(paragraphStart, paragraphEnd) + PDI
 
-        appendText(builder, "Paragraph $index\n", spansFirstHeading())
-        appendText(builder, "Paragraph Text:", spansInlineHeading())
-        appendText(builder, " “$paragraphText”\n")
-        appendText(builder, "Paragraph Range:", spansInlineHeading())
-        appendText(builder, " Start=$paragraphStart Length=$paragraphLength\n")
-        appendText(builder, "Base Level:", spansInlineHeading())
-        appendText(builder, " ${paragraph.baseLevel}\n\n")
+        builder.append("Paragraph $index\n", spansFirstHeading())
+        builder.append("Paragraph Text:", spansInlineHeading())
+        builder.append(" “$paragraphText”\n")
+        builder.append("Paragraph Range:", spansInlineHeading())
+        builder.append(" Start=$paragraphStart Length=$paragraphLength\n")
+        builder.append("Base Level:", spansInlineHeading())
+        builder.append(" ${paragraph.baseLevel}\n\n")
 
         var counter = 1
         for (bidiRun in paragraph.logicalRuns) {
@@ -172,7 +171,7 @@ class BidiInfoActivity : AppCompatActivity() {
             line?.dispose()
         }
 
-        appendText(builder, "\n")
+        builder.append("\n")
     }
 
     private fun writeRunText(builder: SpannableStringBuilder, run: BidiRun, index: Int) {
@@ -181,13 +180,13 @@ class BidiInfoActivity : AppCompatActivity() {
         val runLength = runEnd - runStart
         val runText = (if (run.isRightToLeft) RLI else LRI).toString() + bidiText.substring(runStart, runEnd) + PDI
 
-        appendText(builder, "Run $index\n", spansSecondHeading())
-        appendText(builder, "Run Text:", spansInlineHeading())
-        appendText(builder, " “$runText”\n")
-        appendText(builder, "Run Range:", spansInlineHeading())
-        appendText(builder, " Start=$runStart Length=$runLength\n")
-        appendText(builder, "Embedding Level:", spansInlineHeading())
-        appendText(builder, " ${run.embeddingLevel}\n\n")
+        builder.append("Run $index\n", spansSecondHeading())
+        builder.append("Run Text:", spansInlineHeading())
+        builder.append(" “$runText”\n")
+        builder.append("Run Range:", spansInlineHeading())
+        builder.append(" Start=$runStart Length=$runLength\n")
+        builder.append("Embedding Level:", spansInlineHeading())
+        builder.append(" ${run.embeddingLevel}\n\n")
     }
 
     private fun writeLineText(builder: SpannableStringBuilder, line: BidiLine) {
@@ -201,15 +200,15 @@ class BidiInfoActivity : AppCompatActivity() {
 
         val runCount = visualMap.size()
         if (runCount > 0) {
-            appendText(builder, "Visual Order\n", spansSecondHeading())
+            builder.append("Visual Order\n", spansSecondHeading())
 
             for (i in 0 until runCount) {
                 val runIndex = visualMap.valueAt(i)
-                appendText(builder, "<Run $runIndex>", spansInlineHeading())
-                appendText(builder, " ")
+                builder.append("<Run $runIndex>", spansInlineHeading())
+                builder.append(" ")
             }
 
-            appendText(builder, "\n\n")
+            builder.append("\n\n")
         }
     }
 
@@ -219,22 +218,21 @@ class BidiInfoActivity : AppCompatActivity() {
         for (bidiPair in line.mirroringPairs) {
             if (!wroteHeading) {
                 wroteHeading = true
-                appendText(builder, "Mirrors\n", spansSecondHeading())
+                builder.append("Mirrors\n", spansSecondHeading())
             }
 
-            appendText(builder, "*", spansInlineHeading())
-            appendText(builder, " Index=" + bidiPair.charIndex)
-            appendText(
-                builder,
+            builder.append("*", spansInlineHeading())
+            builder.append(" Index=" + bidiPair.charIndex)
+            builder.append(
                 " Character=‘" + String(Character.toChars(bidiPair.actualCodePoint)) + "’"
             )
-            appendText(
+            builder.append(
                 builder, " Mirror=‘${String(Character.toChars(bidiPair.pairingCodePoint))}’\n"
             )
         }
 
         if (wroteHeading) {
-            appendText(builder, "\n")
+            builder.append("\n")
         }
     }
 
