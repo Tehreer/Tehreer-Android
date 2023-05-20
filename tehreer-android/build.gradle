@@ -103,10 +103,6 @@ android {
     }
 }
 
-configurations {
-    doclet
-}
-
 dependencies {
     implementation 'androidx.annotation:annotation:1.6.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
@@ -117,21 +113,24 @@ dependencies {
     androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito-inline:2.28.1'
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
-    /* doclet project(':doclet') */
 }
 
 artifacts {
-    task apiDocs(type: Javadoc, dependsOn: configurations.doclet) {
+    task apiDocs(type: Javadoc) {
         title = "$libraryName $libraryVersion API"
         source = android.sourceSets.main.java.srcDirs
         classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        exclude '**/internal/**'
+        exclude '**/*.kt'
 
-        options.doclet = "ExcludeDoclet"
-        options.docletpath = configurations.doclet.files.asType(List)
         options.links("https://developer.android.com/reference/")
+        options.addStringOption('Xdoclint:none', '-quiet')
         options.addStringOption("bottom", "Copyright &copy; 2022 $developerName. All rights reserved.")
+    }
+
+    afterEvaluate {
+        apiDocs.classpath += files(android.libraryVariants.collect { variant ->
+            variant.javaCompileProvider.get().classpath.files
+        })
     }
 
     task javadocJar(type: Jar, dependsOn: apiDocs) {
