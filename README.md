@@ -1,7 +1,7 @@
 # Tehreer-Android
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.mta452/tehreer-android.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.mta452%22%20AND%20a%3A%22tehreer-android%22)
-[![Continuous Integration](https://github.com/Tehreer/Tehreer-Android/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Tehreer/Tehreer-Android)
+[![Continuous Integration](https://github.com/Tehreer/Tehreer-Android/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Tehreer/Tehreer-Android)
 [![Codecov](https://codecov.io/gh/Tehreer/Tehreer-Android/branch/develop/graph/badge.svg)](https://codecov.io/gh/Tehreer/Tehreer-Android)
 
 Tehreer is a library which gives full control over following text related technologies.
