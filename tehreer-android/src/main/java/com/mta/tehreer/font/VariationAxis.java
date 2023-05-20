@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public final class VariationAxis {
      */
     public static final int FLAG_HIDDEN_AXIS = 0x0001;
 
-    /** @hide */
+    /** @hidden */
     @IntDef (
         flag = true,
         value = {

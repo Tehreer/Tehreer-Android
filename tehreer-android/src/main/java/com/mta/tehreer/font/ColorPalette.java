@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2020-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public final class ColorPalette {
     public static final int USABLE_WITH_LIGHT_BACKGROUND = 0x0001;
     public static final int USABLE_WITH_DARK_BACKGROUND = 0x0002;
 
-    /** @hide */
+    /** @hidden */
     @IntDef(
         flag = true,
         value = {
