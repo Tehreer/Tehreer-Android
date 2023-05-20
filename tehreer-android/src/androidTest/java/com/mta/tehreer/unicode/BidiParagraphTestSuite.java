@@ -34,6 +34,8 @@ import com.mta.tehreer.util.DescriptionBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Iterator;
+
 public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiParagraph, BidiParagraph.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
     private static final byte[] DEFAULT_LEVELS = { 0, 0, 0, 0, 1, 1, 1, 1 };
@@ -186,11 +188,11 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
     public void testGetLogicalRuns() {
         buildSUT((sut) -> {
             // When
-            Iterable<BidiRun> iterable = sut.getLogicalRuns();
+            Iterator<BidiRun> iterator = sut.getLogicalRuns();
 
             // Then
-            assertTrue(iterable instanceof BidiParagraph.RunIterable);
-            assertSame(((BidiParagraph.RunIterable) iterable).owner, sut);
+            assertTrue(iterator instanceof BidiParagraph.RunIterator);
+            assertSame(((BidiParagraph.RunIterator) iterator).owner, sut);
         });
     }
 

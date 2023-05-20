@@ -165,8 +165,8 @@ public class BidiParagraph implements Disposable {
      *
      * @return An iterable of logically ordered runs in this paragraph.
      */
-    public @NonNull Iterable<BidiRun> getLogicalRuns() {
-        return new RunIterable(this);
+    public @NonNull Iterator<BidiRun> getLogicalRuns() {
+        return new RunIterator(this);
     }
 
     private void checkSubRange(int charStart, int charEnd) {
@@ -209,7 +209,7 @@ public class BidiParagraph implements Disposable {
                 + ", charEnd=" + getCharEnd()
                 + ", baseLevel=" + getBaseLevel()
                 + ", charLevels=" + Description.forByteList(getCharLevels())
-                + ", logicalRuns=" + Description.forIterable(getLogicalRuns())
+                + ", logicalRuns=" + Description.forIterator(getLogicalRuns())
                 + "}";
     }
 
@@ -253,19 +253,6 @@ public class BidiParagraph implements Disposable {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
-        }
-    }
-
-    static final class RunIterable implements Iterable<BidiRun> {
-        final BidiParagraph owner;
-
-        RunIterable(BidiParagraph owner) {
-            this.owner = owner;
-        }
-
-        @Override
-        public @NonNull Iterator<BidiRun> iterator() {
-            return new RunIterator(owner);
         }
     }
 }
