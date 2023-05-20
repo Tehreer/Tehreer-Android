@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Iterator;
 
 public class ScriptClassifierTest {
     private ScriptClassifier sut;
@@ -78,22 +80,22 @@ public class ScriptClassifierTest {
 
     @Test
     public void testGetScriptRunsForPartialRange() {
-        Iterable<ScriptRun> iterable = sut.getScriptRuns(1, 7);
-        assertTrue(iterable instanceof ScriptClassifier.RunIterable);
+        Iterator<ScriptRun> iterator = sut.getScriptRuns(1, 7);
+        assertTrue(iterator instanceof ScriptClassifier.RunIterator);
 
-        ScriptClassifier.RunIterable runIterable = (ScriptClassifier.RunIterable) iterable;
-        assertEquals(runIterable.start, 1);
-        assertEquals(runIterable.end, 7);
+        ScriptClassifier.RunIterator runIterator = (ScriptClassifier.RunIterator) iterator;
+        assertEquals(runIterator.index, 1);
+        assertEquals(runIterator.end, 7);
     }
 
     @Test
     public void testGetScriptRunsForFullRange() {
-        Iterable<ScriptRun> iterable = sut.getScriptRuns();
-        assertTrue(iterable instanceof ScriptClassifier.RunIterable);
+        Iterator<ScriptRun> iterator = sut.getScriptRuns();
+        assertTrue(iterator instanceof ScriptClassifier.RunIterator);
 
-        ScriptClassifier.RunIterable runIterable = (ScriptClassifier.RunIterable) iterable;
-        assertEquals(runIterable.start, 0);
-        assertEquals(runIterable.end, 8);
+        ScriptClassifier.RunIterator runIterator = (ScriptClassifier.RunIterator) iterator;
+        assertEquals(runIterator.index, 0);
+        assertEquals(runIterator.end, 8);
     }
 
     @Test

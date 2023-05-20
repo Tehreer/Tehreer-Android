@@ -79,7 +79,7 @@ public class ScriptClassifier {
      *
      * @return An iterable of resolved script runs in source text.
      */
-    public @NonNull Iterable<ScriptRun> getScriptRuns() {
+    public @NonNull Iterator<ScriptRun> getScriptRuns() {
         return getScriptRuns(0, scripts.length);
     }
 
@@ -90,23 +90,23 @@ public class ScriptClassifier {
     }
 
     /**
-     * Returns an iterable of resolved script runs within the specified range of source text.
+     * Returns an iterator of resolved script runs within the specified range of source text.
      *
      * @param charStart The index to the first character in source text.
      * @param charEnd The index after the last character in source text.
-     * @return An iterable of script runs within the specified range of source text.
+     * @return An iterator of script runs within the specified range of source text.
      */
-    public @NonNull Iterable<ScriptRun> getScriptRuns(int charStart, int charEnd) {
+    public @NonNull Iterator<ScriptRun> getScriptRuns(int charStart, int charEnd) {
         checkSubRange(charStart, charEnd);
 
-        return new RunIterable(scripts, charStart, charEnd);
+        return new RunIterator(scripts, charStart, charEnd);
     }
 
     @Override
     public @NonNull String toString() {
         return "ScriptClassifier{text=" + text
                 + ", charScripts=" + Description.forIntList(getCharScripts())
-                + ", scriptRuns=" + Description.forIterable(getScriptRuns())
+                + ", scriptRuns=" + Description.forIterator(getScriptRuns())
                 + "}";
     }
 
@@ -149,23 +149,6 @@ public class ScriptClassifier {
         @Override
         public void remove() {
             throw new UnsupportedOperationException();
-        }
-    }
-
-    static class RunIterable implements Iterable<ScriptRun> {
-        final byte[] scripts;
-        final int start;
-        final int end;
-
-        RunIterable(byte[] scripts, int start, int end) {
-            this.scripts = scripts;
-            this.start = start;
-            this.end = end;
-        }
-
-        @Override
-        public @NonNull Iterator<ScriptRun> iterator() {
-            return new RunIterator(scripts, start, end);
         }
     }
 }
