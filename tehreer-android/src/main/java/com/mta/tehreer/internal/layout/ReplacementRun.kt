@@ -104,8 +104,8 @@ internal class ReplacementRun(
         return charEnd
     }
 
-    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntArray {
-        return intArrayOf(0, 1)
+    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
+        return 0..0
     }
 
     override fun getLeadingGlyphIndex(charIndex: Int): Int {

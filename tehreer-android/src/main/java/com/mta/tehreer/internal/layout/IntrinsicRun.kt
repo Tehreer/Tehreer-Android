@@ -114,21 +114,15 @@ internal class IntrinsicRun(
         return glyphIdArray.size - 1
     }
 
-    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntArray {
+    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
         val firstIndex = fromIndex - charStart
         val lastIndex = toIndex - 1 - charStart
 
-        val glyphRange = IntArray(2)
-
-        if (isBackward) {
-            glyphRange[0] = clusterMapArray[lastIndex]
-            glyphRange[1] = backwardGlyphIndex(firstIndex) + 1
+        return if (isBackward) {
+            clusterMapArray[lastIndex]..backwardGlyphIndex(firstIndex)
         } else {
-            glyphRange[0] = clusterMapArray[firstIndex]
-            glyphRange[1] = forwardGlyphIndex(lastIndex) + 1
+            clusterMapArray[firstIndex]..forwardGlyphIndex(lastIndex)
         }
-
-        return glyphRange
     }
 
     override fun getLeadingGlyphIndex(charIndex: Int): Int {

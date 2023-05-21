@@ -39,8 +39,8 @@ internal class IntrinsicRunSlice(
 
     init {
         val glyphRange = intrinsicRun.getGlyphRangeForChars(charStart, charEnd)
-        glyphOffset = glyphRange[0]
-        glyphCount = glyphRange[1] - glyphRange[0]
+        glyphOffset = glyphRange.first
+        glyphCount = glyphRange.last - glyphRange.first + 1
         caretBoundary = intrinsicRun.getCaretBoundary(charStart, charEnd)
     }
 
@@ -149,12 +149,9 @@ internal class IntrinsicRunSlice(
         return intrinsicRun.getClusterEnd(charIndex)
     }
 
-    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntArray {
+    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
         val glyphRange = intrinsicRun.getGlyphRangeForChars(fromIndex, toIndex)
-        glyphRange[0] -= glyphOffset
-        glyphRange[1] -= glyphOffset
-
-        return glyphRange
+        return (glyphRange.first - glyphOffset)..(glyphRange.last - glyphOffset)
     }
 
     override fun getLeadingGlyphIndex(charIndex: Int): Int {

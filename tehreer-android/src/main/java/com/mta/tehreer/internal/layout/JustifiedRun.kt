@@ -119,7 +119,7 @@ internal class JustifiedRun(
         return textRun.getClusterEnd(charIndex)
     }
 
-    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntArray {
+    override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
         return textRun.getGlyphRangeForChars(fromIndex, toIndex)
     }
 

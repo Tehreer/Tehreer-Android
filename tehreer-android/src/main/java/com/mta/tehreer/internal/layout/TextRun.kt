@@ -57,7 +57,7 @@ internal interface TextRun {
     fun getClusterStart(charIndex: Int): Int
     fun getClusterEnd(charIndex: Int): Int
 
-    fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntArray
+    fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange
     fun getLeadingGlyphIndex(charIndex: Int): Int
     fun getTrailingGlyphIndex(charIndex: Int): Int
 

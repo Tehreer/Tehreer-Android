@@ -394,16 +394,14 @@ internal class LineResolver {
                 }
 
                 val glyphRange = textRun.getGlyphRangeForChars(spaceStart, spaceEnd)
-                val glyphStart = glyphRange[0]
-                val glyphEnd = glyphRange[1]
+                val glyphCount = glyphRange.last - glyphRange.first + 1
 
                 val spaceCount = spaceEnd - spaceStart
-                val glyphCount = glyphEnd - glyphStart
 
                 val distribution = spaceCount.toFloat() / glyphCount
                 val advanceAddition = spaceAddition * distribution
 
-                for (k in glyphStart until glyphEnd) {
+                for (k in glyphRange) {
                     glyphAdvances[k] += advanceAddition
                 }
             }

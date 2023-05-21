@@ -156,8 +156,8 @@ internal class DefaultTextRunDrawing(
         val caretBoundary = textRun.getCaretBoundary(fromIndex, toIndex)
         val glyphRange = textRun.getGlyphRangeForChars(actualStart, actualEnd)
 
-        var glyphStart = glyphRange[0]
-        var glyphEnd = glyphRange[1]
+        var glyphStart = glyphRange.first
+        var glyphEnd = glyphRange.last + 1
 
         var chunkStart = fromIndex
         var chunkEnd = toIndex
