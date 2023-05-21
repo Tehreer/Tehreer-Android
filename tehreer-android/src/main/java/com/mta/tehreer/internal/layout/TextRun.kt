@@ -67,7 +67,6 @@ internal interface TextRun {
     fun getRangeDistance(fromIndex: Int, toIndex: Int): Float
     fun computeNearestCharIndex(distance: Float): Int
 
-    fun computeTypographicExtent(glyphStart: Int, glyphEnd: Int): Float
     fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF
 
     fun draw(renderer: Renderer, canvas: Canvas)

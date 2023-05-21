@@ -135,10 +135,6 @@ internal class ReplacementRun(
         return computeNearestIndex(caretEdges, isRTL, distance) + charStart
     }
 
-    override fun computeTypographicExtent(glyphStart: Int, glyphEnd: Int): Float {
-        return width
-    }
-
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
         return RectF(0.0f, 0.0f, width, height)
     }

@@ -69,16 +69,6 @@ internal abstract class AbstractTextRun : TextRun {
         return nearestIndex + charStart
     }
 
-    override fun computeTypographicExtent(glyphStart: Int, glyphEnd: Int): Float {
-        var extent = 0.0f
-
-        for (i in glyphStart until glyphEnd) {
-            extent += glyphAdvances[i]
-        }
-
-        return extent
-    }
-
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
         renderer.typeface = typeface
         renderer.typeSize = typeSize

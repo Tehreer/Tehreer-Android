@@ -414,24 +414,9 @@ public class GlyphRun {
      *
      * @see #getCharStart()
      * @see #getCharEnd()
-     * @see #computeTypographicExtent(int, int)
      */
     public int computeNearestCharIndex(float distance) {
         return textRun.computeNearestCharIndex(distance);
-    }
-
-    /**
-     * Calculates the typographic extent for the given glyph range in this run. The typographic
-     * extent is equal to the sum of advances of glyphs.
-     *
-     * @param glyphStart The index to first glyph being measured.
-     * @param glyphEnd The index after the last glyph being measured.
-     * @return The typographic extent for the given glyph range in this run.
-     */
-    public float computeTypographicExtent(int glyphStart, int glyphEnd) {
-        checkGlyphRange(glyphStart, glyphEnd);
-
-        return textRun.computeTypographicExtent(glyphStart, glyphEnd);
     }
 
     @NonNull RectF computeBoundingBox(@NonNull Renderer renderer) {

@@ -147,10 +147,6 @@ internal class JustifiedRun(
         return super.computeNearestCharIndex(distance)
     }
 
-    override fun computeTypographicExtent(glyphStart: Int, glyphEnd: Int): Float {
-        return super.computeTypographicExtent(glyphStart, glyphEnd)
-    }
-
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
         return super.computeBoundingBox(renderer, glyphStart, glyphEnd)
     }

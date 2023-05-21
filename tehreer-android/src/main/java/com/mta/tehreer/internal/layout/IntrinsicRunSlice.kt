@@ -178,13 +178,6 @@ internal class IntrinsicRunSlice(
         return intrinsicRun.computeNearestCharIndex(distance, charStart, charEnd)
     }
 
-    override fun computeTypographicExtent(glyphStart: Int, glyphEnd: Int): Float {
-        val actualStart = glyphStart + glyphOffset
-        val actualEnd = glyphEnd + glyphOffset
-
-        return intrinsicRun.computeTypographicExtent(actualStart, actualEnd)
-    }
-
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
         val actualStart = glyphStart + glyphOffset
         val actualEnd = glyphEnd + glyphOffset
