@@ -16,10 +16,10 @@
 
 package com.mta.tehreer.internal.util
 
-inline fun Byte.isEven(): Boolean {
+internal inline fun Byte.isEven(): Boolean {
     return (toInt() and 1) == 0
 }
 
-inline fun Byte.isOdd(): Boolean {
+internal inline fun Byte.isOdd(): Boolean {
     return (toInt() and 1) == 1
 }
