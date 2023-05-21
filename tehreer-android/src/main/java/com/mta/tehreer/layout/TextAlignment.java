@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ public enum TextAlignment {
     /**
      * Aligns text to the left side of the line if its paragraph level is even.
      */
-    INTRINSIC,
+    LEADING,
     /**
      * Aligns text to the right side of the line if its paragraph level is even.
      */
-    EXTRINSIC,
+    TRAILING,
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -376,11 +376,11 @@ public class TLabel extends View {
             break;
 
         case Gravity.END:
-            textAlignment = TextAlignment.EXTRINSIC;
+            textAlignment = TextAlignment.TRAILING;
             break;
 
         default:
-            textAlignment = TextAlignment.INTRINSIC;
+            textAlignment = TextAlignment.LEADING;
             break;
         }
 

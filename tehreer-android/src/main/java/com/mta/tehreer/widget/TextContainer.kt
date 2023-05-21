@@ -53,7 +53,7 @@ private data class TextProperties(
     var spanned: Spanned? = null,
     var textSize: Float = 16.0f,
     var textColor: Int = Color.BLACK,
-    var textAlignment: TextAlignment = TextAlignment.INTRINSIC,
+    var textAlignment: TextAlignment = TextAlignment.LEADING,
     var extraLineSpacing: Float = 0.0f,
     var lineHeightMultiplier: Float = 1.0f,
     var isJustificationEnabled: Boolean = false,
@@ -521,8 +521,8 @@ internal class TextContainer : ViewGroup {
             Gravity.LEFT -> TextAlignment.LEFT
             Gravity.RIGHT -> TextAlignment.RIGHT
             Gravity.CENTER_HORIZONTAL -> TextAlignment.CENTER
-            Gravity.END -> TextAlignment.EXTRINSIC
-            else -> TextAlignment.INTRINSIC
+            Gravity.END -> TextAlignment.TRAILING
+            else -> TextAlignment.LEADING
         }
 
         requestComposedFrame()

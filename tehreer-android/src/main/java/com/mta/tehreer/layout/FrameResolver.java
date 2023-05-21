@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public class FrameResolver {
     private @NonNull RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private boolean mFitsHorizontally = false;
     private boolean mFitsVertically = false;
-    private @NonNull TextAlignment mTextAlignment = TextAlignment.INTRINSIC;
+    private @NonNull TextAlignment mTextAlignment = TextAlignment.LEADING;
     private @NonNull VerticalAlignment mVerticalAlignment = VerticalAlignment.TOP;
     private @NonNull BreakMode mTruncationMode = BreakMode.LINE;
     private @Nullable TruncationPlace mTruncationPlace = null;
@@ -161,7 +161,7 @@ public class FrameResolver {
 
     /**
      * Returns the text alignment to apply on each line of a frame. The default value is
-     * {@link TextAlignment#INTRINSIC}.
+     * {@link TextAlignment#LEADING}.
      *
      * @return The current text alignment.
      */
@@ -171,7 +171,7 @@ public class FrameResolver {
 
     /**
      * Sets the text alignment to apply on each line of a frame. The default value is
-     * {@link TextAlignment#INTRINSIC}.
+     * {@link TextAlignment#LEADING}.
      *
      * @param textAlignment A value of {@link TextAlignment}.
      */
@@ -391,10 +391,10 @@ public class FrameResolver {
             case CENTER:
                 return 0.5f;
 
-            case INTRINSIC:
+            case LEADING:
                 return (isLTR ? 0.0f : 1.0f);
 
-            case EXTRINSIC:
+            case TRAILING:
                 return (isLTR ? 1.0f : 0.0f);
             }
         }
