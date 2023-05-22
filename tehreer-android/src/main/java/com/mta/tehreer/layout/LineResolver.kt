@@ -19,8 +19,6 @@ package com.mta.tehreer.layout
 import android.text.Spanned
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.internal.layout.*
-import com.mta.tehreer.internal.layout.BreakResolver.suggestBackwardBreak
-import com.mta.tehreer.internal.layout.BreakResolver.suggestForwardBreak
 import com.mta.tehreer.internal.layout.ParagraphCollection.RunConsumer
 import com.mta.tehreer.internal.util.getLeadingWhitespaceEnd
 import com.mta.tehreer.internal.util.getNextSpace
@@ -103,13 +101,13 @@ internal class LineResolver {
 
         return createComposedLine(
             spanned, start, end, runList,
-            bidiParagraphs.charLevel(start)
+            bidiParagraphs.getBaseLevel(start)
         )
     }
 
     fun createCompactLine(
         start: Int, end: Int, extent: Float,
-        breaks: ByteArray,
+        breakResolver: BreakResolver,
         mode: BreakMode,
         place: TruncationPlace,
         token: ComposedLine
@@ -118,13 +116,13 @@ internal class LineResolver {
 
         return when (place) {
             TruncationPlace.START -> {
-                createStartTruncatedLine(start, end, tokenlessWidth, breaks, mode, token)
+                createStartTruncatedLine(start, end, tokenlessWidth, breakResolver, mode, token)
             }
             TruncationPlace.MIDDLE -> {
-                createMiddleTruncatedLine(start, end, tokenlessWidth, breaks, mode, token)
+                createMiddleTruncatedLine(start, end, tokenlessWidth, breakResolver, mode, token)
             }
             TruncationPlace.END -> {
-                createEndTruncatedLine(start, end, tokenlessWidth, breaks, mode, token)
+                createEndTruncatedLine(start, end, tokenlessWidth, breakResolver, mode, token)
             }
         }
     }
@@ -188,13 +186,11 @@ internal class LineResolver {
 
     private fun createStartTruncatedLine(
         start: Int, end: Int, tokenlessWidth: Float,
-        breaks: ByteArray,
+        breakResolver: BreakResolver,
         mode: BreakMode,
         token: ComposedLine
     ): ComposedLine {
-        val truncatedStart = suggestBackwardBreak(
-            spanned, intrinsicRuns, breaks, start, end, tokenlessWidth, mode
-        )
+        val truncatedStart = breakResolver.suggestBackwardBreak(start, end, tokenlessWidth, mode)
         if (truncatedStart > start) {
             val runList = ArrayList<GlyphRun>()
             var tokenInsertIndex = 0
@@ -210,7 +206,7 @@ internal class LineResolver {
             return createComposedLine(
                 spanned, truncatedStart, end,
                 runList,
-                bidiParagraphs.charLevel(truncatedStart)
+                bidiParagraphs.getBaseLevel(truncatedStart)
             )
         }
 
@@ -219,17 +215,13 @@ internal class LineResolver {
 
     private fun createMiddleTruncatedLine(
         start: Int, end: Int, tokenlessWidth: Float,
-        breaks: ByteArray,
+        breakResolver: BreakResolver,
         mode: BreakMode,
         token: ComposedLine
     ): ComposedLine {
         val halfWidth = tokenlessWidth / 2.0f
-        var firstMidEnd = suggestForwardBreak(
-            spanned, intrinsicRuns, breaks, start, end, halfWidth, mode
-        )
-        var secondMidStart = suggestBackwardBreak(
-            spanned, intrinsicRuns, breaks, start, end, halfWidth, mode
-        )
+        var firstMidEnd = breakResolver.suggestForwardBreak(start, end, halfWidth, mode)
+        var secondMidStart = breakResolver.suggestBackwardBreak(start, end, halfWidth, mode)
 
         if (firstMidEnd < secondMidStart) {
             // Exclude inner whitespaces as truncation token replaces them.
@@ -249,7 +241,7 @@ internal class LineResolver {
 
             return createComposedLine(
                 spanned, start, end, runList,
-                bidiParagraphs.charLevel(start)
+                bidiParagraphs.getBaseLevel(start)
             )
         }
 
@@ -258,13 +250,11 @@ internal class LineResolver {
 
     private fun createEndTruncatedLine(
         start: Int, end: Int, tokenlessWidth: Float,
-        breaks: ByteArray,
+        breakResolver: BreakResolver,
         mode: BreakMode,
         token: ComposedLine
     ): ComposedLine {
-        var truncatedEnd = suggestForwardBreak(
-            spanned, intrinsicRuns, breaks, start, end, tokenlessWidth, mode
-        )
+        var truncatedEnd = breakResolver.suggestForwardBreak(start, end, tokenlessWidth, mode)
         if (truncatedEnd < end) {
             // Exclude trailing whitespaces as truncation token replaces them.
             truncatedEnd = spanned.getTrailingWhitespaceStart(start, truncatedEnd)
@@ -282,7 +272,7 @@ internal class LineResolver {
 
             return createComposedLine(
                 spanned, start, truncatedEnd, runList,
-                bidiParagraphs.charLevel(start)
+                bidiParagraphs.getBaseLevel(start)
             )
         }
 
@@ -412,7 +402,7 @@ internal class LineResolver {
             glyphRun.textRun = justifiedRun
         }
 
-        val paragraphLevel = bidiParagraphs.charLevel(charStart)
+        val paragraphLevel = bidiParagraphs.getBaseLevel(charStart)
 
         return createComposedLine(spanned, charStart, charEnd, runList, paragraphLevel)
     }

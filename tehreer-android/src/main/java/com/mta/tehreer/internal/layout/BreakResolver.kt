@@ -18,271 +18,153 @@ package com.mta.tehreer.internal.layout
 
 import com.mta.tehreer.internal.util.getTrailingWhitespaceStart
 import com.mta.tehreer.layout.BreakMode
-import java.text.BreakIterator
-import kotlin.experimental.and
-import kotlin.experimental.or
+import com.mta.tehreer.unicode.BreakClassifier
 import kotlin.math.max
 import kotlin.math.min
 
-internal object BreakResolver {
-    private const val ZERO: Byte = 0
-
-    const val LINE = (1 shl 0).toByte()
-    const val CHARACTER = (1 shl 2).toByte()
-    const val PARAGRAPH = (1 shl 4).toByte()
-
-    fun typeMode(type: Byte, forward: Boolean): Byte {
-        return (if (forward) type else type.toInt() shl 1).toByte()
-    }
-
-    private fun fillBreaks(text: String, breaks: ByteArray, type: Byte) {
-        val iterator = when (type) {
-            CHARACTER -> BreakIterator.getCharacterInstance()
-            else -> BreakIterator.getLineInstance()
-        }
-
-        iterator.setText(text)
-        iterator.first()
-
-        val forwardType = typeMode(type, true)
-        var charNext: Int
-
-        while (iterator.next().also { charNext = it } != BreakIterator.DONE) {
-            breaks[charNext - 1] = breaks[charNext - 1] or forwardType
-        }
-
-        iterator.last()
-        val backwardType = typeMode(type, false)
-        var charIndex: Int
-
-        while (iterator.previous().also { charIndex = it } != BreakIterator.DONE) {
-            breaks[charIndex] = breaks[charIndex] or backwardType
-        }
-    }
-
-    @JvmStatic
-    fun fillBreaks(text: String, breaks: ByteArray) {
-        fillBreaks(text, breaks, LINE)
-        fillBreaks(text, breaks, CHARACTER)
-    }
-
-    private fun findForwardBreak(
-        text: CharSequence, runs: RunCollection,
-        breaks: ByteArray, type: Byte,
-        start: Int, end: Int, extent: Float
-    ): Int {
-        var type = type
-        var forwardBreak = start
-        var charIndex = start
+internal class BreakResolver(
+    private val text: CharSequence,
+    private val paragraphs: ParagraphCollection,
+    private val runs: RunCollection,
+    private val breaks: BreakClassifier
+) {
+    private fun findForwardBreak(iterator: IntIterator, startIndex: Int, breakExtent: Float): Int {
+        var forwardIndex = startIndex
         var measurement = 0.0f
 
-        val mustType = typeMode(PARAGRAPH, true)
-        type = typeMode(type, true)
+        for (breakIndex in iterator) {
+            measurement += runs.measureChars(forwardIndex, breakIndex)
+            if (measurement > breakExtent) {
+                val wsStart = text.getTrailingWhitespaceStart(forwardIndex, breakIndex)
+                val wsExtent = runs.measureChars(wsStart, breakIndex)
 
-        while (charIndex < end) {
-            val charType = breaks[charIndex]
-
-            // Handle necessary break.
-            if (charType and mustType == mustType) {
-                val segmentEnd = charIndex + 1
-
-                measurement += runs.measureChars(forwardBreak, segmentEnd)
-                if (measurement <= extent) {
-                    forwardBreak = segmentEnd
+                // Break if excluding whitespace extent helps.
+                if ((measurement - wsExtent) <= breakExtent) {
+                    forwardIndex = breakIndex
                 }
                 break
             }
 
-            // Handle optional break.
-            if (charType and type == type) {
-                val segmentEnd = charIndex + 1
-
-                measurement += runs.measureChars(forwardBreak, segmentEnd)
-                if (measurement > extent) {
-                    val whitespaceStart = text.getTrailingWhitespaceStart(forwardBreak, segmentEnd)
-                    val whitespaceWidth = runs.measureChars(whitespaceStart, segmentEnd)
-
-                    // Break if excluding whitespaces width helps.
-                    if (measurement - whitespaceWidth <= extent) {
-                        forwardBreak = segmentEnd
-                    }
-                    break
-                }
-
-                forwardBreak = segmentEnd
-            }
-
-            charIndex++
+            forwardIndex = breakIndex
         }
 
-        return forwardBreak
+        return forwardIndex
     }
 
-    private fun findBackwardBreak(
-        text: CharSequence, runs: RunCollection,
-        breaks: ByteArray, type: Byte,
-        start: Int, end: Int, extent: Float
-    ): Int {
-        var type = type
-        var backwardBreak = end
-        var charIndex = end - 1
+    private fun findBackwardBreak(iterator: IntIterator, endIndex: Int, breakExtent: Float): Int {
+        var backwardIndex = endIndex
         var measurement = 0.0f
 
-        val mustType = typeMode(PARAGRAPH, false)
-        type = typeMode(type, false)
+        for (breakIndex in iterator) {
+            measurement += runs.measureChars(breakIndex, backwardIndex)
+            if (measurement > breakExtent) {
+                val wsStart = text.getTrailingWhitespaceStart(breakIndex, backwardIndex)
+                val wsExtent = runs.measureChars(wsStart, breakIndex)
 
-        while (charIndex >= start) {
-            val charType = breaks[charIndex]
-
-            // Handle necessary break.
-            if (charType and mustType == mustType) {
-                measurement += runs.measureChars(backwardBreak, charIndex)
-                if (measurement <= extent) {
-                    backwardBreak = charIndex
+                // Break if excluding whitespace extent helps.
+                if ((measurement - wsExtent) <= breakExtent) {
+                    backwardIndex = breakIndex
                 }
                 break
             }
 
-            // Handle optional break.
-            if (charType and type == type) {
-                measurement += runs.measureChars(charIndex, backwardBreak)
-                if (measurement > extent) {
-                    val whitespaceStart = text.getTrailingWhitespaceStart(charIndex, backwardBreak)
-                    val whitespaceWidth = runs.measureChars(whitespaceStart, backwardBreak)
-
-                    // Break if excluding trailing whitespaces helps.
-                    if (measurement - whitespaceWidth <= extent) {
-                        backwardBreak = charIndex
-                    }
-                    break
-                }
-
-                backwardBreak = charIndex
-            }
-
-            charIndex--
+            backwardIndex = breakIndex
         }
 
-        return backwardBreak
+        return backwardIndex
     }
 
-    @JvmStatic
-    fun suggestForwardCharBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        charStart: Int, charEnd: Int, extent: Float
+    fun findForwardBreak(
+        startIndex: Int, endIndex: Int, breakExtent: Float, breakMode: BreakMode
     ): Int {
-        var forwardBreak = findForwardBreak(
-            text, runs, breaks, CHARACTER, charStart, charEnd, extent
-        )
+        val paragraph = paragraphs.getParagraph(startIndex)
+        val maxIndex = min(endIndex, paragraph.charEnd)
+
+        val iterator = when (breakMode) {
+            BreakMode.CHARACTER -> breaks.getForwardGraphemeBreaks(startIndex, maxIndex)
+            BreakMode.LINE -> breaks.getForwardLineBreaks(startIndex, maxIndex)
+        }
+
+        return findForwardBreak(iterator, startIndex, breakExtent)
+    }
+
+    fun findBackwardBreak(
+        startIndex: Int, endIndex: Int, breakExtent: Float, breakMode: BreakMode
+    ): Int {
+        val paragraph = paragraphs.getParagraph(endIndex - 1)
+        val minIndex = min(startIndex, paragraph.charStart)
+
+        val iterator = when (breakMode) {
+            BreakMode.CHARACTER -> breaks.getBackwardGraphemeBreaks(minIndex, endIndex)
+            BreakMode.LINE -> breaks.getBackwardLineBreaks(minIndex, endIndex)
+        }
+
+        return findBackwardBreak(iterator, endIndex, breakExtent)
+    }
+
+    private fun suggestForwardCharacterBreak(
+        startIndex: Int, endIndex: Int, breakExtent: Float
+    ): Int {
+        val breakIndex = findForwardBreak(startIndex, endIndex, breakExtent, BreakMode.CHARACTER)
 
         // Take at least one character (grapheme) if extent is too small.
-        if (forwardBreak == charStart) {
-            for (i in charStart until charEnd) {
-                if (breaks[i] and CHARACTER != ZERO) {
-                    forwardBreak = i + 1
-                    break
-                }
-            }
-
-            // Character range does not cover even a single grapheme?
-            if (forwardBreak == charStart) {
-                forwardBreak = min(charStart + 1, charEnd)
-            }
+        if (breakIndex == startIndex) {
+            return min(endIndex, breakIndex + 1)
         }
 
-        return forwardBreak
+        return breakIndex
     }
 
-    @JvmStatic
-    fun suggestBackwardCharBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        start: Int, end: Int, extent: Float
+    private fun suggestBackwardCharacterBreak(
+        startIndex: Int, endIndex: Int, breakExtent: Float
     ): Int {
-        var backwardBreak = findBackwardBreak(
-            text, runs, breaks, CHARACTER, start, end, extent
-        )
+        val breakIndex = findBackwardBreak(startIndex, endIndex, breakExtent, BreakMode.CHARACTER)
 
         // Take at least one character (grapheme) if extent is too small.
-        if (backwardBreak == end) {
-            for (i in end - 1 downTo start) {
-                if (breaks[i] and CHARACTER != ZERO) {
-                    backwardBreak = i
-                    break
-                }
-            }
-
-            // Character range does not cover even a single grapheme?
-            if (backwardBreak == end) {
-                backwardBreak = max(end - 1, start)
-            }
+        if (breakIndex == endIndex) {
+            return max(startIndex, breakIndex - 1)
         }
 
-        return backwardBreak
+        return breakIndex
     }
 
-    @JvmStatic
-    fun suggestForwardLineBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        start: Int, end: Int, extent: Float
-    ): Int {
-        var forwardBreak = findForwardBreak(text, runs, breaks, LINE, start, end, extent)
+    private fun suggestForwardLineBreak(startIndex: Int, endIndex: Int, breakExtent: Float): Int {
+        val breakIndex = findForwardBreak(startIndex, endIndex, breakExtent, BreakMode.LINE)
 
         // Fallback to character break if no line break occurs in desired extent.
-        if (forwardBreak == start) {
-            forwardBreak = suggestForwardCharBreak(text, runs, breaks, start, end, extent)
+        if (breakIndex == startIndex) {
+            return suggestForwardCharacterBreak(startIndex, endIndex, breakExtent)
         }
 
-        return forwardBreak
+        return breakIndex
     }
 
-    @JvmStatic
-    fun suggestBackwardLineBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        start: Int, end: Int, extent: Float
-    ): Int {
-        var backwardBreak = findBackwardBreak(text, runs, breaks, LINE, start, end, extent)
+    private fun suggestBackwardLineBreak(startIndex: Int, endIndex: Int, breakExtent: Float): Int {
+        val breakIndex = findBackwardBreak(startIndex, endIndex, breakExtent, BreakMode.LINE)
 
         // Fallback to character break if no line break occurs in desired extent.
-        if (backwardBreak == end) {
-            backwardBreak = suggestBackwardCharBreak(text, runs, breaks, start, end, extent)
+        if (breakIndex == endIndex) {
+            return suggestBackwardCharacterBreak(startIndex, endIndex, breakExtent)
         }
 
-        return backwardBreak
+        return breakIndex
     }
 
-    @JvmStatic
     fun suggestForwardBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        start: Int, end: Int, extent: Float, mode: BreakMode
+        startIndex: Int, endIndex: Int, breakExtent: Float, breakMode: BreakMode
     ): Int {
-        return when (mode) {
-            BreakMode.CHARACTER -> {
-                suggestForwardCharBreak(text, runs, breaks, start, end, extent)
-            }
-            BreakMode.LINE -> {
-                suggestForwardLineBreak(text, runs, breaks, start, end, extent)
-            }
+        return when (breakMode) {
+            BreakMode.CHARACTER -> suggestForwardCharacterBreak(startIndex, endIndex, breakExtent)
+            BreakMode.LINE -> suggestForwardLineBreak(startIndex, endIndex, breakExtent)
         }
     }
 
-    @JvmStatic
     fun suggestBackwardBreak(
-        text: CharSequence,
-        runs: RunCollection, breaks: ByteArray,
-        start: Int, end: Int, extent: Float, mode: BreakMode
+        startIndex: Int, endIndex: Int, breakExtent: Float, breakMode: BreakMode
     ): Int {
-        return when (mode) {
-            BreakMode.CHARACTER -> {
-                suggestBackwardCharBreak(text, runs, breaks, start, end, extent)
-            }
-            BreakMode.LINE -> {
-                suggestBackwardLineBreak(text, runs, breaks, start, end, extent)
-            }
+        return when (breakMode) {
+            BreakMode.CHARACTER -> suggestBackwardCharacterBreak(startIndex, endIndex, breakExtent)
+            BreakMode.LINE -> suggestBackwardLineBreak(startIndex, endIndex, breakExtent)
         }
     }
 }

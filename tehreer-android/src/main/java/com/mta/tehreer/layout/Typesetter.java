@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import com.mta.tehreer.internal.layout.TokenResolver;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
+import com.mta.tehreer.unicode.BreakClassifier;
 
 import java.util.Collections;
 import java.util.List;
@@ -46,9 +47,9 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 public class Typesetter {
     private String mText;
     private Spanned mSpanned;
-    private byte[] mBreakRecord;
     private ParagraphCollection mBidiParagraphs;
     private RunCollection mIntrinsicRuns;
+    private BreakResolver mBreakResolver;
 
     /**
      * Constructs the typesetter object using given text, typeface and type size.
@@ -92,17 +93,17 @@ public class Typesetter {
     private void init(@NonNull String text, @NonNull Spanned spanned, @Nullable List<Object> defaultSpans) {
         mText = text;
         mSpanned = spanned;
-        mBreakRecord = new byte[text.length()];
         mBidiParagraphs = new ParagraphCollection();
         mIntrinsicRuns = new RunCollection();
 
         if (defaultSpans == null) {
-            defaultSpans = Collections.EMPTY_LIST;
+            defaultSpans = Collections.emptyList();
         }
 
-        BreakResolver.fillBreaks(mText, mBreakRecord);
-        ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBreakRecord,
-                               mBidiParagraphs, mIntrinsicRuns);
+        ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBidiParagraphs, mIntrinsicRuns);
+
+        BreakClassifier breakClassifier = new BreakClassifier(text);
+        mBreakResolver = new BreakResolver(mText, mBidiParagraphs, mIntrinsicRuns, breakClassifier);
     }
 
     /**
@@ -122,10 +123,6 @@ public class Typesetter {
         return mIntrinsicRuns;
     }
 
-    byte[] getBreaks() {
-        return mBreakRecord;
-    }
-
     private void checkSubRange(int charStart, int charEnd) {
         checkArgument(charStart >= 0, "Char Start: " + charStart);
         checkArgument(charEnd <= mText.length(), "Char End: " + charEnd + ", Text Length: " + mText.length());
@@ -139,7 +136,7 @@ public class Typesetter {
      *
      * @param charStart The index to the first character (inclusive) for break calculations.
      * @param charEnd The index to the last character (exclusive) for break calculations.
-     * @param breakWidth The requested break width.
+     * @param breakExtent The requested break extent.
      * @param breakMode The requested break mode.
      * @return The index (exclusive) that would cause the break.
      *
@@ -148,21 +145,11 @@ public class Typesetter {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
     public int suggestForwardBreak(int charStart, int charEnd,
-                                   float breakWidth, @NonNull BreakMode breakMode) {
+                                   float breakExtent, @NonNull BreakMode breakMode) {
         checkNotNull(breakMode, "breakMode");
         checkSubRange(charStart, charEnd);
 
-        switch (breakMode) {
-        case CHARACTER:
-            return BreakResolver.suggestForwardCharBreak(mText, mIntrinsicRuns, mBreakRecord,
-                                                         charStart, charEnd, breakWidth);
-
-        case LINE:
-            return BreakResolver.suggestForwardLineBreak(mText, mIntrinsicRuns, mBreakRecord,
-                                                         charStart, charEnd, breakWidth);
-        }
-
-        return -1;
+        return mBreakResolver.suggestForwardBreak(charStart, charEnd, breakExtent, breakMode);
     }
 
     /**
@@ -172,7 +159,7 @@ public class Typesetter {
      *
      * @param charStart The index to the first character (inclusive) for break calculations.
      * @param charEnd The index to the last character (exclusive) for break calculations.
-     * @param breakWidth The requested break width.
+     * @param breakExtent The requested break extent.
      * @param breakMode The requested break mode.
      * @return The index (inclusive) that would cause the break.
      *
@@ -181,21 +168,11 @@ public class Typesetter {
      *         <code>charStart</code> is greater than or equal to <code>charEnd</code>
      */
     public int suggestBackwardBreak(int charStart, int charEnd,
-                                    float breakWidth, @NonNull BreakMode breakMode) {
+                                    float breakExtent, @NonNull BreakMode breakMode) {
         checkNotNull(breakMode, "breakMode");
         checkSubRange(charStart, charEnd);
 
-        switch (breakMode) {
-        case CHARACTER:
-            return BreakResolver.suggestBackwardCharBreak(mText, mIntrinsicRuns, mBreakRecord,
-                                                          charStart, charEnd, breakWidth);
-
-        case LINE:
-            return BreakResolver.suggestBackwardLineBreak(mText, mIntrinsicRuns, mBreakRecord,
-                                                          charStart, charEnd, breakWidth);
-        }
-
-        return -1;
+        return mBreakResolver.suggestBackwardBreak(charStart, charEnd, breakExtent, breakMode);
     }
 
     /**
@@ -243,10 +220,10 @@ public class Typesetter {
         checkNotNull(truncationPlace, "truncationPlace");
         checkSubRange(charStart, charEnd);
 
-        LineResolver resolver = new LineResolver();
-        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver lineResolver = new LineResolver();
+        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
-        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
+        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
                 TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, null));
     }
 
@@ -278,10 +255,10 @@ public class Typesetter {
         checkSubRange(charStart, charEnd);
         checkArgument(truncationToken.length() > 0, "Truncation token is empty");
 
-        LineResolver resolver = new LineResolver();
-        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver lineResolver = new LineResolver();
+        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
-        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode, truncationPlace,
+        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
                 TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, truncationToken));
     }
 
@@ -312,11 +289,11 @@ public class Typesetter {
         checkNotNull(truncationToken, "truncationToken");
         checkSubRange(charStart, charEnd);
 
-        LineResolver resolver = new LineResolver();
-        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
+        LineResolver lineResolver = new LineResolver();
+        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
 
-        return resolver.createCompactLine(charStart, charEnd, maxWidth, mBreakRecord, breakMode,
-                                          truncationPlace, truncationToken);
+        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode,
+                                              truncationPlace, truncationToken);
     }
 
     /**

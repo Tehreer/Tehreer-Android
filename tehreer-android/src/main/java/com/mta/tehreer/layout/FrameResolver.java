@@ -30,9 +30,7 @@ import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.mta.tehreer.internal.layout.BreakResolver;
 import com.mta.tehreer.internal.layout.ParagraphCollection;
-import com.mta.tehreer.internal.layout.RunCollection;
 import com.mta.tehreer.unicode.BidiParagraph;
 
 import java.util.ArrayList;
@@ -49,8 +47,6 @@ public class FrameResolver {
     private Typesetter mTypesetter;
     private Spanned mSpanned;
     private ParagraphCollection mParagraphs;
-    private RunCollection mRuns;
-    private byte[] mBreaks;
 
     private @NonNull RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private boolean mFitsHorizontally = false;
@@ -91,9 +87,7 @@ public class FrameResolver {
         mTypesetter = typesetter;
         mSpanned = typesetter.getSpanned();
         mParagraphs = typesetter.getParagraphs();
-        mRuns = typesetter.getRuns();
-        mBreaks = typesetter.getBreaks();
-        mLineResolver.reset(mSpanned, mParagraphs, mRuns);
+        mLineResolver.reset(mSpanned, mParagraphs, typesetter.getRuns());
     }
 
     /**
@@ -544,7 +538,7 @@ public class FrameResolver {
         int lineStart = context.startIndex;
         while (lineStart != context.endIndex) {
             final float breakExtent = context.lineExtent + context.extraWidth;
-            final int lineEnd = BreakResolver.suggestForwardBreak(mSpanned, mRuns, mBreaks, lineStart, context.endIndex, breakExtent, BreakMode.LINE);
+            final int lineEnd = mTypesetter.suggestForwardBreak(lineStart, context.endIndex, breakExtent, BreakMode.LINE);
             final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
             resolveAttributes(context, composedLine);
 

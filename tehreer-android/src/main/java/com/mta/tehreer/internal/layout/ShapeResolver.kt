@@ -34,7 +34,6 @@ internal object ShapeResolver {
     fun fillRuns(
         text: String, spanned: Spanned,
         defaultSpans: List<Any>,
-        breaks: ByteArray,
         paragraphs: MutableList<BidiParagraph?>,
         runs: MutableList<TextRun>
     ) {
@@ -49,8 +48,6 @@ internal object ShapeResolver {
             val locator = ShapingRunLocator(spanned, defaultSpans)
 
             val baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT
-            val forwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, true).toInt()
-            val backwardType = BreakResolver.typeMode(BreakResolver.PARAGRAPH, false).toInt()
 
             var paragraphStart = 0
             val suggestedEnd = text.length
@@ -94,9 +91,6 @@ internal object ShapeResolver {
                     }
                 }
                 paragraphs.add(paragraph)
-
-                breaks[paragraph.charStart] = (breaks[paragraph.charStart].toInt() or backwardType).toByte()
-                breaks[paragraph.charEnd - 1] = (breaks[paragraph.charEnd - 1].toInt() or forwardType).toByte()
 
                 paragraphStart = paragraph.charEnd
             }

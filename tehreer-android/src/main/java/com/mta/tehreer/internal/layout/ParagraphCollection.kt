@@ -44,10 +44,9 @@ internal class ParagraphCollection : ArrayList<BidiParagraph>() {
         return -(low + 1)
     }
 
-    fun charLevel(charIndex: Int): Byte {
-        val paragraphIndex = binarySearch(charIndex)
-        return this[paragraphIndex].baseLevel
-    }
+    fun getParagraph(charIndex: Int) = this[binarySearch(charIndex)]
+
+    fun getBaseLevel(charIndex: Int) = getParagraph(charIndex).baseLevel
 
     interface RunConsumer {
         fun accept(bidiRun: BidiRun)
@@ -71,14 +70,13 @@ internal class ParagraphCollection : ArrayList<BidiParagraph>() {
 
         do {
             val bidiParagraph = this[paragraphIndex]
+
             feasibleStart = max(bidiParagraph.charStart, lineStart)
             feasibleEnd = min(bidiParagraph.charEnd, lineEnd)
 
             val bidiLine = bidiParagraph.createLine(feasibleStart, feasibleEnd)
-            val bidiRuns = bidiLine.visualRuns
-
-            for (i in 0 until bidiRuns.size) {
-                runConsumer.accept(bidiRuns[i])
+            for (bidiRun in bidiLine.visualRuns) {
+                runConsumer.accept(bidiRun)
             }
 
             bidiLine.dispose()
