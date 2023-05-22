@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,16 +47,16 @@ public class BidiRunTest extends HashableTestSuite<BidiRun> {
 
     @Before
     public void setUp() {
-        sut = new BidiRun(startIndex, endIndex, embeddingLevel);
+        subject = new BidiRun(startIndex, endIndex, embeddingLevel);
     }
 
     @Test
     public void testIsRightToLeftForEvenLevel() {
         // Given
-        sut.embeddingLevel = 0;
+        subject.embeddingLevel = 0;
 
         // When
-        boolean isRightToLeft = sut.isRightToLeft();
+        boolean isRightToLeft = subject.isRightToLeft();
 
         // Then
         assertFalse(isRightToLeft);
@@ -65,10 +65,10 @@ public class BidiRunTest extends HashableTestSuite<BidiRun> {
     @Test
     public void testIsRightToLeftForOddLevel() {
         // Given
-        sut.embeddingLevel = 1;
+        subject.embeddingLevel = 1;
 
         // When
-        boolean isRightToLeft = sut.isRightToLeft();
+        boolean isRightToLeft = subject.isRightToLeft();
 
         // Then
         assertTrue(isRightToLeft);
@@ -84,7 +84,7 @@ public class BidiRunTest extends HashableTestSuite<BidiRun> {
                 .build();
 
         // When
-        String string = sut.toString();
+        String string = subject.toString();
 
         // Then
         assertEquals(string, description);

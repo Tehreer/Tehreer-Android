@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,6 +91,6 @@ public class GlyphOffsetListTest extends PointListTestSuite<GlyphOffsetList> {
             -1.0f, -0.9f,  -0.8f, -0.7f,  -0.6f, -0.5f,  -0.4f, -0.3f,  -0.2f, -0.1f,
             0.0f, 0.1f,  0.2f, 0.3f,  0.4f, 0.5f,  0.6f, 0.7f,  0.8f, 0.9f,  1.0f, 1.1f
         };
-        sut = buildList(values);
+        subject = buildList(values);
     }
 }

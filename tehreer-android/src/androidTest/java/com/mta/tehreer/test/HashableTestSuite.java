@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.junit.Test;
 public abstract class HashableTestSuite<T> {
     protected final Class<T> clazz;
 
-    protected T sut;
+    protected T subject;
 
     protected HashableTestSuite(Class<T> clazz) {
         this.clazz = clazz;
@@ -39,7 +39,7 @@ public abstract class HashableTestSuite<T> {
     @Test
     public void testEqualsWithSelf() {
         // When
-        boolean isEqual = sut.equals(sut);
+        boolean isEqual = subject.equals(subject);
 
         // Then
         assertTrue(isEqual);
@@ -48,7 +48,7 @@ public abstract class HashableTestSuite<T> {
     @Test
     public void testEqualsWithNull() {
         // When
-        boolean isEqual = sut.equals(null);
+        boolean isEqual = subject.equals(null);
 
         // Then
         assertFalse(isEqual);
@@ -57,10 +57,10 @@ public abstract class HashableTestSuite<T> {
     @Test
     public void testEqualsWithIdenticalObject() {
         // Given
-        T other = buildIdentical(sut);
+        T other = buildIdentical(subject);
 
         // When
-        boolean isEqual = sut.equals(other);
+        boolean isEqual = subject.equals(other);
 
         // Then
         assertTrue(isEqual);
@@ -72,7 +72,7 @@ public abstract class HashableTestSuite<T> {
         T mock = mock(clazz);
 
         // When
-        boolean isEqual = sut.equals(mock);
+        boolean isEqual = subject.equals(mock);
 
         // Then
         assertFalse(isEqual);
@@ -81,10 +81,10 @@ public abstract class HashableTestSuite<T> {
     @Test
     public void testHashCodeByMatchingWithIdenticalObject() {
         // Given
-        T other = buildIdentical(sut);
+        T other = buildIdentical(subject);
 
         // When
-        int hashCode = sut.hashCode();
+        int hashCode = subject.hashCode();
 
         // Then
         assertEquals(hashCode, other.hashCode());
@@ -93,12 +93,12 @@ public abstract class HashableTestSuite<T> {
     @Test
     public void testHashCodeByGeneratingItFiveTimes() {
         // Given
-        int hashCode = sut.hashCode();
+        int hashCode = subject.hashCode();
 
         // Then
-        assertEquals(hashCode, sut.hashCode());
-        assertEquals(hashCode, sut.hashCode());
-        assertEquals(hashCode, sut.hashCode());
-        assertEquals(hashCode, sut.hashCode());
+        assertEquals(hashCode, subject.hashCode());
+        assertEquals(hashCode, subject.hashCode());
+        assertEquals(hashCode, subject.hashCode());
+        assertEquals(hashCode, subject.hashCode());
     }
 }

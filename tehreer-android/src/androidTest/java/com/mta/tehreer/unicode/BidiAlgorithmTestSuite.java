@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.internal.collections.UInt8BufferIntList;
 import com.mta.tehreer.DisposableTestSuite;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Test;
@@ -38,7 +38,7 @@ import org.junit.Test;
 public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlgorithm, BidiAlgorithm.Finalizable> {
     private static final String DEFAULT_TEXT = "abcdابجد";
 
-    protected static class BidiAlgorithmBuilder extends UnsafeSUTBuilder<BidiAlgorithm, BidiAlgorithm.Finalizable> {
+    protected static class BidiAlgorithmBuilder extends UnsafeSubjectBuilder<BidiAlgorithm, BidiAlgorithm.Finalizable> {
         String text = DEFAULT_TEXT;
 
         protected BidiAlgorithmBuilder() {
@@ -46,7 +46,7 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
         }
 
         @Override
-        public BidiAlgorithm buildSUT() {
+        public BidiAlgorithm buildSubject() {
             return new BidiAlgorithm(text);
         }
     }
@@ -60,25 +60,25 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
     protected BidiAlgorithmTestSuite(DefaultMode defaultMode) {
         super(new BidiAlgorithmBuilder(), defaultMode);
 
-        setOnPreBuildSUT((builder) -> {
-            BidiAlgorithmBuilder sutBuilder = (BidiAlgorithmBuilder) builder;
-            sutBuilder.text = text;
+        setOnPreBuildSubject((builder) -> {
+            BidiAlgorithmBuilder subjectBuilder = (BidiAlgorithmBuilder) builder;
+            subjectBuilder.text = text;
         });
     }
 
     @Test
     public void testNativePointers() {
-        buildSUT((sut) -> {
-            assertNotEquals(sut.nativeBuffer, 0);
-            assertNotEquals(sut.nativeAlgorithm, 0);
+        buildSubject((subject) -> {
+            assertNotEquals(subject.nativeBuffer, 0);
+            assertNotEquals(subject.nativeAlgorithm, 0);
         });
     }
 
     @Test
     public void testGetCharBidiClasses() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            IntList bidiClasses = sut.getCharBidiClasses();
+            IntList bidiClasses = subject.getCharBidiClasses();
 
             // Then
             assertTrue(bidiClasses instanceof UInt8BufferIntList);
@@ -107,20 +107,20 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
 
     @Test
     public void testGetParagraphBoundaryForInvalidRange() {
-        buildSUT((sut) -> {
-            testRangeExceptions(sut::getParagraphBoundary);
+        buildSubject((subject) -> {
+            testRangeExceptions (subject::getParagraphBoundary);
         });
     }
 
     @Test
     public void testGetParagraphBoundaryForFullRange() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             int startIndex = 0;
             int endIndex = text.length();
 
             // When
-            int paragraphBoundary = sut.getParagraphBoundary(startIndex, endIndex);
+            int paragraphBoundary = subject.getParagraphBoundary(startIndex, endIndex);
 
             // Then
             assertEquals(paragraphBoundary, endIndex);
@@ -129,23 +129,23 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
 
     @Test
     public void testCreateParagraphWithBaseDirectionForInvalidRange() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             testRangeExceptions((startIndex, endIndex) -> {
-                sut.createParagraph(startIndex, endIndex, BaseDirection.LEFT_TO_RIGHT);
+                subject.createParagraph(startIndex, endIndex, BaseDirection.LEFT_TO_RIGHT);
             });
         });
     }
 
     @Test
     public void testCreateParagraphForFullRangeAndLTRBaseDirection() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             int startIndex = 0;
             int endIndex = text.length();
             BaseDirection baseDirection = BaseDirection.LEFT_TO_RIGHT;
 
             // When
-            BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseDirection);
+            BidiParagraph paragraph = subject.createParagraph(startIndex, endIndex, baseDirection);
 
             // Then
             assertNotNull(paragraph);
@@ -154,36 +154,36 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
 
     @Test
     public void testCreateParagraphWithBaseLevelForInvalidRange() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             testRangeExceptions((startIndex, endIndex) -> {
-                sut.createParagraph(startIndex, endIndex, (byte) 0);
+                subject.createParagraph(startIndex, endIndex, (byte) 0);
             });
         });
     }
 
     @Test
     public void testCreateParagraphForInvalidBaseLevel() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Negative Value
             assertThrows(IllegalArgumentException.class, "Base Level: -1",
-                         () -> sut.createParagraph(0, text.length(), (byte) -1));
+                         () -> subject.createParagraph(0, text.length(), (byte) -1));
 
             // > MAX Value
             assertThrows(IllegalArgumentException.class, "Base Level: 126",
-                         () -> sut.createParagraph(0, text.length(), (byte) 126));
+                         () -> subject.createParagraph(0, text.length(), (byte) 126));
         });
     }
 
     @Test
     public void testCreateParagraphForFullRangeAndZeroBaseLevel() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             int startIndex = 0;
             int endIndex = text.length();
             byte baseLevel = 0;
 
             // When
-            BidiParagraph paragraph = sut.createParagraph(startIndex, endIndex, baseLevel);
+            BidiParagraph paragraph = subject.createParagraph(startIndex, endIndex, baseLevel);
 
             // Then
             assertNotNull(paragraph);
@@ -192,7 +192,7 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
 
     @Test
     public void testToString() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             String description = DescriptionBuilder
                     .of(BidiAlgorithm.class)
                     .put("text", text)
@@ -200,7 +200,7 @@ public abstract class BidiAlgorithmTestSuite extends DisposableTestSuite<BidiAlg
                     .build();
 
             // When
-            String string = sut.toString();
+            String string = subject.toString();
 
             // Then
             assertEquals(string, description);

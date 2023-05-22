@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,19 +32,19 @@ public class BidiLineRunListTest {
 
     @Mock
     private BidiLine line;
-    private BidiLine.RunList sut;
+    private BidiLine.RunList subject;
 
     @Before
     public void setUp() {
         when(line.getRunCount()).thenReturn(DEFAULT_SIZE);
 
-        sut = new BidiLine.RunList(line);
+        subject = new BidiLine.RunList(line);
     }
 
     @Test
     public void testSize() {
         // When
-        int size = sut.size();
+        int size = subject.size();
 
         // Then
         assertEquals(size, DEFAULT_SIZE);
@@ -53,13 +53,13 @@ public class BidiLineRunListTest {
     @Test(expected = IndexOutOfBoundsException.class)
     public void testGetForNegativeIndex() {
         // When
-        sut.get(-1);
+        subject.get(-1);
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void testGetForLimitIndex() {
         // When
-        sut.get(DEFAULT_SIZE);
+        subject.get(DEFAULT_SIZE);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class BidiLineRunListTest {
         when(line.getVisualRun(0)).thenReturn(anyRun);
 
         // When
-        BidiRun run = sut.get(0);
+        BidiRun run = subject.get(0);
 
         // Then
         assertSame(run, anyRun);
@@ -80,7 +80,7 @@ public class BidiLineRunListTest {
         when(line.getVisualRun(1)).thenReturn(anyRun);
 
         // When
-        BidiRun run = sut.get(1);
+        BidiRun run = subject.get(1);
 
         // Then
         assertSame(run, anyRun);

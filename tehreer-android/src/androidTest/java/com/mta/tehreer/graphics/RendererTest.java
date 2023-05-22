@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.mta.tehreer.graphics;
 
 import static org.junit.Assert.assertEquals;
@@ -16,36 +32,36 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RendererTest {
-    private Renderer sut;
+    private Renderer subject;
     private Typeface typeface;
     private float typeSize;
 
     @Before
     public void setUp() {
-        sut = new Renderer();
+        subject = new Renderer();
         typeface = TypefaceStore.getNafeesWeb();
         typeSize = 32.0f;
     }
 
     @Test
     public void testInitialValues() {
-        assertEquals(sut.getFillColor(), Color.BLACK);
-        assertEquals(sut.getRenderingStyle(), RenderingStyle.FILL);
-        assertEquals(sut.getWritingDirection(), WritingDirection.LEFT_TO_RIGHT);
-        assertNull(sut.getTypeface());
-        assertEquals(sut.getTypeSize(), 16.0f, 0.0f);
-        assertEquals(sut.getSlantAngle(), 0.0f, 0.0f);
-        assertEquals(sut.getScaleX(), 1.0f, 0.0f);
-        assertEquals(sut.getScaleY(), 1.0f, 0.0f);
-        assertEquals(sut.getStrokeColor(), Color.BLACK);
-        assertEquals(sut.getStrokeWidth(), 1.0f, 0.0f);
-        assertEquals(sut.getStrokeCap(), StrokeCap.BUTT);
-        assertEquals(sut.getStrokeJoin(), StrokeJoin.ROUND);
-        assertEquals(sut.getStrokeMiter(), 1.0f, 0.0f);
-        assertEquals(sut.getShadowRadius(), 0.0f, 0.0f);
-        assertEquals(sut.getShadowDx(), 0.0f, 0.0f);
-        assertEquals(sut.getShadowDy(), 0.0f, 0.0f);
-        assertEquals(sut.getShadowColor(), Color.TRANSPARENT);
+        assertEquals(subject.getFillColor(), Color.BLACK);
+        assertEquals(subject.getRenderingStyle(), RenderingStyle.FILL);
+        assertEquals(subject.getWritingDirection(), WritingDirection.LEFT_TO_RIGHT);
+        assertNull(subject.getTypeface());
+        assertEquals(subject.getTypeSize(), 16.0f, 0.0f);
+        assertEquals(subject.getSlantAngle(), 0.0f, 0.0f);
+        assertEquals(subject.getScaleX(), 1.0f, 0.0f);
+        assertEquals(subject.getScaleY(), 1.0f, 0.0f);
+        assertEquals(subject.getStrokeColor(), Color.BLACK);
+        assertEquals(subject.getStrokeWidth(), 1.0f, 0.0f);
+        assertEquals(subject.getStrokeCap(), StrokeCap.BUTT);
+        assertEquals(subject.getStrokeJoin(), StrokeJoin.ROUND);
+        assertEquals(subject.getStrokeMiter(), 1.0f, 0.0f);
+        assertEquals(subject.getShadowRadius(), 0.0f, 0.0f);
+        assertEquals(subject.getShadowDx(), 0.0f, 0.0f);
+        assertEquals(subject.getShadowDy(), 0.0f, 0.0f);
+        assertEquals(subject.getShadowColor(), Color.TRANSPARENT);
     }
 
     @Test
@@ -54,10 +70,10 @@ public class RendererTest {
         int fillColor = Color.RED;
 
         // When
-        sut.setFillColor(fillColor);
+        subject.setFillColor(fillColor);
 
         // Then
-        assertEquals(sut.getFillColor(), fillColor);
+        assertEquals(subject.getFillColor(), fillColor);
     }
 
     @Test
@@ -66,10 +82,10 @@ public class RendererTest {
         RenderingStyle renderingStyle = RenderingStyle.FILL_STROKE;
 
         // When
-        sut.setRenderingStyle(renderingStyle);
+        subject.setRenderingStyle(renderingStyle);
 
         // Then
-        assertEquals(sut.getRenderingStyle(), renderingStyle);
+        assertEquals(subject.getRenderingStyle(), renderingStyle);
     }
 
     @Test
@@ -78,28 +94,28 @@ public class RendererTest {
         WritingDirection writingDirection = WritingDirection.RIGHT_TO_LEFT;
 
         // When
-        sut.setWritingDirection(writingDirection);
+        subject.setWritingDirection(writingDirection);
 
         // Then
-        assertEquals(sut.getWritingDirection(), writingDirection);
+        assertEquals(subject.getWritingDirection(), writingDirection);
     }
 
     @Test
     public void testTypefaceProperty() {
         // When
-        sut.setTypeface(typeface);
+        subject.setTypeface(typeface);
 
         // Then
-        assertEquals(sut.getTypeface(), typeface);
+        assertEquals(subject.getTypeface(), typeface);
     }
 
     @Test
     public void testTypeSizeProperty() {
         // When
-        sut.setTypeSize(typeSize);
+        subject.setTypeSize(typeSize);
 
         // Then
-        assertEquals(sut.getTypeSize(), typeSize, 0.0f);
+        assertEquals(subject.getTypeSize(), typeSize, 0.0f);
     }
 
     @Test
@@ -108,10 +124,10 @@ public class RendererTest {
         float slantAngle = 1.0f;
 
         // When
-        sut.setSlantAngle(slantAngle);
+        subject.setSlantAngle(slantAngle);
 
         // Then
-        assertEquals(sut.getSlantAngle(), slantAngle, 0.0f);
+        assertEquals(subject.getSlantAngle(), slantAngle, 0.0f);
     }
 
     @Test
@@ -120,10 +136,10 @@ public class RendererTest {
         float scaleX = 2.5f;
 
         // When
-        sut.setScaleX(scaleX);
+        subject.setScaleX(scaleX);
 
         // Then
-        assertEquals(sut.getScaleX(), scaleX, 0.0f);
+        assertEquals(subject.getScaleX(), scaleX, 0.0f);
     }
 
     @Test
@@ -132,10 +148,10 @@ public class RendererTest {
         float scaleY = 2.5f;
 
         // When
-        sut.setScaleY(scaleY);
+        subject.setScaleY(scaleY);
 
         // Then
-        assertEquals(sut.getScaleY(), scaleY, 0.0f);
+        assertEquals(subject.getScaleY(), scaleY, 0.0f);
     }
 
     @Test
@@ -144,10 +160,10 @@ public class RendererTest {
         int strokeColor = Color.BLUE;
 
         // When
-        sut.setStrokeColor(strokeColor);
+        subject.setStrokeColor(strokeColor);
 
         // Then
-        assertEquals(sut.getStrokeColor(), strokeColor);
+        assertEquals(subject.getStrokeColor(), strokeColor);
     }
 
     @Test
@@ -156,10 +172,10 @@ public class RendererTest {
         float strokeWidth = 2.5f;
 
         // When
-        sut.setStrokeWidth(strokeWidth);
+        subject.setStrokeWidth(strokeWidth);
 
         // Then
-        assertEquals(sut.getStrokeWidth(), strokeWidth, 0.0f);
+        assertEquals(subject.getStrokeWidth(), strokeWidth, 0.0f);
     }
 
     @Test
@@ -168,10 +184,10 @@ public class RendererTest {
         StrokeCap strokeCap = StrokeCap.SQUARE;
 
         // When
-        sut.setStrokeCap(strokeCap);
+        subject.setStrokeCap(strokeCap);
 
         // Then
-        assertEquals(sut.getStrokeCap(), strokeCap);
+        assertEquals(subject.getStrokeCap(), strokeCap);
     }
 
     @Test
@@ -180,10 +196,10 @@ public class RendererTest {
         StrokeJoin strokeJoin = StrokeJoin.MITER;
 
         // When
-        sut.setStrokeJoin(strokeJoin);
+        subject.setStrokeJoin(strokeJoin);
 
         // Then
-        assertEquals(sut.getStrokeJoin(), strokeJoin);
+        assertEquals(subject.getStrokeJoin(), strokeJoin);
     }
 
     @Test
@@ -192,10 +208,10 @@ public class RendererTest {
         float strokeMiter = 2.5f;
 
         // When
-        sut.setStrokeMiter(strokeMiter);
+        subject.setStrokeMiter(strokeMiter);
 
         // Then
-        assertEquals(sut.getStrokeMiter(), strokeMiter, 0.0f);
+        assertEquals(subject.getStrokeMiter(), strokeMiter, 0.0f);
     }
 
     @Test
@@ -204,10 +220,10 @@ public class RendererTest {
         float shadowRadius = 2.5f;
 
         // When
-        sut.setShadowRadius(shadowRadius);
+        subject.setShadowRadius(shadowRadius);
 
         // Then
-        assertEquals(sut.getShadowRadius(), shadowRadius, 0.0f);
+        assertEquals(subject.getShadowRadius(), shadowRadius, 0.0f);
     }
 
     @Test
@@ -216,10 +232,10 @@ public class RendererTest {
         float shadowDx = 2.5f;
 
         // When
-        sut.setShadowDx(shadowDx);
+        subject.setShadowDx(shadowDx);
 
         // Then
-        assertEquals(sut.getShadowDx(), shadowDx, 0.0f);
+        assertEquals(subject.getShadowDx(), shadowDx, 0.0f);
     }
 
     @Test
@@ -228,10 +244,10 @@ public class RendererTest {
         float shadowDy = 2.5f;
 
         // When
-        sut.setShadowDy(shadowDy);
+        subject.setShadowDy(shadowDy);
 
         // Then
-        assertEquals(sut.getShadowDy(), shadowDy, 0.0f);
+        assertEquals(subject.getShadowDy(), shadowDy, 0.0f);
     }
 
     @Test
@@ -240,21 +256,21 @@ public class RendererTest {
         int shadowColor = Color.GRAY;
 
         // When
-        sut.setShadowColor(shadowColor);
+        subject.setShadowColor(shadowColor);
 
         // Then
-        assertEquals(sut.getShadowColor(), shadowColor);
+        assertEquals(subject.getShadowColor(), shadowColor);
     }
 
     @Test
     public void testComputeBoundingBoxForSingleGlyph() {
         // Given
         int glyphId = typeface.getGlyphId('ت');
-        sut.setTypeface(typeface);
-        sut.setTypeSize(typeSize);
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
 
         // When
-        RectF bbox = sut.computeBoundingBox(glyphId);
+        RectF bbox = subject.computeBoundingBox(glyphId);
 
         // Then
         assertEquals(bbox, new RectF(1.0f, 14.0f, 24.0f, 29.0f));
@@ -267,12 +283,12 @@ public class RendererTest {
         PointList glyphOffsets = PointList.of(new float[10]);
         FloatList glyphAdvancess = FloatList.of(6, 15, 9, 10, 9);
 
-        sut.setTypeface(typeface);
-        sut.setTypeSize(typeSize);
-        sut.setWritingDirection(WritingDirection.RIGHT_TO_LEFT);
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+        subject.setWritingDirection(WritingDirection.RIGHT_TO_LEFT);
 
         // When
-        RectF bbox = sut.computeBoundingBox(glyphIds, glyphOffsets, glyphAdvancess);
+        RectF bbox = subject.computeBoundingBox(glyphIds, glyphOffsets, glyphAdvancess);
 
         // Then
         assertEquals(bbox, new RectF(-3.0f, -17.0f, 51.0f, 9.0f));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,6 @@ public class GlyphAdvanceListTest extends FloatListTestSuite<GlyphAdvanceList> {
             -1.0f, -0.8f, -0.6f, -0.4f, -0.2f,
             0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f
         };
-        sut = buildList(values);
+        subject = buildList(values);
     }
 }

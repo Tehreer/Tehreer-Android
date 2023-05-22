@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.collections.ByteList;
 import com.mta.tehreer.internal.collections.Int8BufferByteList;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Ignore;
@@ -40,7 +40,7 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
     private static final String DEFAULT_TEXT = "abcdابجد";
     private static final byte[] DEFAULT_LEVELS = { 0, 0, 0, 0, 1, 1, 1, 1 };
 
-    protected static class BidiParagraphBuilder extends UnsafeSUTBuilder<BidiParagraph, BidiParagraph.Finalizable> {
+    protected static class BidiParagraphBuilder extends UnsafeSubjectBuilder<BidiParagraph, BidiParagraph.Finalizable> {
         String text = DEFAULT_TEXT;
         int startIndex = 0;
         int endIndex = text.length();
@@ -51,7 +51,7 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
         }
 
         @Override
-        public BidiParagraph buildSUT() {
+        public BidiParagraph buildSubject() {
             BidiAlgorithm bidiAlgorithm = BidiAlgorithm.finalizable(new BidiAlgorithm(text));
             return bidiAlgorithm.createParagraph(startIndex, endIndex, baseLevel);
         }
@@ -65,12 +65,12 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
     protected BidiParagraphTestSuite(DefaultMode defaultMode) {
         super(new BidiParagraphBuilder(), defaultMode);
 
-        setOnPreBuildSUT((builder) -> {
-            BidiParagraphBuilder sutBuilder = (BidiParagraphBuilder) builder;
-            sutBuilder.text = text;
-            sutBuilder.startIndex = startIndex;
-            sutBuilder.endIndex = endIndex;
-            sutBuilder.baseLevel = baseLevel;
+        setOnPreBuildSubject((builder) -> {
+            BidiParagraphBuilder subjectBuilder = (BidiParagraphBuilder) builder;
+            subjectBuilder.text = text;
+            subjectBuilder.startIndex = startIndex;
+            subjectBuilder.endIndex = endIndex;
+            subjectBuilder.baseLevel = baseLevel;
         });
     }
 
@@ -83,11 +83,11 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
         baseLevel = 0;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getBaseLevel(), baseLevel);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getBaseLevel(), baseLevel);
         });
     }
 
@@ -99,11 +99,11 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
         baseLevel = 1;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getBaseLevel(), baseLevel);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getBaseLevel(), baseLevel);
         });
     }
 
@@ -116,27 +116,27 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
         baseLevel = 0;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getBaseLevel(), baseLevel);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getBaseLevel(), baseLevel);
         });
     }
 
     @Test
     public void testNativePointers() {
-        buildSUT((sut) -> {
-            assertNotEquals(sut.nativeBuffer, 0);
-            assertNotEquals(sut.nativeParagraph, 0);
+        buildSubject((subject) -> {
+            assertNotEquals(subject.nativeBuffer, 0);
+            assertNotEquals(subject.nativeParagraph, 0);
         });
     }
 
     @Test
     public void testGetCharLevels() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            ByteList charLevels = sut.getCharLevels();
+            ByteList charLevels = subject.getCharLevels();
 
             // Then
             assertTrue(charLevels instanceof Int8BufferByteList);
@@ -147,9 +147,9 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
 
     @Test
     public void testGetOnwardRunForLeftToRightRun() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiRun run = sut.getOnwardRun(0);
+            BidiRun run = subject.getOnwardRun(0);
 
             // Then
             assertNotNull(run);
@@ -161,9 +161,9 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
 
     @Test
     public void testGetOnwardRunForRightToLeftRun() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiRun run = sut.getOnwardRun(5);
+            BidiRun run = subject.getOnwardRun(5);
 
             // Then
             assertNotNull(run);
@@ -175,9 +175,9 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
 
     @Test
     public void testGetOnwardRunFromEndIndex() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiRun run = sut.getOnwardRun(8);
+            BidiRun run = subject.getOnwardRun(8);
 
             // Then
             assertNull(run);
@@ -186,40 +186,40 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
 
     @Test
     public void testGetLogicalRuns() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            Iterator<BidiRun> iterator = sut.getLogicalRuns();
+            Iterator<BidiRun> iterator = subject.getLogicalRuns();
 
             // Then
             assertTrue(iterator instanceof BidiParagraph.RunIterator);
-            assertSame(((BidiParagraph.RunIterator) iterator).owner, sut);
+            assertSame(((BidiParagraph.RunIterator) iterator).owner, subject);
         });
     }
 
     @Test
     public void testCreateLineForInvalidRange() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Invalid Start
             assertThrows(IllegalArgumentException.class,
                          "Char Start: -1, Paragraph Range: [0, 8)",
-                         () -> sut.createLine(-1, 8));
+                         () -> subject.createLine(-1, 8));
 
             // Invalid End
             assertThrows(IllegalArgumentException.class,
                          "Char End: 9, Paragraph Range: [0, 8)",
-                         () -> sut.createLine(0, 9));
+                         () -> subject.createLine(0, 9));
 
             // Empty Range
             assertThrows(IllegalArgumentException.class, "Bad Range: [0, 0)",
-                         () -> sut.createLine(0, 0));
+                         () -> subject.createLine(0, 0));
         });
     }
 
     @Test
     public void testCreateLineForFullRange() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiLine line = sut.createLine(startIndex, endIndex);
+            BidiLine line = subject.createLine(startIndex, endIndex);
 
             // Then
             assertNotNull(line);
@@ -228,18 +228,18 @@ public abstract class BidiParagraphTestSuite extends DisposableTestSuite<BidiPar
 
     @Test
     public void testToString() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             String description = DescriptionBuilder
                     .of(BidiParagraph.class)
                     .put("charStart", startIndex)
                     .put("charEnd", endIndex)
                     .put("baseLevel", baseLevel)
                     .put("charLevels", DEFAULT_LEVELS)
-                    .put("logicalRuns", sut.getLogicalRuns())
+                    .put("logicalRuns", subject.getLogicalRuns())
                     .build();
 
             // When
-            String string = sut.toString();
+            String string = subject.toString();
 
             // Then
             assertEquals(string, description);

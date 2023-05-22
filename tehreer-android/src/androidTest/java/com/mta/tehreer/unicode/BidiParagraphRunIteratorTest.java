@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,20 +34,20 @@ import java.util.NoSuchElementException;
 public class BidiParagraphRunIteratorTest {
     @Mock
     private BidiParagraph paragraph;
-    private BidiParagraph.RunIterator sut;
+    private BidiParagraph.RunIterator subject;
 
     @Before
     public void setUp() {
-        sut = new BidiParagraph.RunIterator(paragraph);
+        subject = new BidiParagraph.RunIterator(paragraph);
     }
 
     @Test
     public void testHasNextForAvailableRun() {
         // Given
-        sut.run = mock(BidiRun.class);
+        subject.run = mock(BidiRun.class);
 
         // When
-        boolean hasNext = sut.hasNext();
+        boolean hasNext = subject.hasNext();
 
         // Then
         assertTrue(hasNext);
@@ -56,10 +56,10 @@ public class BidiParagraphRunIteratorTest {
     @Test
     public void testHasNextForNoAvailableRun() {
         // Given
-        sut.run = null;
+        subject.run = null;
 
         // When
-        boolean hasNext = sut.hasNext();
+        boolean hasNext = subject.hasNext();
 
         // Then
         assertFalse(hasNext);
@@ -73,27 +73,27 @@ public class BidiParagraphRunIteratorTest {
         when(paragraph.getOnwardRun(4)).thenReturn(secondRun);
 
         // Given
-        sut.run = firstRun;
+        subject.run = firstRun;
 
         // When
-        BidiRun bidiRun = sut.next();
+        BidiRun bidiRun = subject.next();
 
         // Then
         assertSame(bidiRun, firstRun);
-        assertSame(sut.run, secondRun);
+        assertSame(subject.run, secondRun);
     }
 
     @Test(expected = NoSuchElementException.class)
     public void testNextForNoAvailableRun() {
         // Given
-        sut.run = null;
+        subject.run = null;
 
         // When
-        sut.next();
+        subject.next();
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testRemove() {
-        sut.remove();
+        subject.remove();
     }
 }

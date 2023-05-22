@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
             super(IntList.class);
 
             this.values = values;
-            this.sut = subList;
+            this.subject = subList;
         }
 
         @Override
@@ -53,7 +53,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
     @Test
     public void testSize() {
         // When
-        int size = sut.size();
+        int size = subject.size();
 
         // Then
         assertEquals(size, values.length);
@@ -66,7 +66,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.get(index));
+                     () -> subject.get(index));
     }
 
     @Test()
@@ -76,14 +76,14 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.get(index));
+                     () -> subject.get(index));
     }
 
     @Test
     public void testGetForAllIndexes() {
         int length = values.length;
         for (int i = 0; i < length; i++) {
-            assertEquals(sut.get(i), values[i], 0.0f);
+            assertEquals(subject.get(i), values[i], 0.0f);
         }
     }
 
@@ -93,11 +93,11 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
 
         // Invalid Start
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, -1));
+                     () -> subject.copyTo(array, -1));
 
         // Exceeding Length
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 1));
+                     () -> subject.copyTo(array, 1));
     }
 
     @Test
@@ -107,7 +107,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
 
         // Then
         assertThrows(NullPointerException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -121,7 +121,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
 
         // When
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -129,7 +129,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] array = new int[values.length];
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         // Then
         assertArrayEquals(array, values);
@@ -147,7 +147,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         int[] copiedChunk = Arrays.copyOfRange(array, 0, actualLength);
         int[] remainingChunk = Arrays.copyOfRange(array, actualLength, finalLength);
@@ -169,7 +169,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, extraLength);
+        subject.copyTo(array, extraLength);
 
         int[] firstChunk = Arrays.copyOfRange(array, 0, extraLength);
         int[] copiedChunk = Arrays.copyOfRange(array, extraLength, finalLength);
@@ -216,15 +216,15 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
     public void testSubListForInvalidRanges() {
         // Invalid Start
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(-1, values.length));
+                     () -> subject.subList(-1, values.length));
 
         // Invalid End
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(0, values.length + 1));
+                     () -> subject.subList(0, values.length + 1));
 
         // Bad Range
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(values.length, -1));
+                     () -> subject.subList(values.length, -1));
     }
 
     @Test
@@ -232,9 +232,9 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int fullLength = values.length;
         int halfLength = fullLength / 2;
 
-        testSubList(sut.subList(0, 0), new int[0]);
-        testSubList(sut.subList(halfLength, halfLength), new int[0]);
-        testSubList(sut.subList(fullLength, fullLength), new int[0]);
+        testSubList(subject.subList(0, 0), new int[0]);
+        testSubList(subject.subList(halfLength, halfLength), new int[0]);
+        testSubList(subject.subList(fullLength, fullLength), new int[0]);
     }
 
     @Test
@@ -244,7 +244,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] firstHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        IntList subList = sut.subList(startIndex, endIndex);
+        IntList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, firstHalf);
@@ -257,7 +257,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] secondHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        IntList subList = sut.subList(startIndex, endIndex);
+        IntList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, secondHalf);
@@ -271,7 +271,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
         int[] midHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        IntList subList = sut.subList(startIndex, endIndex);
+        IntList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, midHalf);
@@ -280,7 +280,7 @@ public abstract class IntListTestSuite<T extends IntList> extends HashableTestSu
     @Test
     public void testToArray() {
         // When
-        int[] array = sut.toArray();
+        int[] array = subject.toArray();
 
         // Then
         assertArrayEquals(array, values);

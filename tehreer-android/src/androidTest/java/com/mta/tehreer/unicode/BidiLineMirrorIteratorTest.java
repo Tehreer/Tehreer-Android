@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,20 +36,20 @@ public class BidiLineMirrorIteratorTest {
     private BidiLine line;
     @Mock
     private BidiMirrorLocator locator;
-    private BidiLine.MirrorIterator sut;
+    private BidiLine.MirrorIterator subject;
 
     @Before
     public void setUp() {
-        sut = new BidiLine.MirrorIterator(line, locator);
+        subject = new BidiLine.MirrorIterator(line, locator);
     }
 
     @Test
     public void testHasNextForAvailablePair() {
         // Given
-        sut.pair = mock(BidiPair.class);
+        subject.pair = mock(BidiPair.class);
 
         // When
-        boolean hasNext = sut.hasNext();
+        boolean hasNext = subject.hasNext();
 
         // Then
         assertTrue(hasNext);
@@ -58,10 +58,10 @@ public class BidiLineMirrorIteratorTest {
     @Test
     public void testHasNextForNoAvailablePair() {
         // Given
-        sut.pair = null;
+        subject.pair = null;
 
         // When
-        boolean hasNext = sut.hasNext();
+        boolean hasNext = subject.hasNext();
 
         // Then
         assertFalse(hasNext);
@@ -75,27 +75,27 @@ public class BidiLineMirrorIteratorTest {
         when(locator.nextPair()).thenReturn(secondPair);
 
         // Given
-        sut.pair = firstPair;
+        subject.pair = firstPair;
 
         // When
-        BidiPair bidiPair = sut.next();
+        BidiPair bidiPair = subject.next();
 
         // Then
         assertSame(bidiPair, firstPair);
-        assertSame(sut.pair, secondPair);
+        assertSame(subject.pair, secondPair);
     }
 
     @Test(expected = NoSuchElementException.class)
     public void testNextForNoAvailablePair() {
         // Given
-        sut.pair = null;
+        subject.pair = null;
 
         // When
-        sut.next();
+        subject.next();
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testRemove() {
-        sut.remove();
+        subject.remove();
     }
 }

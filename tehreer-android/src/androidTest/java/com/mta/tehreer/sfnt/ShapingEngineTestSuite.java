@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.mta.tehreer.DisposableTestSuite;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 import com.mta.tehreer.util.TypefaceStore;
 
@@ -38,7 +38,7 @@ import java.util.Set;
 public abstract class ShapingEngineTestSuite extends DisposableTestSuite<ShapingEngine, ShapingEngine.Finalizable> {
     private static final String DEFAULT_TEXT = "abcd";
 
-    protected static class ShapingEngineBuilder extends UnsafeSUTBuilder<ShapingEngine, ShapingEngine.Finalizable> {
+    protected static class ShapingEngineBuilder extends UnsafeSubjectBuilder<ShapingEngine, ShapingEngine.Finalizable> {
         Typeface typeface;
 
         protected ShapingEngineBuilder() {
@@ -46,7 +46,7 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
         }
 
         @Override
-        public ShapingEngine buildSUT() {
+        public ShapingEngine buildSubject() {
             ShapingEngine shapingEngine = new ShapingEngine();
             if (typeface != null) {
                 shapingEngine.setTypeface(typeface);
@@ -62,124 +62,124 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
     protected ShapingEngineTestSuite(DefaultMode defaultMode) {
         super(new ShapingEngineBuilder(), defaultMode);
 
-        setOnPreBuildSUT((builder) -> {
-            ShapingEngineBuilder sutBuilder = (ShapingEngineBuilder) builder;
-            sutBuilder.typeface = typeface;
+        setOnPreBuildSubject((builder) -> {
+            ShapingEngineBuilder subjectBuilder = (ShapingEngineBuilder) builder;
+            subjectBuilder.typeface = typeface;
         });
     }
 
     @Test
     public void testNativePointers() {
-        buildSUT((sut) -> {
-            assertNotEquals(sut.nativeEngine, 0);
+        buildSubject((subject) -> {
+            assertNotEquals(subject.nativeEngine, 0);
         });
     }
 
     @Test
     public void testInitialPropertyValues() {
-        buildSUT((sut) -> {
-            assertNull(sut.getTypeface());
-            assertEquals(sut.getTypeSize(), 16.0f, 0.0f);
-            assertEquals(sut.getScriptTag(), SfntTag.make("DFLT"));
-            assertEquals(sut.getLanguageTag(), SfntTag.make("dflt"));
-            assertTrue(sut.getOpenTypeFeatures().isEmpty());
-            assertEquals(sut.getWritingDirection(), WritingDirection.LEFT_TO_RIGHT);
-            assertEquals(sut.getShapingOrder(), ShapingOrder.FORWARD);
+        buildSubject((subject) -> {
+            assertNull(subject.getTypeface());
+            assertEquals(subject.getTypeSize(), 16.0f, 0.0f);
+            assertEquals(subject.getScriptTag(), SfntTag.make("DFLT"));
+            assertEquals(subject.getLanguageTag(), SfntTag.make("dflt"));
+            assertTrue(subject.getOpenTypeFeatures().isEmpty());
+            assertEquals(subject.getWritingDirection(), WritingDirection.LEFT_TO_RIGHT);
+            assertEquals(subject.getShapingOrder(), ShapingOrder.FORWARD);
         });
     }
 
     @Test
     public void testTypeSizePropertyForNegativeValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             assertThrows(IllegalArgumentException.class,
-                         () -> sut.setTypeSize(-1.0f));
+                         () -> subject.setTypeSize(-1.0f));
         });
     }
 
     @Test
     public void testTypeSizePropertyForPositiveValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             float typeSize = 64.0f;
 
             // When
-            sut.setTypeSize(typeSize);
+            subject.setTypeSize(typeSize);
 
             // Then
-            assertEquals(sut.getTypeSize(), typeSize, 0.0f);
+            assertEquals(subject.getTypeSize(), typeSize, 0.0f);
         });
     }
 
     @Test
     public void testTypeSizePropertyForFractionalValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             float typeSize = 100.0f / 3.0f;
 
             // When
-            sut.setTypeSize(typeSize);
+            subject.setTypeSize(typeSize);
 
             // Then
-            assertEquals(sut.getTypeSize(), typeSize, 0.0f);
+            assertEquals(subject.getTypeSize(), typeSize, 0.0f);
         });
     }
 
     @Test
     public void testScriptTagProperty() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             int scriptTag = SfntTag.make("arab");
 
             // When
-            sut.setScriptTag(scriptTag);
+            subject.setScriptTag(scriptTag);
 
             // Then
-            assertEquals(sut.getScriptTag(), scriptTag);
+            assertEquals(subject.getScriptTag(), scriptTag);
         });
     }
 
     @Test
     public void testLanguageTagProperty() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             int languageTag = SfntTag.make("URD ");
 
             // When
-            sut.setLanguageTag(languageTag);
+            subject.setLanguageTag(languageTag);
 
             // Then
-            assertEquals(sut.getLanguageTag(), languageTag);
+            assertEquals(subject.getLanguageTag(), languageTag);
         });
     }
 
     @Test(expected = NullPointerException.class)
     public void testOpenTypeFeaturesPropertyForNullSet() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             Set<OpenTypeFeature> features = null;
 
             // When
-            sut.setOpenTypeFeatures(features);
+            subject.setOpenTypeFeatures(features);
         });
     }
 
     @Test
     public void testOpenTypeFeaturesPropertyForEmptySet() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             Set<OpenTypeFeature> features = Collections.emptySet();
 
             // When
-            sut.setOpenTypeFeatures(features);
+            subject.setOpenTypeFeatures(features);
 
             // Then
-            assertTrue(sut.getOpenTypeFeatures().isEmpty());
+            assertTrue(subject.getOpenTypeFeatures().isEmpty());
         });
     }
 
     @Test
     public void testOpenTypeFeaturesPropertyForCustomValues() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             Set<OpenTypeFeature> features = new LinkedHashSet<>();
             features.add(OpenTypeFeature.of(SfntTag.make("aalt"), 3));
@@ -187,68 +187,68 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
             features.add(OpenTypeFeature.of(SfntTag.make("cswh"), 1));
 
             // When
-            sut.setOpenTypeFeatures(features);
+            subject.setOpenTypeFeatures(features);
 
             // Then
-            assertEquals(sut.getOpenTypeFeatures(), features);
+            assertEquals(subject.getOpenTypeFeatures(), features);
         });
     }
 
     @Test(expected = NullPointerException.class)
     public void testWritingDirectionPropertyForNullValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             WritingDirection writingDirection = null;
 
             // When
-            sut.setWritingDirection(writingDirection);
+            subject.setWritingDirection(writingDirection);
         });
     }
 
     @Test
     public void testWritingDirectionPropertyForValidValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             WritingDirection writingDirection = WritingDirection.RIGHT_TO_LEFT;
 
             // When
-            sut.setWritingDirection(writingDirection);
+            subject.setWritingDirection(writingDirection);
 
             // Then
-            assertEquals(sut.getWritingDirection(), writingDirection);
+            assertEquals(subject.getWritingDirection(), writingDirection);
         });
     }
 
     @Test(expected = NullPointerException.class)
     public void testShapingOrderPropertyForNullValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             ShapingOrder shapingOrder = null;
 
             // When
-            sut.setShapingOrder(shapingOrder);
+            subject.setShapingOrder(shapingOrder);
         });
     }
 
     @Test
     public void testShapingOrderPropertyForValidValue() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
             ShapingOrder shapingOrder = ShapingOrder.BACKWARD;
 
             // When
-            sut.setShapingOrder(shapingOrder);
+            subject.setShapingOrder(shapingOrder);
 
             // Then
-            assertEquals(sut.getShapingOrder(), shapingOrder);
+            assertEquals(subject.getShapingOrder(), shapingOrder);
         });
     }
 
     @Test(expected = IllegalStateException.class)
     public void testShapeTextWithoutSpecifyingTypeface() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            sut.shapeText(text, 0, text.length());
+            subject.shapeText(text, 0, text.length());
         });
     }
 
@@ -258,9 +258,9 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
         typeface = TypefaceStore.getNafeesWeb();
         text = null;
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            sut.shapeText(text, 0, text.length());
+            subject.shapeText(text, 0, text.length());
         });
     }
 
@@ -268,21 +268,21 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
     public void testShapeTextForInvalidRanges() {
         typeface = TypefaceStore.getNafeesWeb();
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             int length = text.length();
 
             // Invalid Start
             assertThrows(IllegalArgumentException.class, "From Index: -1",
-                         () -> sut.shapeText(text, -1, length));
+                         () -> subject.shapeText(text, -1, length));
 
             // Invalid End
             assertThrows(IllegalArgumentException.class,
                          String.format("To Index: %d, Text Length: %d", length + 1, length),
-                         () -> sut.shapeText(text, 0, length + 1));
+                         () -> subject.shapeText(text, 0, length + 1));
 
             // Empty Range
             assertThrows(IllegalArgumentException.class, "Bad Range: [1, 0)",
-                         () -> sut.shapeText(text, 1, 0));
+                         () -> subject.shapeText(text, 1, 0));
         });
     }
 
@@ -290,9 +290,9 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
     public void testShapeTextForFullRange() {
         typeface = TypefaceStore.getNafeesWeb();
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            ShapingResult result = sut.shapeText(text, 0, text.length());
+            ShapingResult result = subject.shapeText(text, 0, text.length());
 
             // Then
             assertNotNull(result);
@@ -301,20 +301,20 @@ public abstract class ShapingEngineTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testToString() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             String description = DescriptionBuilder
                     .of(ShapingEngine.class)
-                    .put("typeface", sut.getTypeface())
-                    .put("typeSize", sut.getTypeSize())
-                    .put("scriptTag", SfntTag.toString(sut.getScriptTag()))
-                    .put("languageTag", SfntTag.toString(sut.getLanguageTag()))
-                    .put("openTypeFeatures", sut.getOpenTypeFeatures())
-                    .put("writingDirection", sut.getWritingDirection())
-                    .put("shapingOrder", sut.getShapingOrder())
+                    .put("typeface", subject.getTypeface())
+                    .put("typeSize", subject.getTypeSize())
+                    .put("scriptTag", SfntTag.toString(subject.getScriptTag()))
+                    .put("languageTag", SfntTag.toString(subject.getLanguageTag()))
+                    .put("openTypeFeatures", subject.getOpenTypeFeatures())
+                    .put("writingDirection", subject.getWritingDirection())
+                    .put("shapingOrder", subject.getShapingOrder())
                     .build();
 
             // When
-            String string = sut.toString();
+            String string = subject.toString();
 
             // Then
             assertEquals(string, description);

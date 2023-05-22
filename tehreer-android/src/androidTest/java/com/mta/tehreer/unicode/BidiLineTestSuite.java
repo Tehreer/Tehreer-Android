@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.mta.tehreer.DisposableTestSuite;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 
 import org.junit.Test;
@@ -37,7 +37,7 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         new BidiRun(4, 8, (byte) 1),
     };
 
-    protected static class BidiLineBuilder extends UnsafeSUTBuilder<BidiLine, BidiLine.Finalizable> {
+    protected static class BidiLineBuilder extends UnsafeSubjectBuilder<BidiLine, BidiLine.Finalizable> {
         String text = DEFAULT_TEXT;
         int startIndex = 0;
         int endIndex = text.length();
@@ -48,7 +48,7 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         }
 
         @Override
-        public BidiLine buildSUT() {
+        public BidiLine buildSubject() {
             BidiAlgorithm bidiAlgorithm = BidiAlgorithm.finalizable(new BidiAlgorithm(text));
             BidiParagraph bidiParagraph = BidiParagraph.finalizable(
                     bidiAlgorithm.createParagraph(0, text.length(), baseLevel));
@@ -65,12 +65,12 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
     protected BidiLineTestSuite(DisposableTestSuite.DefaultMode defaultMode) {
         super(new BidiLineBuilder(), defaultMode);
 
-        setOnPreBuildSUT((builder) -> {
-            BidiLineBuilder sutBuilder = (BidiLineBuilder) builder;
-            sutBuilder.text = text;
-            sutBuilder.startIndex = startIndex;
-            sutBuilder.endIndex = endIndex;
-            sutBuilder.baseLevel = baseLevel;
+        setOnPreBuildSubject((builder) -> {
+            BidiLineBuilder subjectBuilder = (BidiLineBuilder) builder;
+            subjectBuilder.text = text;
+            subjectBuilder.startIndex = startIndex;
+            subjectBuilder.endIndex = endIndex;
+            subjectBuilder.baseLevel = baseLevel;
         });
     }
 
@@ -82,10 +82,10 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         baseLevel = 0;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
         });
     }
 
@@ -97,10 +97,10 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         baseLevel = 1;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
         });
     }
 
@@ -112,18 +112,18 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
         baseLevel = 0;
 
         // When
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
         });
     }
 
     @Test
     public void testGetRunCount() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            int runCount = sut.getRunCount();
+            int runCount = subject.getRunCount();
 
             // Then
             assertEquals(runCount, 2);
@@ -132,9 +132,9 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
 
     @Test
     public void testGetVisualRunForFirstIndex() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiRun run = sut.getVisualRun(0);
+            BidiRun run = subject.getVisualRun(0);
 
             // Then
             assertNotNull(run);
@@ -146,9 +146,9 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
 
     @Test
     public void testGetVisualRunForLastIndex() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            BidiRun run = sut.getVisualRun(1);
+            BidiRun run = subject.getVisualRun(1);
 
             // Then
             assertNotNull(run);
@@ -160,43 +160,43 @@ public abstract class BidiLineTestSuite extends DisposableTestSuite<BidiLine, Bi
 
     @Test
     public void testGetVisualRuns() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            List<BidiRun> visualRuns = sut.getVisualRuns();
+            List<BidiRun> visualRuns = subject.getVisualRuns();
 
             // Then
             assertTrue(visualRuns instanceof BidiLine.RunList);
-            assertSame(((BidiLine.RunList) visualRuns).owner, sut);
-            assertSame(((BidiLine.RunList) visualRuns).size, sut.getRunCount());
+            assertSame(((BidiLine.RunList) visualRuns).owner, subject);
+            assertSame(((BidiLine.RunList) visualRuns).size, subject.getRunCount());
             assertArrayEquals(visualRuns.toArray(new BidiRun[0]), DEFAULT_VISUAL_RUNS);
         });
     }
 
     @Test
     public void testGetMirroringPairs() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            Iterable<BidiPair> mirroringPairs = sut.getMirroringPairs();
+            Iterable<BidiPair> mirroringPairs = subject.getMirroringPairs();
 
             // Then
             assertTrue(mirroringPairs instanceof BidiLine.MirrorIterable);
-            assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, sut);
+            assertSame(((BidiLine.MirrorIterable) mirroringPairs).owner, subject);
         });
     }
 
     @Test
     public void testToString() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             String description = DescriptionBuilder
                     .of(BidiLine.class)
                     .put("charStart", startIndex)
                     .put("charEnd", endIndex)
                     .put("visualRuns", DEFAULT_VISUAL_RUNS)
-                    .put("mirroringPairs", sut.getMirroringPairs())
+                    .put("mirroringPairs", subject.getMirroringPairs())
                     .build();
 
             // When
-            String string = sut.toString();
+            String string = subject.toString();
 
             // Then
             assertEquals(string, description);

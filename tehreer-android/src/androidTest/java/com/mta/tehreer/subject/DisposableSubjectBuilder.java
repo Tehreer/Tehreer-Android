@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sut;
+package com.mta.tehreer.subject;
 
 import androidx.annotation.Nullable;
 
 import java.util.function.Consumer;
 
-public class DisposableSUTBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SUTBuilder<T> {
-    private final UnsafeSUTBuilder<T, F> builder;
+public class DisposableSubjectBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SubjectBuilder<T> {
+    private final UnsafeSubjectBuilder<T, F> builder;
 
-    public DisposableSUTBuilder(UnsafeSUTBuilder<T, F> builder) {
+    public DisposableSubjectBuilder(UnsafeSubjectBuilder<T, F> builder) {
         this.builder = builder;
     }
 
     @Override
-    public T buildSUT() {
-        return builder.buildSUT();
+    public T buildSubject() {
+        return builder.buildSubject();
     }
 
-    public void buildSUT(@Nullable Consumer<T> consumer) {
-        T sut = null;
+    public void buildSubject(@Nullable Consumer<T> consumer) {
+        T subject = null;
 
         try {
-            sut = buildSUT();
+            subject = buildSubject();
 
             if (consumer != null) {
-                consumer.accept(sut);
+                consumer.accept (subject);
             }
         } finally {
-            if (sut != null) {
-                sut.dispose();
+            if  (subject != null) {
+                subject.dispose();
             }
         }
     }

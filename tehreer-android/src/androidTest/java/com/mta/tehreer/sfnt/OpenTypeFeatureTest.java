@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class OpenTypeFeatureTest extends HashableTestSuite<OpenTypeFeature> {
 
     @Before
     public void setUp() {
-        sut = OpenTypeFeature.of(tag, value);
+        subject = OpenTypeFeature.of(tag, value);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class OpenTypeFeatureTest extends HashableTestSuite<OpenTypeFeature> {
                 .build();
 
         // When
-        String string = sut.toString();
+        String string = subject.toString();
 
         // Then
         assertEquals(string, description);

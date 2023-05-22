@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.Constants;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DisposableUtils;
-import com.mta.tehreer.sut.SUTBuilder;
+import com.mta.tehreer.subject.SubjectBuilder;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,116 +47,116 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
     }
 
     private final DefaultMode defaultMode;
-    private final UnsafeSUTBuilder<T, F> sutBuilder;
+    private final UnsafeSubjectBuilder<T, F> subjectBuilder;
 
-    private Consumer<SUTBuilder<?>> onPreBuildSUT;
-    private Consumer<SUTBuilder<?>> onPostBuildSUT;
+    private Consumer<SubjectBuilder<?>> onPreBuildSubject;
+    private Consumer<SubjectBuilder<?>> onPostBuildSubject;
 
-    protected DisposableTestSuite(@NonNull UnsafeSUTBuilder<T, F> sutBuilder) {
-        this(sutBuilder, DefaultMode.NONE);
+    protected DisposableTestSuite(@NonNull UnsafeSubjectBuilder<T, F> subjectBuilder) {
+        this(subjectBuilder, DefaultMode.NONE);
     }
 
-    protected DisposableTestSuite(@NonNull UnsafeSUTBuilder<T, F> sutBuilder,
+    protected DisposableTestSuite(@NonNull UnsafeSubjectBuilder<T, F> subjectBuilder,
                                   @NonNull DefaultMode defaultMode) {
-        this.sutBuilder = sutBuilder;
+        this.subjectBuilder = subjectBuilder;
         this.defaultMode = defaultMode;
     }
 
     protected Class<T> getUnsafeClass() {
-        return sutBuilder.getUnsafeClass();
+        return subjectBuilder.getUnsafeClass();
     }
 
     protected Class<F> getSafeClass() {
-        return sutBuilder.getSafeClass();
+        return subjectBuilder.getSafeClass();
     }
 
-    protected void setOnPreBuildSUT(@Nullable Consumer<SUTBuilder<?>> onPreBuildSUT) {
-        this.onPreBuildSUT = onPreBuildSUT;
+    protected void setOnPreBuildSubject(@Nullable Consumer<SubjectBuilder<?>> onPreBuildSubject) {
+        this.onPreBuildSubject = onPreBuildSubject;
     }
 
-    protected void setOnPostBuildSUT(@Nullable Consumer<SUTBuilder<?>> onPostBuildSUT) {
-        this.onPostBuildSUT = onPostBuildSUT;
+    protected void setOnPostBuildSubject(@Nullable Consumer<SubjectBuilder<?>> onPostBuildSubject) {
+        this.onPostBuildSubject = onPostBuildSubject;
     }
 
-    private void onPreBuildSUT() {
-        if (onPreBuildSUT != null) {
-            onPreBuildSUT.accept(sutBuilder);
+    private void onPreBuildSubject() {
+        if (onPreBuildSubject != null) {
+            onPreBuildSubject.accept(subjectBuilder);
         }
     }
 
-    private void onPostBuildSUT() {
-        if (onPostBuildSUT != null) {
-            onPostBuildSUT.accept(sutBuilder);
+    private void onPostBuildSubject() {
+        if (onPostBuildSubject != null) {
+            onPostBuildSubject.accept(subjectBuilder);
         }
     }
 
-    protected T buildUnsafeSUT() {
-        onPreBuildSUT();
-        T sut = sutBuilder.buildSUT();
-        onPostBuildSUT();
+    protected T buildUnsafeSubject() {
+        onPreBuildSubject();
+        T subject = subjectBuilder.buildSubject();
+        onPostBuildSubject();
 
-        return sut;
+        return subject;
     }
 
-    protected F buildSafeSUT() {
-        onPreBuildSUT();
-        F sut = sutBuilder.getFinalizableBuilder().buildSUT();
-        onPostBuildSUT();
+    protected F buildSafeSubject() {
+        onPreBuildSubject();
+        F subject = subjectBuilder.getFinalizableBuilder().buildSubject();
+        onPostBuildSubject();
 
-        return sut;
+        return subject;
     }
 
-    protected void buildDisposableSUT(@Nullable Consumer<T> consumer) {
-        onPreBuildSUT();
-        sutBuilder.getDisposableBuilder().buildSUT(consumer);
-        onPostBuildSUT();
+    protected void buildDisposableSubject(@Nullable Consumer<T> consumer) {
+        onPreBuildSubject();
+        subjectBuilder.getDisposableBuilder().buildSubject(consumer);
+        onPostBuildSubject();
     }
 
-    protected void buildSafeSUT(@Nullable Consumer<T> consumer) {
-        onPreBuildSUT();
+    protected void buildSafeSubject(@Nullable Consumer<T> consumer) {
+        onPreBuildSubject();
 
-        SUTBuilder<F> builder = sutBuilder.getFinalizableBuilder();
-        builder.buildSUT((sut) -> {
+        SubjectBuilder<F> builder = subjectBuilder.getFinalizableBuilder();
+        builder.buildSubject( (subject) -> {
             if (consumer != null) {
-                consumer.accept(sut);
+                consumer.accept (subject);
             }
         });
 
-        onPostBuildSUT();
+        onPostBuildSubject();
     }
 
-    protected void buildSUT(@Nullable Consumer<T> consumer) {
+    protected void buildSubject(@Nullable Consumer<T> consumer) {
         switch (defaultMode) {
             case NONE:
                 fail("Default mode not specified");
                 break;
             case DISPOSABLE:
-                buildDisposableSUT(consumer);
+                buildDisposableSubject(consumer);
                 break;
             case SAFE:
-                buildSafeSUT(consumer);
+                buildSafeSubject(consumer);
                 break;
         }
     }
 
     public static abstract class StaticTestSuite<T extends Disposable, F extends T> extends DisposableTestSuite<T, F> {
-        protected StaticTestSuite(UnsafeSUTBuilder<T, F> sutBuilder) {
-            super(sutBuilder);
+        protected StaticTestSuite(UnsafeSubjectBuilder<T, F> subjectBuilder) {
+            super (subjectBuilder);
         }
 
-        protected boolean invokeIsFinalizable(T sut) {
-            return DisposableUtils.invokeIsFinalizable(getUnsafeClass(), sut);
+        protected boolean invokeIsFinalizable(T subject) {
+            return DisposableUtils.invokeIsFinalizable(getUnsafeClass(), subject);
         }
 
-        protected F invokeFinalizable(T sut) {
-            return DisposableUtils.invokeFinalizable(getUnsafeClass(), sut);
+        protected F invokeFinalizable(T subject) {
+            return DisposableUtils.invokeFinalizable(getUnsafeClass(), subject);
         }
 
         @Test
         public void testIsFinalizableForUnsafeInstance() {
-            buildDisposableSUT((sut) -> {
+            buildDisposableSubject( (subject) -> {
                 // When
-                boolean isFinalizable = invokeIsFinalizable(sut);
+                boolean isFinalizable = invokeIsFinalizable (subject);
 
                 // Then
                 assertFalse(isFinalizable);
@@ -166,10 +166,10 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
         @Test
         public void testIsFinalizableForSafeInstance() {
             // Given
-            T sut = buildSafeSUT();
+            T subject = buildSafeSubject();
 
             // When
-            boolean isFinalizable = invokeIsFinalizable(sut);
+            boolean isFinalizable = invokeIsFinalizable (subject);
 
             // Then
             assertTrue(isFinalizable);
@@ -178,10 +178,10 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
         @Test
         public void testFinalizableForUnsafeInstance() {
             // Given
-            T sut = buildUnsafeSUT();
+            T subject = buildUnsafeSubject();
 
             // When
-            F object = invokeFinalizable(sut);
+            F object = invokeFinalizable (subject);
 
             // Then
             assertSame(object.getClass(), getSafeClass());
@@ -202,13 +202,13 @@ public abstract class DisposableTestSuite<T extends Disposable, F extends T> {
         @Test
         public void testFinalizableForSameInstance() {
             // Given
-            T sut = buildSafeSUT();
+            T subject = buildSafeSubject();
 
             // When
-            F object = invokeFinalizable(sut);
+            F object = invokeFinalizable (subject);
 
             // Then
-            assertSame(object, sut);
+            assertSame(object, subject);
         }
     }
 }

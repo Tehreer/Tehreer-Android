@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public class BidiMirrorLocatorTest {
     private static final String DEFAULT_TEXT = "یہ ایک (car) ہے۔";
 
     private BidiLine bidiLine;
-    private BidiMirrorLocator sut;
+    private BidiMirrorLocator subject;
 
     @Before
     public void setUp() {
@@ -43,27 +43,27 @@ public class BidiMirrorLocatorTest {
         bidiLine = BidiLine.finalizable(
             bidiParagraph.createLine(0, text.length())
         );
-        sut = new BidiMirrorLocator();
+        subject = new BidiMirrorLocator();
     }
 
     @After
     public void tearDown() {
-        sut.dispose();
+        subject.dispose();
     }
 
     @Test
     public void testNativePointers() {
-        assertNotEquals(sut.nativeMirrorLocator, 0);
+        assertNotEquals(subject.nativeMirrorLocator, 0);
     }
 
     @Test
     public void testNextPair() {
-        sut.loadLine(bidiLine);
+        subject.loadLine(bidiLine);
 
         // For First Mirror
         {
             // When
-            BidiPair pair = sut.nextPair();
+            BidiPair pair = subject.nextPair();
 
             // Then
             assertNotNull(pair);
@@ -75,7 +75,7 @@ public class BidiMirrorLocatorTest {
         // For Last Mirror
         {
             // When
-            BidiPair pair = sut.nextPair();
+            BidiPair pair = subject.nextPair();
 
             // Then
             assertNotNull(pair);
@@ -87,7 +87,7 @@ public class BidiMirrorLocatorTest {
         // For No Available Mirror
         {
             // When
-            BidiPair pair = sut.nextPair();
+            BidiPair pair = subject.nextPair();
 
             // Then
             assertNull(pair);

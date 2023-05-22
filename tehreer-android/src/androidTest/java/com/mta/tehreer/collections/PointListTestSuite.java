@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
             super(PointList.class);
 
             this.values = values;
-            this.sut = subList;
+            this.subject = subList;
         }
 
         @Override
@@ -60,7 +60,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
     @Test
     public void testSize() {
         // When
-        int size = sut.size();
+        int size = subject.size();
 
         // Then
         assertEquals(size, numberOfPoints());
@@ -73,9 +73,9 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.getX(index));
+                     () -> subject.getX(index));
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.getY(index));
+                     () -> subject.getY(index));
     }
 
     @Test()
@@ -85,9 +85,9 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.getX(index));
+                     () -> subject.getX(index));
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.getY(index));
+                     () -> subject.getY(index));
     }
 
     @Test
@@ -97,8 +97,8 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
             int firstIndex = i * 2;
             int secondIndex = firstIndex + 1;
 
-            assertEquals(sut.getX(i), values[firstIndex], 0.0f);
-            assertEquals(sut.getY(i), values[secondIndex], 0.0f);
+            assertEquals(subject.getX(i), values[firstIndex], 0.0f);
+            assertEquals(subject.getY(i), values[secondIndex], 0.0f);
         }
     }
 
@@ -108,11 +108,11 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
 
         // Invalid Start
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, -1));
+                     () -> subject.copyTo(array, -1));
 
         // Exceeding Length
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 1));
+                     () -> subject.copyTo(array, 1));
     }
 
     @Test
@@ -122,7 +122,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
 
         // Then
         assertThrows(NullPointerException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -136,7 +136,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
 
         // When
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -144,7 +144,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] array = new float[values.length];
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         // Then
         assertArrayEquals(array, values, 0.0f);
@@ -162,7 +162,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         float[] copiedChunk = Arrays.copyOfRange(array, 0, actualLength);
         float[] remainingChunk = Arrays.copyOfRange(array, actualLength, finalLength);
@@ -184,7 +184,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, extraLength);
+        subject.copyTo(array, extraLength);
 
         float[] firstChunk = Arrays.copyOfRange(array, 0, extraLength);
         float[] copiedChunk = Arrays.copyOfRange(array, extraLength, finalLength);
@@ -230,15 +230,15 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
     public void testSubListForInvalidRanges() {
         // Invalid Start
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(-1, numberOfPoints()));
+                     () -> subject.subList(-1, numberOfPoints()));
 
         // Invalid End
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(0, numberOfPoints() + 1));
+                     () -> subject.subList(0, numberOfPoints() + 1));
 
         // Bad Range
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(numberOfPoints(), -1));
+                     () -> subject.subList(numberOfPoints(), -1));
     }
 
     @Test
@@ -246,9 +246,9 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         int fullLength = numberOfPoints();
         int halfLength = fullLength / 2;
 
-        testSubList(sut.subList(0, 0), new float[0]);
-        testSubList(sut.subList(halfLength, halfLength), new float[0]);
-        testSubList(sut.subList(fullLength, fullLength), new float[0]);
+        testSubList(subject.subList(0, 0), new float[0]);
+        testSubList(subject.subList(halfLength, halfLength), new float[0]);
+        testSubList(subject.subList(fullLength, fullLength), new float[0]);
     }
 
     @Test
@@ -258,7 +258,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] firstHalf = copyPoints(startIndex, endIndex);
 
         // When
-        PointList subList = sut.subList(startIndex, endIndex);
+        PointList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, firstHalf);
@@ -271,7 +271,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] secondHalf = copyPoints(startIndex, endIndex);
 
         // When
-        PointList subList = sut.subList(startIndex, endIndex);
+        PointList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, secondHalf);
@@ -285,7 +285,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
         float[] midHalf = copyPoints(startIndex, endIndex);
 
         // When
-        PointList subList = sut.subList(startIndex, endIndex);
+        PointList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, midHalf);
@@ -294,7 +294,7 @@ public abstract class PointListTestSuite<T extends PointList> extends HashableTe
     @Test
     public void testToArray() {
         // When
-        float[] array = sut.toArray();
+        float[] array = subject.toArray();
 
         // Then
         assertArrayEquals(array, values, 0.0f);

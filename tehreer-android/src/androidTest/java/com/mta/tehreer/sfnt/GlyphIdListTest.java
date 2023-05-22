@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,6 @@ public class GlyphIdListTest extends IntListTestSuite<GlyphIdList> {
             0x00000000, 0x1C71C71C, 0x38E38E38, 0x55555554, 0x71C71C70,
             0x8E38E38C, 0xAAAAAAA8, 0xC71C71C4, 0xE38E38E0, 0xFFFFFFFC
         };
-        sut = buildList(values);
+        subject = buildList(values);
     }
 }

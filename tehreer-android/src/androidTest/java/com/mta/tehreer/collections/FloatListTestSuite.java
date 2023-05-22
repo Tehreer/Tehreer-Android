@@ -36,7 +36,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
             super(FloatList.class);
 
             this.values = values;
-            this.sut = subList;
+            this.subject = subList;
         }
 
         @Override
@@ -52,7 +52,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
     @Test
     public void testSize() {
         // When
-        int size = sut.size();
+        int size = subject.size();
 
         // Then
         assertEquals(size, values.length);
@@ -65,7 +65,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.get(index));
+                     () -> subject.get(index));
     }
 
     @Test()
@@ -75,14 +75,14 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
 
         // Then
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.get(index));
+                     () -> subject.get(index));
     }
 
     @Test
     public void testGetForAllIndexes() {
         int length = values.length;
         for (int i = 0; i < length; i++) {
-            assertEquals(sut.get(i), values[i], 0.0f);
+            assertEquals(subject.get(i), values[i], 0.0f);
         }
     }
 
@@ -92,11 +92,11 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
 
         // Invalid Start
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, -1));
+                     () -> subject.copyTo(array, -1));
 
         // Exceeding Length
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 1));
+                     () -> subject.copyTo(array, 1));
     }
 
     @Test
@@ -106,7 +106,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
 
         // Then
         assertThrows(NullPointerException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -120,7 +120,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
 
         // When
         assertThrows(ArrayIndexOutOfBoundsException.class,
-                     () -> sut.copyTo(array, 0));
+                     () -> subject.copyTo(array, 0));
     }
 
     @Test
@@ -128,7 +128,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] array = new float[values.length];
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         // Then
         assertArrayEquals(array, values, 0.0f);
@@ -146,7 +146,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, 0);
+        subject.copyTo(array, 0);
 
         float[] copiedChunk = Arrays.copyOfRange(array, 0, actualLength);
         float[] remainingChunk = Arrays.copyOfRange(array, actualLength, finalLength);
@@ -168,7 +168,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] extraChunk = Arrays.copyOfRange(array, actualLength, finalLength);
 
         // When
-        sut.copyTo(array, extraLength);
+        subject.copyTo(array, extraLength);
 
         float[] firstChunk = Arrays.copyOfRange(array, 0, extraLength);
         float[] copiedChunk = Arrays.copyOfRange(array, extraLength, finalLength);
@@ -215,15 +215,15 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
     public void testSubListForInvalidRanges() {
         // Invalid Start
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(-1, values.length));
+                     () -> subject.subList(-1, values.length));
 
         // Invalid End
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(0, values.length + 1));
+                     () -> subject.subList(0, values.length + 1));
 
         // Bad Range
         assertThrows(IndexOutOfBoundsException.class,
-                     () -> sut.subList(values.length, -1));
+                     () -> subject.subList(values.length, -1));
     }
 
     @Test
@@ -231,9 +231,9 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         int fullLength = values.length;
         int halfLength = fullLength / 2;
 
-        testSubList(sut.subList(0, 0), new float[0]);
-        testSubList(sut.subList(halfLength, halfLength), new float[0]);
-        testSubList(sut.subList(fullLength, fullLength), new float[0]);
+        testSubList(subject.subList(0, 0), new float[0]);
+        testSubList(subject.subList(halfLength, halfLength), new float[0]);
+        testSubList(subject.subList(fullLength, fullLength), new float[0]);
     }
 
     @Test
@@ -243,7 +243,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] firstHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        FloatList subList = sut.subList(startIndex, endIndex);
+        FloatList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, firstHalf);
@@ -256,7 +256,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] secondHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        FloatList subList = sut.subList(startIndex, endIndex);
+        FloatList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, secondHalf);
@@ -270,7 +270,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
         float[] midHalf = Arrays.copyOfRange(values, startIndex, endIndex);
 
         // When
-        FloatList subList = sut.subList(startIndex, endIndex);
+        FloatList subList = subject.subList(startIndex, endIndex);
 
         // Then
         testSubList(subList, midHalf);
@@ -279,7 +279,7 @@ public abstract class FloatListTestSuite<T extends FloatList> extends HashableTe
     @Test
     public void testToArray() {
         // When
-        float[] array = sut.toArray();
+        float[] array = subject.toArray();
 
         // Then
         assertArrayEquals(array, values, 0.0f);

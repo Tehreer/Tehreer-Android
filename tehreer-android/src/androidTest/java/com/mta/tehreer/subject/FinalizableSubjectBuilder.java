@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sut;
+package com.mta.tehreer.subject;
 
 import static org.junit.Assert.fail;
 
 import com.mta.tehreer.util.DisposableUtils;
 
-public class FinalizableSUTBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SUTBuilder<F> {
-    private final UnsafeSUTBuilder<T, F> builder;
+public class FinalizableSubjectBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SubjectBuilder<F> {
+    private final UnsafeSubjectBuilder<T, F> builder;
 
-    public FinalizableSUTBuilder(UnsafeSUTBuilder<T, F> builder) {
+    public FinalizableSubjectBuilder(UnsafeSubjectBuilder<T, F> builder) {
         this.builder = builder;
     }
 
-    public F buildSUT() {
-        T unsafeSUT = builder.buildSUT();
-        F sut = null;
+    public F buildSubject() {
+        T unsafeSubject = builder.buildSubject();
+        F subject = null;
 
         try {
-            sut = DisposableUtils.invokeFinalizable(builder.unsafeClass, unsafeSUT);
+            subject = DisposableUtils.invokeFinalizable(builder.unsafeClass, unsafeSubject);
         } catch (Throwable throwable) {
             fail(throwable.getMessage());
         }
 
-        return sut;
+        return subject;
     }
 }

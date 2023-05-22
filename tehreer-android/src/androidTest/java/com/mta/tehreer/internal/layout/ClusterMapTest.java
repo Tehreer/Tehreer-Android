@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,6 @@ public class ClusterMapTest extends IntListTestSuite<ClusterMap> {
             0x00000000, 0x1C71AAAA, 0x38E35554, 0x5554FFFE, 0x71C6AAA8,
             0x8E385552, 0xAAA9FFFC, 0xC71BAAA6, 0xE38D5550, 0xFFFEFFFA
         };
-        sut = buildList(sample, difference);
+        subject = buildList(sample, difference);
     }
 }

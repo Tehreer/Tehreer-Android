@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public class BidiAlgorithmDisposableTest extends BidiAlgorithmTestSuite {
 
         // Then
         assertThrows(NullPointerException.class, "text",
-                     () -> buildSUT((sut) -> { }));
+                     () -> buildSubject((subject) -> { }));
     }
 
     @Test
@@ -45,6 +45,6 @@ public class BidiAlgorithmDisposableTest extends BidiAlgorithmTestSuite {
 
         // Then
         assertThrows(IllegalArgumentException.class, "Text is empty",
-                     () -> buildSUT((sut) -> { }));
+                     () -> buildSubject((subject) -> { }));
     }
 }

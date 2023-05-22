@@ -30,23 +30,23 @@ import org.junit.Test;
 import java.util.Iterator;
 
 public class ScriptClassifierTest {
-    private ScriptClassifier sut;
+    private ScriptClassifier subject;
 
     private final String text = "abcdابجد";
 
     @Before
     public void setUp() {
-        sut = new ScriptClassifier(text);
+        subject = new ScriptClassifier(text);
     }
 
     @Test
     public void testGetText() {
-        assertEquals(sut.getText(), text);
+        assertEquals(subject.getText(), text);
     }
 
     @Test
     public void testGetCharScripts() {
-        IntList charScripts = sut.getCharScripts();
+        IntList charScripts = subject.getCharScripts();
 
         assertTrue(charScripts instanceof JByteArrayIntList);
     }
@@ -55,7 +55,7 @@ public class ScriptClassifierTest {
     public void testGetScriptRunsForInvalidRange() {
         // Invalid Start
         try {
-            sut.getScriptRuns(-1, 8);
+            subject.getScriptRuns(-1, 8);
             fail();
         } catch (IllegalArgumentException exception) {
             assertEquals(exception.getMessage(), "Char Start: -1");
@@ -63,7 +63,7 @@ public class ScriptClassifierTest {
 
         // Invalid End
         try {
-            sut.getScriptRuns(0, 9);
+            subject.getScriptRuns(0, 9);
             fail();
         } catch (IllegalArgumentException exception) {
             assertEquals(exception.getMessage(), "Char End: 9, Text Length: 8");
@@ -71,7 +71,7 @@ public class ScriptClassifierTest {
 
         // Empty Range
         try {
-            sut.getScriptRuns(0, 0);
+            subject.getScriptRuns(0, 0);
             fail();
         } catch (IllegalArgumentException exception) {
             assertEquals(exception.getMessage(), "Bad Range: [0, 0)");
@@ -80,7 +80,7 @@ public class ScriptClassifierTest {
 
     @Test
     public void testGetScriptRunsForPartialRange() {
-        Iterator<ScriptRun> iterator = sut.getScriptRuns(1, 7);
+        Iterator<ScriptRun> iterator = subject.getScriptRuns(1, 7);
         assertTrue(iterator instanceof ScriptClassifier.RunIterator);
 
         ScriptClassifier.RunIterator runIterator = (ScriptClassifier.RunIterator) iterator;
@@ -90,7 +90,7 @@ public class ScriptClassifierTest {
 
     @Test
     public void testGetScriptRunsForFullRange() {
-        Iterator<ScriptRun> iterator = sut.getScriptRuns();
+        Iterator<ScriptRun> iterator = subject.getScriptRuns();
         assertTrue(iterator instanceof ScriptClassifier.RunIterator);
 
         ScriptClassifier.RunIterator runIterator = (ScriptClassifier.RunIterator) iterator;
@@ -103,12 +103,12 @@ public class ScriptClassifierTest {
         String description = DescriptionBuilder
                 .of(ScriptClassifier.class)
                 .put("text", text)
-                .put("charScripts", sut.getCharScripts())
-                .put("scriptRuns", sut.getScriptRuns())
+                .put("charScripts", subject.getCharScripts())
+                .put("scriptRuns", subject.getScriptRuns())
                 .build();
 
         // When
-        String string = sut.toString();
+        String string = subject.toString();
 
         // Then
         assertEquals(string, description);

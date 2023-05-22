@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class BidiLineMirrorIterableTest {
     private static final String DEFAULT_TEXT = "یہ ایک (car) ہے۔";
 
     private BidiLine bidiLine;
-    private BidiLine.MirrorIterable sut;
+    private BidiLine.MirrorIterable subject;
 
     @Before
     public void setUp() {
@@ -45,13 +45,13 @@ public class BidiLineMirrorIterableTest {
         bidiLine = BidiLine.finalizable(
             bidiParagraph.createLine(0, text.length())
         );
-        sut = new BidiLine.MirrorIterable(bidiLine);
+        subject = new BidiLine.MirrorIterable(bidiLine);
     }
 
     @Test
     public void testIterator() {
         // When
-        Iterator<BidiPair> iterator = sut.iterator();
+        Iterator<BidiPair> iterator = subject.iterator();
 
         // Then
         assertTrue(iterator instanceof BidiLine.MirrorIterator);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.util.NoSuchElementException;
 
 public class ScriptClassifierRunIteratorTest {
-    private ScriptClassifier.RunIterator sut;
+    private ScriptClassifier.RunIterator subject;
 
     private final @Script.Value
     byte[] scripts = {
@@ -35,25 +35,25 @@ public class ScriptClassifierRunIteratorTest {
 
     @Before
     public void setUp() {
-        sut = new ScriptClassifier.RunIterator(scripts, 0, scripts.length);
+        subject = new ScriptClassifier.RunIterator(scripts, 0, scripts.length);
     }
 
     @Test
     public void testHasNextForValidIndexes() {
-        sut.index = 0;
-        assertTrue(sut.hasNext());
+        subject.index = 0;
+        assertTrue(subject.hasNext());
 
-        sut.index = 1;
-        assertTrue(sut.hasNext());
+        subject.index = 1;
+        assertTrue(subject.hasNext());
 
-        sut.index = 2;
-        assertTrue(sut.hasNext());
+        subject.index = 2;
+        assertTrue(subject.hasNext());
     }
 
     @Test
     public void testHasNextForEndingIndex() {
-        sut.index = scripts.length;
-        assertFalse(sut.hasNext());
+        subject.index = scripts.length;
+        assertFalse(subject.hasNext());
     }
 
     @Test
@@ -61,13 +61,13 @@ public class ScriptClassifierRunIteratorTest {
         ScriptRun scriptRun;
 
         // Given
-        sut.index = 0;
+        subject.index = 0;
 
         // When
-        scriptRun = sut.next();
+        scriptRun = subject.next();
 
         // Then
-        assertEquals(sut.index, 1);
+        assertEquals(subject.index, 1);
         assertEquals(scriptRun.charStart, 0);
         assertEquals(scriptRun.charEnd, 1);
         assertEquals(scriptRun.script, Script.LATIN);
@@ -78,13 +78,13 @@ public class ScriptClassifierRunIteratorTest {
         ScriptRun scriptRun;
 
         // Given
-        sut.index = 1;
+        subject.index = 1;
 
         // When
-        scriptRun = sut.next();
+        scriptRun = subject.next();
 
         // Then
-        assertEquals(sut.index, 2);
+        assertEquals(subject.index, 2);
         assertEquals(scriptRun.charStart, 1);
         assertEquals(scriptRun.charEnd, 2);
         assertEquals(scriptRun.script, Script.COMMON);
@@ -95,13 +95,13 @@ public class ScriptClassifierRunIteratorTest {
         ScriptRun scriptRun;
 
         // Given
-        sut.index = 2;
+        subject.index = 2;
 
         // When
-        scriptRun = sut.next();
+        scriptRun = subject.next();
 
         // Then
-        assertEquals(sut.index, 3);
+        assertEquals(subject.index, 3);
         assertEquals(scriptRun.charStart, 2);
         assertEquals(scriptRun.charEnd, 3);
         assertEquals(scriptRun.script, Script.ARABIC);
@@ -110,14 +110,14 @@ public class ScriptClassifierRunIteratorTest {
     @Test(expected = NoSuchElementException.class)
     public void testNextForNoAvailableRun() {
         // Given
-        sut.index = 3;
+        subject.index = 3;
 
         // When
-        sut.next();
+        subject.next();
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void testRemove() {
-        sut.remove();
+        subject.remove();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Typeface;
 import com.mta.tehreer.internal.layout.CaretEdgesBuilder;
-import com.mta.tehreer.sut.UnsafeSUTBuilder;
+import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 import com.mta.tehreer.util.TypefaceStore;
 
@@ -71,7 +71,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         2351.0f, 2038.5f, 1789.5f, 1662.0f, 1162.5f, 597.0f, 0.0f
     );
 
-    protected static class ShapingResultBuilder extends UnsafeSUTBuilder<ShapingResult, ShapingResult.Finalizable> {
+    protected static class ShapingResultBuilder extends UnsafeSubjectBuilder<ShapingResult, ShapingResult.Finalizable> {
         Typeface typeface = DEFAULT_TYPEFACE;
         float typeSize = DEFAULT_TYPE_SIZE;
         String scriptTag = DEFAULT_SCRIPT_TAG;
@@ -88,7 +88,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         }
 
         @Override
-        public ShapingResult buildSUT() {
+        public ShapingResult buildSubject() {
             ShapingEngine shapingEngine = ShapingEngine.finalizable(
                 new ShapingEngine()
             );
@@ -118,18 +118,18 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
     protected ShapingResultTestSuite(DisposableTestSuite.DefaultMode defaultMode) {
         super(new ShapingResultBuilder(), defaultMode);
 
-        setOnPreBuildSUT((builder) -> {
-            ShapingResultBuilder sutBuilder = (ShapingResultBuilder) builder;
-            sutBuilder.typeface = typeface;
-            sutBuilder.typeSize = typeSize;
-            sutBuilder.scriptTag = scriptTag;
-            sutBuilder.languageTag = languageTag;
-            sutBuilder.openTypeFeatures = openTypeFeatures;
-            sutBuilder.writingDirection = writingDirection;
-            sutBuilder.shapingOrder = shapingOrder;
-            sutBuilder.text = text;
-            sutBuilder.startIndex = startIndex;
-            sutBuilder.endIndex = endIndex;
+        setOnPreBuildSubject((builder) -> {
+            ShapingResultBuilder subjectBuilder = (ShapingResultBuilder) builder;
+            subjectBuilder.typeface = typeface;
+            subjectBuilder.typeSize = typeSize;
+            subjectBuilder.scriptTag = scriptTag;
+            subjectBuilder.languageTag = languageTag;
+            subjectBuilder.openTypeFeatures = openTypeFeatures;
+            subjectBuilder.writingDirection = writingDirection;
+            subjectBuilder.shapingOrder = shapingOrder;
+            subjectBuilder.text = text;
+            subjectBuilder.startIndex = startIndex;
+            subjectBuilder.endIndex = endIndex;
         });
     }
 
@@ -138,35 +138,35 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         // Given
         shapingOrder = ShapingOrder.FORWARD;
 
-        buildSUT((sut) -> {
-            assertFalse(sut.isBackward());
+        buildSubject((subject) -> {
+            assertFalse(subject.isBackward());
         });
     }
 
     @Test
     public void testGetGlyphIdForAllElements() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             IntList values = DEFAULT_GLYPH_IDS;
 
-            int glyphCount = sut.getGlyphCount();
+            int glyphCount = subject.getGlyphCount();
             assertEquals(glyphCount, values.size());
 
             for (int i = 0; i < glyphCount; i++) {
-                assertEquals(sut.getGlyphId(i), values.get(i));
+                assertEquals(subject.getGlyphId(i), values.get(i));
             }
         });
     }
 
     @Test
     public void testCopyGlyphIdsOnMatchingArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             IntList values = DEFAULT_GLYPH_IDS;
 
             int[] glyphIds = new int[values.size()];
             Arrays.fill(glyphIds, -1);
 
             // When
-            sut.copyGlyphIds(0, values.size(), glyphIds, 0);
+            subject.copyGlyphIds(0, values.size(), glyphIds, 0);
 
             // Then
             assertArrayEquals(glyphIds, values.toArray());
@@ -175,7 +175,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphIdsOnSmallArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             IntList values = DEFAULT_GLYPH_IDS;
             int length = values.size() / 2;
             int startIndex = length / 2;
@@ -187,7 +187,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             Arrays.fill(glyphIds, -1);
 
             // When
-            sut.copyGlyphIds(startIndex, values.size(), glyphIds, 0);
+            subject.copyGlyphIds(startIndex, values.size(), glyphIds, 0);
 
             // Then
             assertArrayEquals(glyphIds, values.toArray());
@@ -196,7 +196,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphIdsOnLargeArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             IntList values = DEFAULT_GLYPH_IDS;
 
             int extraLength = values.size() / 2;
@@ -212,7 +212,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             int[] lastChunk = Arrays.copyOfRange(glyphIds, endIndex, finalLength);
 
             // When
-            sut.copyGlyphIds(0, values.size(), glyphIds, startIndex);
+            subject.copyGlyphIds(0, values.size(), glyphIds, startIndex);
 
             // Then
             assertArrayEquals(Arrays.copyOfRange(glyphIds, 0, startIndex), firstChunk);
@@ -223,44 +223,44 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testGetGlyphIds() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            IntList glyphIds = sut.getGlyphIds();
+            IntList glyphIds = subject.getGlyphIds();
 
             // Then
             assertNotNull(glyphIds);
             assertTrue(glyphIds instanceof ShapingResult.GlyphIdList);
-            assertSame(((ShapingResult.GlyphIdList) glyphIds).owner, sut);
+            assertSame(((ShapingResult.GlyphIdList) glyphIds).owner, subject);
             assertEquals(((ShapingResult.GlyphIdList) glyphIds).offset, 0);
-            assertEquals(((ShapingResult.GlyphIdList) glyphIds).size, sut.getGlyphCount());
+            assertEquals(((ShapingResult.GlyphIdList) glyphIds).size, subject.getGlyphCount());
         });
     }
 
     @Test
     public void testGetGlyphOffsetForAllElements() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             PointList values = DEFAULT_GLYPH_OFFSETS;
 
-            int glyphCount = sut.getGlyphCount();
+            int glyphCount = subject.getGlyphCount();
             assertEquals(glyphCount, values.size());
 
             for (int i = 0; i < glyphCount; i++) {
-                assertEquals(sut.getGlyphXOffset(i), values.getX(i), 0.0f);
-                assertEquals(sut.getGlyphYOffset(i), values.getY(i), 0.0f);
+                assertEquals(subject.getGlyphXOffset(i), values.getX(i), 0.0f);
+                assertEquals(subject.getGlyphYOffset(i), values.getY(i), 0.0f);
             }
         });
     }
 
     @Test
     public void testCopyGlyphOffsetsOnMatchingArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             PointList values = DEFAULT_GLYPH_OFFSETS;
 
             float[] glyphOffsets = new float[values.size() * 2];
             Arrays.fill(glyphOffsets, -1.0f);
 
             // When
-            sut.copyGlyphOffsets(0, values.size(), glyphOffsets, 0);
+            subject.copyGlyphOffsets(0, values.size(), glyphOffsets, 0);
 
             // Then
             assertArrayEquals(glyphOffsets, values.toArray(), 0.0f);
@@ -269,7 +269,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphOffsetsOnSmallArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             PointList values = DEFAULT_GLYPH_OFFSETS;
             int length = values.size() / 2;
             int startIndex = length / 2;
@@ -281,7 +281,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             Arrays.fill(glyphOffsets, -1.0f);
 
             // When
-            sut.copyGlyphOffsets(startIndex, values.size(), glyphOffsets, 0);
+            subject.copyGlyphOffsets(startIndex, values.size(), glyphOffsets, 0);
 
             // Then
             assertArrayEquals(glyphOffsets, values.toArray(), 0.0f);
@@ -290,7 +290,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphOffsetsOnLargeArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             PointList values = DEFAULT_GLYPH_OFFSETS;
 
             int actualLength = values.size() * 2;
@@ -307,7 +307,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             float[] lastChunk = Arrays.copyOfRange(glyphOffsets, endIndex, finalLength);
 
             // When
-            sut.copyGlyphOffsets(0, values.size(), glyphOffsets, startIndex);
+            subject.copyGlyphOffsets(0, values.size(), glyphOffsets, startIndex);
 
             // Then
             assertArrayEquals(Arrays.copyOfRange(glyphOffsets, 0, startIndex), firstChunk, 0.0f);
@@ -318,43 +318,43 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testGetGlyphOffsets() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            PointList glyphOffsets = sut.getGlyphOffsets();
+            PointList glyphOffsets = subject.getGlyphOffsets();
 
             // Then
             assertNotNull(glyphOffsets);
             assertTrue(glyphOffsets instanceof ShapingResult.GlyphOffsetList);
-            assertSame(((ShapingResult.GlyphOffsetList) glyphOffsets).owner, sut);
+            assertSame(((ShapingResult.GlyphOffsetList) glyphOffsets).owner, subject);
             assertEquals(((ShapingResult.GlyphOffsetList) glyphOffsets).offset, 0);
-            assertEquals(((ShapingResult.GlyphOffsetList) glyphOffsets).size, sut.getGlyphCount());
+            assertEquals(((ShapingResult.GlyphOffsetList) glyphOffsets).size, subject.getGlyphCount());
         });
     }
 
     @Test
     public void testGetGlyphAdvanceForAllElements() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             FloatList values = DEFAULT_GLYPH_ADVANCES;
 
-            int glyphCount = sut.getGlyphCount();
+            int glyphCount = subject.getGlyphCount();
             assertEquals(glyphCount, values.size());
 
             for (int i = 0; i < glyphCount; i++) {
-                assertEquals(sut.getGlyphAdvance(i), values.get(i), 0.0f);
+                assertEquals(subject.getGlyphAdvance(i), values.get(i), 0.0f);
             }
         });
     }
 
     @Test
     public void testCopyGlyphAdvancesOnMatchingArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             FloatList values = DEFAULT_GLYPH_ADVANCES;
 
             float[] glyphAdvances = new float[values.size()];
             Arrays.fill(glyphAdvances, -1.0f);
 
             // When
-            sut.copyGlyphAdvances(0, values.size(), glyphAdvances, 0);
+            subject.copyGlyphAdvances(0, values.size(), glyphAdvances, 0);
 
             // Then
             assertArrayEquals(glyphAdvances, values.toArray(), 0.0f);
@@ -363,7 +363,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphAdvancesOnSmallArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             FloatList values = DEFAULT_GLYPH_ADVANCES;
             int length = values.size() / 2;
             int startIndex = length / 2;
@@ -375,7 +375,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             Arrays.fill(glyphAdvances, -1.0f);
 
             // When
-            sut.copyGlyphAdvances(startIndex, values.size(), glyphAdvances, 0);
+            subject.copyGlyphAdvances(startIndex, values.size(), glyphAdvances, 0);
 
             // Then
             assertArrayEquals(glyphAdvances, values.toArray(), 0.0f);
@@ -384,7 +384,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testCopyGlyphAdvancesOnLargeArray() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             FloatList values = DEFAULT_GLYPH_ADVANCES;
 
             int extraLength = values.size() / 2;
@@ -400,7 +400,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             float[] lastChunk = Arrays.copyOfRange(glyphAdvances, endIndex, finalLength);
 
             // When
-            sut.copyGlyphAdvances(0, values.size(), glyphAdvances, startIndex);
+            subject.copyGlyphAdvances(0, values.size(), glyphAdvances, startIndex);
 
             // Then
             assertArrayEquals(Arrays.copyOfRange(glyphAdvances, 0, startIndex), firstChunk, 0.0f);
@@ -411,64 +411,64 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testGetGlyphAdvances() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            FloatList glyphAdvances = sut.getGlyphAdvances();
+            FloatList glyphAdvances = subject.getGlyphAdvances();
 
             // Then
             assertNotNull(glyphAdvances);
             assertTrue(glyphAdvances instanceof ShapingResult.GlyphAdvanceList);
-            assertSame(((ShapingResult.GlyphAdvanceList) glyphAdvances).owner, sut);
+            assertSame(((ShapingResult.GlyphAdvanceList) glyphAdvances).owner, subject);
             assertEquals(((ShapingResult.GlyphAdvanceList) glyphAdvances).offset, 0);
-            assertEquals(((ShapingResult.GlyphAdvanceList) glyphAdvances).size, sut.getGlyphCount());
+            assertEquals(((ShapingResult.GlyphAdvanceList) glyphAdvances).size, subject.getGlyphCount());
         });
     }
 
     @Test
     public void testGetClusterMap() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // When
-            IntList clusterMap = sut.getClusterMap();
+            IntList clusterMap = subject.getClusterMap();
 
             // Then
             assertNotNull(clusterMap);
             assertTrue(clusterMap instanceof ShapingResult.ClusterMap);
-            assertSame(((ShapingResult.ClusterMap) clusterMap).owner, sut);
+            assertSame(((ShapingResult.ClusterMap) clusterMap).owner, subject);
             assertTrue(((ShapingResult.ClusterMap) clusterMap).pointer != 0);
-            assertEquals(((ShapingResult.ClusterMap) clusterMap).size, sut.getCharEnd() - sut.getCharStart());
+            assertEquals(((ShapingResult.ClusterMap) clusterMap).size, subject.getCharEnd() - subject.getCharStart());
         });
     }
 
     @Test
     public void testGetCaretEdges() {
-        buildSUT((sut) -> {
-            sut = spy(sut);
+        buildSubject((subject) -> {
+            subject = spy (subject);
 
             // When
-            FloatList caretEdges = sut.getCaretEdges();
+            FloatList caretEdges = subject.getCaretEdges();
 
             // Then
-            verify(sut).getCaretEdges(null);
+            verify (subject).getCaretEdges(null);
             assertNotNull(caretEdges);
-            assertEquals(caretEdges.size(), sut.getCharEnd() - sut.getCharStart() + 1);
+            assertEquals(caretEdges.size(), subject.getCharEnd() - subject.getCharStart() + 1);
         });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetCaretEdgesForLessCaretStops() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Given
-            boolean[] caretStops = new boolean[sut.getGlyphCount() - 1];
+            boolean[] caretStops = new boolean [subject.getGlyphCount() - 1];
 
             // When
-            sut.getCaretEdges(caretStops);
+            subject.getCaretEdges(caretStops);
         });
     }
 
     @Test
     public void testGetCaretEdgesWithBuilderInput() {
-        buildSUT((sut) -> {
-            sut = spy(sut);
+        buildSubject((subject) -> {
+            subject = spy (subject);
 
             boolean isBackward = false;
             boolean isRTL = true;
@@ -478,15 +478,15 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             CaretEdgesBuilder caretEdgesBuilder = spy(new CaretEdgesBuilder());
             FloatList caretEdges = FloatList.of();
 
-            doReturn(isBackward).when(sut).isBackward();
-            doReturn(isRTL).when(sut).isRTL();
-            doReturn(glyphAdvances).when(sut).getGlyphAdvances();
-            doReturn(clusterMap).when(sut).getClusterMap();
-            doReturn(caretEdgesBuilder).when(sut).createCaretEdgesBuilder();
+            doReturn(isBackward).when (subject).isBackward();
+            doReturn(isRTL).when (subject).isRTL();
+            doReturn(glyphAdvances).when (subject).getGlyphAdvances();
+            doReturn(clusterMap).when (subject).getClusterMap();
+            doReturn(caretEdgesBuilder).when (subject).createCaretEdgesBuilder();
             doReturn(caretEdges).when(caretEdgesBuilder).build();
 
             // When
-            FloatList list = sut.getCaretEdges(caretStops);
+            FloatList list = subject.getCaretEdges(caretStops);
 
             // Then
             assertSame(list, caretEdges);
@@ -501,21 +501,21 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testToString() {
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             String description = DescriptionBuilder
                     .of(ShapingResult.class)
-                    .put("isBackward", sut.isBackward())
-                    .put("charStart", sut.getCharStart())
-                    .put("charEnd", sut.getCharEnd())
-                    .put("glyphCount", sut.getGlyphCount())
-                    .put("glyphIds", sut.getGlyphIds())
-                    .put("glyphOffsets", sut.getGlyphOffsets())
-                    .put("glyphAdvances", sut.getGlyphAdvances())
-                    .put("clusterMap", sut.getClusterMap())
+                    .put("isBackward", subject.isBackward())
+                    .put("charStart", subject.getCharStart())
+                    .put("charEnd", subject.getCharEnd())
+                    .put("glyphCount", subject.getGlyphCount())
+                    .put("glyphIds", subject.getGlyphIds())
+                    .put("glyphOffsets", subject.getGlyphOffsets())
+                    .put("glyphAdvances", subject.getGlyphAdvances())
+                    .put("clusterMap", subject.getClusterMap())
                     .build();
 
             // When
-            String string = sut.toString();
+            String string = subject.toString();
 
             // Then
             assertEquals(string, description);
@@ -524,16 +524,16 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
 
     @Test
     public void testResultsForFullText() {
-        buildSUT((sut) -> {
-            assertFalse(sut.isBackward());
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getGlyphCount(), text.length());
-            assertEquals(sut.getGlyphIds(), DEFAULT_GLYPH_IDS);
-            assertEquals(sut.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS);
-            assertEquals(sut.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES);
-            assertEquals(sut.getClusterMap(), DEFAULT_CLUSTER_MAP);
-            assertEquals(sut.getCaretEdges(), DEFAULT_CARET_EDGES);
+        buildSubject((subject) -> {
+            assertFalse(subject.isBackward());
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getGlyphCount(), text.length());
+            assertEquals(subject.getGlyphIds(), DEFAULT_GLYPH_IDS);
+            assertEquals(subject.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS);
+            assertEquals(subject.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES);
+            assertEquals(subject.getClusterMap(), DEFAULT_CLUSTER_MAP);
+            assertEquals(subject.getCaretEdges(), DEFAULT_CARET_EDGES);
         });
     }
 
@@ -543,16 +543,16 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         startIndex = 0;
         endIndex = 4;
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertFalse(sut.isBackward());
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getGlyphCount(), endIndex - startIndex);
-            assertEquals(sut.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
-            assertEquals(sut.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
+            assertFalse(subject.isBackward());
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getGlyphCount(), endIndex - startIndex);
+            assertEquals(subject.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
+            assertEquals(subject.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
         });
     }
 
@@ -562,16 +562,16 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         startIndex = 5;
         endIndex = 8;
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertFalse(sut.isBackward());
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getGlyphCount(), endIndex - startIndex);
-            assertEquals(sut.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
-            assertEquals(sut.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
+            assertFalse(subject.isBackward());
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getGlyphCount(), endIndex - startIndex);
+            assertEquals(subject.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
+            assertEquals(subject.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
         });
     }
 
@@ -581,16 +581,16 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
         startIndex = 9;
         endIndex = 12;
 
-        buildSUT((sut) -> {
+        buildSubject((subject) -> {
             // Then
-            assertFalse(sut.isBackward());
-            assertEquals(sut.getCharStart(), startIndex);
-            assertEquals(sut.getCharEnd(), endIndex);
-            assertEquals(sut.getGlyphCount(), endIndex - startIndex);
-            assertEquals(sut.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
-            assertEquals(sut.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
-            assertEquals(sut.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
+            assertFalse(subject.isBackward());
+            assertEquals(subject.getCharStart(), startIndex);
+            assertEquals(subject.getCharEnd(), endIndex);
+            assertEquals(subject.getGlyphCount(), endIndex - startIndex);
+            assertEquals(subject.getGlyphIds(), DEFAULT_GLYPH_IDS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex));
+            assertEquals(subject.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES.subList(startIndex, endIndex));
+            assertEquals(subject.getClusterMap(), DEFAULT_CLUSTER_MAP.subList(0, endIndex - startIndex));
         });
     }
 }

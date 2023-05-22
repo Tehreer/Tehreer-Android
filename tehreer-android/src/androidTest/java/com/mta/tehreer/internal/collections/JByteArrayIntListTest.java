@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2022 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.mta.tehreer.internal.collections;
 
 import androidx.annotation.NonNull;
@@ -51,6 +52,6 @@ public class JByteArrayIntListTest extends IntListTestSuite<JByteArrayIntList> {
         values = new int[] {
             0, 28, 56, 84, 112, -116, -88, -60, -32, -4
         };
-        sut = buildList(values);
+        subject = buildList(values);
     }
 }

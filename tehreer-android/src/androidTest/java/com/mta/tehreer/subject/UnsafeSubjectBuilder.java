@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.sut;
+package com.mta.tehreer.subject;
 
-public abstract class UnsafeSUTBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SUTBuilder<T> {
+public abstract class UnsafeSubjectBuilder<T extends com.mta.tehreer.Disposable, F extends T> implements SubjectBuilder<T> {
     protected final Class<T> unsafeClass;
     protected final Class<F> safeClass;
 
-    protected UnsafeSUTBuilder(Class<T> unsafeClass, Class<F> safeClass) {
+    protected UnsafeSubjectBuilder(Class<T> unsafeClass, Class<F> safeClass) {
         this.unsafeClass = unsafeClass;
         this.safeClass = safeClass;
     }
@@ -33,11 +33,11 @@ public abstract class UnsafeSUTBuilder<T extends com.mta.tehreer.Disposable, F e
         return safeClass;
     }
 
-    public DisposableSUTBuilder<T, F> getDisposableBuilder() {
-        return new DisposableSUTBuilder<>(this);
+    public DisposableSubjectBuilder<T, F> getDisposableBuilder() {
+        return new DisposableSubjectBuilder<>(this);
     }
 
-    public FinalizableSUTBuilder<T, F> getFinalizableBuilder() {
-        return new FinalizableSUTBuilder<>(this);
+    public FinalizableSubjectBuilder<T, F> getFinalizableBuilder() {
+        return new FinalizableSubjectBuilder<>(this);
     }
 }
