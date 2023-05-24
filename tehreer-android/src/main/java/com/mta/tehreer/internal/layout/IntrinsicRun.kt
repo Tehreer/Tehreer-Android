@@ -39,7 +39,7 @@ internal class IntrinsicRun(
     override val glyphIds: IntList,
     override val glyphOffsets: PointList,
     override val glyphAdvances: FloatList,
-    val clusterMapArray: IntArray,
+    override val clusterMap: IntList,
     override val caretEdges: FloatList
 ) : AbstractTextRun() {
     override val spans: List<Any>
@@ -54,14 +54,12 @@ internal class IntrinsicRun(
     override val glyphCount: Int
         get() = glyphIds.size()
 
-    override val clusterMap = IntList.of(*clusterMapArray)
-
     override fun getClusterStart(charIndex: Int): Int {
-        val arrayIndex = charIndex - startIndex
-        val common = clusterMapArray[arrayIndex]
+        val listIndex = charIndex - startIndex
+        val common = clusterMap[listIndex]
 
-        for (i in arrayIndex - 1 downTo 0) {
-            if (clusterMapArray[i] != common) {
+        for (i in listIndex - 1 downTo 0) {
+            if (clusterMap[i] != common) {
                 return (i + 1) + startIndex
             }
         }
@@ -70,25 +68,25 @@ internal class IntrinsicRun(
     }
 
     override fun getClusterEnd(charIndex: Int): Int {
-        val arrayIndex = charIndex - startIndex
-        val common = clusterMapArray[arrayIndex]
-        val length = clusterMapArray.size
+        val listIndex = charIndex - startIndex
+        val common = clusterMap[listIndex]
+        val size = clusterMap.size()
 
-        for (i in arrayIndex + 1 until length) {
-            if (clusterMapArray[i] != common) {
+        for (i in listIndex + 1 until size) {
+            if (clusterMap[i] != common) {
                 return i + startIndex
             }
         }
 
-        return length + startIndex
+        return size + startIndex
     }
 
-    private fun forwardGlyphIndex(arrayIndex: Int): Int {
-        val common = clusterMapArray[arrayIndex]
-        val length = clusterMapArray.size
+    private fun forwardGlyphIndex(listIndex: Int): Int {
+        val common = clusterMap[listIndex]
+        val size = clusterMap.size()
 
-        for (i in arrayIndex + 1 until length) {
-            val mapping = clusterMapArray[i]
+        for (i in listIndex + 1 until size) {
+            val mapping = clusterMap[i]
             if (mapping != common) {
                 return mapping - 1
             }
@@ -97,11 +95,11 @@ internal class IntrinsicRun(
         return glyphIds.size() - 1
     }
 
-    private fun backwardGlyphIndex(arrayIndex: Int): Int {
-        val common = clusterMapArray[arrayIndex]
+    private fun backwardGlyphIndex(listIndex: Int): Int {
+        val common = clusterMap[listIndex]
 
-        for (i in arrayIndex - 1 downTo 0) {
-            val mapping = clusterMapArray[i]
+        for (i in listIndex - 1 downTo 0) {
+            val mapping = clusterMap[i]
             if (mapping != common) {
                 return mapping - 1
             }
@@ -115,20 +113,20 @@ internal class IntrinsicRun(
         val lastIndex = toIndex - 1 - startIndex
 
         return if (isBackward) {
-            clusterMapArray[lastIndex]..backwardGlyphIndex(firstIndex)
+            clusterMap[lastIndex]..backwardGlyphIndex(firstIndex)
         } else {
-            clusterMapArray[firstIndex]..forwardGlyphIndex(lastIndex)
+            clusterMap[firstIndex]..forwardGlyphIndex(lastIndex)
         }
     }
 
     override fun getLeadingGlyphIndex(charIndex: Int): Int {
-        val arrayIndex = charIndex - startIndex
-        return if (isBackward) backwardGlyphIndex(arrayIndex) else clusterMapArray[arrayIndex]
+        val listIndex = charIndex - startIndex
+        return if (isBackward) backwardGlyphIndex(listIndex) else clusterMap[listIndex]
     }
 
     override fun getTrailingGlyphIndex(charIndex: Int): Int {
-        val arrayIndex = charIndex - startIndex
-        return if (isBackward) clusterMapArray[arrayIndex] else forwardGlyphIndex(arrayIndex)
+        val listIndex = charIndex - startIndex
+        return if (isBackward) clusterMap[listIndex] else forwardGlyphIndex(listIndex)
     }
 
     override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {

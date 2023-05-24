@@ -82,7 +82,7 @@ internal class IntrinsicRunSlice(
             val offset = actualStart - intrinsicRun.startIndex
             val size = actualEnd - actualStart
 
-            return ClusterMap(intrinsicRun.clusterMapArray, offset, size, glyphOffset)
+            return ClusterMap(intrinsicRun.clusterMap, offset, size, glyphOffset)
         }
 
     internal class CaretEdges(

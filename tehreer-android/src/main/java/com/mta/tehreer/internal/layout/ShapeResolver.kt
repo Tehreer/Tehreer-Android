@@ -183,7 +183,7 @@ internal object ShapeResolver {
                         glyphIds = glyphIds.toIntList(),
                         glyphOffsets = offsets.toPointList(),
                         glyphAdvances = advances.toFloatList(),
-                        clusterMapArray = clusterMap,
+                        clusterMap = clusterMap.toIntList(),
                         caretEdges = caretEdges.toFloatList()
                     )
                 } finally {

@@ -17,10 +17,12 @@
 package com.mta.tehreer.internal.layout
 
 import com.mta.tehreer.collections.IntList
-import com.mta.tehreer.internal.util.Preconditions
+import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
+import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
+import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
 
 internal class ClusterMap(
-    private val array: IntArray,
+    private val list: IntList,
     private val offset: Int,
     private val size: Int,
     private val difference: Int
@@ -30,21 +32,21 @@ internal class ClusterMap(
     }
 
     override fun get(index: Int): Int {
-        Preconditions.checkElementIndex(index, size)
-        return array[index + offset] - difference
+        checkElementIndex(index, size)
+        return list[index + offset] - difference
     }
 
     override fun copyTo(array: IntArray, atIndex: Int) {
-        Preconditions.checkNotNull(array)
-        Preconditions.checkArrayBounds(array, atIndex, size)
+        checkNotNull(array)
+        checkArrayBounds(array, atIndex, size)
 
         for (i in 0 until size) {
-            array[i + atIndex] = this.array[i + offset] - difference
+            array[i + atIndex] = list[i + offset] - difference
         }
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): IntList {
-        Preconditions.checkIndexRange(fromIndex, toIndex, size)
-        return ClusterMap(array, offset + fromIndex, toIndex - fromIndex, difference)
+        checkIndexRange(fromIndex, toIndex, size)
+        return ClusterMap(list, offset + fromIndex, toIndex - fromIndex, difference)
     }
 }
