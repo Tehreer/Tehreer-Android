@@ -82,7 +82,7 @@ internal class BreakClassifier(
     class BackwardGraphemeBreakIterator(
         private val breakData: ByteArray,
         private val startIndex: Int,
-        val endIndex: Int
+        endIndex: Int
     ): IntIterator() {
         private var currentIndex = endIndex
 
@@ -130,7 +130,7 @@ internal class BreakClassifier(
     class BackwardLineBreakIterator(
         private val breakData: ByteArray,
         private val startIndex: Int,
-        val endIndex: Int
+        endIndex: Int
     ): IntIterator() {
         private var currentIndex = endIndex
 
