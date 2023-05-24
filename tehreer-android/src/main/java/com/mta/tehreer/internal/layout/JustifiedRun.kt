@@ -26,7 +26,7 @@ import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.graphics.DefaultTextRunDrawing
 import com.mta.tehreer.internal.util.isOdd
-import com.mta.tehreer.internal.util.toList
+import com.mta.tehreer.internal.util.toFloatList
 
 internal class JustifiedRun(
     private val textRun: TextRun,
@@ -47,7 +47,7 @@ internal class JustifiedRun(
             .setClusterMap(textRun.clusterMap)
             .setCaretStops(null)
             .build()
-            .toList()
+            .toFloatList()
 
         if (isRTL) {
             if (textRun.startExtraLength > 0) {

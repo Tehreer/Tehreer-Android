@@ -17,5 +17,11 @@
 package com.mta.tehreer.internal.util
 
 import com.mta.tehreer.collections.FloatList
+import com.mta.tehreer.collections.IntList
+import com.mta.tehreer.collections.PointList
 
-fun FloatArray.toList() = FloatList.of(*this)
+internal fun IntArray.toIntList() = IntList.of(*this)
+
+internal fun FloatArray.toFloatList() = FloatList.of(*this)
+
+internal fun FloatArray.toPointList() = PointList.of(*this)

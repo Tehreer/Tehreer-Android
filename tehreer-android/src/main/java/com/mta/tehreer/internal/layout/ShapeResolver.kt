@@ -25,6 +25,9 @@ import com.mta.tehreer.collections.PointList
 import com.mta.tehreer.internal.util.Preconditions
 import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.internal.util.isOdd
+import com.mta.tehreer.internal.util.toFloatList
+import com.mta.tehreer.internal.util.toIntList
+import com.mta.tehreer.internal.util.toPointList
 import com.mta.tehreer.sfnt.ShapingEngine
 import com.mta.tehreer.sfnt.ShapingOrder
 import com.mta.tehreer.sfnt.ShapingResult
@@ -177,11 +180,11 @@ internal object ShapeResolver {
                         ascent = ascent,
                         descent = descent,
                         leading = leading,
-                        glyphIds = IntList.of(*glyphIds),
-                        glyphOffsets = PointList.of(*offsets),
-                        glyphAdvances = FloatList.of(*advances),
+                        glyphIds = glyphIds.toIntList(),
+                        glyphOffsets = offsets.toPointList(),
+                        glyphAdvances = advances.toFloatList(),
                         clusterMapArray = clusterMap,
-                        caretEdges = FloatList.of(*caretEdges)
+                        caretEdges = caretEdges.toFloatList()
                     )
                 } finally {
                     shapingResult?.dispose()
