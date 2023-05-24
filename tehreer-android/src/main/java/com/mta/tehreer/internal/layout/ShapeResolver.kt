@@ -163,13 +163,21 @@ internal object ShapeResolver {
                     }
 
                     textRun = IntrinsicRun(
-                        runStart, runEnd, isBackward, bidiLevel, writingDirection,
-                        typeface, typeSize,
-                        ascent, descent, leading,
-                        IntList.of(*glyphIds),
-                        PointList.of(*offsets),
-                        FloatList.of(*advances),
-                        clusterMap, caretEdges
+                        startIndex = runStart,
+                        endIndex = runEnd,
+                        isBackward = isBackward,
+                        bidiLevel = bidiLevel,
+                        writingDirection = writingDirection,
+                        typeface = typeface,
+                        typeSize = typeSize,
+                        ascent = ascent,
+                        descent = descent,
+                        leading = leading,
+                        glyphIds = IntList.of(*glyphIds),
+                        glyphOffsets = PointList.of(*offsets),
+                        glyphAdvances = FloatList.of(*advances),
+                        clusterMapArray = clusterMap,
+                        caretEdges = caretEdges
                     )
                 } finally {
                     shapingResult?.dispose()
