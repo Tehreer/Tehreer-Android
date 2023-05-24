@@ -49,16 +49,16 @@ internal class JustifiedRun(
 
         if (isRTL) {
             if (textRun.startExtraLength > 0) {
-                caretBoundary = getCaretBoundary(textRun.charStart, textRun.charEnd)
+                caretBoundary = getCaretBoundary(textRun.startIndex, textRun.endIndex)
             }
         }
     }
 
-    override val charStart: Int
-        get() = textRun.charStart
+    override val startIndex: Int
+        get() = textRun.startIndex
 
-    override val charEnd: Int
-        get() = textRun.charEnd
+    override val endIndex: Int
+        get() = textRun.endIndex
 
     override val isBackward: Boolean
         get() = textRun.isBackward

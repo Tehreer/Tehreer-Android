@@ -304,8 +304,8 @@ internal class LineResolver {
                 val runIndex = intrinsicRuns.binarySearch(visualStart)
 
                 val textRun = intrinsicRuns[runIndex]
-                val feasibleStart = max(textRun.charStart, visualStart)
-                val feasibleEnd = min(textRun.charEnd, toIndex)
+                val feasibleStart = max(textRun.startIndex, visualStart)
+                val feasibleEnd = min(textRun.endIndex, toIndex)
 
                 val bidiLevel = textRun.bidiLevel
                 val isForwardRun = bidiLevel.isEven()

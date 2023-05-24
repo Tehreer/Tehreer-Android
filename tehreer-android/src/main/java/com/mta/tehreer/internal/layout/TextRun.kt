@@ -26,8 +26,9 @@ import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.graphics.Typeface
 
 internal interface TextRun {
-    val charStart: Int
-    val charEnd: Int
+    val startIndex: Int
+    val endIndex: Int
+
     val isBackward: Boolean
     val bidiLevel: Byte
     val spans: List<Any?>

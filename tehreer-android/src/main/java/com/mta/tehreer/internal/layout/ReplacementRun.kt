@@ -32,8 +32,8 @@ import com.mta.tehreer.internal.util.isOdd
 
 internal class ReplacementRun(
     val charSequence: CharSequence,
-    override val charStart: Int,
-    override val charEnd: Int,
+    override val startIndex: Int,
+    override val endIndex: Int,
     override val bidiLevel: Byte,
     private val replacementSpan: ReplacementSpan,
     val paint: Paint,
@@ -79,7 +79,7 @@ internal class ReplacementRun(
         get() = FloatList.of(width)
 
     override val clusterMap: IntList
-        get() = IntList.of(*IntArray(charEnd - charStart))
+        get() = IntList.of(*IntArray(endIndex - startIndex))
 
     override val ascent: Float
         get() = replacementAscent.toFloat()
@@ -97,11 +97,11 @@ internal class ReplacementRun(
         get() = (replacementAscent + replacementDescent + replacementLeading).toFloat()
 
     override fun getClusterStart(charIndex: Int): Int {
-        return charStart
+        return startIndex
     }
 
     override fun getClusterEnd(charIndex: Int): Int {
-        return charEnd
+        return endIndex
     }
 
     override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
@@ -121,18 +121,18 @@ internal class ReplacementRun(
     }
 
     override fun getCaretEdge(charIndex: Int): Float {
-        return caretEdges[charIndex - charStart]
+        return caretEdges[charIndex - startIndex]
     }
 
     override fun getRangeDistance(fromIndex: Int, toIndex: Int): Float {
-        val firstIndex = fromIndex - charStart
-        val lastIndex = toIndex - charStart
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - startIndex
 
         return getRangeDistance(caretEdges, isRTL, firstIndex, lastIndex)
     }
 
     override fun computeNearestCharIndex(distance: Float): Int {
-        return computeNearestIndex(caretEdges, isRTL, distance) + charStart
+        return computeNearestIndex(caretEdges, isRTL, distance) + startIndex
     }
 
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
@@ -142,7 +142,7 @@ internal class ReplacementRun(
     override fun draw(renderer: Renderer, canvas: Canvas) {
         replacementSpan.draw(
             canvas,
-            charSequence, charStart, charEnd,
+            charSequence, startIndex, endIndex,
             0f, -replacementAscent,
             0, replacementDescent,
             paint

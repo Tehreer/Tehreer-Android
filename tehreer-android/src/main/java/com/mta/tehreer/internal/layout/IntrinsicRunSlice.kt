@@ -29,8 +29,8 @@ import com.mta.tehreer.internal.util.Preconditions
 
 internal class IntrinsicRunSlice(
     private val intrinsicRun: IntrinsicRun,
-    override val charStart: Int,
-    override val charEnd: Int,
+    override val startIndex: Int,
+    override val endIndex: Int,
     override val spans: List<Any>
 ) : TextRun {
     private val glyphOffset: Int
@@ -38,10 +38,10 @@ internal class IntrinsicRunSlice(
     private val caretBoundary: Float
 
     init {
-        val glyphRange = intrinsicRun.getGlyphRangeForChars(charStart, charEnd)
+        val glyphRange = intrinsicRun.getGlyphRangeForChars(startIndex, endIndex)
         glyphOffset = glyphRange.first
         glyphCount = glyphRange.last - glyphRange.first + 1
-        caretBoundary = intrinsicRun.getCaretBoundary(charStart, charEnd)
+        caretBoundary = intrinsicRun.getCaretBoundary(startIndex, endIndex)
     }
 
     override val isBackward: Boolean
@@ -51,10 +51,10 @@ internal class IntrinsicRunSlice(
         get() = intrinsicRun.bidiLevel
 
     override val startExtraLength: Int
-        get() = charStart - intrinsicRun.getClusterStart(charStart)
+        get() = startIndex - intrinsicRun.getClusterStart(startIndex)
 
     override val endExtraLength: Int
-        get() = intrinsicRun.getClusterEnd(charEnd - 1) - charEnd
+        get() = intrinsicRun.getClusterEnd(endIndex - 1) - endIndex
 
     override val typeface: Typeface
         get() = intrinsicRun.typeface
@@ -76,10 +76,10 @@ internal class IntrinsicRunSlice(
 
     override val clusterMap: IntList
         get() {
-            val actualStart = intrinsicRun.getClusterStart(charStart)
-            val actualEnd = intrinsicRun.getClusterEnd(charEnd - 1)
+            val actualStart = intrinsicRun.getClusterStart(startIndex)
+            val actualEnd = intrinsicRun.getClusterEnd(endIndex - 1)
 
-            val offset = actualStart - intrinsicRun.charStart
+            val offset = actualStart - intrinsicRun.startIndex
             val size = actualEnd - actualStart
 
             return ClusterMap(intrinsicRun.clusterMapArray, offset, size, glyphOffset)
@@ -117,10 +117,10 @@ internal class IntrinsicRunSlice(
 
     override val caretEdges: FloatList
         get() {
-            val actualStart = intrinsicRun.getClusterStart(charStart)
-            val actualEnd = intrinsicRun.getClusterEnd(charEnd - 1)
+            val actualStart = intrinsicRun.getClusterStart(startIndex)
+            val actualEnd = intrinsicRun.getClusterEnd(endIndex - 1)
 
-            val offset = actualStart - intrinsicRun.charStart
+            val offset = actualStart - intrinsicRun.startIndex
             val size = actualEnd - actualStart + 1
 
             return CaretEdges(intrinsicRun.caretEdges, offset, size, caretBoundary)
@@ -136,7 +136,7 @@ internal class IntrinsicRunSlice(
         get() = intrinsicRun.leading
 
     override val width: Float
-        get() = intrinsicRun.getRangeDistance(charStart, charEnd)
+        get() = intrinsicRun.getRangeDistance(startIndex, endIndex)
 
     override val height: Float
         get() = intrinsicRun.ascent + intrinsicRun.descent + intrinsicRun.leading
@@ -175,7 +175,7 @@ internal class IntrinsicRunSlice(
     }
 
     override fun computeNearestCharIndex(distance: Float): Int {
-        return intrinsicRun.computeNearestCharIndex(distance, charStart, charEnd)
+        return intrinsicRun.computeNearestCharIndex(distance, startIndex, endIndex)
     }
 
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {

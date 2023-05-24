@@ -26,8 +26,8 @@ import com.mta.tehreer.graphics.Typeface
 import java.lang.UnsupportedOperationException
 
 internal class IntrinsicRun(
-    override val charStart: Int,
-    override val charEnd: Int,
+    override val startIndex: Int,
+    override val endIndex: Int,
     override val isBackward: Boolean,
     override val bidiLevel: Byte,
     override val writingDirection: WritingDirection,
@@ -57,30 +57,30 @@ internal class IntrinsicRun(
     override val clusterMap = IntList.of(*clusterMapArray)
 
     override fun getClusterStart(charIndex: Int): Int {
-        val arrayIndex = charIndex - charStart
+        val arrayIndex = charIndex - startIndex
         val common = clusterMapArray[arrayIndex]
 
         for (i in arrayIndex - 1 downTo 0) {
             if (clusterMapArray[i] != common) {
-                return (i + 1) + charStart
+                return (i + 1) + startIndex
             }
         }
 
-        return charStart
+        return startIndex
     }
 
     override fun getClusterEnd(charIndex: Int): Int {
-        val arrayIndex = charIndex - charStart
+        val arrayIndex = charIndex - startIndex
         val common = clusterMapArray[arrayIndex]
         val length = clusterMapArray.size
 
         for (i in arrayIndex + 1 until length) {
             if (clusterMapArray[i] != common) {
-                return i + charStart
+                return i + startIndex
             }
         }
 
-        return length + charStart
+        return length + startIndex
     }
 
     private fun forwardGlyphIndex(arrayIndex: Int): Int {
@@ -111,8 +111,8 @@ internal class IntrinsicRun(
     }
 
     override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {
-        val firstIndex = fromIndex - charStart
-        val lastIndex = toIndex - 1 - charStart
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - 1 - startIndex
 
         return if (isBackward) {
             clusterMapArray[lastIndex]..backwardGlyphIndex(firstIndex)
@@ -122,12 +122,12 @@ internal class IntrinsicRun(
     }
 
     override fun getLeadingGlyphIndex(charIndex: Int): Int {
-        val arrayIndex = charIndex - charStart
+        val arrayIndex = charIndex - startIndex
         return if (isBackward) backwardGlyphIndex(arrayIndex) else clusterMapArray[arrayIndex]
     }
 
     override fun getTrailingGlyphIndex(charIndex: Int): Int {
-        val arrayIndex = charIndex - charStart
+        val arrayIndex = charIndex - startIndex
         return if (isBackward) clusterMapArray[arrayIndex] else forwardGlyphIndex(arrayIndex)
     }
 

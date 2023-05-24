@@ -28,9 +28,9 @@ internal class RunCollection : ArrayList<TextRun>() {
             val mid = (low + high) ushr 1
             val value = this[mid]
 
-            if (charIndex >= value.charEnd) {
+            if (charIndex >= value.endIndex) {
                 low = mid + 1
-            } else if (charIndex < value.charStart) {
+            } else if (charIndex < value.startIndex) {
                 high = mid - 1
             } else {
                 return mid
@@ -49,7 +49,7 @@ internal class RunCollection : ArrayList<TextRun>() {
 
             do {
                 val textRun = this[runIndex]
-                val segmentEnd = min(charEnd, textRun.charEnd)
+                val segmentEnd = min(charEnd, textRun.endIndex)
                 extent += textRun.getRangeDistance(startIndex, segmentEnd)
 
                 startIndex = segmentEnd

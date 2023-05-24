@@ -25,14 +25,14 @@ internal abstract class AbstractTextRun : TextRun {
         get() = bidiLevel.isOdd()
 
     override val width: Float
-        get() = getRangeDistance(charStart, charEnd)
+        get() = getRangeDistance(startIndex, endIndex)
 
     override val height: Float
         get() = ascent + descent + leading
 
     override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        val firstIndex = fromIndex - charStart
-        val lastIndex = toIndex - charStart
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - startIndex
 
         return CaretUtils.getLeftMargin(caretEdges, isRTL, firstIndex, lastIndex)
     }
@@ -42,31 +42,31 @@ internal abstract class AbstractTextRun : TextRun {
     }
 
     protected open fun getCaretEdge(charIndex: Int, caretBoundary: Float): Float {
-        val actualStart = getClusterStart(charStart)
+        val actualStart = getClusterStart(startIndex)
         return caretEdges[charIndex - actualStart] - caretBoundary
     }
 
     override fun getRangeDistance(fromIndex: Int, toIndex: Int): Float {
-        val firstIndex = fromIndex - charStart
-        val lastIndex = toIndex - charStart
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - startIndex
 
         return CaretUtils.getRangeDistance(caretEdges, isRTL, firstIndex, lastIndex)
     }
 
     override fun computeNearestCharIndex(distance: Float): Int {
-        return computeNearestCharIndex(distance, charStart, charEnd)
+        return computeNearestCharIndex(distance, startIndex, endIndex)
     }
 
     protected open fun computeNearestCharIndex(distance: Float, fromIndex: Int, toIndex: Int): Int {
-        val firstIndex = fromIndex - charStart
-        val lastIndex = toIndex - charStart
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - startIndex
 
         val nearestIndex = CaretUtils.computeNearestIndex(
             caretEdges, isRTL,
             firstIndex, lastIndex, distance
         )
 
-        return nearestIndex + charStart
+        return nearestIndex + startIndex
     }
 
     override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {

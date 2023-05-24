@@ -61,16 +61,16 @@ public class GlyphRun {
     }
 
     private void checkCharIndex(int charIndex) {
-        final int charStart = textRun.getCharStart();
-        final int charEnd = textRun.getCharEnd();
+        final int charStart = textRun.getStartIndex();
+        final int charEnd = textRun.getEndIndex();
 
         checkArgument(charIndex >= charStart && charIndex < charEnd,
                       "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
     }
 
     private void checkCaretIndex(int charIndex) {
-        final int charStart = textRun.getCharStart();
-        final int charEnd = textRun.getCharEnd();
+        final int charStart = textRun.getStartIndex();
+        final int charEnd = textRun.getEndIndex();
 
         checkArgument(charIndex >= charStart && charIndex <= charEnd,
                       "Char Index: " + charIndex + ", Run Range: [" + charStart + ", " + charEnd + ')');
@@ -94,7 +94,7 @@ public class GlyphRun {
      * @return The index to the first character of this run in source text.
      */
     public int getCharStart() {
-        return textRun.getCharStart();
+        return textRun.getStartIndex();
     }
 
     /**
@@ -103,7 +103,7 @@ public class GlyphRun {
      * @return The index after the last character of this run in source text.
      */
     public int getCharEnd() {
-        return textRun.getCharEnd();
+        return textRun.getEndIndex();
     }
 
     /**

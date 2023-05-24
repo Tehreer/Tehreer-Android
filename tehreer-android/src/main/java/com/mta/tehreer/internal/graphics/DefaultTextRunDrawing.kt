@@ -128,7 +128,7 @@ internal class DefaultTextRunDrawing(
             }
         }
 
-        draw(renderer, canvas, textRun.charStart, textRun.charEnd)
+        draw(renderer, canvas, textRun.startIndex, textRun.endIndex)
 
         renderer.fillColor = defaultFillColor
     }
