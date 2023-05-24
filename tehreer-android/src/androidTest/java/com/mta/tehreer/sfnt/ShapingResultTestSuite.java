@@ -66,10 +66,10 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
     private static final IntList DEFAULT_CLUSTER_MAP = IntList.of(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
     );
-    private static final FloatList DEFAULT_CARET_EDGES = FloatList.of(
+    private static final float[] DEFAULT_CARET_EDGES = new float[] {
         4290.5f, 4109.5f, 3926.0f, 3439.0f, 2931.5f, 2804.0f,
         2351.0f, 2038.5f, 1789.5f, 1662.0f, 1162.5f, 597.0f, 0.0f
-    );
+    };
 
     protected static class ShapingResultBuilder extends UnsafeSubjectBuilder<ShapingResult, ShapingResult.Finalizable> {
         Typeface typeface = DEFAULT_TYPEFACE;
@@ -445,12 +445,12 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             subject = spy (subject);
 
             // When
-            FloatList caretEdges = subject.getCaretEdges();
+            float[] caretEdges = subject.getCaretEdges();
 
             // Then
             verify (subject).getCaretEdges(null);
             assertNotNull(caretEdges);
-            assertEquals(caretEdges.size(), subject.getCharEnd() - subject.getCharStart() + 1);
+            assertEquals(caretEdges.length, subject.getCharEnd() - subject.getCharStart() + 1);
         });
     }
 
@@ -468,7 +468,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
     @Test
     public void testGetCaretEdgesWithBuilderInput() {
         buildSubject((subject) -> {
-            subject = spy (subject);
+            subject = spy(subject);
 
             boolean isBackward = false;
             boolean isRTL = true;
@@ -476,7 +476,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             IntList clusterMap = DEFAULT_CLUSTER_MAP;
             boolean[] caretStops = new boolean[text.length()];
             CaretEdgesBuilder caretEdgesBuilder = spy(new CaretEdgesBuilder());
-            FloatList caretEdges = FloatList.of();
+            float[] caretEdges = new float[] { };
 
             doReturn(isBackward).when (subject).isBackward();
             doReturn(isRTL).when (subject).isRTL();
@@ -486,10 +486,10 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             doReturn(caretEdges).when(caretEdgesBuilder).build();
 
             // When
-            FloatList list = subject.getCaretEdges(caretStops);
+            float[] array = subject.getCaretEdges(caretStops);
 
             // Then
-            assertSame(list, caretEdges);
+            assertSame(array, caretEdges);
             verify(caretEdgesBuilder).setBackward(isBackward);
             verify(caretEdgesBuilder).setRTL(isRTL);
             verify(caretEdgesBuilder).setGlyphAdvances(glyphAdvances);
@@ -533,7 +533,7 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
             assertEquals(subject.getGlyphOffsets(), DEFAULT_GLYPH_OFFSETS);
             assertEquals(subject.getGlyphAdvances(), DEFAULT_GLYPH_ADVANCES);
             assertEquals(subject.getClusterMap(), DEFAULT_CLUSTER_MAP);
-            assertEquals(subject.getCaretEdges(), DEFAULT_CARET_EDGES);
+            assertArrayEquals(subject.getCaretEdges(), DEFAULT_CARET_EDGES, 0.0f);
         });
     }
 

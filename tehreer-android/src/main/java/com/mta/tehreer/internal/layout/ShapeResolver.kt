@@ -153,6 +153,10 @@ internal object ShapeResolver {
                             offsets[i * 2] *= scaleX
                             advances[i] *= scaleX
                         }
+
+                        for (i in caretEdges.indices) {
+                            caretEdges[i] *= scaleX
+                        }
                     }
 
                     val baselineShift = locator.baselineShift
@@ -177,7 +181,7 @@ internal object ShapeResolver {
                         glyphOffsets = PointList.of(*offsets),
                         glyphAdvances = FloatList.of(*advances),
                         clusterMapArray = clusterMap,
-                        caretEdges = caretEdges
+                        caretEdges = FloatList.of(*caretEdges)
                     )
                 } finally {
                     shapingResult?.dispose()

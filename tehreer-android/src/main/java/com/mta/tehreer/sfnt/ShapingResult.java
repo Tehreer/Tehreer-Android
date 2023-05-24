@@ -439,7 +439,7 @@ public class ShapingResult implements Disposable {
      *
      * @return A list of caret edges having caret stop on every code unit.
      */
-    public @NonNull FloatList getCaretEdges() {
+    public @NonNull float[] getCaretEdges() {
         return getCaretEdges(null);
     }
 
@@ -453,7 +453,7 @@ public class ShapingResult implements Disposable {
      * @param caretStops An array for caret stops of the code units represented by this object.
      * @return A list of caret edges.
      */
-    public @NonNull FloatList getCaretEdges(@Nullable boolean[] caretStops) {
+    public @NonNull float[] getCaretEdges(@Nullable boolean[] caretStops) {
         int charCount = getCharCount();
         if (caretStops != null) {
             if (caretStops.length < charCount) {
