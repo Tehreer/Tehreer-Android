@@ -36,9 +36,9 @@ internal class IntrinsicRun(
     override val ascent: Float,
     override val descent: Float,
     override val leading: Float,
-    private val glyphIdArray: IntArray,
-    private val glyphOffsetArray: FloatArray,
-    private val glyphAdvanceArray: FloatArray,
+    override val glyphIds: IntList,
+    override val glyphOffsets: PointList,
+    override val glyphAdvances: FloatList,
     val clusterMapArray: IntArray,
     override val caretEdges: FloatList
 ) : AbstractTextRun() {
@@ -52,11 +52,7 @@ internal class IntrinsicRun(
         get() = 0
 
     override val glyphCount: Int
-        get() = glyphIdArray.size
-
-    override val glyphIds = IntList.of(*glyphIdArray)
-    override val glyphOffsets = PointList.of(*glyphOffsetArray)
-    override val glyphAdvances = FloatList.of(*glyphAdvanceArray)
+        get() = glyphIds.size()
 
     override val clusterMap = IntList.of(*clusterMapArray)
 
@@ -98,7 +94,7 @@ internal class IntrinsicRun(
             }
         }
 
-        return glyphIdArray.size - 1
+        return glyphIds.size() - 1
     }
 
     private fun backwardGlyphIndex(arrayIndex: Int): Int {
@@ -111,7 +107,7 @@ internal class IntrinsicRun(
             }
         }
 
-        return glyphIdArray.size - 1
+        return glyphIds.size() - 1
     }
 
     override fun getGlyphRangeForChars(fromIndex: Int, toIndex: Int): IntRange {

@@ -20,6 +20,8 @@ import android.graphics.Paint
 import android.graphics.Paint.FontMetricsInt
 import android.text.Spanned
 import com.mta.tehreer.collections.FloatList
+import com.mta.tehreer.collections.IntList
+import com.mta.tehreer.collections.PointList
 import com.mta.tehreer.internal.util.Preconditions
 import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.internal.util.isOdd
@@ -164,7 +166,9 @@ internal object ShapeResolver {
                         runStart, runEnd, isBackward, bidiLevel, writingDirection,
                         typeface, typeSize,
                         ascent, descent, leading,
-                        glyphIds, offsets, advances,
+                        IntList.of(*glyphIds),
+                        PointList.of(*offsets),
+                        FloatList.of(*advances),
                         clusterMap, caretEdges
                     )
                 } finally {
