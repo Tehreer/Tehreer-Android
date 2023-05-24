@@ -19,9 +19,6 @@ package com.mta.tehreer.internal.layout
 import android.graphics.Paint
 import android.graphics.Paint.FontMetricsInt
 import android.text.Spanned
-import com.mta.tehreer.collections.FloatList
-import com.mta.tehreer.collections.IntList
-import com.mta.tehreer.collections.PointList
 import com.mta.tehreer.internal.util.Preconditions
 import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.internal.util.isOdd
@@ -39,7 +36,7 @@ internal object ShapeResolver {
     fun fillRuns(
         text: String, spanned: Spanned,
         defaultSpans: List<Any>,
-        paragraphs: MutableList<BidiParagraph?>,
+        paragraphs: MutableList<BidiParagraph>,
         runs: MutableList<TextRun>
     ) {
         var bidiAlgorithm: BidiAlgorithm? = null
@@ -213,10 +210,19 @@ internal object ShapeResolver {
                 }
 
                 textRun = ReplacementRun(
-                    spanned, runStart, runEnd, bidiLevel,
-                    replacement, paint, typeface, typeSize,
-                    metrics.ascent, metrics.descent, metrics.leading,
-                    extent, FloatList.of(*caretEdges)
+                    charSequence = spanned,
+                    startIndex = runStart,
+                    endIndex = runEnd,
+                    bidiLevel = bidiLevel,
+                    replacementSpan = replacement,
+                    paint = paint,
+                    typeface = typeface,
+                    typeSize = typeSize,
+                    replacementAscent = metrics.ascent,
+                    replacementDescent = metrics.descent,
+                    replacementLeading = metrics.leading,
+                    replacementExtent = extent,
+                    caretEdges = caretEdges.toFloatList()
                 )
             }
 
