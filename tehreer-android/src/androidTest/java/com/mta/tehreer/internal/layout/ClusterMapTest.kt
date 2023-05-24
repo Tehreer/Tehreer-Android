@@ -16,6 +16,7 @@
 
 package com.mta.tehreer.internal.layout
 
+import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.IntListTestSuite
 import org.junit.Before
 
@@ -23,7 +24,7 @@ internal class ClusterMapTest : IntListTestSuite<ClusterMap>(
     ClusterMap::class.java
 ) {
     private fun buildList(values: IntArray, difference: Int): ClusterMap {
-        return ClusterMap(values, 0, values.size, difference)
+        return ClusterMap(IntList.of(*values), 0, values.size, difference)
     }
 
     override fun buildIdentical(list: ClusterMap): ClusterMap {
