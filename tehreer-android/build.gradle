@@ -44,6 +44,8 @@ group = publishedGroupId
 version = libraryVersion
 
 android {
+    namespace 'com.mta.tehreer'
+
     compileSdkVersion 33
     buildToolsVersion '31.0.0'
 
