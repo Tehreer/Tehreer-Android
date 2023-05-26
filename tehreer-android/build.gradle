@@ -105,7 +105,6 @@ android {
 
 dependencies {
     implementation 'androidx.annotation:annotation:1.6.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
     testImplementation 'junit:junit:4.13.2'
 
