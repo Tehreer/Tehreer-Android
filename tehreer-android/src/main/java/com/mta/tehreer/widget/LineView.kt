@@ -18,23 +18,52 @@ package com.mta.tehreer.widget
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Rect
 import android.view.View
 import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.layout.ComposedLine
+import kotlin.math.ceil
+import kotlin.math.floor
 
 internal class LineView(context: Context?) : View(context) {
-    val renderer = Renderer()
+    private val separatorPaint = Paint()
+
     val frame = Rect()
+    val renderer = Renderer()
+
+    init {
+        separatorPaint.color = Color.TRANSPARENT
+        separatorPaint.strokeWidth = 1.0f
+        separatorPaint.style = Paint.Style.STROKE
+    }
+
+    private fun drawSeparator(canvas: Canvas, line: ComposedLine) {
+        if (separatorColor == Color.TRANSPARENT) {
+            return
+        }
+
+        val lineTop = line.originY - line.ascent - frame.top
+        val lineBottom = lineTop + line.height
+
+        val separatorLeft = floor(0.0f - frame.left)
+        val separatorRight = ceil(separatorLeft + layoutWidth)
+        val separatorY = floor(lineBottom - (separatorPaint.strokeWidth / 2.0f))
+
+        canvas.drawLine(separatorLeft, separatorY, separatorRight, separatorY, separatorPaint)
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        line?.run {
-            val dx = originX - frame.left
-            val dy = originY - frame.top
+        line?.let {
+            drawSeparator(canvas, it)
 
-            draw(renderer, canvas, dx, dy)
+            val dx = it.originX - frame.left
+            val dy = it.originY - frame.top
+
+            it.draw(renderer, canvas, dx, dy)
         }
     }
 
@@ -42,6 +71,14 @@ internal class LineView(context: Context?) : View(context) {
         super.onLayout(changed, left, top, right, bottom)
         frame.set(left, top, right, bottom)
     }
+
+    var layoutWidth: Float = 0.0f
+
+    var separatorColor: Int
+        get() = separatorPaint.color
+        set(separatorColor) {
+            separatorPaint.color = separatorColor
+        }
 
     private var _line: ComposedLine? = null
     var line: ComposedLine?

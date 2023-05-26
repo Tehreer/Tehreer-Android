@@ -58,6 +58,7 @@ private data class TextProperties(
     var lineHeightMultiplier: Float = 1.0f,
     var isJustificationEnabled: Boolean = false,
     var justificationLevel: Float = 1.0f,
+    var separatorColor: Int = Color.TRANSPARENT,
     var typesetter: Typesetter? = null,
     var composedFrame: ComposedFrame? = null
 )
@@ -280,6 +281,13 @@ internal class TextContainer : ViewGroup {
                     val boundingBox = line.computeBoundingBox(renderer)
                     boundingBox.offset(line.originX, line.originY)
 
+                    val lineLeft = 0.0f
+                    val lineTop = line.originY - line.ascent
+                    val lineRight = properties.layoutWidth.toFloat()
+                    val lineBottom = lineTop + line.height
+
+                    boundingBox.union(lineLeft, lineTop, lineRight, lineBottom)
+
                     lineBoxes.add(
                         Rect(
                             boundingBox.left.roundToInt(),
@@ -422,6 +430,8 @@ internal class TextContainer : ViewGroup {
         }
 
         val allLines = it.lines
+        val layoutWidth = properties.layoutWidth.toFloat()
+        val separatorColor = properties.separatorColor
 
         // Layout the lines.
         for (index in visibleIndexes) {
@@ -457,6 +467,9 @@ internal class TextContainer : ViewGroup {
             if (lineView.parent == null) {
                 addView(lineView)
             }
+
+            lineView.layoutWidth = layoutWidth
+            lineView.separatorColor = separatorColor
             lineView.bringToFront()
 
             val lineBox = lineBoxes[index]
@@ -606,5 +619,12 @@ internal class TextContainer : ViewGroup {
         set(justificationLevel) {
             properties.justificationLevel = justificationLevel
             requestComposedFrame()
+        }
+
+    var separatorColor: Int
+        get() = properties.separatorColor
+        set(separatorColor) {
+            properties.separatorColor = separatorColor
+            invalidate()
         }
 }

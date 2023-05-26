@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Muhammad Tayyab Akram
+ * Copyright (C) 2021-2023 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -360,5 +360,25 @@ public class TTextView extends ScrollView {
      */
     public void setJustificationLevel(@FloatRange(from = 0.0, to = 1.0) float justificationLevel) {
         mTextContainer.setJustificationLevel(justificationLevel);
+    }
+
+    /**
+     * Returns the color being used to display a separator line below each rendered text line. The
+     * default value is <code>Color.TRANSPARENT</code>.
+     *
+     * @return The current separator color.
+     */
+    public @ColorInt int getSeparatorColor() {
+        return mTextContainer.getSeparatorColor();
+    }
+
+    /**
+     * Sets the color to display a separator line below each rendered text line. The default value
+     * is <code>Color.TRANSPARENT</code>.
+     *
+     * @param separatorColor The separator color.
+     */
+    public void setSeparatorColor(@ColorInt int separatorColor) {
+        mTextContainer.setSeparatorColor(separatorColor);
     }
 }
