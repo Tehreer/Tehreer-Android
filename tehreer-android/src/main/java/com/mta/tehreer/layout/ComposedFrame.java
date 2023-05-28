@@ -234,7 +234,7 @@ public class ComposedFrame {
         Path selectionPath = new Path();
 
         int firstIndex = getLineIndexForChar(charStart);
-        int lastIndex = getLineIndexForChar(charEnd);
+        int lastIndex = getLineIndexForChar(charEnd - 1);
 
         ComposedLine firstLine = lineList.get(firstIndex);
         ComposedLine lastLine = lineList.get(lastIndex);
