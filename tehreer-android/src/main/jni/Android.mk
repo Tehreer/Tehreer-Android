@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2021 Muhammad Tayyab Akram
+# Copyright (C) 2016-2023 Muhammad Tayyab Akram
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,8 +53,10 @@ FT_FILE_LIST := \
     pshinter/pshinter.c \
     psnames/psnames.c \
     raster/raster.c \
+    sdf/sdf.c \
     sfnt/sfnt.c \
     smooth/smooth.c \
+    svg/svg.c \
     truetype/truetype.c \
     type1/type1.c \
     type42/type42.c \
