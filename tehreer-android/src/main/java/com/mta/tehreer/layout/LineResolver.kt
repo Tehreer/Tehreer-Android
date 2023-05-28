@@ -76,17 +76,11 @@ private fun createComposedLine(
     )
 }
 
-internal class LineResolver {
-    private lateinit var spanned: Spanned
-    private lateinit var bidiParagraphs: ParagraphCollection
-    private lateinit var intrinsicRuns: RunCollection
-
-    fun reset(spanned: Spanned, paragraphs: ParagraphCollection, runs: RunCollection) {
-        this.spanned = spanned
-        this.bidiParagraphs = paragraphs
-        this.intrinsicRuns = runs
-    }
-
+internal class LineResolver(
+    private val spanned: Spanned,
+    private val bidiParagraphs: ParagraphCollection,
+    private val intrinsicRuns: RunCollection
+) {
     fun createSimpleLine(start: Int, end: Int): ComposedLine {
         val runList = mutableListOf<GlyphRun>()
 

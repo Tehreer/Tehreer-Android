@@ -43,7 +43,6 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  * This class resolves text frames by using a typesetter object.
  */
 public class FrameResolver {
-    private @NonNull LineResolver mLineResolver = new LineResolver();
     private Typesetter mTypesetter;
     private Spanned mSpanned;
     private ParagraphCollection mParagraphs;
@@ -87,7 +86,6 @@ public class FrameResolver {
         mTypesetter = typesetter;
         mSpanned = typesetter.getSpanned();
         mParagraphs = typesetter.getParagraphs();
-        mLineResolver.reset(mSpanned, mParagraphs, typesetter.getRuns());
     }
 
     /**
@@ -539,7 +537,7 @@ public class FrameResolver {
         while (lineStart != context.endIndex) {
             final float breakExtent = context.lineExtent + context.extraWidth;
             final int lineEnd = mTypesetter.suggestForwardBreak(lineStart, context.endIndex, breakExtent, BreakMode.LINE);
-            final ComposedLine composedLine = mLineResolver.createSimpleLine(lineStart, lineEnd);
+            final ComposedLine composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
             resolveAttributes(context, composedLine);
 
             final float lineHeight = composedLine.getHeight();

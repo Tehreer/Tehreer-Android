@@ -49,6 +49,7 @@ public class Typesetter {
     private Spanned mSpanned;
     private ParagraphCollection mBidiParagraphs;
     private RunCollection mIntrinsicRuns;
+    private LineResolver mLineResolver;
     private BreakResolver mBreakResolver;
 
     /**
@@ -101,6 +102,8 @@ public class Typesetter {
         }
 
         ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBidiParagraphs, mIntrinsicRuns);
+
+        mLineResolver = new LineResolver(spanned, mBidiParagraphs, mIntrinsicRuns);
 
         BreakClassifier breakClassifier = new BreakClassifier(text);
         mBreakResolver = new BreakResolver(mText, mBidiParagraphs, mIntrinsicRuns, breakClassifier);
@@ -189,10 +192,7 @@ public class Typesetter {
 	public @NonNull ComposedLine createSimpleLine(int charStart, int charEnd) {
         checkSubRange(charStart, charEnd);
 
-        LineResolver resolver = new LineResolver();
-        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
-
-        return resolver.createSimpleLine(charStart, charEnd);
+        return mLineResolver.createSimpleLine(charStart, charEnd);
 	}
 
     /**
@@ -220,10 +220,7 @@ public class Typesetter {
         checkNotNull(truncationPlace, "truncationPlace");
         checkSubRange(charStart, charEnd);
 
-        LineResolver lineResolver = new LineResolver();
-        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
-
-        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
+        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
                 TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, null));
     }
 
@@ -255,10 +252,7 @@ public class Typesetter {
         checkSubRange(charStart, charEnd);
         checkArgument(truncationToken.length() > 0, "Truncation token is empty");
 
-        LineResolver lineResolver = new LineResolver();
-        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
-
-        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
+        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
                 TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, truncationToken));
     }
 
@@ -289,11 +283,8 @@ public class Typesetter {
         checkNotNull(truncationToken, "truncationToken");
         checkSubRange(charStart, charEnd);
 
-        LineResolver lineResolver = new LineResolver();
-        lineResolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
-
-        return lineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode,
-                                              truncationPlace, truncationToken);
+        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode,
+                                               truncationPlace, truncationToken);
     }
 
     /**
@@ -316,11 +307,8 @@ public class Typesetter {
                                                      float justificationWidth) {
         checkSubRange(charStart, charEnd);
 
-        LineResolver resolver = new LineResolver();
-        resolver.reset(mSpanned, mBidiParagraphs, mIntrinsicRuns);
-
-        return resolver.createJustifiedLine(charStart, charEnd, justificationFactor,
-                                            justificationWidth);
+        return mLineResolver.createJustifiedLine(charStart, charEnd, justificationFactor,
+                                                 justificationWidth);
     }
 
     /**
