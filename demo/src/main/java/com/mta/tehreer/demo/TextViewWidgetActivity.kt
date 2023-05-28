@@ -46,7 +46,7 @@ class TextViewWidgetActivity : AppCompatActivity() {
         textView.spanned = parseSurah()
         textView.lineHeightMultiplier = 0.80f
         textView.isJustificationEnabled = true
-        textView.separatorColor = Color.DKGRAY
+        textView.separatorColor = Color.GRAY
 
         val justificationLevelBar = findViewById<SeekBar>(R.id.seek_bar_justification_level)
         justificationLevelBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
