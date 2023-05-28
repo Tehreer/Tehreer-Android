@@ -39,13 +39,13 @@ internal class LineView(context: Context?) : View(context) {
         separatorPaint.style = Paint.Style.STROKE
     }
 
-    private fun drawSeparator(canvas: Canvas, line: ComposedLine) {
+    private fun drawSeparator(canvas: Canvas, textLine: ComposedLine) {
         if (separatorColor == Color.TRANSPARENT) {
             return
         }
 
-        val lineTop = line.originY - line.ascent - frame.top
-        val lineBottom = lineTop + line.height
+        val lineTop = textLine.originY - textLine.ascent - frame.top
+        val lineBottom = lineTop + textLine.height
 
         val separatorLeft = floor(0.0f - frame.left)
         val separatorRight = ceil(separatorLeft + layoutWidth)
@@ -54,16 +54,19 @@ internal class LineView(context: Context?) : View(context) {
         canvas.drawLine(separatorLeft, separatorY, separatorRight, separatorY, separatorPaint)
     }
 
+    private fun drawTextLine(canvas: Canvas, textLine: ComposedLine) {
+        val dx = textLine.originX - frame.left
+        val dy = textLine.originY - frame.top
+
+        textLine.draw(renderer, canvas, dx, dy)
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         line?.let {
             drawSeparator(canvas, it)
-
-            val dx = it.originX - frame.left
-            val dy = it.originY - frame.top
-
-            it.draw(renderer, canvas, dx, dy)
+            drawTextLine(canvas, it)
         }
     }
 
