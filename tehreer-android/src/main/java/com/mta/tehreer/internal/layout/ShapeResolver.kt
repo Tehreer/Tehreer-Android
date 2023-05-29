@@ -19,7 +19,7 @@ package com.mta.tehreer.internal.layout
 import android.graphics.Paint
 import android.graphics.Paint.FontMetricsInt
 import android.text.Spanned
-import com.mta.tehreer.internal.util.Preconditions
+import com.mta.tehreer.internal.util.Preconditions.checkArgument
 import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.internal.util.isOdd
 import com.mta.tehreer.internal.util.toFloatList
@@ -31,14 +31,15 @@ import com.mta.tehreer.sfnt.ShapingResult
 import com.mta.tehreer.sfnt.WritingDirection
 import com.mta.tehreer.unicode.*
 
-internal object ShapeResolver {
-    @JvmStatic
-    fun fillRuns(
-        text: String, spanned: Spanned,
-        defaultSpans: List<Any>,
-        paragraphs: MutableList<BidiParagraph>,
-        runs: MutableList<TextRun>
-    ) {
+internal class ShapeResolver(
+    private val text: String,
+    private val spanned: Spanned,
+    private val defaultSpans: List<Any>
+) {
+    fun createParagraphsAndRuns(): Pair<ParagraphCollection, RunCollection> {
+        val paragraphs = ParagraphCollection()
+        val runs = RunCollection()
+
         var bidiAlgorithm: BidiAlgorithm? = null
         var shapingEngine: ShapingEngine? = null
 
@@ -47,9 +48,7 @@ internal object ShapeResolver {
             shapingEngine = ShapingEngine()
 
             val scriptClassifier = ScriptClassifier(text)
-            val locator = ShapingRunLocator(spanned, defaultSpans)
-
-            val baseDirection = BaseDirection.DEFAULT_LEFT_TO_RIGHT
+            val runLocator = ShapingRunLocator(spanned, defaultSpans)
 
             var paragraphStart = 0
             val suggestedEnd = text.length
@@ -58,7 +57,7 @@ internal object ShapeResolver {
                 val paragraph = bidiAlgorithm.createParagraph(
                     paragraphStart,
                     suggestedEnd,
-                    baseDirection
+                    BaseDirection.DEFAULT_LEFT_TO_RIGHT
                 )
 
                 for (bidiRun in paragraph.logicalRuns) {
@@ -69,27 +68,18 @@ internal object ShapeResolver {
                         val scriptTag = Script.getOpenTypeTag(scriptRun.script)
                         val writingDirection = ShapingEngine.getScriptDirection(scriptTag)
 
-                        val isOddLevel = bidiRun.embeddingLevel.isOdd()
-                        val isBackward =
-                            ((isOddLevel && writingDirection == WritingDirection.LEFT_TO_RIGHT)
-                                    or (!isOddLevel && writingDirection == WritingDirection.RIGHT_TO_LEFT))
-                        val shapingOrder =
-                            if (isBackward) ShapingOrder.BACKWARD else ShapingOrder.FORWARD
+                        val isRTL = bidiRun.isRightToLeft
+                        val isBackward = ((isRTL && writingDirection == WritingDirection.LEFT_TO_RIGHT)
+                                      or (!isRTL && writingDirection == WritingDirection.RIGHT_TO_LEFT))
+                        val shapingOrder = if (isBackward) ShapingOrder.BACKWARD else ShapingOrder.FORWARD
 
-                        locator.reset(scriptRun.charStart, scriptRun.charEnd)
+                        runLocator.reset(scriptRun.charStart, scriptRun.charEnd)
 
                         shapingEngine.scriptTag = scriptTag
                         shapingEngine.writingDirection = writingDirection
                         shapingEngine.shapingOrder = shapingOrder
 
-                        resolveTypefaces(
-                            text,
-                            spanned,
-                            runs,
-                            locator,
-                            shapingEngine,
-                            bidiRun.embeddingLevel
-                        )
+                        resolveTypefaces(runs, runLocator, shapingEngine, bidiRun.embeddingLevel)
                     }
                 }
                 paragraphs.add(paragraph)
@@ -100,46 +90,47 @@ internal object ShapeResolver {
             shapingEngine?.dispose()
             bidiAlgorithm?.dispose()
         }
+
+        return Pair(paragraphs, runs)
     }
 
     private fun resolveTypefaces(
-        text: String, spanned: Spanned,
-        runs: MutableList<TextRun>,
-        locator: ShapingRunLocator,
-        engine: ShapingEngine, bidiLevel: Byte
+        runs: RunCollection,
+        runLocator: ShapingRunLocator,
+        shapingEngine: ShapingEngine, bidiLevel: Byte
     ) {
         var paint: Paint? = null
         var metrics: FontMetricsInt? = null
 
-        while (locator.moveNext()) {
-            val runStart = locator.runStart
-            val runEnd = locator.runEnd
+        while (runLocator.moveNext()) {
+            val runStart = runLocator.runStart
+            val runEnd = runLocator.runEnd
 
-            val typeface = locator.typeface
-            Preconditions.checkArgument(
+            val typeface = runLocator.typeface
+            checkArgument(
                 typeface != null,
                 "No typeface is specified for range [$runStart, $runEnd)"
             )
 
-            val typeSize = locator.typeSize
+            val typeSize = runLocator.typeSize
             val sizeByEm = typeSize / typeface!!.unitsPerEm
             val ascent = typeface.ascent * sizeByEm
             val descent = typeface.descent * sizeByEm
             val leading = typeface.leading * sizeByEm
 
-            val replacement = locator.replacement
+            val replacement = runLocator.replacement
             var textRun: TextRun
 
             if (replacement == null) {
-                engine.typeface = typeface
-                engine.typeSize = typeSize
+                shapingEngine.typeface = typeface
+                shapingEngine.typeSize = typeSize
 
                 var shapingResult: ShapingResult? = null
 
                 try {
-                    shapingResult = engine.shapeText(text, runStart, runEnd)
+                    shapingResult = shapingEngine.shapeText(text, runStart, runEnd)
 
-                    val writingDirection = engine.writingDirection
+                    val writingDirection = shapingEngine.writingDirection
                     val isBackward = shapingResult.isBackward
                     val glyphIds = shapingResult.glyphIds.toArray()
                     val offsets = shapingResult.glyphOffsets.toArray()
@@ -147,7 +138,7 @@ internal object ShapeResolver {
                     val clusterMap = shapingResult.clusterMap.toArray()
                     val caretEdges = shapingResult.getCaretEdges(null)
 
-                    val scaleX = locator.scaleX
+                    val scaleX = runLocator.scaleX
                     if (scaleX.compareTo(1.0f) != 0) {
                         for (i in glyphIds.indices) {
                             offsets[i * 2] *= scaleX
@@ -159,7 +150,7 @@ internal object ShapeResolver {
                         }
                     }
 
-                    val baselineShift = locator.baselineShift
+                    val baselineShift = runLocator.baselineShift
                     if (baselineShift.compareTo(0.0f) != 0) {
                         for (i in glyphIds.indices) {
                             offsets[i * 2 + 1] += baselineShift

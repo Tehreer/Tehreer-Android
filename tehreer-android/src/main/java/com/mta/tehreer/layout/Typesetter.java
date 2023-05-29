@@ -37,6 +37,8 @@ import com.mta.tehreer.unicode.BreakClassifier;
 import java.util.Collections;
 import java.util.List;
 
+import kotlin.Pair;
+
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 
@@ -94,14 +96,15 @@ public class Typesetter {
     private void init(@NonNull String text, @NonNull Spanned spanned, @Nullable List<Object> defaultSpans) {
         mText = text;
         mSpanned = spanned;
-        mBidiParagraphs = new ParagraphCollection();
-        mIntrinsicRuns = new RunCollection();
 
         if (defaultSpans == null) {
             defaultSpans = Collections.emptyList();
         }
 
-        ShapeResolver.fillRuns(mText, mSpanned, defaultSpans, mBidiParagraphs, mIntrinsicRuns);
+        ShapeResolver shapeResolver = new ShapeResolver(mText, mSpanned, defaultSpans);
+        Pair<ParagraphCollection, RunCollection> shapeResult = shapeResolver.createParagraphsAndRuns();
+        mBidiParagraphs = shapeResult.getFirst();
+        mIntrinsicRuns = shapeResult.getSecond();
 
         mLineResolver = new LineResolver(spanned, mBidiParagraphs, mIntrinsicRuns);
 
