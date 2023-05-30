@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2021 Muhammad Tayyab Akram
+    Copyright (C) 2021-2023 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -75,11 +75,10 @@
         </LinearLayout>
     </LinearLayout>
 
-    <com.mta.tehreer.widget.TTextView
+    <com.mta.tehreer.demo.QuranTextView
         android:id="@+id/text_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
         android:scrollbarStyle="outsideOverlay"
         app:gravity="center"
         app:textColor="@android:color/black"

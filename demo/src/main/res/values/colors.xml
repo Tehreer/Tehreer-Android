@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright (C) 2017 Muhammad Tayyab Akram
+    Copyright (C) 2016-2023 Muhammad Tayyab Akram
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,4 +18,5 @@
     <color name="colorPrimary">#2C842C</color>
     <color name="colorPrimaryDark">#006400</color>
     <color name="colorAccent">#5AB45A</color>
+    <color name="colorHighlight">#22006400</color>
 </resources>

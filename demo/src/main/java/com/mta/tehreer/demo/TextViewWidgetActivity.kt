@@ -24,14 +24,12 @@ import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
-import com.mta.tehreer.widget.TTextView
 import com.mta.tehreer.graphics.TypefaceManager
 import org.json.JSONArray
 import org.json.JSONException
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.Reader
-import java.lang.StringBuilder
 
 class TextViewWidgetActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,13 +38,14 @@ class TextViewWidgetActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val textView = findViewById<TTextView>(R.id.text_view)
+        val textView = findViewById<QuranTextView>(R.id.text_view)
         textView.setGravity(Gravity.CENTER_HORIZONTAL)
         textView.typeface = TypefaceManager.getTypeface(R.id.typeface_noorehuda)
         textView.spanned = parseSurah()
         textView.lineHeightMultiplier = 0.80f
         textView.isJustificationEnabled = true
         textView.separatorColor = Color.GRAY
+        textView.highlightingColor = resources.getColor(R.color.colorHighlight)
 
         val justificationLevelBar = findViewById<SeekBar>(R.id.seek_bar_justification_level)
         justificationLevelBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -90,6 +89,11 @@ class TextViewWidgetActivity : AppCompatActivity() {
 
                 val offset = surah.length
                 surah.append(ayahText)
+                surah.setSpan(
+                    QuranTextView.AyahSpan(),
+                    offset, surah.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
 
                 for (j in 0 until attrCount) {
                     val attrJson = attrsJson.getJSONObject(j)
