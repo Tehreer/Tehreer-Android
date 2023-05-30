@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.util.TypedValue
 import android.view.Gravity
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
@@ -31,31 +32,43 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.io.Reader
 
+private const val MIN_TEXT_SIZE = 20f
+private const val MAX_TEXT_SIZE = 56f
+
 class TextViewWidgetActivity : AppCompatActivity() {
+    private lateinit var textView: QuranTextView
+    private lateinit var textSizeBar: SeekBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_text_view_widget)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val textView = findViewById<QuranTextView>(R.id.text_view)
-        textView.setGravity(Gravity.CENTER_HORIZONTAL)
-        textView.typeface = TypefaceManager.getTypeface(R.id.typeface_noorehuda)
-        textView.spanned = parseSurah()
-        textView.lineHeightMultiplier = 0.80f
-        textView.isJustificationEnabled = true
-        textView.separatorColor = Color.GRAY
-        textView.highlightingColor = resources.getColor(R.color.colorHighlight)
+        textSizeBar = findViewById(R.id.seek_bar_text_size)
+        textSizeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) { }
 
-        val justificationLevelBar = findViewById<SeekBar>(R.id.seek_bar_justification_level)
-        justificationLevelBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
-                textView.justificationLevel = ((i / 4.0f) * 0.35f) + 0.65f
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                clearAyahHighlighting()
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) { }
-            override fun onStopTrackingTouch(seekBar: SeekBar) { }
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                updateTextSize()
+            }
         })
+
+        textView = findViewById(R.id.text_view)
+        textView.apply {
+            updateTextSize()
+            setGravity(Gravity.CENTER_HORIZONTAL)
+            typeface = TypefaceManager.getTypeface(R.id.typeface_noorehuda)
+            spanned = parseSurah()
+            lineHeightMultiplier = 0.80f
+            isJustificationEnabled = true
+            separatorColor = Color.GRAY
+            highlightingColor = resources.getColor(R.color.colorHighlight)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -121,5 +134,20 @@ class TextViewWidgetActivity : AppCompatActivity() {
         }
 
         return null
+    }
+
+    private fun spToPx(sp: Float) =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, resources.displayMetrics)
+
+    private fun clearAyahHighlighting() {
+        textView.clearAyahHighlighting()
+    }
+
+    private fun updateTextSize() {
+        val ratio = (textSizeBar.progress.toFloat() / textSizeBar.max.toFloat())
+        val multiplier = MAX_TEXT_SIZE - MIN_TEXT_SIZE
+        val sp = (ratio * multiplier) + MIN_TEXT_SIZE
+
+        textView.textSize = spToPx(sp)
     }
 }

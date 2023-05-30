@@ -35,7 +35,7 @@
             android:layout_height="match_parent"
             android:layout_weight="2"
             android:gravity="center"
-            android:text="Justification Level"
+            android:text="Text Size"
             android:textColor="@android:color/black"
             android:textSize="14sp"/>
 
@@ -46,7 +46,7 @@
             android:gravity="center">
 
             <TextView
-                android:id="@+id/text_view_jstf_level_min_value"
+                android:id="@+id/text_view_text_size_min_value"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="left|center_vertical"
@@ -56,15 +56,15 @@
                 android:textSize="12sp"/>
 
             <SeekBar
-                android:id="@+id/seek_bar_justification_level"
+                android:id="@+id/seek_bar_text_size"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:max="4"
-                android:progress="4"/>
+                android:max="100"
+                android:progress="36"/>
 
             <TextView
-                android:id="@+id/text_view_jstf_level_max_value"
+                android:id="@+id/text_view_text_size_max_value"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:gravity="left|center_vertical"
@@ -82,6 +82,5 @@
         android:scrollbarStyle="outsideOverlay"
         app:gravity="center"
         app:textColor="@android:color/black"
-        app:textSize="32sp"
         app:typeface="@id/typeface_noorehuda" />
 </LinearLayout>

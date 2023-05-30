@@ -154,6 +154,12 @@ class QuranTextView : TTextView {
         invalidate()
     }
 
+    fun clearAyahHighlighting() {
+        activeAyahSpan = null
+        activeAyahPath = null
+        invalidate()
+    }
+
     var highlightingColor: Int
         get() = paint.color
         set(value) {
