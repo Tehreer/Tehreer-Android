@@ -20,7 +20,7 @@ It is a wrapper over C libraries, [FreeType](https://www.freetype.org), [SheenBi
 If you are building with Gradle, simply add the following line to the `dependencies` section of your `build.gradle` file:
 
 ```groovy
-implementation 'com.github.mta452:tehreer-android:2.8'
+implementation 'com.github.mta452:tehreer-android:3.0'
 ```
 
 ## Proguard
@@ -35,7 +35,7 @@ The [Javadocs](https://tehreer.github.io/Tehreer-Android/apidocs/) are available
 
 ## License
 ```
-Copyright (C) 2016-2022 Muhammad Tayyab Akram
+Copyright (C) 2016-2023 Muhammad Tayyab Akram
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

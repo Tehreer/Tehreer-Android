@@ -9,7 +9,7 @@ ext {
     publishedArtifactId = 'tehreer-android'
 
     libraryName = 'Tehreer-Android'
-    libraryVersion = '2.8'
+    libraryVersion = '3.0'
     libraryDescription = 'A library that gives full control over text related technologies such as bidirectional algorithm, open type shaping, text typesetting and text rendering.'
 
     siteUrl = 'https://github.com/Tehreer/Tehreer-Android'
@@ -52,7 +52,7 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 33
-        versionCode 8
+        versionCode 9
         versionName libraryVersion
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -129,7 +129,7 @@ artifacts {
 
         options.links("https://developer.android.com/reference/")
         options.addStringOption('Xdoclint:none', '-quiet')
-        options.addStringOption("bottom", "Copyright &copy; 2022 $developerName. All rights reserved.")
+        options.addStringOption("bottom", "Copyright &copy; 2023 $developerName. All rights reserved.")
     }
 
     afterEvaluate {
