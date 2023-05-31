@@ -47,7 +47,7 @@ android {
     namespace 'com.mta.tehreer'
 
     compileSdkVersion 33
-    buildToolsVersion '31.0.0'
+    buildToolsVersion '33.0.2'
 
     defaultConfig {
         minSdkVersion 15
