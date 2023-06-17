@@ -129,24 +129,11 @@ internal class IntrinsicRun(
         return if (isBackward) clusterMap[listIndex] else forwardGlyphIndex(listIndex)
     }
 
-    override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        return super.getCaretBoundary(fromIndex, toIndex)
-    }
+    fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
+        val firstIndex = fromIndex - startIndex
+        val lastIndex = toIndex - startIndex
 
-    override fun getCaretEdge(charIndex: Int): Float {
-        return super.getCaretEdge(charIndex)
-    }
-
-    public override fun getCaretEdge(charIndex: Int, caretBoundary: Float): Float {
-        return super.getCaretEdge(charIndex, caretBoundary)
-    }
-
-    override fun getRangeDistance(fromIndex: Int, toIndex: Int): Float {
-        return super.getRangeDistance(fromIndex, toIndex)
-    }
-
-    override fun computeNearestCharIndex(distance: Float): Int {
-        return super.computeNearestCharIndex(distance)
+        return CaretUtils.getLeftMargin(caretEdges, isRTL, firstIndex, lastIndex)
     }
 
     public override fun computeNearestCharIndex(

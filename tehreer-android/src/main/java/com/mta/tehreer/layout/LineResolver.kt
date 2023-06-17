@@ -60,7 +60,7 @@ private fun createComposedLine(
         val wsStart = max(glyphRun.charStart, trailingWhitespaceStart)
         val wsEnd = min(glyphRun.charEnd, charEnd)
         if (wsStart < wsEnd) {
-            trailingWhitespaceExtent = glyphRun.computeRangeDistance(wsStart, wsEnd)
+            trailingWhitespaceExtent += glyphRun.computeRangeDistance(wsStart, wsEnd)
         }
 
         lineAscent = max(lineAscent, glyphRun.ascent)
@@ -339,7 +339,7 @@ internal class LineResolver(
         val wordStart = spanned.getLeadingWhitespaceEnd(charStart, charEnd)
         val wordEnd = spanned.getTrailingWhitespaceStart(charStart, charEnd)
 
-        val actualWidth = intrinsicRuns.measureChars(charStart, charEnd)
+        val actualWidth = intrinsicRuns.measureChars(charStart, wordEnd)
         val extraWidth = justificationWidth - actualWidth
         val availableWidth = extraWidth * justificationFactor
 

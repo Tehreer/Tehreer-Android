@@ -162,10 +162,6 @@ internal class IntrinsicRunSlice(
         return intrinsicRun.getTrailingGlyphIndex(charIndex) - glyphOffset
     }
 
-    override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        return intrinsicRun.getCaretBoundary(fromIndex, toIndex) - caretBoundary
-    }
-
     override fun getCaretEdge(charIndex: Int): Float {
         return intrinsicRun.getCaretEdge(charIndex) - caretBoundary
     }

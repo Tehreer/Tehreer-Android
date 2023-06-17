@@ -41,10 +41,8 @@ internal class DefaultTextRunDrawing(
     private fun getLeadingEdge(
         fromIndex: Int,
         toIndex: Int,
-        isBackward: Boolean,
-        caretBoundary: Float
     ): Float {
-        return textRun.getCaretEdge(if (!isBackward) fromIndex else toIndex) - caretBoundary
+        return textRun.getCaretEdge(if (!textRun.isBackward) fromIndex else toIndex)
     }
 
     private fun getClusterRange(charIndex: Int, exclusion: ClusterRange?): ClusterRange? {
@@ -70,40 +68,34 @@ internal class DefaultTextRunDrawing(
             cluster.glyphEnd = if (isBackward) minStart else cluster.glyphEnd
         }
 
-        return if (cluster.glyphStart < cluster.glyphEnd) cluster else null
+        return if (cluster.glyphStart < cluster.glyphEnd) {
+            cluster
+        } else {
+            null
+        }
     }
 
-    private fun drawEdgeCluster(
-        renderer: Renderer, canvas: Canvas,
-        cluster: ClusterRange, caretBoundary: Float,
-        fromIndex: Int, toIndex: Int
-    ) {
-        val startClipped = cluster.actualStart < fromIndex
-        val endClipped = cluster.actualEnd > toIndex
+    private fun drawEdgeCluster(renderer: Renderer, canvas: Canvas, cluster: ClusterRange) {
+        val runStart = textRun.startIndex
+        val runEnd = textRun.endIndex
+
+        val startClipped = (cluster.actualStart < runStart)
+        val endClipped = (cluster.actualEnd > runEnd)
 
         val clipLeft: Float
         val clipRight: Float
 
-        val isBackward = textRun.isBackward
-
         if (!isRTL) {
-            clipLeft =
-                if (startClipped) textRun.getCaretEdge(fromIndex) - caretBoundary else -Float.MAX_VALUE
-            clipRight =
-                if (endClipped) textRun.getCaretEdge(toIndex) - caretBoundary else Float.MAX_VALUE
+            clipLeft = if (startClipped) textRun.getCaretEdge(runStart) else -Float.MAX_VALUE
+            clipRight = if (endClipped) textRun.getCaretEdge(runEnd) else Float.MAX_VALUE
         } else {
-            clipRight =
-                if (startClipped) textRun.getCaretEdge(fromIndex) - caretBoundary else Float.MAX_VALUE
-            clipLeft =
-                if (endClipped) textRun.getCaretEdge(toIndex) - caretBoundary else -Float.MAX_VALUE
+            clipRight = if (startClipped) textRun.getCaretEdge(runStart) else Float.MAX_VALUE
+            clipLeft = if (endClipped) textRun.getCaretEdge(runEnd) else -Float.MAX_VALUE
         }
 
         canvas.save()
         canvas.clipRect(clipLeft, -Float.MAX_VALUE, clipRight, Float.MAX_VALUE)
-        canvas.translate(
-            getLeadingEdge(cluster.actualStart, cluster.actualEnd, isBackward, caretBoundary),
-            0.0f
-        )
+        canvas.translate(getLeadingEdge(cluster.actualStart, cluster.actualEnd), 0.0f)
 
         renderer.drawGlyphs(
             canvas,
@@ -116,7 +108,10 @@ internal class DefaultTextRunDrawing(
     }
 
     override fun draw(renderer: Renderer, canvas: Canvas) {
+        renderer.typeface = textRun.typeface
+        renderer.typeSize = textRun.typeSize
         renderer.scaleX = 1.0f
+        renderer.writingDirection = textRun.writingDirection
 
         val defaultFillColor = renderer.fillColor
 
@@ -128,42 +123,29 @@ internal class DefaultTextRunDrawing(
             }
         }
 
-        draw(renderer, canvas, textRun.startIndex, textRun.endIndex)
-
-        renderer.fillColor = defaultFillColor
-    }
-
-    private fun draw(renderer: Renderer, canvas: Canvas, fromIndex: Int, toIndex: Int) {
-        renderer.typeface = textRun.typeface
-        renderer.typeSize = textRun.typeSize
-        renderer.writingDirection = textRun.writingDirection
-
-        val lastIndex = toIndex - 1
-        val actualStart = textRun.getClusterStart(fromIndex)
-        val actualEnd = textRun.getClusterEnd(lastIndex)
+        val firstIndex = textRun.startIndex
+        val lastIndex = textRun.endIndex - 1
 
         var firstCluster: ClusterRange? = null
         var lastCluster: ClusterRange? = null
 
-        if (actualStart < fromIndex) {
-            firstCluster = getClusterRange(fromIndex, null)
+        if (textRun.startExtraLength > 0) {
+            firstCluster = getClusterRange(firstIndex, null)
         }
-        if (actualEnd > toIndex) {
+        if (textRun.endExtraLength > 0) {
             lastCluster = getClusterRange(lastIndex, firstCluster)
         }
 
         val isBackward = textRun.isBackward
-        val caretBoundary = textRun.getCaretBoundary(fromIndex, toIndex)
-        val glyphRange = textRun.getGlyphRangeForChars(actualStart, actualEnd)
 
-        var glyphStart = glyphRange.first
-        var glyphEnd = glyphRange.last + 1
+        var glyphStart = 0
+        var glyphEnd = textRun.glyphCount
 
-        var chunkStart = fromIndex
-        var chunkEnd = toIndex
+        var chunkStart = firstIndex
+        var chunkEnd = lastIndex + 1
 
         if (firstCluster != null) {
-            drawEdgeCluster(renderer, canvas, firstCluster, caretBoundary, fromIndex, toIndex)
+            drawEdgeCluster(renderer, canvas, firstCluster)
 
             // Exclude first cluster characters.
             chunkStart = firstCluster.actualEnd
@@ -180,10 +162,7 @@ internal class DefaultTextRunDrawing(
         }
 
         canvas.save()
-        canvas.translate(
-            getLeadingEdge(chunkStart, chunkEnd, isBackward, caretBoundary),
-            0.0f
-        )
+        canvas.translate(getLeadingEdge(chunkStart, chunkEnd), 0.0f)
 
         renderer.drawGlyphs(
             canvas,
@@ -195,7 +174,9 @@ internal class DefaultTextRunDrawing(
         canvas.restore()
 
         lastCluster?.let {
-            drawEdgeCluster(renderer, canvas, it, caretBoundary, fromIndex, toIndex)
+            drawEdgeCluster(renderer, canvas, it)
         }
+
+        renderer.fillColor = defaultFillColor
     }
 }

@@ -30,25 +30,15 @@ internal abstract class AbstractTextRun : TextRun {
     override val height: Float
         get() = ascent + descent + leading
 
-    override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        val firstIndex = fromIndex - startIndex
-        val lastIndex = toIndex - startIndex
-
-        return CaretUtils.getLeftMargin(caretEdges, isRTL, firstIndex, lastIndex)
-    }
-
     override fun getCaretEdge(charIndex: Int): Float {
-        return getCaretEdge(charIndex, 0.0f)
-    }
-
-    protected open fun getCaretEdge(charIndex: Int, caretBoundary: Float): Float {
-        val actualStart = getClusterStart(startIndex)
-        return caretEdges[charIndex - actualStart] - caretBoundary
+        val actualStart = startIndex - startExtraLength
+        return caretEdges[charIndex - actualStart]
     }
 
     override fun getRangeDistance(fromIndex: Int, toIndex: Int): Float {
-        val firstIndex = fromIndex - startIndex
-        val lastIndex = toIndex - startIndex
+        val actualStart = startIndex - startExtraLength
+        val firstIndex = fromIndex - actualStart
+        val lastIndex = toIndex - actualStart
 
         return CaretUtils.getRangeDistance(caretEdges, isRTL, firstIndex, lastIndex)
     }

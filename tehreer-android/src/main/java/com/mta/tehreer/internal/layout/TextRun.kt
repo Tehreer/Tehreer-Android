@@ -62,7 +62,6 @@ internal interface TextRun {
     fun getLeadingGlyphIndex(charIndex: Int): Int
     fun getTrailingGlyphIndex(charIndex: Int): Int
 
-    fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float
     fun getCaretEdge(charIndex: Int): Float
 
     fun getRangeDistance(fromIndex: Int, toIndex: Int): Float

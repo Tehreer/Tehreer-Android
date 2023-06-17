@@ -21,10 +21,12 @@ import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.sfnt.WritingDirection
 import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.PointList
-import android.graphics.RectF
 import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.graphics.DefaultTextRunDrawing
+import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
+import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
+import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 import com.mta.tehreer.internal.util.isOdd
 import com.mta.tehreer.internal.util.toFloatList
 
@@ -34,25 +36,59 @@ internal class JustifiedRun(
 ) : AbstractTextRun() {
     override val glyphAdvances: FloatList
     override val caretEdges: FloatList
-    private var caretBoundary = 0.0f
 
     init {
         val isRTL = textRun.bidiLevel.isOdd()
 
-        glyphAdvances = justifiedAdvances
-        caretEdges = CaretEdgesBuilder()
+        val caretEdgesArray = CaretEdgesBuilder()
             .setBackward(textRun.isBackward)
             .setRTL(isRTL)
             .setGlyphAdvances(justifiedAdvances)
             .setClusterMap(textRun.clusterMap)
             .setCaretStops(null)
             .build()
-            .toFloatList()
 
-        if (isRTL) {
-            if (textRun.startExtraLength > 0) {
-                caretBoundary = getCaretBoundary(textRun.startIndex, textRun.endIndex)
+        val runLength = textRun.endIndex - textRun.startIndex
+        val firstIndex = textRun.startExtraLength
+        val lastIndex = firstIndex + runLength
+
+        val caretBoundary = caretEdgesArray[if (isRTL) lastIndex else firstIndex]
+
+        glyphAdvances = justifiedAdvances
+        caretEdges = CaretEdges(caretEdgesArray, caretBoundary)
+    }
+
+    internal class CaretEdges(
+        val base: FloatArray,
+        val offset: Int,
+        val size: Int,
+        val boundary: Float
+    ) : FloatList() {
+        constructor(
+            base: FloatArray,
+            boundary: Float
+        ): this(base, 0, base.size, boundary)
+
+        override fun size(): Int {
+            return size
+        }
+
+        override fun get(index: Int): Float {
+            checkElementIndex(index, size)
+            return base[index + offset] - boundary
+        }
+
+        override fun copyTo(array: FloatArray, atIndex: Int) {
+            checkNotNull(array)
+
+            for (i in 0 until size) {
+                array[i + atIndex] = base[i + offset] - boundary
             }
+        }
+
+        override fun subList(fromIndex: Int, toIndex: Int): FloatList {
+            checkIndexRange(fromIndex, toIndex, size)
+            return CaretEdges(base, offset + fromIndex, toIndex - fromIndex, boundary)
         }
     }
 
@@ -131,26 +167,6 @@ internal class JustifiedRun(
 
     override fun getTrailingGlyphIndex(charIndex: Int): Int {
         return textRun.getTrailingGlyphIndex(charIndex)
-    }
-
-    override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        return super.getCaretBoundary(fromIndex, toIndex) - caretBoundary
-    }
-
-    override fun getCaretEdge(charIndex: Int): Float {
-        return super.getCaretEdge(charIndex)
-    }
-
-    override fun getRangeDistance(fromIndex: Int, toIndex: Int): Float {
-        return super.getRangeDistance(fromIndex, toIndex)
-    }
-
-    override fun computeNearestCharIndex(distance: Float): Int {
-        return super.computeNearestCharIndex(distance)
-    }
-
-    override fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
-        return super.computeBoundingBox(renderer, glyphStart, glyphEnd)
     }
 
     override fun draw(renderer: Renderer, canvas: Canvas) {

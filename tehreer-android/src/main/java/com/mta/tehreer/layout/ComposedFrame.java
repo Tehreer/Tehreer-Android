@@ -206,6 +206,9 @@ public class ComposedFrame {
             float selectionLeft = visualEdges[edgeIndex++] + lineLeft;
             float selectionRight = visualEdges[edgeIndex++] + lineLeft;
 
+            selectionLeft = Math.max(selectionLeft, 0);
+            selectionRight = Math.min(selectionRight, mWidth);
+
             selectionPath.addRect(selectionLeft, selectionTop,
                                   selectionRight, selectionBottom, Path.Direction.CW);
         }

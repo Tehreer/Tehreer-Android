@@ -116,10 +116,6 @@ internal class ReplacementRun(
         return 1
     }
 
-    override fun getCaretBoundary(fromIndex: Int, toIndex: Int): Float {
-        return 0.0f
-    }
-
     override fun getCaretEdge(charIndex: Int): Float {
         return caretEdges[charIndex - startIndex]
     }
