@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2023 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,12 +80,16 @@ public class FrameResolver {
      *
      * @param typesetter A typesetter object.
      */
-    public void setTypesetter(@NonNull Typesetter typesetter) {
-        checkNotNull(typesetter, "typesetter");
-
-        mTypesetter = typesetter;
-        mSpanned = typesetter.getSpanned();
-        mParagraphs = typesetter.getParagraphs();
+    public void setTypesetter(Typesetter typesetter) {
+        if (typesetter == null) {
+            mTypesetter = null;
+            mSpanned = null;
+            mParagraphs = null;
+        } else {
+            mTypesetter = typesetter;
+            mSpanned = typesetter.getSpanned();
+            mParagraphs = typesetter.getParagraphs();
+        }
     }
 
     /**
