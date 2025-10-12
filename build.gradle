@@ -2,18 +2,20 @@
 
 buildscript {
     ext {
-        kotlinVersion = "1.8.21"
+        kotlinVersion = "2.2.0"
+        composeVersion = "1.9.3"
     }
 
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.12.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlinVersion"
     }
 }
 

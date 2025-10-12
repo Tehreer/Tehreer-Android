@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'jacoco'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -44,26 +45,32 @@ group = publishedGroupId
 version = libraryVersion
 
 android {
-    namespace 'com.mta.tehreer'
+    namespace = 'com.mta.tehreer'
+    ndkVersion = '28.2.13676358'
 
-    compileSdkVersion 33
-    buildToolsVersion '33.0.2'
+    compileSdkVersion 36
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion composeVersion
+    }
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 33
-        versionCode 9
-        versionName libraryVersion
+        minSdkVersion 21
+        targetSdkVersion 35
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_21
     }
 
     testOptions {
@@ -92,7 +99,7 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled true
+            testCoverageEnabled = true
         }
         release {
             minifyEnabled false
@@ -107,10 +114,19 @@ android {
             }
         }
     }
+
+    publishing {
+        singleVariant("release") { }
+    }
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.6.0'
+    implementation 'androidx.annotation:annotation:1.9.1'
+    implementation "androidx.compose.ui:ui:$composeVersion"
+    implementation "androidx.compose.ui:ui-graphics:$composeVersion"
+    implementation "androidx.compose.runtime:runtime:$composeVersion"
+    implementation "androidx.compose.foundation:foundation:$composeVersion"
+    implementation "androidx.compose.foundation:foundation-layout:$composeVersion"
 
     testImplementation 'junit:junit:4.13.2'
 
@@ -156,9 +172,9 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                groupId publishedGroupId
-                artifactId publishedArtifactId
-                version libraryVersion
+                groupId = publishedGroupId
+                artifactId = publishedArtifactId
+                version = libraryVersion
 
                 from components.release
 
@@ -200,8 +216,8 @@ afterEvaluate {
                 url = mavenUrl
 
                 credentials {
-                    username ossrhUsername
-                    password ossrhPassword
+                    username = ossrhUsername
+                    password = ossrhPassword
                 }
             }
         }
