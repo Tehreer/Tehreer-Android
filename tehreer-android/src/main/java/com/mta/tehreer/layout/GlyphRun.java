@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
  */
 public class GlyphRun {
     private TextRun textRun;
+    private boolean isTruncated;
     private float originX;
     private float originY;
 
@@ -46,8 +47,9 @@ public class GlyphRun {
         this.textRun = textRun;
     }
 
-    GlyphRun(@NonNull GlyphRun otherRun) {
+    GlyphRun(@NonNull GlyphRun otherRun, boolean isTruncated) {
         this.textRun = otherRun.textRun;
+        this.isTruncated = isTruncated;
         this.originX = otherRun.originX;
         this.originY = otherRun.originY;
     }
@@ -58,6 +60,10 @@ public class GlyphRun {
 
     void setTextRun(TextRun textRun) {
         this.textRun = textRun;
+    }
+
+    boolean isTruncated() {
+        return isTruncated;
     }
 
     private void checkCharIndex(int charIndex) {

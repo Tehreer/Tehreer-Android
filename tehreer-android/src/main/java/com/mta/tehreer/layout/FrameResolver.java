@@ -853,14 +853,15 @@ public class FrameResolver {
                 final ComposedLine textLine = textLines.get(i);
                 final int charStart = textLine.getCharStart();
                 final int charEnd = textLine.getCharEnd();
+                final int breakEnd = textLine.getBreakEnd();
 
                 // Skip the last line of paragraph if it's smaller in width.
-                if ((charEnd == mSpanned.length() || mSpanned.charAt(charEnd - 1) == '\n')
+                if ((charEnd == mSpanned.length() || mSpanned.charAt(breakEnd - 1) == '\n')
                         && textLine.getWidth() <= context.layoutWidth) {
                     continue;
                 }
 
-                ComposedLine justifiedLine = mTypesetter.createJustifiedLine(charStart, charEnd, 1.0f, context.layoutWidth);
+                ComposedLine justifiedLine = mTypesetter.createJustifiedLine(textLine, 1.0f, context.layoutWidth);
 
                 final float intrinsicMargin = textLine.getIntrinsicMargin();
                 final float flushFactor = textLine.getFlushFactor();

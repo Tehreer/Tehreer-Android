@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -288,6 +288,12 @@ public class Typesetter {
 
         return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode,
                                                truncationPlace, truncationToken);
+    }
+
+    @NonNull ComposedLine createJustifiedLine(@NonNull ComposedLine line,
+                                              float justificationFactor,
+                                              float justificationWidth) {
+        return mLineResolver.createJustifiedLine(line, justificationFactor, justificationWidth);
     }
 
     /**

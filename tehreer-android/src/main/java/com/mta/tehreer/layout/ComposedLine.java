@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 public class ComposedLine {
 	private final int lineStart;
 	private final int lineEnd;
+    private final int breakEnd;
     private final byte paragraphLevel;
     private final float extent;
     private final float trailingWhitespaceExtent;
@@ -53,11 +54,12 @@ public class ComposedLine {
     private float mOriginX;
     private float mOriginY;
 
-	ComposedLine(int charStart, int charEnd, byte paragraphLevel,
+	ComposedLine(int charStart, int charEnd, int breakEnd, byte paragraphLevel,
                  float ascent, float descent, float leading, float extent,
                  float trailingWhitespaceExtent, @NonNull List<GlyphRun> runList) {
 	    this.lineStart = charStart;
 	    this.lineEnd = charEnd;
+        this.breakEnd = breakEnd;
 	    this.paragraphLevel = paragraphLevel;
 	    this.extent = extent;
 	    this.trailingWhitespaceExtent = trailingWhitespaceExtent;
@@ -85,6 +87,10 @@ public class ComposedLine {
 	public int getCharEnd() {
 		return lineEnd;
 	}
+
+    public int getBreakEnd() {
+        return breakEnd;
+    }
 
 	Object[] getSpans() {
 	    return mSpans;

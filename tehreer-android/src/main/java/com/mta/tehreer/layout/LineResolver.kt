@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,9 +42,8 @@ private fun createGlyphRun(
 }
 
 private fun createComposedLine(
-    text: CharSequence, charStart: Int, charEnd: Int,
-    runList: List<GlyphRun>,
-    paragraphLevel: Byte
+    text: CharSequence, charStart: Int, charEnd: Int, breakEnd: Int,
+    runList: List<GlyphRun>, paragraphLevel: Byte
 ): ComposedLine {
     var lineAscent = 0.0f
     var lineDescent = 0.0f
@@ -70,7 +69,7 @@ private fun createComposedLine(
     }
 
     return ComposedLine(
-        charStart, charEnd, paragraphLevel,
+        charStart, charEnd, breakEnd, paragraphLevel,
         lineAscent, lineDescent, lineLeading, lineExtent,
         trailingWhitespaceExtent, Collections.unmodifiableList(runList)
     )
@@ -94,7 +93,7 @@ internal class LineResolver(
         })
 
         return createComposedLine(
-            spanned, start, end, runList,
+            spanned, start, end, end, runList,
             bidiParagraphs.getBaseLevel(start)
         )
     }
@@ -198,8 +197,7 @@ internal class LineResolver(
             addTokenRuns(token, runList, tokenInsertIndex)
 
             return createComposedLine(
-                spanned, truncatedStart, end,
-                runList,
+                spanned, truncatedStart, end, end, runList,
                 bidiParagraphs.getBaseLevel(truncatedStart)
             )
         }
@@ -234,7 +232,7 @@ internal class LineResolver(
             addTokenRuns(token, runList, tokenInsertIndex)
 
             return createComposedLine(
-                spanned, start, end, runList,
+                spanned, start, end, end, runList,
                 bidiParagraphs.getBaseLevel(start)
             )
         }
@@ -248,10 +246,10 @@ internal class LineResolver(
         mode: BreakMode,
         token: ComposedLine
     ): ComposedLine {
-        var truncatedEnd = breakResolver.suggestForwardBreak(start, end, tokenlessWidth, mode)
-        if (truncatedEnd < end) {
+        val breakEnd = breakResolver.suggestForwardBreak(start, end, tokenlessWidth, mode)
+        if (breakEnd < end) {
             // Exclude trailing whitespaces as truncation token replaces them.
-            truncatedEnd = spanned.getTrailingWhitespaceStart(start, truncatedEnd)
+            val truncatedEnd = spanned.getTrailingWhitespaceStart(start, breakEnd)
 
             val runList = mutableListOf<GlyphRun>()
             var tokenInsertIndex = 0
@@ -265,19 +263,19 @@ internal class LineResolver(
             addTokenRuns(token, runList, tokenInsertIndex)
 
             return createComposedLine(
-                spanned, start, truncatedEnd, runList,
+                spanned, start, truncatedEnd, breakEnd, runList,
                 bidiParagraphs.getBaseLevel(start)
             )
         }
 
-        return createSimpleLine(start, truncatedEnd)
+        return createSimpleLine(start, breakEnd)
     }
 
     private fun addTokenRuns(token: ComposedLine, runList: MutableList<GlyphRun>, index: Int) {
         var insertIndex = index
 
         for (truncationRun in token.runs) {
-            val modifiedRun = GlyphRun(truncationRun)
+            val modifiedRun = GlyphRun(truncationRun, true)
             runList.add(insertIndex, modifiedRun)
 
             insertIndex++
@@ -332,32 +330,46 @@ internal class LineResolver(
     }
 
     fun createJustifiedLine(
-        charStart: Int, charEnd: Int,
+        line: ComposedLine,
         justificationFactor: Float,
         justificationWidth: Float
     ): ComposedLine {
-        val wordStart = spanned.getLeadingWhitespaceEnd(charStart, charEnd)
-        val wordEnd = spanned.getTrailingWhitespaceStart(charStart, charEnd)
+        val lineStart = line.charStart
+        val lineEnd = line.charEnd
+        val breakEnd = line.breakEnd;
 
-        val actualWidth = intrinsicRuns.measureChars(charStart, wordEnd)
-        val extraWidth = justificationWidth - actualWidth
-        val availableWidth = extraWidth * justificationFactor
+        val wordStart = spanned.getLeadingWhitespaceEnd(lineStart, lineEnd)
+        val wordEnd = spanned.getTrailingWhitespaceStart(lineStart, lineEnd)
 
-        val innerSpaceCount = computeSpaceCount(wordStart, wordEnd)
-        val spaceAddition = availableWidth / innerSpaceCount
-
-        val runList = mutableListOf<GlyphRun>()
-        bidiParagraphs.forEachLineRun(charStart, charEnd, object : RunConsumer {
-            override fun accept(bidiRun: BidiRun) {
-                addVisualRuns(bidiRun.charStart, bidiRun.charEnd, runList)
-            }
-        })
-
+        val runList = line.runs
         val runCount = runList.size
+
+        val actualWidth = line.width - line.trailingWhitespaceExtent
+        var innerSpaceCount = 0
+
         for (i in 0 until runCount) {
             val glyphRun = runList[i]
             val textRun = glyphRun.textRun
-            if (textRun is ReplacementRun) {
+
+            if (glyphRun.isTruncated || textRun is ReplacementRun) {
+                continue
+            }
+
+            val runStart = max(glyphRun.charStart, wordStart)
+            val runEnd = min(glyphRun.charEnd, wordEnd)
+
+            innerSpaceCount += computeSpaceCount(runStart, runEnd)
+        }
+
+        val extraWidth = justificationWidth - actualWidth
+        val availableWidth = extraWidth * justificationFactor
+        val spaceAddition = availableWidth / innerSpaceCount
+
+        for (i in 0 until runCount) {
+            val glyphRun = runList[i]
+            val textRun = glyphRun.textRun
+
+            if (glyphRun.isTruncated || textRun is ReplacementRun) {
                 continue
             }
 
@@ -396,9 +408,21 @@ internal class LineResolver(
             glyphRun.textRun = justifiedRun
         }
 
-        val paragraphLevel = bidiParagraphs.getBaseLevel(charStart)
+        return createComposedLine(
+            spanned, lineStart, lineEnd, breakEnd, runList,
+            line.paragraphLevel
+        )
+    }
 
-        return createComposedLine(spanned, charStart, charEnd, runList, paragraphLevel)
+    fun createJustifiedLine(
+        charStart: Int, charEnd: Int,
+        justificationFactor: Float,
+        justificationWidth: Float
+    ): ComposedLine {
+        return createJustifiedLine(
+            createSimpleLine(charStart, charEnd),
+            justificationFactor, justificationWidth
+        )
     }
 
     private fun computeSpaceCount(startIndex: Int, endIndex: Int): Int {
