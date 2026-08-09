@@ -1,11 +1,15 @@
-apply plugin: 'com.android.library'
-apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'org.jetbrains.kotlin.plugin.compose'
-apply plugin: 'jacoco'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
+}
 
 ext {
+    kotlinVersion = "2.4.10"
+    composeVersion = "1.11.4"
+
     publishedGroupId = 'com.github.mta452'
     publishedArtifactId = 'tehreer-android'
 
@@ -48,29 +52,25 @@ android {
     namespace = 'com.mta.tehreer'
     ndkVersion = '28.2.13676358'
 
-    compileSdkVersion 36
+    compileSdk = 37
 
     buildFeatures {
-        compose true
+        compose = true
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion composeVersion
+        kotlinCompilerExtensionVersion = composeVersion
     }
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 35
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        minSdk = 23
+        targetSdk = 37
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_21
-        targetCompatibility JavaVersion.VERSION_21
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     testOptions {
@@ -102,8 +102,8 @@ android {
             testCoverageEnabled = true
         }
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled = false
+            proguardFiles(getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro')
 
             externalNativeBuild {
                 ndkBuild {
@@ -121,7 +121,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.9.1'
+    implementation 'androidx.annotation:annotation:1.10.0'
     implementation "androidx.compose.ui:ui:$composeVersion"
     implementation "androidx.compose.ui:ui-graphics:$composeVersion"
     implementation "androidx.compose.runtime:runtime:$composeVersion"
@@ -130,17 +130,16 @@ dependencies {
 
     testImplementation 'junit:junit:4.13.2'
 
-    androidTestImplementation 'org.mockito:mockito-core:4.5.1'
-    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito-inline:2.28.1'
-    androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'org.mockito:mockito-core:5.23.0'
+    androidTestImplementation 'com.linkedin.dexmaker:dexmaker-mockito-inline:2.28.6'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 }
 
 artifacts {
     task apiDocs(type: Javadoc) {
         title = "$libraryName $libraryVersion API"
         source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
         exclude '**/*.kt'
 
         options.links("https://developer.android.com/reference/")
@@ -148,10 +147,10 @@ artifacts {
         options.addStringOption("bottom", "Copyright &copy; 2023 $developerName. All rights reserved.")
     }
 
-    afterEvaluate {
-        apiDocs.classpath += files(android.libraryVariants.collect { variant ->
-            variant.javaCompileProvider.get().classpath.files
-        })
+    apiDocs.classpath += project.files(androidComponents.sdkComponents.bootClasspath)
+
+    androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+        apiDocs.classpath += variant.compileConfiguration
     }
 
     task javadocJar(type: Jar, dependsOn: apiDocs) {
