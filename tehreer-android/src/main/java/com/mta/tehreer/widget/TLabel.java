@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,7 +252,7 @@ public class TLabel extends View {
         if (mTypesetter != null) {
             long t1 = System.nanoTime();
 
-            mLayoutRect.set(paddingLeft, paddingTop, layoutWidth, layoutHeight);
+            mLayoutRect.set(paddingLeft, paddingTop, paddingLeft + layoutWidth, paddingTop + layoutHeight);
 
             mResolver.setTypesetter(mTypesetter);
             mResolver.setFrameBounds(mLayoutRect);
