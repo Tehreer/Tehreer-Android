@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,17 @@ import com.mta.tehreer.collections.PointList
 import android.graphics.RectF
 import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.graphics.Typeface
+import com.mta.tehreer.internal.util.isEven
 import com.mta.tehreer.internal.util.isOdd
+import com.mta.tehreer.internal.util.toFloatList
+import com.mta.tehreer.layout.style.ViewSpan
 
 internal class ReplacementRun(
     val charSequence: CharSequence,
     override val startIndex: Int,
     override val endIndex: Int,
     override val bidiLevel: Byte,
-    private val replacementSpan: ReplacementSpan,
+    internal val replacementSpan: ReplacementSpan,
     val paint: Paint,
     override val typeface: Typeface,
     override val typeSize: Float,
@@ -144,4 +147,36 @@ internal class ReplacementRun(
             paint
         )
     }
+}
+
+/**
+ * Whether this run is a view that has a line of its own. Kept as an extension - rather than a
+ * member - so that [ReplacementRun] does not need to be `open` for it; nothing else about the run
+ * needs to be overridden.
+ */
+internal val ReplacementRun.isBlock: Boolean
+    get() = (replacementSpan as? ViewSpan)?.isBlock == true
+
+/**
+ * Returns the run that a frame [layoutWidth] wide has to use, which is this one unless the span
+ * decides its room when the frame is made, as a view span does. The run is not changed, as
+ * other frames of the same typesetter may be in use.
+ */
+internal fun ReplacementRun.forFrame(layoutWidth: Float): ReplacementRun {
+    val viewSpan = replacementSpan as? ViewSpan ?: return this
+    val room = viewSpan.computeRoom(layoutWidth)
+
+    val length = endIndex - startIndex
+    val edges = FloatArray(length + 1)
+
+    if (bidiLevel.isEven()) {
+        edges[length] = room.extent.toFloat()
+    } else {
+        edges[0] = room.extent.toFloat()
+    }
+
+    return ReplacementRun(
+        charSequence, startIndex, endIndex, bidiLevel, replacementSpan, paint, typeface, typeSize,
+        room.ascent, room.descent, 0, room.extent, edges.toFloatList()
+    )
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ import kotlin.math.floor
 
 internal class LineView(context: Context?) : View(context) {
     private val separatorPaint = Paint()
+
+    var lineIndex = 0
 
     val frame = Rect()
     val renderer = Renderer()
@@ -80,7 +82,10 @@ internal class LineView(context: Context?) : View(context) {
     var separatorColor: Int
         get() = separatorPaint.color
         set(separatorColor) {
-            separatorPaint.color = separatorColor
+            if (separatorPaint.color != separatorColor) {
+                separatorPaint.color = separatorColor
+                invalidate()
+            }
         }
 
     private var _line: ComposedLine? = null

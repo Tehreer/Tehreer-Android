@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import com.mta.tehreer.internal.layout.ParagraphCollection;
 import com.mta.tehreer.unicode.BidiParagraph;
+import com.mta.tehreer.layout.style.ViewSpan;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -541,7 +542,7 @@ public class FrameResolver {
         while (lineStart != context.endIndex) {
             final float breakExtent = context.lineExtent + context.extraWidth;
             final int lineEnd = mTypesetter.suggestForwardBreak(lineStart, context.endIndex, breakExtent, BreakMode.LINE);
-            final ComposedLine composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd);
+            final ComposedLine composedLine = mTypesetter.createSimpleLine(lineStart, lineEnd, context.layoutWidth);
             resolveAttributes(context, composedLine);
 
             final float lineHeight = composedLine.getHeight();
@@ -691,8 +692,12 @@ public class FrameResolver {
 
     private void resolveAttributes(@NonNull FrameContext context, @NonNull ComposedLine textLine) {
         resolveCustomHeight(context, textLine);
-        resolveLineHeightMultiplier(context, textLine);
-        resolveExtraLineSpacing(context, textLine);
+
+        // The line of a view is as tall as the view and its margins.
+        if (!textLine.isBlock()) {
+            resolveLineHeightMultiplier(context, textLine);
+            resolveExtraLineSpacing(context, textLine);
+        }
 
         // Compute the origin of line.
         textLine.setOriginX(context.leadingOffset + textLine.getFlushPenOffset(context.flushFactor, context.lineExtent));
@@ -844,6 +849,20 @@ public class FrameResolver {
         }
     }
 
+    private boolean endsBeforeBlock(int charEnd) {
+        if (charEnd >= mSpanned.length()) {
+            return false;
+        }
+
+        for (ViewSpan span : mSpanned.getSpans(charEnd, charEnd + 1, ViewSpan.class)) {
+            if (span.getPlacement() == ViewSpan.Placement.BLOCK) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void resolveJustification(@NonNull FrameContext context) {
         if (mJustificationEnabled) {
             final List<ComposedLine> textLines = context.textLines;
@@ -858,6 +877,11 @@ public class FrameResolver {
                 // Skip the last line of paragraph if it's smaller in width.
                 if ((charEnd == mSpanned.length() || mSpanned.charAt(breakEnd - 1) == '\n')
                         && textLine.getWidth() <= context.layoutWidth) {
+                    continue;
+                }
+
+                // The line of a view has nothing to justify, and the one before it ends there.
+                if (textLine.isBlock() || endsBeforeBlock(charEnd)) {
                     continue;
                 }
 

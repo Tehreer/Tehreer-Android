@@ -31,11 +31,14 @@ import kotlin.math.min
 
 private fun createGlyphRun(
     textRun: TextRun, spanStart: Int, spanEnd: Int,
-    spans: Array<Any>
+    spans: Array<Any>, layoutWidth: Float
 ): GlyphRun {
     var innerRun = textRun
     if (innerRun is IntrinsicRun) {
         innerRun = IntrinsicRunSlice(innerRun, spanStart, spanEnd, listOf(*spans))
+    } else if (innerRun is ReplacementRun && !layoutWidth.isNaN()) {
+        // The room of a view is decided by the frame that the line is in.
+        innerRun = innerRun.forFrame(layoutWidth)
     }
 
     return GlyphRun(innerRun)
@@ -49,6 +52,7 @@ private fun createComposedLine(
     var lineDescent = 0.0f
     var lineLeading = 0.0f
     var lineExtent = 0.0f
+    var blockRun: GlyphRun? = null
 
     val trailingWhitespaceStart = text.getTrailingWhitespaceStart(charStart, charEnd)
     var trailingWhitespaceExtent = 0.0f
@@ -66,13 +70,29 @@ private fun createComposedLine(
         lineDescent = max(lineDescent, glyphRun.descent)
         lineLeading = max(lineLeading, glyphRun.leading)
         lineExtent += glyphRun.width
+
+        val textRun = glyphRun.textRun
+        if (textRun is ReplacementRun && textRun.isBlock) {
+            blockRun = glyphRun
+        }
     }
 
-    return ComposedLine(
+    // A line that holds a block view is as tall as the view and its margins, and nothing else: the
+    // metrics of the newline that ends its paragraph would only add blank space.
+    blockRun?.let {
+        lineAscent = it.ascent
+        lineDescent = it.descent
+        lineLeading = it.leading
+    }
+
+    val line = ComposedLine(
         charStart, charEnd, breakEnd, paragraphLevel,
         lineAscent, lineDescent, lineLeading, lineExtent,
         trailingWhitespaceExtent, Collections.unmodifiableList(runList)
     )
+    line.isBlock = blockRun != null
+
+    return line
 }
 
 internal class LineResolver(
@@ -80,7 +100,12 @@ internal class LineResolver(
     private val bidiParagraphs: ParagraphCollection,
     private val intrinsicRuns: RunCollection
 ) {
-    fun createSimpleLine(start: Int, end: Int): ComposedLine {
+    /**
+     * Creates a line. The runs whose room is decided by the frame, those of view spans, get it
+     * from the frame's [layoutWidth], if it is known.
+     */
+    @JvmOverloads
+    fun createSimpleLine(start: Int, end: Int, layoutWidth: Float = Float.NaN): ComposedLine {
         val runList = mutableListOf<GlyphRun>()
 
         bidiParagraphs.forEachLineRun(start, end, object : RunConsumer {
@@ -88,7 +113,7 @@ internal class LineResolver(
                 val visualStart = bidiRun.charStart
                 val visualEnd = bidiRun.charEnd
 
-                addVisualRuns(visualStart, visualEnd, runList)
+                addVisualRuns(visualStart, visualEnd, runList, layoutWidth)
             }
         })
 
@@ -282,7 +307,10 @@ internal class LineResolver(
         }
     }
 
-    private fun addVisualRuns(fromIndex: Int, toIndex: Int, runList: MutableList<GlyphRun>) {
+    private fun addVisualRuns(
+        fromIndex: Int, toIndex: Int, runList: MutableList<GlyphRun>,
+        layoutWidth: Float = Float.NaN
+    ) {
         var visualStart = fromIndex
 
         if (visualStart < toIndex) {
@@ -313,7 +341,7 @@ internal class LineResolver(
                     val spanEnd = spanned.nextSpanTransition(spanStart, feasibleEnd, Any::class.java)
                     val spans = spanned.getSpans(spanStart, spanEnd, Any::class.java)
 
-                    val glyphRun = createGlyphRun(textRun, spanStart, spanEnd, spans)
+                    val glyphRun = createGlyphRun(textRun, spanStart, spanEnd, spans, layoutWidth)
                     runList.add(insertIndex, glyphRun)
 
                     if (isForwardRun) {

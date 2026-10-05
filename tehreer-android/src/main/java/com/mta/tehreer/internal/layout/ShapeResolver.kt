@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,6 +90,11 @@ internal class ShapeResolver(
             shapingEngine?.dispose()
             bidiAlgorithm?.dispose()
         }
+
+        // Every run has been added by now, and this thread is the only one with a reference to
+        // `runs` so far - the last safe moment to compute its block list eagerly, before it is
+        // handed back and possibly published to another thread. See RunCollection.finalizeBlocks.
+        runs.finalizeBlocks()
 
         return Pair(paragraphs, runs)
     }

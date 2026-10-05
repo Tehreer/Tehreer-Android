@@ -47,6 +47,8 @@ public class ComposedLine {
     private float mIntrinsicMargin;
     private float mFlushFactor;
 
+    private boolean mBlock;
+
     private float mAscent;
     private float mDescent;
     private float mLeading;
@@ -98,6 +100,15 @@ public class ComposedLine {
 
     void setSpans(Object[] spans) {
 	    mSpans = spans;
+    }
+
+    /** Whether this line is the line of a view that has a line of its own. */
+    boolean isBlock() {
+        return mBlock;
+    }
+
+    void setBlock(boolean block) {
+        mBlock = block;
     }
 
     boolean isFirst() {

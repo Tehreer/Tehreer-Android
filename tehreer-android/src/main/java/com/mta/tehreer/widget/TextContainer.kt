@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,68 +25,83 @@ import android.os.Looper
 import android.text.Spanned
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ScrollView
+import androidx.annotation.VisibleForTesting
 import com.mta.tehreer.graphics.Renderer
+import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.StrokeCap
+import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.util.SmartRunnable
 import com.mta.tehreer.layout.ComposedFrame
-import com.mta.tehreer.layout.FrameResolver
+import com.mta.tehreer.layout.ComposedLine
 import com.mta.tehreer.layout.TextAlignment
 import com.mta.tehreer.layout.Typesetter
-import com.mta.tehreer.layout.style.TypeSizeSpan
-import com.mta.tehreer.layout.style.TypefaceSpan
+import com.mta.tehreer.layout.style.ViewSpan
 import java.util.ArrayDeque
+import java.util.IdentityHashMap
 import java.util.Queue
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-private data class TextProperties(
-    var handler: Handler,
-    var layoutID: Any? = null,
-    var layoutWidth: Int = 0,
-    var typeface: Typeface? = null,
-    var text: String? = null,
-    var spanned: Spanned? = null,
-    var textSize: Float = 16.0f,
-    var textColor: Int = Color.BLACK,
-    var textAlignment: TextAlignment = TextAlignment.LEADING,
-    var extraLineSpacing: Float = 0.0f,
-    var lineHeightMultiplier: Float = 1.0f,
-    var isJustificationEnabled: Boolean = false,
-    var justificationLevel: Float = 1.0f,
-    var separatorColor: Int = Color.TRANSPARENT,
-    var typesetter: Typesetter? = null,
-    var composedFrame: ComposedFrame? = null
-)
-
-private typealias OnTaskUpdateListener<T> = (T) -> Unit
+/** A character, and how far the top of the screen is below the top of its line. */
+private class Anchor(val charIndex: Int, val offset: Float)
 
 internal class TextContainer : ViewGroup {
-    private lateinit var properties: TextProperties
+    internal lateinit var properties: TextProperties
 
-    private var lineBoxes = mutableListOf<Rect>()
+    private var displayedFrame: ComposedFrame? = null
+    private var displayedLineBoxes = LineBoxes()
+
+    private var pendingFrame: ComposedFrame? = null
+    private var isSwapPending = false
+    private var isPendingSwapFirstLoad = false
 
     private var scrollView: ScrollView? = null
-    private var scrollX = 0
-    private var scrollY = 0
     private var scrollWidth = 0
     private var scrollHeight = 0
 
-    private val visibleRect = Rect()
+    internal val visibleRect = Rect()
+    internal val originInScrollView = IntArray(2)
 
     private var isTextLayoutRequested = false
-    private var isTypesetterUserDefined = false
+    internal var isTypesetterUserDefined = false
+        private set
     private var isTypesetterResolved = false
     private var isComposedFrameResolved = false
 
-    private val lineViews = mutableListOf<LineView>()
-    private val insideViews = mutableListOf<LineView>()
-    private val outsideViews = mutableListOf<LineView>()
-    private val visibleIndexes = mutableListOf<Int>()
+    private var lineViewsByIndex = arrayOfNulls<LineView>(0)
+    private val attachedLineViews = ArrayList<LineView>()
+    private val reusableLineViews = ArrayList<LineView>()
+
+    internal var viewSlots: List<ViewSlot> = emptyList()
+        private set
+
+    internal val spanViews = IdentityHashMap<ViewSpan, View>()
+    internal val measuredViews = IdentityHashMap<ViewSpan, View>()
+    internal val resizingSpans = IdentityHashMap<ViewSpan, Boolean>()
+    internal var isFrameFresh = false
+
+    /** How far from the visible part of the container, in px, a view is already made and attached. */
+    var viewSpanPrefetchDistance = 0
+        set(value) {
+            val distance = value.coerceAtLeast(0)
+
+            if (field != distance) {
+                field = distance
+                layoutLines()
+            }
+        }
+
+    private var pendingAnchor: Anchor? = null
+    private var isTextNew = true
+    private var pendingScrollCharIndex = -1
 
     private val executor: Executor = Executors.newCachedThreadPool()
     private var textTask: TextResolvingTask? = null
@@ -117,21 +132,8 @@ internal class TextContainer : ViewGroup {
         scrollView = view
     }
 
-    fun setScrollPosition(x: Int, y: Int) {
-        var scrollChanged = false
-
-        if (scrollX != x) {
-            scrollX = x
-            scrollChanged = true
-        }
-        if (scrollY != y) {
-            scrollY = y
-            scrollChanged = true
-        }
-
-        if (scrollChanged) {
-            layoutLines()
-        }
+    fun onScrollViewScrolled() {
+        layoutLines()
     }
 
     fun setVisibleRegion(width: Int, height: Int) {
@@ -143,6 +145,56 @@ internal class TextContainer : ViewGroup {
         scrollHeight = height
     }
 
+    /**
+     * Finds the top-left corner of this container in the coordinates of the scroll view, which
+     * is what `MotionEvent` uses, by walking up through every ancestor between the two.
+     */
+    internal fun locateInScrollView(out: IntArray): Boolean {
+        val root = scrollView ?: return false
+
+        var x = 0
+        var y = 0
+        var view: View = this
+
+        while (true) {
+            val parent = view.parent as? View ?: return false
+
+            x += view.left - parent.scrollX
+            y += view.top - parent.scrollY
+
+            if (parent === root) {
+                break
+            }
+
+            view = parent
+        }
+
+        out[0] = x
+        out[1] = y
+
+        return true
+    }
+
+    internal fun updateVisibleRect() {
+        val root = scrollView
+
+        if (root != null && locateInScrollView(originInScrollView)) {
+            val clipsToPadding = root.clipToPadding
+
+            val left = if (clipsToPadding) root.paddingLeft else 0
+            val top = if (clipsToPadding) root.paddingTop else 0
+            val right = root.width - if (clipsToPadding) root.paddingRight else 0
+            val bottom = root.height - if (clipsToPadding) root.paddingBottom else 0
+
+            val dx = originInScrollView[0]
+            val dy = originInScrollView[1]
+
+            visibleRect.set(left - dx, top - dy, right - dx, bottom - dy)
+        } else {
+            visibleRect.set(0, 0, scrollWidth, scrollHeight)
+        }
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         var widthSize = MeasureSpec.getSize(widthMeasureSpec)
@@ -152,7 +204,7 @@ internal class TextContainer : ViewGroup {
             widthSize = 0
         }
 
-        properties.composedFrame?.let {
+        displayedFrame?.let {
             heightSize = ceil(it.height).toInt()
         }
 
@@ -169,188 +221,13 @@ internal class TextContainer : ViewGroup {
             performTextLayout()
         }
 
+        applyPendingAnchor()
         layoutLines()
     }
 
-    private class TypesettingTask(
-        private val properties: TextProperties,
-        private val listener: OnTaskUpdateListener<Typesetter?>
-    ) : SmartRunnable() {
-        private fun notifyUpdateIfNeeded() {
-            if (!isCancelled) {
-                properties.handler.run {
-                    post { listener(properties.typesetter) }
-                }
-            }
-        }
-
-        override fun run() {
-            val text = properties.text
-            val spanned = properties.spanned
-
-            if (text != null) {
-                val typeface = properties.typeface
-                val textSize = properties.textSize
-
-                if (typeface != null && text.isNotEmpty()) {
-                    properties.typesetter = Typesetter(text, typeface, textSize)
-                }
-            } else if (spanned != null) {
-                if (spanned.isNotEmpty()) {
-                    val typeface = properties.typeface
-                    val textSize = properties.textSize
-
-                    val defaultSpans = mutableListOf<Any>()
-
-                    if (typeface != null) {
-                        defaultSpans.add(TypefaceSpan(typeface))
-                    }
-                    defaultSpans.add(TypeSizeSpan(textSize))
-
-                    properties.typesetter = Typesetter(spanned, defaultSpans)
-                }
-            }
-
-            notifyUpdateIfNeeded()
-        }
-    }
-
-    private class FrameResolvingTask(
-        private val properties: TextProperties,
-        private val listener: OnTaskUpdateListener<ComposedFrame?>
-    ) : SmartRunnable() {
-        private fun notifyUpdateIfNeeded() {
-            if (!isCancelled) {
-                properties.handler.run {
-                    post { listener(properties.composedFrame) }
-                }
-            }
-        }
-
-        override fun run() {
-            val input = properties.typesetter
-            if (input != null) {
-                val resolver = FrameResolver()
-                resolver.apply {
-                    typesetter = input
-                    frameBounds =
-                        RectF(0.0f, 0.0f, properties.layoutWidth.toFloat(), Float.POSITIVE_INFINITY)
-                    fitsHorizontally = false
-                    fitsVertically = true
-                    textAlignment = properties.textAlignment
-                    extraLineSpacing = properties.extraLineSpacing
-                    lineHeightMultiplier = properties.lineHeightMultiplier
-                    isJustificationEnabled = properties.isJustificationEnabled
-                    justificationLevel = properties.justificationLevel
-                }
-
-                properties.composedFrame = resolver.createFrame(0, input.spanned.length)
-            }
-
-            notifyUpdateIfNeeded()
-        }
-    }
-
-    private class LineBoxesTask(
-        private val properties: TextProperties,
-        private val listener: OnTaskUpdateListener<MutableList<Rect>>
-    ) : SmartRunnable() {
-        private val lineBoxes = mutableListOf<Rect>()
-
-        private fun notifyUpdateIfNeeded() {
-            if (!isCancelled) {
-                val list = lineBoxes.toMutableList()
-
-                properties.handler.run {
-                    post { listener(list) }
-                }
-            }
-        }
-
-        override fun run() {
-            val input = properties.composedFrame?.lines
-            if (input != null) {
-                val renderer = Renderer()
-                renderer.typeface = properties.typeface
-                renderer.typeSize = properties.textSize
-                renderer.fillColor = properties.textColor
-
-                var lineChunk = 0
-
-                for (line in input) {
-                    val boundingBox = line.computeBoundingBox(renderer)
-                    boundingBox.offset(line.originX, line.originY)
-
-                    val lineLeft = 0.0f
-                    val lineTop = line.originY - line.ascent
-                    val lineRight = properties.layoutWidth.toFloat()
-                    val lineBottom = lineTop + line.height
-
-                    boundingBox.union(lineLeft, lineTop, lineRight, lineBottom)
-
-                    lineBoxes.add(
-                        Rect(
-                            boundingBox.left.roundToInt(),
-                            boundingBox.top.roundToInt(),
-                            boundingBox.right.roundToInt(),
-                            boundingBox.bottom.roundToInt()
-                        )
-                    )
-
-                    if (isCancelled) {
-                        break
-                    }
-
-                    if (lineChunk == 64) {
-                        notifyUpdateIfNeeded()
-                        lineChunk = 0
-                    } else {
-                        lineChunk += 1
-                    }
-                }
-            }
-
-            notifyUpdateIfNeeded()
-        }
-    }
-
-    private class TextResolvingTask(
-        private val subTasks: Queue<SmartRunnable>
-    ) : SmartRunnable() {
-        private var currentTask: SmartRunnable? = null
-
-        @Synchronized
-        private fun poll(): SmartRunnable? {
-            currentTask = subTasks.poll()
-            return currentTask
-        }
-
-        override fun run() {
-            var runnable: SmartRunnable?
-
-            while (poll().also { runnable = it } != null) {
-                runnable?.run()
-            }
-        }
-
-        @Synchronized
-        override fun cancel() {
-            super.cancel()
-
-            val iterator = subTasks.iterator()
-
-            while (iterator.hasNext()) {
-                val runnable = iterator.next()
-                runnable.cancel()
-
-                iterator.remove()
-            }
-
-            currentTask?.cancel()
-        }
-    }
-
     private fun performTextLayout() {
+        measureViewSpans()
+
         val context = properties.copy()
 
         val subTasks: Queue<SmartRunnable> = ArrayDeque()
@@ -384,136 +261,89 @@ internal class TextContainer : ViewGroup {
         }
     }
 
+    /**
+     * The frame resolves well before its line boxes, and is only displayed once they are ready,
+     * so a line view never appears before its own text.
+     */
     private fun updateComposedFrame(layoutID: Any?, composedFrame: ComposedFrame?) {
-        if (layoutID === properties.layoutID) {
-            isComposedFrameResolved = true
-            properties.composedFrame = composedFrame
+        if (layoutID !== properties.layoutID) {
+            return
+        }
 
-            lineBoxes.clear()
-            lineViews.clear()
-            removeAllViews()
+        isComposedFrameResolved = true
 
+        if (isTextNew) {
+            pendingFrame = composedFrame
+            isSwapPending = true
+            isPendingSwapFirstLoad = true
+
+            isTextNew = false
+
+            if (pendingScrollCharIndex >= 0) {
+                pendingAnchor = Anchor(pendingScrollCharIndex, Float.NaN)
+            }
+            pendingScrollCharIndex = -1
+        } else {
+            pendingAnchor = pendingAnchor ?: captureAnchor()
+            pendingFrame = composedFrame
+            isPendingSwapFirstLoad = isSwapPending && isPendingSwapFirstLoad
+            isSwapPending = true
+        }
+    }
+
+    private fun updateLineBoxes(layoutID: Any?, lineBoxes: LineBoxes) {
+        if (layoutID !== properties.layoutID) {
+            return
+        }
+
+        displayedLineBoxes = lineBoxes
+
+        if (!isSwapPending) {
+            layoutLines()
+            return
+        }
+
+        val isFirstLoad = isPendingSwapFirstLoad
+
+        isSwapPending = false
+        isPendingSwapFirstLoad = false
+
+        displayedFrame = pendingFrame
+        pendingFrame = null
+
+        recycleLineViews()
+
+        viewSlots = displayedFrame?.let { resolveViewSlots(it) } ?: emptyList()
+        detachOrphanViews()
+        isFrameFresh = true
+
+        if (isFirstLoad) {
             scrollView?.scrollTo(0, 0)
-            layoutLines()
+        }
+
+        layoutLines()
+
+        if (pendingAnchor != null) {
+            requestLayout()
         }
     }
 
-    private fun updateLineBoxes(layoutID: Any?, resolvedBoxes: MutableList<Rect>) {
-        if (layoutID === properties.layoutID) {
-            lineBoxes = resolvedBoxes
-            layoutLines()
-        }
+    private fun markTextNew() {
+        isTextNew = true
+        pendingScrollCharIndex = -1
+        pendingAnchor = null
+
+        pendingFrame = null
+        isSwapPending = false
+        isPendingSwapFirstLoad = false
     }
-
-    private fun layoutLines() = properties.composedFrame?.let {
-        visibleRect.set(scrollX, scrollY, scrollX + scrollWidth, scrollY + scrollHeight)
-
-        insideViews.clear()
-        outsideViews.clear()
-
-        // Get outside and inside line views.
-        for (lineView in lineViews) {
-            if (Rect.intersects(lineView.frame, visibleRect)) {
-                insideViews.add(lineView)
-            } else {
-                outsideViews.add(lineView)
-            }
-        }
-
-        visibleIndexes.clear()
-
-        // Get line indexes that should be visible.
-        for (i in 0 until lineBoxes.size) {
-            if (Rect.intersects(lineBoxes[i], visibleRect)) {
-                visibleIndexes.add(i)
-            }
-        }
-
-        val allLines = it.lines
-        val layoutWidth = properties.layoutWidth.toFloat()
-        val separatorColor = properties.separatorColor
-
-        // Layout the lines.
-        for (index in visibleIndexes) {
-            val textLine = allLines[index]
-            var insideView: LineView? = null
-            var lineView: LineView
-
-            for (view in insideViews) {
-                if (view.line === textLine) {
-                    insideView = view
-                    break
-                }
-            }
-
-            if (insideView != null) {
-                lineView = insideView
-            } else {
-                val outsideCount = outsideViews.size
-                if (outsideCount > 0) {
-                    lineView = outsideViews[outsideCount - 1]
-                    outsideViews.removeAt(outsideCount - 1)
-                } else {
-                    lineView = LineView(context)
-                    lineView.setBackgroundColor(Color.TRANSPARENT)
-
-                    lineViews.add(lineView)
-                }
-
-                updateRenderer(lineView.renderer)
-                lineView.line = textLine
-            }
-
-            if (lineView.parent == null) {
-                addView(lineView)
-            }
-
-            lineView.layoutWidth = layoutWidth
-            lineView.separatorColor = separatorColor
-            lineView.bringToFront()
-
-            val lineBox = lineBoxes[index]
-            lineView.layout(lineBox.left, lineBox.top, lineBox.right, lineBox.bottom)
-        }
-    }
-
-    private fun updateRenderer(renderer: Renderer) {
-        renderer.fillColor = properties.textColor
-        renderer.typeface = properties.typeface
-        renderer.typeSize = properties.textSize
-    }
-
-    fun hitTestPosition(x: Float, y: Float): Int = properties.composedFrame?.let {
-        val adjustedX = x - it.originX
-        val adjustedY = y - it.originY
-        val lineIndex = it.getLineIndexForPosition(adjustedX, adjustedY)
-
-        val composedLine = it.lines[lineIndex]
-        val lineLeft = composedLine.originX
-        val lineRight = lineLeft + composedLine.width
-
-        // Check if position exists within the line horizontally.
-        if (adjustedX in lineLeft..lineRight) {
-            var charIndex = composedLine.computeNearestCharIndex(adjustedX - lineLeft)
-            val lastIndex = composedLine.charEnd - 1
-
-            // Make sure to provide character of this line.
-            if (charIndex > lastIndex) {
-                charIndex = lastIndex
-            }
-
-            return charIndex
-        }
-
-        return -1
-    } ?: -1
 
     private fun requestTypesetter() {
         isTypesetterResolved = isTypesetterUserDefined
         requestComposedFrame()
     }
 
-    private fun requestComposedFrame() {
+    internal fun requestComposedFrame() {
         isComposedFrameResolved = false
         requestTextLayout()
     }
@@ -525,6 +355,391 @@ internal class TextContainer : ViewGroup {
         isTextLayoutRequested = true
 
         requestLayout()
+    }
+
+    private fun layoutLines() {
+        val frame = displayedFrame ?: return
+        updateVisibleRect()
+
+        val lines = frame.lines
+        val lineBoxes = displayedLineBoxes
+        val boxes = lineBoxes.boxes
+
+        var attachedIndex = attachedLineViews.size - 1
+
+        while (attachedIndex >= 0) {
+            val lineView = attachedLineViews[attachedIndex]
+
+            if (!Rect.intersects(boxes[lineView.lineIndex], visibleRect)) {
+                lineViewsByIndex[lineView.lineIndex] = null
+
+                val lastIndex = attachedLineViews.size - 1
+                attachedLineViews[attachedIndex] = attachedLineViews[lastIndex]
+                attachedLineViews.removeAt(lastIndex)
+
+                enqueueReusableLineView(lineView)
+            }
+
+            attachedIndex -= 1
+        }
+
+        lineBoxes.forEachLineIndex(visibleRect) { lineIndex ->
+            if (lineViewsByIndex[lineIndex] == null) {
+                val lineView = dequeueReusableLineView()
+                lineView.lineIndex = lineIndex
+                lineView.line = lines[lineIndex]
+                configure(lineView)
+
+                val box = boxes[lineIndex]
+                lineView.layout(box.left, box.top, box.right, box.bottom)
+
+                if (lineView.parent == null) {
+                    addView(lineView, 0)
+                }
+
+                lineViewsByIndex[lineIndex] = lineView
+                attachedLineViews.add(lineView)
+            }
+        }
+
+        layoutViews()
+    }
+
+    private fun recycleLineViews() {
+        reusableLineViews.addAll(attachedLineViews)
+        attachedLineViews.clear()
+        lineViewsByIndex = arrayOfNulls(displayedFrame?.lines?.size ?: 0)
+
+        for (lineView in reusableLineViews) {
+            removeViewInLayout(lineView)
+        }
+
+        requestLayout()
+        invalidate()
+    }
+
+    private fun dequeueReusableLineView(): LineView {
+        val lastIndex = reusableLineViews.size - 1
+
+        if (lastIndex >= 0) {
+            return reusableLineViews.removeAt(lastIndex)
+        }
+
+        return LineView(context).also { it.setBackgroundColor(Color.TRANSPARENT) }
+    }
+
+    private fun enqueueReusableLineView(lineView: LineView) {
+        reusableLineViews.add(lineView)
+    }
+
+    private fun configure(lineView: LineView) {
+        updateRenderer(lineView.renderer)
+        lineView.layoutWidth = properties.layoutWidth.toFloat()
+        lineView.separatorColor = properties.separatorColor
+    }
+
+    private fun updateRenderer(renderer: Renderer) = properties.updateRenderer(renderer)
+
+    private fun updateLineViews() {
+        for (lineView in attachedLineViews) {
+            configure(lineView)
+            lineView.invalidate()
+        }
+    }
+
+    private fun lineTop(frame: ComposedFrame, line: ComposedLine) =
+        frame.originY + line.originY - line.ascent
+
+    private fun lineBottom(frame: ComposedFrame, line: ComposedLine) =
+        frame.originY + line.originY + line.descent + line.leading
+
+    /** The first line that reaches below [top], or the last one if it is further up. */
+    private fun firstVisibleLineIndex(frame: ComposedFrame, top: Float = visibleRect.top.toFloat()): Int {
+        val lines = frame.lines
+        val lineBoxes = displayedLineBoxes
+
+        val lineIndex = lineBoxes.firstLineIndex(floor(top).toInt()) {
+            lineBottom(frame, lines[it]) > top
+        }
+
+        if (lineIndex >= 0) {
+            return lineIndex
+        }
+
+        for (unboxedIndex in lineBoxes.size until lines.size) {
+            if (lineBottom(frame, lines[unboxedIndex]) > top) {
+                return unboxedIndex
+            }
+        }
+
+        return lines.size - 1
+    }
+
+    private fun captureAnchor(): Anchor? {
+        val frame = displayedFrame ?: return null
+        if (frame.lines.isEmpty()) {
+            return null
+        }
+
+        updateVisibleRect()
+
+        val line = frame.lines[firstVisibleLineIndex(frame)]
+        return Anchor(line.charStart, visibleRect.top - lineTop(frame, line))
+    }
+
+    private fun scrollToAnchor(frame: ComposedFrame, anchor: Anchor, animate: Boolean) {
+        val root = scrollView ?: return
+        if (frame.lines.isEmpty()) {
+            return
+        }
+
+        updateVisibleRect()
+
+        val charIndex = anchor.charIndex.coerceIn(frame.charStart, frame.charEnd - 1)
+        val line = frame.lines[frame.getLineIndexForChar(charIndex)]
+
+        val offset = if (anchor.offset.isNaN()) {
+            if (root.clipToPadding) 0.0f else -root.paddingTop.toFloat()
+        } else {
+            anchor.offset
+        }
+
+        val distance = (lineTop(frame, line) + offset - visibleRect.top).roundToInt()
+
+        if (animate) {
+            root.smoothScrollBy(0, distance)
+        } else {
+            root.scrollBy(0, distance)
+        }
+    }
+
+    private fun applyPendingAnchor() {
+        if (isSwapPending) {
+            return
+        }
+
+        val anchor = pendingAnchor ?: return
+        val frame = if (isComposedFrameResolved) displayedFrame else return
+
+        pendingAnchor = null
+
+        if (frame != null) {
+            scrollToAnchor(frame, anchor, false)
+        }
+    }
+
+    /** The first character that is on the screen, or -1 if no text is displayed. */
+    fun getFirstVisibleCharIndex(): Int {
+        val frame = composedFrame ?: return -1
+        if (frame.lines.isEmpty()) {
+            return -1
+        }
+
+        updateVisibleRect()
+
+        val padding = if (scrollView?.clipToPadding == false) scrollView?.paddingTop ?: 0 else 0
+
+        return frame.lines[firstVisibleLineIndex(frame, visibleRect.top + padding + 0.5f)].charStart
+    }
+
+    /**
+     * Scrolls to the line with [charIndex]. If the text is not displayed yet, it is done as soon as
+     * it is, in place of the scroll to the top that a new text gets.
+     */
+    fun scrollToCharIndex(charIndex: Int, animate: Boolean) {
+        val anchor = Anchor(charIndex.coerceAtLeast(0), Float.NaN)
+        val frame = displayedFrame
+
+        if (isSwapPending || (frame != null && !isComposedFrameResolved)) {
+            pendingAnchor = anchor
+            requestLayout()
+        } else if (frame != null) {
+            scrollToAnchor(frame, anchor, animate)
+        } else {
+            pendingScrollCharIndex = anchor.charIndex
+        }
+    }
+
+    /** The source that the frame is made of. */
+    internal val frameSpanned: Spanned?
+        get() = properties.typesetter?.spanned ?: properties.spanned
+
+    fun onSpanResizeRequested(span: ViewSpan) {
+        if (viewSlots.none { it.span === span }) {
+            return
+        }
+
+        if (span.isMeasured) {
+            (spanViews[span] ?: measuredViews[span])?.let { forceLayoutTree(it) }
+
+            if (!measureViewSpan(span)) {
+                return
+            }
+        }
+
+        spanViews[span]?.let {
+            updateVisibleRect()
+
+            if (span.hideWhileResizing && Rect.intersects(Rect(it.left, it.top, it.right, it.bottom), visibleRect)) {
+                it.visibility = INVISIBLE
+                resizingSpans[span] = true
+            }
+        }
+
+        requestComposedFrame()
+    }
+
+    /** Whether the point, in the coordinates of the scroll view, is on the view of a span. */
+    fun isInsideViewSpan(x: Float, y: Float): Boolean {
+        if (spanViews.isEmpty() || !locateInScrollView(originInScrollView)) {
+            return false
+        }
+
+        val localX = x - originInScrollView[0]
+        val localY = y - originInScrollView[1]
+
+        return spanViews.values.any {
+            localX >= it.left && localX < it.right && localY >= it.top && localY < it.bottom
+        }
+    }
+
+    @VisibleForTesting
+    internal fun lineBoxesForTesting(): List<Rect> = displayedLineBoxes.boxes
+
+    @VisibleForTesting
+    internal fun visibleRectForTesting(): Rect {
+        updateVisibleRect()
+        return Rect(visibleRect)
+    }
+
+    /**
+     * Replaces the line boxes that [layoutLines] culls against, and invalidates the layout ID so
+     * that a real [LineBoxesTask] chunk still in flight cannot land afterward and clobber them.
+     */
+    @VisibleForTesting
+    internal fun overrideLineBoxesForTesting(boxes: List<Rect>) {
+        properties.layoutID = Any()
+        displayedLineBoxes = LineBoxes().also { lineBoxes -> boxes.forEach { lineBoxes.add(it) } }
+
+        recycleLineViews()
+        layoutLines()
+    }
+
+    /**
+     * Returns the char index for [x], [y] given in the coordinates of the scroll view (scroll
+     * applied): the one of the nearest line, found even above the first line or below the last
+     * one. It is -1 only if the point is on the left or on the right of the text of that line.
+     */
+    fun getCharIndexForPosition(x: Float, y: Float): Int {
+        val frame = composedFrame ?: return -1
+        if (frame.lines.isEmpty() || !locateInScrollView(originInScrollView)) {
+            return -1
+        }
+
+        val frameX = x - originInScrollView[0] - frame.originX
+        val frameY = y - originInScrollView[1] - frame.originY
+
+        // The first line that does not end above the position, so that a point above the first
+        // line, or in a gap between two lines, is not taken for one below the last line.
+        val line = frame.lines.firstOrNull { frameY <= it.originY + it.descent + it.leading }
+            ?: frame.lines.last()
+
+        return getCharIndexInLine(line, frameX)
+    }
+
+    /**
+     * Returns the char index for [x], [y] given in the coordinates of the scroll view, or -1 if
+     * there is no text there: above the first line or below the last one, in the gaps to the left
+     * and right of a line, or in the padding. It is what a touch is matched with.
+     */
+    fun getCharIndexUnderPosition(x: Float, y: Float): Int {
+        val frame = composedFrame ?: return -1
+        if (!locateInScrollView(originInScrollView)) {
+            return -1
+        }
+
+        val frameX = x - originInScrollView[0] - frame.originX
+        val frameY = y - originInScrollView[1] - frame.originY
+
+        val line = frame.lines.firstOrNull {
+            val lineTop = it.originY - it.ascent
+            val lineBottom = it.originY + it.descent + it.leading
+
+            frameY in lineTop..lineBottom
+        } ?: return -1
+
+        val nearestIndex = getCharIndexInLine(line, frameX)
+        if (nearestIndex < 0) {
+            return -1
+        }
+
+        // The index is the nearest to the position, which is the one after the char when the
+        // position is on the trailing half of it. The char is the one whose box has it.
+        for (charIndex in intArrayOf(nearestIndex, nearestIndex - 1)) {
+            if (charIndex < line.charStart) {
+                continue
+            }
+
+            val rects = computeSelectionRects(frame, charIndex, charIndex + 1)
+            if (rects.any { it.contains(frameX + frame.originX, frameY + frame.originY) }) {
+                return charIndex
+            }
+        }
+
+        return -1
+    }
+
+    private fun getCharIndexInLine(line: ComposedLine, frameX: Float): Int {
+        val lineLeft = line.originX
+        val lineRight = lineLeft + line.width
+
+        // Check if position exists within the line horizontally.
+        if (frameX < lineLeft || frameX > lineRight) {
+            return -1
+        }
+
+        // Make sure to provide character of this line.
+        return line.computeNearestCharIndex(frameX - lineLeft).coerceAtMost(line.charEnd - 1)
+    }
+
+    /** The rects covered by [span] in the coordinates of the scroll view; see TTextView. */
+    fun getSpanRects(span: Any): List<RectF> {
+        val frame = composedFrame ?: return emptyList()
+        val source = typesetter?.spanned ?: spanned ?: return emptyList()
+
+        if (!locateInScrollView(originInScrollView)) {
+            return emptyList()
+        }
+
+        val dx = originInScrollView[0].toFloat()
+        val dy = originInScrollView[1].toFloat()
+
+        return computeSpanRects(frame, source, span).onEach { it.offset(dx, dy) }
+    }
+
+    /** The rects covered by the chars from [start] up to [end] in the coordinates of the scroll view. */
+    fun getSelectionRects(start: Int, end: Int): List<RectF> {
+        val frame = composedFrame ?: return emptyList()
+
+        if (!locateInScrollView(originInScrollView)) {
+            return emptyList()
+        }
+
+        val dx = originInScrollView[0].toFloat()
+        val dy = originInScrollView[1].toFloat()
+
+        return computeSelectionRects(frame, start, end).onEach { it.offset(dx, dy) }
+    }
+
+    /** The spanned that the displayed frame was made from, or null while it is not resolved. */
+    val frameSource: Spanned?
+        get() = if (composedFrame != null) typesetter?.spanned ?: spanned else null
+
+    /** Redraws the lines, which are child views that draw themselves. */
+    fun invalidateLines() {
+        for (lineView in attachedLineViews) {
+            lineView.invalidate()
+        }
     }
 
     fun setGravity(gravity: Int) {
@@ -542,7 +757,7 @@ internal class TextContainer : ViewGroup {
     }
 
     val composedFrame: ComposedFrame?
-        get() = if (isComposedFrameResolved) properties.composedFrame else null
+        get() = if (isComposedFrameResolved) displayedFrame else null
 
     var typesetter: Typesetter?
         get() = if (isTypesetterResolved) properties.typesetter else null
@@ -551,6 +766,7 @@ internal class TextContainer : ViewGroup {
             properties.spanned = null
             properties.typesetter = typesetter
             isTypesetterUserDefined = true
+            markTextNew()
             requestTypesetter()
         }
 
@@ -560,6 +776,7 @@ internal class TextContainer : ViewGroup {
             properties.text = null
             properties.spanned = spanned
             isTypesetterUserDefined = false
+            markTextNew()
             requestTypesetter()
         }
 
@@ -576,6 +793,7 @@ internal class TextContainer : ViewGroup {
             properties.text = text ?: ""
             properties.spanned = null
             isTypesetterUserDefined = false
+            markTextNew()
             requestTypesetter()
         }
 
@@ -590,7 +808,7 @@ internal class TextContainer : ViewGroup {
         get() = properties.textColor
         set(textColor) {
             properties.textColor = textColor
-            invalidate()
+            updateLineViews()
         }
 
     var extraLineSpacing: Float
@@ -625,6 +843,48 @@ internal class TextContainer : ViewGroup {
         get() = properties.separatorColor
         set(separatorColor) {
             properties.separatorColor = separatorColor
-            invalidate()
+            updateLineViews()
+        }
+
+    var renderingStyle: RenderingStyle
+        get() = properties.renderingStyle
+        set(renderingStyle) {
+            properties.renderingStyle = renderingStyle
+            updateLineViews()
+        }
+
+    var strokeColor: Int
+        get() = properties.strokeColor
+        set(strokeColor) {
+            properties.strokeColor = strokeColor
+            updateLineViews()
+        }
+
+    var strokeWidth: Float
+        get() = properties.strokeWidth
+        set(strokeWidth) {
+            properties.strokeWidth = max(0.0f, strokeWidth)
+            updateLineViews()
+        }
+
+    var strokeCap: StrokeCap
+        get() = properties.strokeCap
+        set(strokeCap) {
+            properties.strokeCap = strokeCap
+            updateLineViews()
+        }
+
+    var strokeJoin: StrokeJoin
+        get() = properties.strokeJoin
+        set(strokeJoin) {
+            properties.strokeJoin = strokeJoin
+            updateLineViews()
+        }
+
+    var strokeMiter: Float
+        get() = properties.strokeMiter
+        set(strokeMiter) {
+            properties.strokeMiter = strokeMiter
+            updateLineViews()
         }
 }

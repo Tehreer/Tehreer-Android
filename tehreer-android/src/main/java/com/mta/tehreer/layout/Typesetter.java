@@ -199,6 +199,16 @@ public class Typesetter {
 	}
 
     /**
+     * Creates a line for a frame that is <code>layoutWidth</code> wide. The room of a view span
+     * is decided by the frame, so it is the same typesetter that serves frames of any width.
+     */
+    @NonNull ComposedLine createSimpleLine(int charStart, int charEnd, float layoutWidth) {
+        checkSubRange(charStart, charEnd);
+
+        return mLineResolver.createSimpleLine(charStart, charEnd, layoutWidth);
+    }
+
+    /**
      * Creates a line of specified string range, truncating it with ellipsis character (U+2026) or
      * three dots if it overflows the max width.
      *
