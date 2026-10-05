@@ -79,34 +79,49 @@ SB_ROOT_PATH := $(ROOT_PATH)/sheenbidi
 SB_HEADERS_PATH := $(SB_ROOT_PATH)/Headers
 SB_SOURCE_PATH := $(SB_ROOT_PATH)/Source
 
+SB_MACROS := -DSB_CONFIG_DISABLE_SCRATCH_MEMORY
+
 ifeq ($(APP_OPTIM), debug)
     SB_FILE_LIST := \
-        BidiChain.c \
-        BidiTypeLookup.c \
-        BracketQueue.c \
-        GeneralCategoryLookup.c \
-        IsolatingRun.c \
-        LevelRun.c \
-        PairingLookup.c \
-        RunQueue.c \
-        SBAlgorithm.c \
-        SBBase.c \
-        SBCodepointSequence.c \
-        SBLine.c \
-        SBLog.c \
-        SBMirrorLocator.c \
-        SBParagraph.c \
-        SBScriptLocator.c \
-        ScriptLookup.c \
-        ScriptStack.c \
-        StatusStack.c
+        API/SBAlgorithm.c \
+        API/SBAllocator.c \
+        API/SBAttributeList.c \
+        API/SBAttributeRegistry.c \
+        API/SBBase.c \
+        API/SBCodepoint.c \
+        API/SBCodepointSequence.c \
+        API/SBLine.c \
+        API/SBLog.c \
+        API/SBMirrorLocator.c \
+        API/SBParagraph.c \
+        API/SBScriptLocator.c \
+        API/SBText.c \
+        API/SBTextConfig.c \
+        API/SBTextIterators.c \
+        Core/List.c \
+        Core/Memory.c \
+        Core/Object.c \
+        Core/Once.c \
+        Data/BidiTypeLookup.c \
+        Data/GeneralCategoryLookup.c \
+        Data/PairingLookup.c \
+        Data/ScriptLookup.c \
+        Script/ScriptStack.c \
+        Text/AttributeDictionary.c \
+        Text/AttributeManager.c \
+        UBA/BidiChain.c \
+        UBA/BracketQueue.c \
+        UBA/IsolatingRun.c \
+        UBA/LevelRun.c \
+        UBA/RunQueue.c \
+        UBA/StatusStack.c
 else
     SB_FILE_LIST := SheenBidi.c
-    SB_MACROS := -DSB_CONFIG_UNITY
+    SB_MACROS += -DSB_CONFIG_UNITY
 endif
 
 LOCAL_CFLAGS := $(SB_MACROS)
-LOCAL_C_INCLUDES := $(SB_HEADERS_PATH)
+LOCAL_C_INCLUDES := $(SB_HEADERS_PATH) $(SB_SOURCE_PATH)
 LOCAL_EXPORT_C_INCLUDES := $(SB_HEADERS_PATH)
 LOCAL_SRC_FILES := $(SB_FILE_LIST:%=$(SB_SOURCE_PATH)/%)
 

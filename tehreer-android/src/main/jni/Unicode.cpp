@@ -15,11 +15,11 @@
  */
 
 extern "C" {
-#include <SBBase.h>
-#include <SBBidiType.h>
-#include <SBCodepoint.h>
-#include <SBGeneralCategory.h>
-#include <SBScript.h>
+#include <SheenBidi/SBBase.h>
+#include <SheenBidi/SBBidiType.h>
+#include <SheenBidi/SBCodepoint.h>
+#include <SheenBidi/SBGeneralCategory.h>
+#include <SheenBidi/SBScript.h>
 }
 
 #include <jni.h>

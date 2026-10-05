@@ -15,8 +15,8 @@
  */
 
 extern "C" {
-#include <SBBase.h>
-#include <SBParagraph.h>
+#include <SheenBidi/SBBase.h>
+#include <SheenBidi/SBParagraph.h>
 }
 
 #include <jni.h>

@@ -15,10 +15,10 @@
  */
 
 extern "C" {
-#include <SBAlgorithm.h>
-#include <SBBase.h>
-#include <SBCodepointSequence.h>
-#include <SBParagraph.h>
+#include <SheenBidi/SBAlgorithm.h>
+#include <SheenBidi/SBBase.h>
+#include <SheenBidi/SBCodepointSequence.h>
+#include <SheenBidi/SBParagraph.h>
 }
 
 #include <jni.h>

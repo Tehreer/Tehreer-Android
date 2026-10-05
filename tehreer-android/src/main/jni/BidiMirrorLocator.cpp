@@ -15,9 +15,9 @@
  */
 
 extern "C" {
-#include <SBCodepointSequence.h>
-#include <SBLine.h>
-#include <SBMirrorLocator.h>
+#include <SheenBidi/SBCodepointSequence.h>
+#include <SheenBidi/SBLine.h>
+#include <SheenBidi/SBMirrorLocator.h>
 }
 
 #include <jni.h>

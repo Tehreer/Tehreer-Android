@@ -15,9 +15,9 @@
  */
 
 extern "C" {
-#include <SBBase.h>
-#include <SBLine.h>
-#include <SBRun.h>
+#include <SheenBidi/SBBase.h>
+#include <SheenBidi/SBLine.h>
+#include <SheenBidi/SBRun.h>
 }
 
 #include <jni.h>
