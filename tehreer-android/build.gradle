@@ -66,6 +66,12 @@ android {
         minSdk = 23
         targetSdk = 37
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
     }
 
     compileOptions {
@@ -83,15 +89,17 @@ android {
     sourceSets {
         androidTest {
             externalNativeBuild {
-                ndkBuild {
-                    path 'src/androidTest/jni/Android.mk'
+                cmake {
+                    path 'src/androidTest/jni/CMakeLists.txt'
+                    version '3.22.1'
                 }
             }
         }
         main {
             externalNativeBuild {
-                ndkBuild {
-                    path 'src/main/jni/Android.mk'
+                cmake {
+                    path 'src/main/jni/CMakeLists.txt'
+                    version '3.22.1'
                 }
             }
         }
@@ -106,10 +114,9 @@ android {
             proguardFiles(getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro')
 
             externalNativeBuild {
-                ndkBuild {
+                cmake {
                     cFlags '-fvisibility=hidden'
                     cppFlags '-fvisibility=hidden'
-                    arguments 'APP_LDFLAGS+=-s'
                 }
             }
         }
