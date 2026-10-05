@@ -6,10 +6,10 @@
  *
  * on files with these headers:
  *
- * # ArabicShaping-15.0.0.txt
- * # Date: 2022-02-14, 18:50:00 GMT [KW, RP]
- * # Scripts-15.0.0.txt
- * # Date: 2022-04-26, 23:15:02 GMT
+ * # ArabicShaping-18.0.0.txt
+ * # Date: 2026-08-18, 19:02:41 GMT
+ * # Scripts-18.0.0.txt
+ * # Date: 2026-06-29, 15:25:26 GMT
  */
 
 #ifndef HB_OT_SHAPER_ARABIC_JOINING_LIST_HH

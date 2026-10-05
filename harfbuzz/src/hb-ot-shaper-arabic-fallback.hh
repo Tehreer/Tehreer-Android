@@ -231,11 +231,7 @@ struct arabic_fallback_plan_t
   OT::hb_ot_layout_lookup_accelerator_t *accel_array[ARABIC_FALLBACK_MAX_LOOKUPS];
 };
 
-#if defined(_WIN32) && !defined(HB_NO_WIN1256)
-#define HB_WITH_WIN1256
-#endif
-
-#ifdef HB_WITH_WIN1256
+#ifndef HB_NO_WIN1256
 #include "hb-ot-shaper-arabic-win1256.hh"
 #endif
 
@@ -254,7 +250,7 @@ arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan HB_UNUS
 				   const hb_ot_shape_plan_t *plan HB_UNUSED,
 				   hb_font_t *font HB_UNUSED)
 {
-#ifdef HB_WITH_WIN1256
+#ifndef HB_NO_WIN1256
   /* Does this font look like it's Windows-1256-encoded? */
   hb_codepoint_t g;
   if (!(hb_font_get_glyph (font, 0x0627u, 0, &g) && g == 199 /* ALEF */ &&
@@ -355,6 +351,8 @@ arabic_fallback_plan_destroy (arabic_fallback_plan_t *fallback_plan)
   for (unsigned int i = 0; i < fallback_plan->num_lookups; i++)
     if (fallback_plan->lookup_array[i])
     {
+      if (fallback_plan->accel_array[i])
+	fallback_plan->accel_array[i]->fini ();
       hb_free (fallback_plan->accel_array[i]);
       if (fallback_plan->free_lookups)
 	hb_free (fallback_plan->lookup_array[i]);
@@ -368,7 +366,7 @@ arabic_fallback_plan_shape (arabic_fallback_plan_t *fallback_plan,
 			    hb_font_t *font,
 			    hb_buffer_t *buffer)
 {
-  OT::hb_ot_apply_context_t c (0, font, buffer);
+  OT::hb_ot_apply_context_t c (0, font, buffer, hb_blob_get_empty ());
   for (unsigned int i = 0; i < fallback_plan->num_lookups; i++)
     if (fallback_plan->lookup_array[i]) {
       c.set_lookup_mask (fallback_plan->mask_array[i]);

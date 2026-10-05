@@ -28,6 +28,7 @@
 #ifndef HB_OT_VAR_GVAR_TABLE_HH
 #define HB_OT_VAR_GVAR_TABLE_HH
 
+#include "hb-decycler.hh"
 #include "hb-open-type.hh"
 #include "hb-ot-var-common.hh"
 
@@ -36,53 +37,288 @@
  * https://docs.microsoft.com/en-us/typography/opentype/spec/gvar
  */
 #define HB_OT_TAG_gvar HB_TAG('g','v','a','r')
+#define HB_OT_TAG_GVAR HB_TAG('G','V','A','R')
+
+struct hb_glyf_scratch_t
+{
+  // glyf
+  contour_point_vector_t all_points;
+  contour_point_vector_t comp_points;
+  hb_decycler_t decycler;
+
+  // gvar
+  contour_point_vector_t orig_points;
+  hb_vector_t<int> x_deltas;
+  hb_vector_t<int> y_deltas;
+  contour_point_vector_t deltas;
+  hb_vector_t<unsigned int> shared_indices;
+  hb_vector_t<unsigned int> private_indices;
+};
 
 namespace OT {
 
-struct contour_point_t
+template <typename OffsetType>
+struct glyph_variations_t
 {
-  void init (float x_ = 0.f, float y_ = 0.f, bool is_end_point_ = false)
-  { flag = 0; x = x_; y = y_; is_end_point = is_end_point_; }
+  // TODO: Move tuple_variations_t to outside of TupleVariationData
+  using tuple_variations_t = typename TupleVariationData<OffsetType>::tuple_variations_t;
+  using GlyphVariationData = TupleVariationData<OffsetType>;
 
-  void transform (const float (&matrix)[4])
+  hb_vector_t<tuple_variations_t> glyph_variations;
+
+  hb_vector_t<F2DOT14> compiled_shared_tuples;
+  private:
+  unsigned shared_tuples_count = 0;
+
+  /* shared coords-> index map after instantiation */
+  hb_hashmap_t<const hb_vector_t<F2DOT14>*, unsigned> shared_tuples_idx_map;
+
+  hb_alloc_pool_t pool;
+
+  public:
+  unsigned compiled_shared_tuples_count () const
+  { return shared_tuples_count; }
+
+  unsigned compiled_byte_size () const
   {
-    float x_ = x * matrix[0] + y * matrix[2];
-	  y  = x * matrix[1] + y * matrix[3];
-    x  = x_;
+    unsigned byte_size = 0;
+    for (const auto& _ : glyph_variations)
+      byte_size += _.get_compiled_byte_size ();
+
+    return byte_size;
   }
-  void translate (const contour_point_t &p) { x += p.x; y += p.y; }
 
+  bool create_from_glyphs_var_data (unsigned axis_count,
+                                    const hb_array_t<const F2DOT14> shared_tuples,
+                                    const hb_subset_plan_t *plan,
+                                    const hb_hashmap_t<hb_codepoint_t, hb_bytes_t>& new_gid_var_data_map)
+  {
+    if (unlikely (!glyph_variations.alloc_exact (plan->new_to_old_gid_list.length)))
+      return false;
 
-  float x = 0.f;
-  float y = 0.f;
-  uint8_t flag = 0;
-  bool is_end_point = false;
+    auto it = hb_iter (plan->new_to_old_gid_list);
+    for (auto &_ : it)
+    {
+      hb_codepoint_t new_gid = _.first;
+      contour_point_vector_t *all_contour_points;
+      if (!new_gid_var_data_map.has (new_gid) ||
+          !plan->new_gid_contour_points_map.has (new_gid, &all_contour_points))
+        return false;
+      hb_bytes_t var_data = new_gid_var_data_map.get (new_gid);
+
+      const GlyphVariationData* p = reinterpret_cast<const GlyphVariationData*> (var_data.arrayZ);
+      typename GlyphVariationData::tuple_iterator_t iterator;
+      tuple_variations_t tuple_vars;
+
+      hb_vector_t<unsigned> shared_indices;
+
+      /* in case variation data is empty, push an empty struct into the vector,
+       * keep the vector in sync with the new_to_old_gid_list */
+      if (!var_data || ! p->has_data () || !all_contour_points->length ||
+          !GlyphVariationData::get_tuple_iterator (var_data, axis_count,
+                                                   var_data.arrayZ,
+                                                   shared_indices, &iterator))
+      {
+        glyph_variations.push (std::move (tuple_vars));
+        continue;
+      }
+
+      bool is_composite_glyph = false;
+      is_composite_glyph = plan->composite_new_gids.has (new_gid);
+
+      if (!p->decompile_tuple_variations (all_contour_points->length, true /* is_gvar */,
+                                          iterator, &(plan->axes_old_index_tag_map),
+                                          shared_indices, shared_tuples,
+                                          tuple_vars, /* OUT */
+					  &pool,
+                                          is_composite_glyph))
+        return false;
+      glyph_variations.push (std::move (tuple_vars));
+    }
+    return !glyph_variations.in_error () && glyph_variations.length == plan->new_to_old_gid_list.length;
+  }
+
+  bool instantiate (const hb_subset_plan_t *plan)
+  {
+    unsigned count = plan->new_to_old_gid_list.length;
+    bool iup_optimize = false;
+    optimize_scratch_t scratch;
+    iup_optimize = plan->flags & HB_SUBSET_FLAGS_OPTIMIZE_IUP_DELTAS;
+    for (unsigned i = 0; i < count; i++)
+    {
+      hb_codepoint_t new_gid = plan->new_to_old_gid_list[i].first;
+      contour_point_vector_t *all_points;
+      if (!plan->new_gid_contour_points_map.has (new_gid, &all_points))
+        return false;
+      /* avar2 partial instancing: cull unreachable tuples. */
+      if (plan->has_avar2 && plan->avar2_reachable_ranges.get_population ())
+	glyph_variations[i].cull_unreachable (plan->avar2_reachable_ranges);
+      if (!glyph_variations[i].instantiate (plan->axes_location, plan->axes_triple_distances, scratch, &pool, all_points, iup_optimize))
+        return false;
+    }
+    return true;
+  }
+
+  bool compile_bytes (const hb_map_t& axes_index_map,
+                      const hb_map_t& axes_old_index_tag_map)
+  {
+    if (!compile_shared_tuples (axes_index_map, axes_old_index_tag_map))
+      return false;
+    for (tuple_variations_t& vars: glyph_variations)
+      if (!vars.compile_bytes (axes_index_map, axes_old_index_tag_map,
+                               true, /* use shared points*/
+                               true,
+                               &shared_tuples_idx_map,
+			       &pool))
+        return false;
+
+    return true;
+  }
+
+  bool compile_shared_tuples (const hb_map_t& axes_index_map,
+                              const hb_map_t& axes_old_index_tag_map)
+  {
+    /* key is pointer to compiled_peak_coords inside each tuple, hashing
+     * function will always deref pointers first */
+    hb_hashmap_t<const hb_vector_t<F2DOT14>*, unsigned> coords_count_map;
+
+    /* count the num of shared coords */
+    for (tuple_variations_t& vars: glyph_variations)
+    {
+      for (tuple_delta_t& var : vars.tuple_vars)
+      {
+        if (!var.compile_coords (axes_index_map, axes_old_index_tag_map, &pool))
+          return false;
+        unsigned *count;
+	unsigned hash = hb_hash (&var.compiled_peak_coords);
+        if (coords_count_map.has_with_hash (&(var.compiled_peak_coords), hash, &count))
+	  (*count)++;
+        else
+          coords_count_map.set_with_hash (&(var.compiled_peak_coords), hash, 1);
+      }
+    }
+
+    if (!coords_count_map || coords_count_map.in_error ())
+      return false;
+
+    /* add only those coords that are used more than once into the vector and sort */
+    hb_vector_t<hb_pair_t<const hb_vector_t<F2DOT14>*, unsigned>> shared_coords {
+      + hb_iter (coords_count_map)
+      | hb_filter ([] (const hb_pair_t<const hb_vector_t<F2DOT14>*, unsigned>& p) { return p.second > 1; })
+    };
+    if (unlikely (shared_coords.in_error ())) return false;
+
+    /* no shared tuples: no coords are used more than once */
+    if (!shared_coords) return true;
+    /* sorting based on the coords frequency first (high to low), then compare
+     * the coords bytes */
+    shared_coords.qsort (_cmp_coords);
+
+    /* build shared_coords->idx map and shared tuples byte array */
+
+    shared_tuples_count = hb_min (0xFFFu + 1, shared_coords.length);
+    unsigned len = shared_tuples_count * (shared_coords[0].first->length);
+    if (unlikely (!compiled_shared_tuples.alloc (len)))
+      return false;
+
+    for (unsigned i = 0; i < shared_tuples_count; i++)
+    {
+      shared_tuples_idx_map.set (shared_coords[i].first, i);
+      /* add a concat() in hb_vector_t? */
+      for (auto c : shared_coords[i].first->iter ())
+        compiled_shared_tuples.push (c);
+    }
+
+    return true;
+  }
+
+  static int _cmp_coords (const void *pa, const void *pb)
+  {
+    const hb_pair_t<hb_vector_t<F2DOT14> *, unsigned> *a = (const hb_pair_t<hb_vector_t<F2DOT14> *, unsigned> *) pa;
+    const hb_pair_t<hb_vector_t<F2DOT14> *, unsigned> *b = (const hb_pair_t<hb_vector_t<F2DOT14> *, unsigned> *) pb;
+
+    if (a->second != b->second)
+      return b->second - a->second; // high to low
+
+    return b->first->as_array().cmp (a->first->as_array ());
+  }
+
+  template<typename Iterator,
+           hb_requires (hb_is_iterator (Iterator))>
+  bool serialize_glyph_var_data (hb_serialize_context_t *c,
+                                 Iterator it,
+                                 bool long_offset,
+                                 unsigned num_glyphs,
+                                 char* glyph_var_data_offsets /* OUT: glyph var data offsets array */) const
+  {
+    TRACE_SERIALIZE (this);
+
+    if (long_offset)
+    {
+      ((HBUINT32 *) glyph_var_data_offsets)[0] = 0;
+      glyph_var_data_offsets += 4;
+    }
+    else
+    {
+      ((HBUINT16 *) glyph_var_data_offsets)[0] = 0;
+      glyph_var_data_offsets += 2;
+    }
+    unsigned glyph_offset = 0;
+    hb_codepoint_t last_gid = 0;
+    unsigned idx = 0;
+
+    GlyphVariationData* cur_glyph = c->start_embed<GlyphVariationData> ();
+    if (!cur_glyph) return_trace (false);
+    for (auto &_ : it)
+    {
+      hb_codepoint_t gid = _.first;
+      if (long_offset)
+        for (; last_gid < gid; last_gid++)
+          ((HBUINT32 *) glyph_var_data_offsets)[last_gid] = glyph_offset;
+      else
+        for (; last_gid < gid; last_gid++)
+          ((HBUINT16 *) glyph_var_data_offsets)[last_gid] = glyph_offset / 2;
+
+      if (idx >= glyph_variations.length) return_trace (false);
+      if (!cur_glyph->serialize (c, true, glyph_variations[idx])) return_trace (false);
+      GlyphVariationData* next_glyph = c->start_embed<GlyphVariationData> ();
+      glyph_offset += (char *) next_glyph - (char *) cur_glyph;
+
+      if (long_offset)
+        ((HBUINT32 *) glyph_var_data_offsets)[gid] = glyph_offset;
+      else
+        ((HBUINT16 *) glyph_var_data_offsets)[gid] = glyph_offset / 2;
+
+      last_gid++;
+      idx++;
+      cur_glyph = next_glyph;
+    }
+
+    if (long_offset)
+      for (; last_gid < num_glyphs; last_gid++)
+        ((HBUINT32 *) glyph_var_data_offsets)[last_gid] = glyph_offset;
+    else
+      for (; last_gid < num_glyphs; last_gid++)
+        ((HBUINT16 *) glyph_var_data_offsets)[last_gid] = glyph_offset / 2;
+    return_trace (true);
+  }
 };
 
-struct contour_point_vector_t : hb_vector_t<contour_point_t>
+template <typename GidOffsetType, unsigned TableTag>
+struct gvar_GVAR
 {
-  void extend (const hb_array_t<contour_point_t> &a)
-  {
-    unsigned int old_len = length;
-    if (unlikely (!resize (old_len + a.length, false)))
-      return;
-    auto arrayZ = this->arrayZ + old_len;
-    unsigned count = a.length;
-    hb_memcpy (arrayZ, a.arrayZ, count * sizeof (arrayZ[0]));
-  }
-};
+  static constexpr hb_tag_t tableTag = TableTag;
 
-struct GlyphVariationData : TupleVariationData
-{};
+  using GlyphVariationData = TupleVariationData<GidOffsetType>;
 
-struct gvar
-{
-  static constexpr hb_tag_t tableTag = HB_OT_TAG_gvar;
+  bool has_data () const { return version.to_int () != 0; }
 
   bool sanitize_shallow (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) && (version.major == 1) &&
+    return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
+		  (version.major == 1) &&
 		  sharedTuples.sanitize (c, this, axisCount * sharedTupleCount) &&
 		  (is_long_offset () ?
 		     c->check_array (get_long_offset_array (), c->get_num_glyphs () + 1) :
@@ -93,13 +329,115 @@ struct gvar
   bool sanitize (hb_sanitize_context_t *c) const
   { return sanitize_shallow (c); }
 
+  bool decompile_glyph_variations (hb_subset_context_t *c,
+                                   glyph_variations_t<GidOffsetType>& glyph_vars /* OUT */) const
+  {
+    hb_hashmap_t<hb_codepoint_t, hb_bytes_t> new_gid_var_data_map;
+    auto it = hb_iter (c->plan->new_to_old_gid_list);
+    if (it->first == 0 && !(c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE))
+    {
+      new_gid_var_data_map.set (0, hb_bytes_t ());
+      it++;
+    }
+
+    for (auto &_ : it)
+    {
+      hb_codepoint_t new_gid = _.first;
+      hb_codepoint_t old_gid = _.second;
+      hb_bytes_t var_data_bytes = get_glyph_var_data_bytes (c->source_blob, glyphCountX, old_gid);
+      new_gid_var_data_map.set (new_gid, var_data_bytes);
+    }
+
+    if (new_gid_var_data_map.in_error ()) return false;
+
+    hb_array_t<const F2DOT14> shared_tuples = (this+sharedTuples).as_array ((unsigned) sharedTupleCount * (unsigned) axisCount);
+    return glyph_vars.create_from_glyphs_var_data (axisCount, shared_tuples, c->plan, new_gid_var_data_map);
+  }
+
+  template<typename Iterator,
+           hb_requires (hb_is_iterator (Iterator))>
+  bool serialize (hb_serialize_context_t *c,
+                  const glyph_variations_t<GidOffsetType>& glyph_vars,
+                  Iterator it,
+                  unsigned axis_count,
+                  unsigned num_glyphs,
+                  bool force_long_offsets) const
+  {
+    TRACE_SERIALIZE (this);
+    gvar_GVAR *out = c->allocate_min<gvar_GVAR> ();
+    if (unlikely (!out)) return_trace (false);
+
+    out->version.major = 1;
+    out->version.minor = 0;
+    out->axisCount = axis_count;
+    out->glyphCountX = hb_min (0xFFFFu, num_glyphs);
+
+    unsigned glyph_var_data_size = glyph_vars.compiled_byte_size ();
+    /* According to the spec: If the short format (Offset16) is used for offsets,
+     * the value stored is the offset divided by 2, so the maximum data size should
+     * be 2 * 0xFFFFu, which is 0x1FFFEu */
+    bool long_offset = glyph_var_data_size > 0x1FFFEu || force_long_offsets;
+    out->flags = long_offset ? 1 : 0;
+
+    unsigned glyph_var_data_offsets_size = (long_offset ? 4 : 2) * (num_glyphs + 1);
+    HBUINT8 *glyph_var_data_offsets = c->allocate_size<HBUINT8> (glyph_var_data_offsets_size, false);
+    if (!glyph_var_data_offsets) return_trace (false);
+
+    /* shared tuples */
+    unsigned shared_tuple_count = glyph_vars.compiled_shared_tuples_count ();
+    out->sharedTupleCount = shared_tuple_count;
+
+    if (!shared_tuple_count)
+      out->sharedTuples = (char *) glyph_var_data_offsets + glyph_var_data_offsets_size - (char *) out;
+    else
+    {
+      hb_array_t<const F2DOT14> shared_tuples = glyph_vars.compiled_shared_tuples.as_array ().copy (c);
+      if (!shared_tuples.arrayZ) return_trace (false);
+      out->sharedTuples = (const char *) shared_tuples.arrayZ - (char *) out;
+    }
+
+    char *glyph_var_data = c->start_embed<char> ();
+    if (!glyph_var_data) return_trace (false);
+    out->dataZ = glyph_var_data - (char *) out;
+
+    return_trace (glyph_vars.serialize_glyph_var_data (c, it, long_offset, num_glyphs,
+                                                       (char *) glyph_var_data_offsets));
+  }
+
+  bool instantiate (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    glyph_variations_t<GidOffsetType> glyph_vars;
+    if (!decompile_glyph_variations (c, glyph_vars))
+      return_trace (false);
+
+    if (!glyph_vars.instantiate (c->plan)) return_trace (false);
+    if (!glyph_vars.compile_bytes (c->plan->axes_index_map, c->plan->axes_old_index_tag_map))
+      return_trace (false);
+
+    unsigned axis_count = c->plan->axes_index_map.get_population ();
+    unsigned num_glyphs = c->plan->num_output_glyphs ();
+    auto it = hb_iter (c->plan->new_to_old_gid_list);
+
+    bool force_long_offsets = false;
+#ifdef HB_EXPERIMENTAL_API
+    force_long_offsets = c->plan->flags & HB_SUBSET_FLAGS_IFTB_REQUIREMENTS;
+#endif
+    return_trace (serialize (c->serializer, glyph_vars, it, axis_count, num_glyphs, force_long_offsets));
+  }
+
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
+    if (c->plan->all_axes_pinned)
+      return_trace (false);
+
+    if (c->plan->normalized_coords)
+      return_trace (instantiate (c));
 
     unsigned glyph_count = version.to_int () ? c->plan->source->get_num_glyphs () : 0;
 
-    gvar *out = c->serializer->allocate_min<gvar> ();
+    gvar_GVAR *out = c->serializer->allocate_min<gvar_GVAR> ();
     if (unlikely (!out)) return_trace (false);
 
     out->version.major = 1;
@@ -110,25 +448,73 @@ struct gvar
     unsigned int num_glyphs = c->plan->num_output_glyphs ();
     out->glyphCountX = hb_min (0xFFFFu, num_glyphs);
 
-    unsigned int subset_data_size = 0;
-    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
-         gid < num_glyphs;
-         gid++)
+    /* avar2 partial instancing: cull tuple variations whose region falls
+     * outside the reachable old-space final-coord ranges. Rewritten glyph
+     * data is cached per new gid; untouched glyphs are copied verbatim. */
+    hb_vector_t<hb_vector_t<char>> culled_vars;
+    hb_set_t culled_gids;
+    if (c->plan->has_avar2 && c->plan->avar2_reachable_ranges.get_population ())
     {
-      hb_codepoint_t old_gid;
-      if (!c->plan->old_gid_for_new_gid (gid, &old_gid)) continue;
-      subset_data_size += get_glyph_var_data_bytes (c->source_blob, glyph_count, old_gid).length;
+      hb_array_t<const F2DOT14> shared_tuples_array =
+	  (this+sharedTuples).as_array ((unsigned) sharedTupleCount * (unsigned) axisCount);
+      if (unlikely (!culled_vars.resize (num_glyphs))) return_trace (false);
+      auto cull_it = hb_iter (c->plan->new_to_old_gid_list);
+      if (cull_it->first == 0 && !(c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE))
+	cull_it++;
+      for (auto &_ : cull_it)
+      {
+	hb_bytes_t var_data_bytes = get_glyph_var_data_bytes (c->source_blob, glyph_count, _.second);
+	if (var_data_bytes.length < GlyphVariationData::min_size) continue;
+	bool changed = false;
+	if (unlikely (!var_data_bytes.as<GlyphVariationData> ()
+		      ->cull_tuple_variations (var_data_bytes, axisCount,
+					       shared_tuples_array,
+					       &c->plan->axes_old_index_tag_map,
+					       c->plan->avar2_reachable_ranges,
+					       culled_vars[_.first], &changed)))
+	  return_trace (false);
+	if (changed) culled_gids.add (_.first);
+      }
+      if (unlikely (culled_gids.in_error ())) return_trace (false);
     }
 
-    bool long_offset = subset_data_size & ~0xFFFFu;
+    auto it = hb_iter (c->plan->new_to_old_gid_list);
+    if (it->first == 0 && !(c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE))
+      it++;
+    unsigned subset_data_size = 0;
+    unsigned padding_size = 0;
+    for (auto &_ : it)
+    {
+      hb_codepoint_t old_gid = _.second;
+      unsigned glyph_data_size = culled_gids.has (_.first)
+				 ? culled_vars[_.first].length
+				 : get_glyph_var_data_bytes (c->source_blob, glyph_count, old_gid).length;
+      if (glyph_data_size % 2)
+      {
+        glyph_data_size++;
+        padding_size++;
+      }
+
+      if (unlikely (hb_unsigned_add_overflows (subset_data_size, glyph_data_size, &subset_data_size)))
+	return_trace (false);
+    }
+
+    /* According to the spec: If the short format (Offset16) is used for offsets,
+     * the value stored is the offset divided by 2, so the maximum data size should
+     * be 2 * 0xFFFFu, which is 0x1FFFEu */
+    bool long_offset = subset_data_size > 0x1FFFEu;
+#ifdef HB_EXPERIMENTAL_API
+    long_offset = long_offset || (c->plan->flags & HB_SUBSET_FLAGS_IFTB_REQUIREMENTS);
+#endif
     out->flags = long_offset ? 1 : 0;
 
-    HBUINT8 *subset_offsets = c->serializer->allocate_size<HBUINT8> ((long_offset ? 4 : 2) * (num_glyphs + 1));
+    unsigned subset_offsets_size = (long_offset ? 4 : 2) * (num_glyphs + 1);
+    HBUINT8 *subset_offsets = c->serializer->allocate_size<HBUINT8> (subset_offsets_size, false);
     if (!subset_offsets) return_trace (false);
 
     /* shared tuples */
     if (!sharedTupleCount || !sharedTuples)
-      out->sharedTuples = 0;
+      out->sharedTuples = (char *) subset_offsets + subset_offsets_size - (char *) out;
     else
     {
       unsigned int shared_tuple_size = F2DOT14::static_size * axisCount * sharedTupleCount;
@@ -138,36 +524,76 @@ struct gvar
       hb_memcpy (tuples, this+sharedTuples, shared_tuple_size);
     }
 
-    char *subset_data = c->serializer->allocate_size<char> (subset_data_size);
+    /* This ordering relative to the shared tuples array, which puts the glyphVariationData
+       last in the table, is required when HB_SUBSET_FLAGS_IFTB_REQUIREMENTS is set */
+    if (long_offset)
+      subset_data_size -= padding_size;
+    char *subset_data = c->serializer->allocate_size<char> (subset_data_size, false);
     if (!subset_data) return_trace (false);
     out->dataZ = subset_data - (char *) out;
 
-    unsigned int glyph_offset = 0;
-    for (hb_codepoint_t gid = (c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE) ? 0 : 1;
-         gid < num_glyphs;
-         gid++)
+
+    if (long_offset)
     {
-      hb_codepoint_t old_gid;
-      hb_bytes_t var_data_bytes = c->plan->old_gid_for_new_gid (gid, &old_gid)
-				? get_glyph_var_data_bytes (c->source_blob,
-							    glyph_count,
-							    old_gid)
-				: hb_bytes_t ();
+      ((HBUINT32 *) subset_offsets)[0] = 0;
+      subset_offsets += 4;
+    }
+    else
+    {
+      ((HBUINT16 *) subset_offsets)[0] = 0;
+      subset_offsets += 2;
+    }
+    unsigned int glyph_offset = 0;
+
+    hb_codepoint_t last = 0;
+    it = hb_iter (c->plan->new_to_old_gid_list);
+    if (it->first == 0 && !(c->plan->flags & HB_SUBSET_FLAGS_NOTDEF_OUTLINE))
+      it++;
+    for (auto &_ : it)
+    {
+      hb_codepoint_t gid = _.first;
+      hb_codepoint_t old_gid = _.second;
+
+      if (long_offset)
+	for (; last < gid; last++)
+	  ((HBUINT32 *) subset_offsets)[last] = glyph_offset;
+      else
+	for (; last < gid; last++)
+	  ((HBUINT16 *) subset_offsets)[last] = glyph_offset / 2;
+
+      hb_bytes_t var_data_bytes = culled_gids.has (gid)
+				  ? hb_bytes_t (culled_vars[gid].arrayZ,
+						culled_vars[gid].length)
+				  : get_glyph_var_data_bytes (c->source_blob,
+							      glyph_count,
+							      old_gid);
+
+      hb_memcpy (subset_data, var_data_bytes.arrayZ, var_data_bytes.length);
+      unsigned glyph_data_size = var_data_bytes.length;
+      subset_data += glyph_data_size;
+      glyph_offset += glyph_data_size;
+
+      if (!long_offset && (glyph_data_size % 2))
+      {
+        *subset_data = 0;
+        subset_data++;
+        glyph_offset++;
+      }
 
       if (long_offset)
 	((HBUINT32 *) subset_offsets)[gid] = glyph_offset;
       else
 	((HBUINT16 *) subset_offsets)[gid] = glyph_offset / 2;
 
-      if (var_data_bytes.length > 0)
-	hb_memcpy (subset_data, var_data_bytes.arrayZ, var_data_bytes.length);
-      subset_data += var_data_bytes.length;
-      glyph_offset += var_data_bytes.length;
+      last++; // Skip over gid
     }
+
     if (long_offset)
-      ((HBUINT32 *) subset_offsets)[num_glyphs] = glyph_offset;
+      for (; last < num_glyphs; last++)
+	((HBUINT32 *) subset_offsets)[last] = glyph_offset;
     else
-      ((HBUINT16 *) subset_offsets)[num_glyphs] = glyph_offset / 2;
+      for (; last < num_glyphs; last++)
+	((HBUINT16 *) subset_offsets)[last] = glyph_offset / 2;
 
     return_trace (true);
   }
@@ -190,7 +616,7 @@ struct gvar
   unsigned get_offset (unsigned glyph_count, unsigned i) const
   {
     if (unlikely (i > glyph_count)) return 0;
-    _hb_compiler_memory_r_barrier ();
+    hb_barrier ();
     return is_long_offset () ? get_long_offset_array ()[i] : get_short_offset_array ()[i] * 2;
   }
 
@@ -200,38 +626,25 @@ struct gvar
   public:
   struct accelerator_t
   {
+
+    hb_scalar_cache_t *create_cache () const
+    {
+      return hb_scalar_cache_t::create (hb_min ((unsigned) table->sharedTupleCount,
+						+TupleVariationHeader::max_shared_tuple_count));
+    }
+
+    static void destroy_cache (hb_scalar_cache_t *cache)
+    {
+      hb_scalar_cache_t::destroy (cache);
+    }
+
+    bool has_data () const { return table->has_data (); }
+
     accelerator_t (hb_face_t *face)
     {
-      table = hb_sanitize_context_t ().reference_table<gvar> (face);
+      table = hb_sanitize_context_t ().reference_table<gvar_GVAR> (face);
       /* If sanitize failed, set glyphCount to 0. */
       glyphCount = table->version.to_int () ? face->get_num_glyphs () : 0;
-
-      /* For shared tuples that only have one axis active, shared the index of
-       * that axis as a cache. This will speed up caclulate_scalar() a lot
-       * for fonts with lots of axes and many "monovar" tuples. */
-      hb_array_t<const F2DOT14> shared_tuples = (table+table->sharedTuples).as_array (table->sharedTupleCount * table->axisCount);
-      unsigned count = table->sharedTupleCount;
-      if (unlikely (!shared_tuple_active_idx.resize (count, false))) return;
-      unsigned axis_count = table->axisCount;
-      for (unsigned i = 0; i < count; i++)
-      {
-	hb_array_t<const F2DOT14> tuple = shared_tuples.sub_array (axis_count * i, axis_count);
-	int idx = -1;
-	for (unsigned j = 0; j < axis_count; j++)
-	{
-	  const F2DOT14 &peak = tuple.arrayZ[j];
-	  if (peak.to_int () != 0)
-	  {
-	    if (idx != -1)
-	    {
-	      idx = -1;
-	      break;
-	    }
-	    idx = j;
-	  }
-	}
-	shared_tuple_active_idx.arrayZ[i] = idx;
-      }
     }
     ~accelerator_t () { table.destroy (); }
 
@@ -263,46 +676,157 @@ struct gvar
     static unsigned int next_index (unsigned int i, unsigned int start, unsigned int end)
     { return (i >= end) ? start : (i + 1); }
 
+#ifndef HB_OPTIMIZE_SIZE
+    template <bool is_x>
+#endif
+    static bool decompile_deltas_add_to_points (const HBUINT8 *&p /* IN/OUT */,
+						hb_array_t<contour_point_t> points,
+						float scalar,
+						const HBUINT8 *end,
+						unsigned start
+#ifdef HB_OPTIMIZE_SIZE
+						, bool is_x
+#endif
+						)
+    {
+      unsigned i = 0;
+      unsigned count = points.length;
+      while (i < count)
+      {
+	if (unlikely (p + 1 > end)) return false;
+	unsigned control = *p++;
+	unsigned run_count = (control & TupleValues::VALUE_RUN_COUNT_MASK) + 1;
+	unsigned stop = i + run_count;
+	if (unlikely (stop > count)) return false;
+
+	unsigned skip = i < start ? hb_min (start - i, run_count) : 0;
+	i += skip;
+
+	switch (control & TupleValues::VALUES_SIZE_MASK)
+	{
+	  case TupleValues::VALUES_ARE_ZEROS:
+	    i = stop;
+	    break;
+	  case TupleValues::VALUES_ARE_WORDS:
+	  {
+	    if (unlikely (p + run_count * HBINT16::static_size > end)) return false;
+	    p += skip * HBINT16::static_size;
+	    const auto *pp = (const HBINT16 *) p;
+	    for (; i < stop; i++)
+	    {
+	      float v = *pp++ * scalar;
+	      if (is_x) points.arrayZ[i].x += v;
+	      else points.arrayZ[i].y += v;
+	    }
+	    p = (const HBUINT8 *) pp;
+	  }
+	  break;
+	  case TupleValues::VALUES_ARE_LONGS:
+	  {
+	    if (unlikely (p + run_count * HBINT32::static_size > end)) return false;
+	    p += skip * HBINT32::static_size;
+	    const auto *pp = (const HBINT32 *) p;
+	    for (; i < stop; i++)
+	    {
+	      float v = *pp++ * scalar;
+	      if (is_x) points.arrayZ[i].x += v;
+	      else points.arrayZ[i].y += v;
+	    }
+	    p = (const HBUINT8 *) pp;
+	  }
+	  break;
+	  case TupleValues::VALUES_ARE_BYTES:
+	  {
+	    if (unlikely (p + run_count > end)) return false;
+	    p += skip * HBINT8::static_size;
+	    const auto *pp = (const HBINT8 *) p;
+	    for (; i < stop; i++)
+	    {
+	      float v = *pp++ * scalar;
+	      if (is_x) points.arrayZ[i].x += v;
+	      else points.arrayZ[i].y += v;
+	    }
+	    p = (const HBUINT8 *) pp;
+	  }
+	  break;
+	}
+      }
+      return true;
+    }
     public:
     bool apply_deltas_to_points (hb_codepoint_t glyph,
-				 hb_array_t<int> coords,
-				 const hb_array_t<contour_point_t> points) const
+				 hb_array_t<const int> coords,
+				 const hb_array_t<contour_point_t> points,
+				 hb_glyf_scratch_t &scratch,
+				 hb_scalar_cache_t *gvar_cache = nullptr,
+				 bool phantom_only = false,
+				 int64_t *budget = nullptr) const
     {
-      if (!coords) return true;
-
       if (unlikely (glyph >= glyphCount)) return true;
+      hb_scalar_cache_t *scalar_cache = gvar_cache ?
+					gvar_cache :
+					(hb_scalar_cache_t *) &Null(hb_scalar_cache_t);
 
       hb_bytes_t var_data_bytes = table->get_glyph_var_data_bytes (table.get_blob (), glyphCount, glyph);
       if (!var_data_bytes.as<GlyphVariationData> ()->has_data ()) return true;
-      hb_vector_t<unsigned int> shared_indices;
-      GlyphVariationData::tuple_iterator_t iterator;
+
+      auto &shared_indices = scratch.shared_indices;
+      shared_indices.clear ();
+
+      typename GlyphVariationData::tuple_iterator_t iterator;
       if (!GlyphVariationData::get_tuple_iterator (var_data_bytes, table->axisCount,
 						   var_data_bytes.arrayZ,
 						   shared_indices, &iterator))
 	return true; /* so isn't applied at all */
 
+      bool any_private_points = false;
+      bool private_points_checked = false;
+
       /* Save original points for inferred delta calculation */
-      contour_point_vector_t orig_points_vec; // Populated lazily
+      auto &orig_points_vec = scratch.orig_points;
+      orig_points_vec.clear (); // Populated lazily
       auto orig_points = orig_points_vec.as_array ();
 
       /* flag is used to indicate referenced point */
-      contour_point_vector_t deltas_vec; // Populated lazily
+      auto &deltas_vec = scratch.deltas;
+      deltas_vec.clear (); // Populated lazily
       auto deltas = deltas_vec.as_array ();
-
-      hb_vector_t<unsigned> end_points; // Populated lazily
 
       unsigned num_coords = table->axisCount;
       hb_array_t<const F2DOT14> shared_tuples = (table+table->sharedTuples).as_array (table->sharedTupleCount * num_coords);
 
-      hb_vector_t<unsigned int> private_indices;
-      hb_vector_t<int> x_deltas;
-      hb_vector_t<int> y_deltas;
+      auto &private_indices = scratch.private_indices;
+      auto &x_deltas = scratch.x_deltas;
+      auto &y_deltas = scratch.y_deltas;
+
+      unsigned count = points.length;
       bool flush = false;
+
       do
       {
 	float scalar = iterator.current_tuple->calculate_scalar (coords, num_coords, shared_tuples,
-								 &shared_tuple_active_idx);
+								 scalar_cache);
+
 	if (scalar == 0.f) continue;
+
+	if (budget &&
+	    unlikely (!hb_budget_spend (*budget, HB_BUDGET_1,
+					 phantom_only && count >= 4 ? 4 : count)))
+	  return false;
+
+	if (!private_points_checked)
+	{
+	  auto scan = iterator;
+	  do
+	  {
+	    if (scan.current_tuple->has_private_points ())
+	    {
+	      any_private_points = true;
+	      break;
+	    }
+	  } while (scan.move_to_next ());
+	  private_points_checked = true;
+	}
 	const HBUINT8 *p = iterator.get_serialized_data ();
 	unsigned int length = iterator.current_tuple->get_data_size ();
 	if (unlikely (!iterator.var_data_bytes.check_range (p, length)))
@@ -310,29 +834,44 @@ struct gvar
 
 	if (!deltas)
 	{
-	  if (unlikely (!deltas_vec.resize (points.length, false))) return false;
+	  if (unlikely (!deltas_vec.resize_dirty  (count))) return false;
 	  deltas = deltas_vec.as_array ();
-	  hb_memset (deltas.arrayZ, 0, deltas.get_size ()); // Faster than vector resize
+	  hb_memset (deltas.arrayZ + (phantom_only ? count - 4 : 0), 0,
+		     (phantom_only ? 4 : count) * sizeof (deltas[0]));
 	}
 
 	const HBUINT8 *end = p + length;
 
 	bool has_private_points = iterator.current_tuple->has_private_points ();
 	if (has_private_points &&
-	    !GlyphVariationData::unpack_points (p, private_indices, end))
+	    !GlyphVariationData::decompile_points (p, private_indices, end))
 	  return false;
 	const hb_array_t<unsigned int> &indices = has_private_points ? private_indices : shared_indices;
 
 	bool apply_to_all = (indices.length == 0);
-	unsigned int num_deltas = apply_to_all ? points.length : indices.length;
-	if (unlikely (!x_deltas.resize (num_deltas, false))) return false;
-	if (unlikely (!GlyphVariationData::unpack_deltas (p, x_deltas, end))) return false;
-	if (unlikely (!y_deltas.resize (num_deltas, false))) return false;
-	if (unlikely (!GlyphVariationData::unpack_deltas (p, y_deltas, end))) return false;
+	unsigned num_deltas = apply_to_all ? points.length : indices.length;
+	unsigned start_deltas = (apply_to_all && phantom_only && num_deltas >= 4 ? num_deltas - 4 : 0);
+
+	if (apply_to_all && !any_private_points)
+	{
+#ifdef HB_OPTIMIZE_SIZE
+	  if (unlikely (!decompile_deltas_add_to_points (p, points, scalar, end, start_deltas, true))) return false;
+	  if (unlikely (!decompile_deltas_add_to_points (p, points, scalar, end, start_deltas, false))) return false;
+#else
+	  if (unlikely (!decompile_deltas_add_to_points<true> (p, points, scalar, end, start_deltas))) return false;
+	  if (unlikely (!decompile_deltas_add_to_points<false> (p, points, scalar, end, start_deltas))) return false;
+#endif
+	  continue;
+	}
+
+	if (unlikely (!x_deltas.resize_dirty  (num_deltas))) return false;
+	if (unlikely (!GlyphVariationData::decompile_deltas (p, x_deltas, end, false, start_deltas))) return false;
+	if (unlikely (!y_deltas.resize_dirty  (num_deltas))) return false;
+	if (unlikely (!GlyphVariationData::decompile_deltas (p, y_deltas, end, false, start_deltas))) return false;
 
 	if (!apply_to_all)
 	{
-	  if (!orig_points)
+	  if (!orig_points && !phantom_only)
 	  {
 	    orig_points_vec.extend (points);
 	    if (unlikely (orig_points_vec.in_error ())) return false;
@@ -341,13 +880,11 @@ struct gvar
 
 	  if (flush)
 	  {
-	    unsigned count = points.length;
-	    for (unsigned int i = 0; i < count; i++)
+	    for (unsigned int i = phantom_only ? count - 4 : 0; i < count; i++)
 	      points.arrayZ[i].translate (deltas.arrayZ[i]);
-	    flush = false;
-
 	  }
-	  hb_memset (deltas.arrayZ, 0, deltas.get_size ());
+	  hb_memset (deltas.arrayZ + (phantom_only ? count - 4 : 0), 0,
+		     (phantom_only ? 4 : count) * sizeof (deltas[0]));
 	}
 
 	if (HB_OPTIMIZE_SIZE_VAL)
@@ -362,10 +899,11 @@ struct gvar
 	      pt_index = indices[i];
 	      if (unlikely (pt_index >= deltas.length)) continue;
 	    }
+	    if (phantom_only && pt_index < count - 4) continue;
 	    auto &delta = deltas.arrayZ[pt_index];
 	    delta.flag = 1;	/* this point is referenced, i.e., explicit deltas specified */
-	    delta.x += x_deltas.arrayZ[i] * scalar;
-	    delta.y += y_deltas.arrayZ[i] * scalar;
+	    delta.add_delta (x_deltas.arrayZ[i] * scalar,
+			     y_deltas.arrayZ[i] * scalar);
 	  }
 	}
 	else
@@ -374,62 +912,58 @@ struct gvar
 	  if (scalar != 1.0f)
 	  {
 	    if (apply_to_all)
-	      for (unsigned int i = 0; i < num_deltas; i++)
+	      for (unsigned int i = phantom_only ? count - 4 : 0; i < count; i++)
 	      {
-		unsigned int pt_index = i;
-		auto &delta = deltas.arrayZ[pt_index];
-		delta.x += x_deltas.arrayZ[i] * scalar;
-		delta.y += y_deltas.arrayZ[i] * scalar;
+		auto &delta = deltas.arrayZ[i];
+		delta.add_delta (x_deltas.arrayZ[i] * scalar,
+				 y_deltas.arrayZ[i] * scalar);
 	      }
 	    else
 	      for (unsigned int i = 0; i < num_deltas; i++)
 	      {
 		unsigned int pt_index = indices[i];
 		if (unlikely (pt_index >= deltas.length)) continue;
+		if (phantom_only && pt_index < count - 4) continue;
 		auto &delta = deltas.arrayZ[pt_index];
 		delta.flag = 1;	/* this point is referenced, i.e., explicit deltas specified */
-		delta.x += x_deltas.arrayZ[i] * scalar;
-		delta.y += y_deltas.arrayZ[i] * scalar;
+		delta.add_delta (x_deltas.arrayZ[i] * scalar,
+				 y_deltas.arrayZ[i] * scalar);
 	      }
 	  }
 	  else
 	  {
 	    if (apply_to_all)
-	      for (unsigned int i = 0; i < num_deltas; i++)
+	      for (unsigned int i = phantom_only ? count - 4 : 0; i < count; i++)
 	      {
-		unsigned int pt_index = i;
-		auto &delta = deltas.arrayZ[pt_index];
-		delta.x += x_deltas.arrayZ[i];
-		delta.y += y_deltas.arrayZ[i];
+		auto &delta = deltas.arrayZ[i];
+		delta.add_delta (x_deltas.arrayZ[i],
+				 y_deltas.arrayZ[i]);
 	      }
 	    else
 	      for (unsigned int i = 0; i < num_deltas; i++)
 	      {
 		unsigned int pt_index = indices[i];
 		if (unlikely (pt_index >= deltas.length)) continue;
+		if (phantom_only && pt_index < count - 4) continue;
 		auto &delta = deltas.arrayZ[pt_index];
 		delta.flag = 1;	/* this point is referenced, i.e., explicit deltas specified */
-		delta.x += x_deltas.arrayZ[i];
-		delta.y += y_deltas.arrayZ[i];
+		delta.add_delta (x_deltas.arrayZ[i],
+				 y_deltas.arrayZ[i]);
 	      }
 	  }
 	}
 
 	/* infer deltas for unreferenced points */
-	if (!apply_to_all)
+	if (!apply_to_all && !phantom_only)
 	{
-	  if (!end_points)
-	  {
-	    unsigned count = points.length;
-	    for (unsigned i = 0; i < count; ++i)
-	      if (points.arrayZ[i].is_end_point)
-		end_points.push (i);
-	    if (unlikely (end_points.in_error ())) return false;
-	  }
-
 	  unsigned start_point = 0;
-	  for (unsigned end_point : end_points)
+	  unsigned end_point = 0;
+	  while (true)
 	  {
+	    while (end_point < count && !points.arrayZ[end_point].is_end_point)
+	      end_point++;
+	    if (unlikely (end_point == count)) break;
+
 	    /* Check the number of unreferenced points in a contour. If no unref points or no ref points, nothing to do. */
 	    unsigned unref_count = 0;
 	    for (unsigned i = start_point; i < end_point + 1; i++)
@@ -472,7 +1006,7 @@ struct gvar
 	      }
 	    }
 	  no_more_gaps:
-	    start_point = end_point + 1;
+	    start_point = end_point = end_point + 1;
 	  }
 	}
 
@@ -482,8 +1016,7 @@ struct gvar
 
       if (flush)
       {
-        unsigned count = points.length;
-	for (unsigned int i = 0; i < count; i++)
+	for (unsigned int i = phantom_only ? count - 4 : 0; i < count; i++)
 	  points.arrayZ[i].translate (deltas.arrayZ[i]);
       }
 
@@ -493,9 +1026,8 @@ struct gvar
     unsigned int get_axis_count () const { return table->axisCount; }
 
     private:
-    hb_blob_ptr_t<gvar> table;
+    hb_blob_ptr_t<gvar_GVAR> table;
     unsigned glyphCount;
-    hb_vector_t<signed> shared_tuple_active_idx;
   };
 
   protected:
@@ -511,7 +1043,7 @@ struct gvar
   NNOffset32To<UnsizedArrayOf<F2DOT14>>
 		sharedTuples;	/* Offset from the start of this table to the shared tuple records.
 				 * Array of tuple records shared across all glyph variation data tables. */
-  HBUINT16	glyphCountX;	/* The number of glyphs in this font. This must match the number of
+  GidOffsetType	glyphCountX;	/* The number of glyphs in this font. This must match the number of
 				 * glyphs stored elsewhere in the font. */
   HBUINT16	flags;		/* Bit-field that gives the format of the offset array that follows.
 				 * If bit 0 is clear, the offsets are uint16; if bit 0 is set, the
@@ -526,8 +1058,14 @@ struct gvar
   DEFINE_SIZE_ARRAY (20, offsetZ);
 };
 
+using gvar = gvar_GVAR<HBUINT16, HB_OT_TAG_gvar>;
+using GVAR = gvar_GVAR<HBUINT24, HB_OT_TAG_GVAR>;
+
 struct gvar_accelerator_t : gvar::accelerator_t {
   gvar_accelerator_t (hb_face_t *face) : gvar::accelerator_t (face) {}
+};
+struct GVAR_accelerator_t : GVAR::accelerator_t {
+  GVAR_accelerator_t (hb_face_t *face) : GVAR::accelerator_t (face) {}
 };
 
 } /* namespace OT */

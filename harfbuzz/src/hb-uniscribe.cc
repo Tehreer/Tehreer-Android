@@ -321,7 +321,7 @@ _hb_generate_unique_face_name (wchar_t *face_name, unsigned int *plen)
 
 /* Destroys blob. */
 static hb_blob_t *
-_hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
+_hb_rename_font (hb_blob_t *blob_in, wchar_t *new_name)
 {
   /* Create a copy of the font data, with the 'name' table replaced by a
    * table that names the font with our private F_* name created above.
@@ -332,7 +332,7 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
    * full, PS. All of them point to the same name data with our unique name.
    */
 
-  blob = hb_sanitize_context_t ().sanitize_blob<OT::OpenTypeFontFile> (blob);
+  hb_unique_ptr_t<hb_blob_t> blob (hb_sanitize_context_t ().sanitize_blob<OT::OpenTypeFontFile> (blob_in));
 
   unsigned int length, new_length, name_str_len;
   const char *orig_sfnt_data = hb_blob_get_data (blob, &length);
@@ -350,10 +350,8 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
   new_length = name_table_offset + padded_name_table_length;
   void *new_sfnt_data = hb_calloc (1, new_length);
   if (!new_sfnt_data)
-  {
-    hb_blob_destroy (blob);
     return nullptr;
-  }
+  auto sfnt_guard = hb_make_scope_guard ([&]() { hb_free (new_sfnt_data); });
 
   hb_memcpy(new_sfnt_data, orig_sfnt_data, length);
 
@@ -397,18 +395,14 @@ _hb_rename_font (hb_blob_t *blob, wchar_t *new_name)
       record.length = name_table_length;
     }
     else if (face_index == 0) /* Fail if first face doesn't have 'name' table. */
-    {
-      hb_free (new_sfnt_data);
-      hb_blob_destroy (blob);
       return nullptr;
-    }
   }
 
   /* The checkSumAdjustment field in the 'head' table is now wrong,
    * but that doesn't actually seem to cause any problems so we don't
    * bother. */
 
-  hb_blob_destroy (blob);
+  sfnt_guard.release ();
   return hb_blob_create ((const char *) new_sfnt_data, new_length,
 			 HB_MEMORY_MODE_WRITABLE, new_sfnt_data, hb_free);
 }
@@ -699,7 +693,7 @@ retry:
 				     script_tags,
 				     &item_count);
   if (unlikely (FAILED (hr)))
-    FAIL ("ScriptItemizeOpenType() failed: 0x%08lx", hr);
+    FAIL ("ScriptItemizeOpenType() failed: 0x%08lx", (unsigned long) hr);
 
 #undef MAX_ITEMS
 
@@ -785,7 +779,7 @@ retry:
     }
     if (unlikely (FAILED (hr)))
     {
-      FAIL ("ScriptShapeOpenType() failed: 0x%08lx", hr);
+      FAIL ("ScriptShapeOpenType() failed: 0x%08lx", (unsigned long) hr);
     }
 
     for (unsigned int j = chars_offset; j < chars_offset + item_chars_len; j++)
@@ -811,7 +805,7 @@ retry:
 				     offsets + glyphs_offset,
 				     nullptr);
     if (unlikely (FAILED (hr)))
-      FAIL ("ScriptPlaceOpenType() failed: 0x%08lx", hr);
+      FAIL ("ScriptPlaceOpenType() failed: 0x%08lx", (unsigned long) hr);
 
     if (DEBUG_ENABLED (UNISCRIBE))
       fprintf (stderr, "Item %d RTL %d LayoutRTL %d LogicalOrder %d ScriptTag %c%c%c%c\n",
@@ -870,9 +864,10 @@ retry:
     hb_glyph_position_t *pos = &buffer->pos[i];
 
     /* TODO vertical */
-    pos->x_advance = x_mult * (int32_t) info->mask;
-    pos->x_offset = x_mult * (backward ? -info->var1.i32 : info->var1.i32);
-    pos->y_offset = y_mult * info->var2.i32;
+    pos->x_advance = hb_clamp_to<hb_position_t> (x_mult * (int32_t) info->mask);
+    double x_offset = backward ? -(double) info->var1.i32 : info->var1.i32;
+    pos->x_offset = hb_clamp_to<hb_position_t> (x_mult * x_offset);
+    pos->y_offset = hb_clamp_to<hb_position_t> (y_mult * info->var2.i32);
   }
 
   if (backward)

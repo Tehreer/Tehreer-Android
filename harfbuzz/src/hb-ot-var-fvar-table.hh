@@ -39,6 +39,24 @@
 
 namespace OT {
 
+static bool axis_coord_pinned_or_within_axis_range (const hb_array_t<const F16DOT16> coords,
+                                                    unsigned axis_index,
+                                                    Triple axis_limit)
+{
+  double axis_coord = static_cast<double>(coords[axis_index].to_float ());
+  if (axis_limit.is_point ())
+  {
+    if (axis_limit.minimum != axis_coord)
+      return false;
+  }
+  else
+  {
+    if (axis_coord < axis_limit.minimum ||
+        axis_coord > axis_limit.maximum)
+      return false;
+  }
+  return true;
+}
 
 struct InstanceRecord
 {
@@ -46,6 +64,27 @@ struct InstanceRecord
 
   hb_array_t<const F16DOT16> get_coordinates (unsigned int axis_count) const
   { return coordinatesZ.as_array (axis_count); }
+
+  bool keep_instance (unsigned axis_count,
+                      const hb_map_t *axes_index_tag_map,
+                      const hb_hashmap_t<hb_tag_t, Triple> *axes_location) const
+  {
+    if (axes_location->is_empty ()) return true;
+    const hb_array_t<const F16DOT16> coords = get_coordinates (axis_count);
+    for (unsigned i = 0 ; i < axis_count; i++)
+    {
+      uint32_t *axis_tag;
+      if (!axes_index_tag_map->has (i, &axis_tag))
+        return false;
+      if (!axes_location->has (*axis_tag))
+        continue;
+
+      Triple axis_limit = axes_location->get (*axis_tag);
+      if (!axis_coord_pinned_or_within_axis_range (coords, i, axis_limit))
+        return false;
+    }
+    return true;
+  }
 
   bool subset (hb_subset_context_t *c,
                unsigned axis_count,
@@ -56,19 +95,23 @@ struct InstanceRecord
     if (unlikely (!c->serializer->embed (flags))) return_trace (false);
 
     const hb_array_t<const F16DOT16> coords = get_coordinates (axis_count);
-    const hb_hashmap_t<hb_tag_t, float> *axes_location = &c->plan->user_axes_location;
+    const hb_hashmap_t<hb_tag_t, Triple> *axes_location = &c->plan->user_axes_location;
     for (unsigned i = 0 ; i < axis_count; i++)
     {
       uint32_t *axis_tag;
+      Triple *axis_limit;
       // only keep instances whose coordinates == pinned axis location
-      if (!c->plan->axes_old_index_tag_map.has (i, &axis_tag)) continue;
+      if (!c->plan->axes_old_index_tag_map.has (i, &axis_tag)) return_trace (false);
+      if (axes_location->has (*axis_tag, &axis_limit))
+      {
+        if (!axis_coord_pinned_or_within_axis_range (coords, i, *axis_limit))
+          return_trace (false);
 
-      if (axes_location->has (*axis_tag) &&
-          fabsf (axes_location->get (*axis_tag) - coords[i].to_float ()) > 0.001f)
-        return_trace (false);
-
-      if (!c->plan->axes_index_map.has (i))
-        continue;
+        //skip axes dropped from fvar (pinned; or self-contained under avar2,
+        //where other pinned axes stay in fvar as hidden)
+        if (axis_limit->is_point () && !c->plan->axes_index_map.has (i))
+          continue;
+      }
 
       if (!c->serializer->embed (coords[i]))
         return_trace (false);
@@ -89,6 +132,7 @@ struct InstanceRecord
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
 		  c->check_array (coordinatesZ.arrayZ, axis_count));
   }
 
@@ -136,7 +180,9 @@ struct AxisRecord
 
   hb_tag_t get_axis_tag () const { return axisTag; }
 
-  int normalize_axis_value (float v) const
+  bool is_hidden () const { return flags & AXIS_FLAG_HIDDEN; }
+
+  float normalize_axis_value (float v) const
   {
     float min_value, default_value, max_value;
     get_coordinates (min_value, default_value, max_value);
@@ -146,23 +192,9 @@ struct AxisRecord
     if (v == default_value)
       return 0;
     else if (v < default_value)
-      v = (v - default_value) / (default_value - min_value);
+      return (v - default_value) / (default_value - min_value);
     else
-      v = (v - default_value) / (max_value - default_value);
-    return roundf (v * 16384.f);
-  }
-
-  float unnormalize_axis_value (int v) const
-  {
-    float min_value, default_value, max_value;
-    get_coordinates (min_value, default_value, max_value);
-
-    if (v == 0)
-      return default_value;
-    else if (v < 0)
-      return v * (default_value - min_value) / 16384.f + default_value;
-    else
-      return v * (max_value - default_value) / 16384.f + default_value;
+      return (v - default_value) / (max_value - default_value);
   }
 
   hb_ot_name_id_t get_name_id () const { return axisNameID; }
@@ -184,6 +216,45 @@ struct AxisRecord
   float get_default () const
   {
     return defaultValue.to_float ();
+  }
+
+  TripleDistances get_triple_distances () const
+  {
+    float min, default_, max;
+    get_coordinates (min, default_, max);
+    return TripleDistances (
+      static_cast<double>(min),
+      static_cast<double>(default_),
+      static_cast<double>(max));
+  }
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    auto *out = c->serializer->embed (this);
+    if (unlikely (!out)) return_trace (false);
+
+    const hb_hashmap_t<hb_tag_t, Triple>& user_axes_location = c->plan->user_axes_location;
+    Triple *axis_limit;
+    if (user_axes_location.has (axisTag, &axis_limit))
+    {
+      if (c->plan->has_avar2 && axis_limit->is_point ())
+      {
+        /* Pinned axis in avar2 mode: keep in fvar as hidden with
+         * min=default=max=pinned_value. */
+        out->minValue.set_float (axis_limit->middle);
+        out->defaultValue.set_float (axis_limit->middle);
+        out->maxValue.set_float (axis_limit->middle);
+        out->flags = out->flags | (HBUINT16) AXIS_FLAG_HIDDEN;
+      }
+      else
+      {
+        out->minValue.set_float (axis_limit->minimum);
+        out->defaultValue.set_float (axis_limit->middle);
+        out->maxValue.set_float (axis_limit->maximum);
+      }
+    }
+    return_trace (true);
   }
 
   public:
@@ -211,12 +282,15 @@ struct fvar
   {
     TRACE_SANITIZE (this);
     return_trace (version.sanitize (c) &&
+		  hb_barrier () &&
 		  likely (version.major == 1) &&
 		  c->check_struct (this) &&
+		  hb_barrier () &&
 		  axisSize == 20 && /* Assumed in our code. */
 		  instanceSize >= axisCount * 4 + 4 &&
 		  get_axes ().sanitize (c) &&
-		  c->check_range (get_instance (0), instanceCount, instanceSize));
+		  c->check_range (&StructAfter<InstanceRecord> (get_axes ()),
+				  instanceCount, instanceSize));
   }
 
   unsigned int get_axis_count () const { return axisCount; }
@@ -226,7 +300,7 @@ struct fvar
 				    unsigned int     *axes_count /* IN/OUT */,
 				    hb_ot_var_axis_t *axes_array /* OUT */) const
   {
-    if (axes_count)
+    if (axes_count && axes_array)
     {
       hb_array_t<const AxisRecord> arr = get_axes ().sub_array (start_offset, axes_count);
       for (unsigned i = 0; i < arr.length; ++i)
@@ -240,7 +314,7 @@ struct fvar
 			       unsigned int          *axes_count /* IN/OUT */,
 			       hb_ot_var_axis_info_t *axes_array /* OUT */) const
   {
-    if (axes_count)
+    if (axes_count && axes_array)
     {
       hb_array_t<const AxisRecord> arr = get_axes ().sub_array (start_offset, axes_count);
       for (unsigned i = 0; i < arr.length; ++i)
@@ -268,11 +342,8 @@ struct fvar
     return axes.lfind (tag, &i) && ((void) axes[i].get_axis_info (i, info), true);
   }
 
-  int normalize_axis_value (unsigned int axis_index, float v) const
+  float normalize_axis_value (unsigned int axis_index, float v) const
   { return get_axes ()[axis_index].normalize_axis_value (v); }
-
-  float unnormalize_axis_value (unsigned int axis_index, int v) const
-  { return get_axes ()[axis_index].unnormalize_axis_value (v); }
 
   unsigned int get_instance_count () const { return instanceCount; }
 
@@ -304,7 +375,7 @@ struct fvar
       return 0;
     }
 
-    if (coords_length && *coords_length)
+    if (coords_length && *coords_length && coords)
     {
       hb_array_t<const F16DOT16> instanceCoords = instance->get_coordinates (axisCount)
 							 .sub_array (0, coords_length);
@@ -314,21 +385,19 @@ struct fvar
     return axisCount;
   }
 
-  void collect_name_ids (hb_hashmap_t<hb_tag_t, float> *user_axes_location,
+  void collect_name_ids (hb_hashmap_t<hb_tag_t, Triple> *user_axes_location,
+			 hb_map_t *axes_old_index_tag_map,
 			 hb_set_t *nameids  /* IN/OUT */) const
   {
     if (!has_data ()) return;
-    hb_map_t pinned_axes;
 
     auto axis_records = get_axes ();
     for (unsigned i = 0 ; i < (unsigned)axisCount; i++)
     {
       hb_tag_t axis_tag = axis_records[i].get_axis_tag ();
-      if (user_axes_location->has (axis_tag))
-      {
-        pinned_axes.set (i, axis_tag);
+      if (user_axes_location->has (axis_tag) &&
+          user_axes_location->get (axis_tag).is_point ())
         continue;
-      }
 
       nameids->add (axis_records[i].get_name_id ());
     }
@@ -337,16 +406,7 @@ struct fvar
     {
       const InstanceRecord *instance = get_instance (i);
 
-      if (hb_any (+ hb_enumerate (instance->get_coordinates (axisCount))
-                  | hb_filter (pinned_axes, hb_first)
-                  | hb_map ([&] (const hb_pair_t<unsigned, const F16DOT16&>& _)
-                            {
-                              hb_tag_t axis_tag = pinned_axes.get (_.first);
-                              float location = user_axes_location->get (axis_tag);
-                              if (fabs ((double)location - (double)_.second.to_float ()) > 0.001) return true;
-                              return false;
-                            })
-                  ))
+      if (!instance->keep_instance (axisCount, axes_old_index_tag_map, user_axes_location))
         continue;
 
       nameids->add (instance->subfamilyNameID);
@@ -384,21 +444,25 @@ struct fvar
     for (unsigned i = 0 ; i < (unsigned)axisCount; i++)
     {
       if (!c->plan->axes_index_map.has (i)) continue;
-      if (unlikely (!c->serializer->embed (axes_records[i])))
+      if (unlikely (!axes_records[i].subset (c)))
         return_trace (false);
     }
 
     if (!c->serializer->check_assign (out->firstAxis, get_size (), HB_SERIALIZE_ERROR_INT_OVERFLOW))
       return_trace (false);
 
+    unsigned num_retained_instances = 0;
     for (unsigned i = 0 ; i < (unsigned)instanceCount; i++)
     {
       const InstanceRecord *instance = get_instance (i);
       auto snap = c->serializer->snapshot ();
       if (!instance->subset (c, axisCount, has_postscript_nameid))
         c->serializer->revert (snap);
+      else
+        num_retained_instances++;
     }
-    return_trace (true);
+
+    return_trace (c->serializer->check_assign (out->instanceCount, num_retained_instances, HB_SERIALIZE_ERROR_INT_OVERFLOW));
   }
 
   public:

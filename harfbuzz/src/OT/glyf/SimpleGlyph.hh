@@ -127,19 +127,20 @@ struct SimpleGlyph
 			  hb_array_t<contour_point_t> points_ /* IN/OUT */,
 			  const HBUINT8 *end)
   {
+    auto *points = points_.arrayZ;
     unsigned count = points_.length;
     for (unsigned int i = 0; i < count;)
     {
       if (unlikely (p + 1 > end)) return false;
       uint8_t flag = *p++;
-      points_.arrayZ[i++].flag = flag;
+      points[i++].flag = flag;
       if (flag & FLAG_REPEAT)
       {
 	if (unlikely (p + 1 > end)) return false;
 	unsigned int repeat_count = *p++;
 	unsigned stop = hb_min (i + repeat_count, count);
 	for (; i < stop; i++)
-	  points_.arrayZ[i].flag = flag;
+	  points[i].flag = flag;
       }
     }
     return true;
@@ -154,17 +155,13 @@ struct SimpleGlyph
   {
     int v = 0;
 
-    unsigned count = points_.length;
-    for (unsigned i = 0; i < count; i++)
+    for (auto &point : points_)
     {
-      unsigned flag = points_.arrayZ[i].flag;
+      unsigned flag = point.flag;
       if (flag & short_flag)
       {
 	if (unlikely (p + 1 > end)) return false;
-	if (flag & same_flag)
-	  v += *p++;
-	else
-	  v -= *p++;
+	v += (bool(flag & same_flag) * 2 - 1) * *p++;
       }
       else
       {
@@ -175,13 +172,14 @@ struct SimpleGlyph
 	  p += HBINT16::static_size;
 	}
       }
-      points_.arrayZ[i].*m = v;
+      point.*m = v;
     }
     return true;
   }
 
   bool get_contour_points (contour_point_vector_t &points /* OUT */,
-			   bool phantom_only = false) const
+			   bool phantom_only = false,
+			   int64_t *budget = nullptr) const
   {
     const HBUINT16 *endPtsOfContours = &StructAfter<HBUINT16> (header);
     int num_contours = header.numberOfContours;
@@ -189,12 +187,18 @@ struct SimpleGlyph
     /* One extra item at the end, for the instruction-count below. */
     if (unlikely (!bytes.check_range (&endPtsOfContours[num_contours]))) return false;
     unsigned int num_points = endPtsOfContours[num_contours - 1] + 1;
+    if (unlikely (num_points < (unsigned) num_contours)) return false;
+
+    /* Charge before allocating and reading, so that glyphs that fail
+     * later (truncated data, composite caps) still pay for this work. */
+    if (budget && unlikely (!hb_budget_spend (*budget, HB_BUDGET_1, num_points))) return false;
 
     unsigned old_length = points.length;
-    points.alloc (points.length + num_points + 4, true); // Allocate for phantom points, to avoid a possible copy
-    if (!points.resize (points.length + num_points, false)) return false;
+    points.alloc (points.length + num_points + 4); // Allocate for phantom points, to avoid a possible copy
+    if (unlikely (!points.resize_dirty (points.length + num_points))) return false;
     auto points_ = points.as_array ().sub_array (old_length);
-    hb_memset (points_.arrayZ, 0, sizeof (contour_point_t) * num_points);
+    if (!phantom_only)
+      hb_memset (points_.arrayZ, 0, sizeof (contour_point_t) * num_points);
     if (phantom_only) return true;
 
     for (int i = 0; i < num_contours; i++)
@@ -281,9 +285,9 @@ struct SimpleGlyph
     unsigned num_points = all_points.length - 4;
 
     hb_vector_t<uint8_t> flags, x_coords, y_coords;
-    if (unlikely (!flags.alloc (num_points, true))) return false;
-    if (unlikely (!x_coords.alloc (2*num_points, true))) return false;
-    if (unlikely (!y_coords.alloc (2*num_points, true))) return false;
+    if (unlikely (!flags.alloc_exact (num_points))) return false;
+    if (unlikely (!x_coords.alloc_exact (2*num_points))) return false;
+    if (unlikely (!y_coords.alloc_exact (2*num_points))) return false;
 
     unsigned lastflag = 255, repeat = 0;
     int prev_x = 0, prev_y = 0;

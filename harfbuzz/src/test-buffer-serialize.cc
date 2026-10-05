@@ -43,11 +43,28 @@ main (int argc, char **argv)
 
 #ifndef HB_NO_BUFFER_SERIALIZE
 
+  hb_buffer_serialize_format_t format = HB_BUFFER_SERIALIZE_FORMAT_TEXT;
+  if (argc > 1)
+  {
+    if (!strcmp (argv[1], "--json"))
+    {
+      format = HB_BUFFER_SERIALIZE_FORMAT_JSON;
+      argc--;
+      argv++;
+    }
+    else if (!strcmp (argv[1], "--text"))
+    {
+      format = HB_BUFFER_SERIALIZE_FORMAT_TEXT;
+      argc--;
+      argv++;
+    }
+  }
+
   if (argc < 2)
     argv[1] = (char *) "/dev/null";
 
   hb_blob_t *blob = hb_blob_create_from_file_or_fail (argv[1]);
-  assert (blob);
+  hb_always_assert (blob);
   hb_face_t *face = hb_face_create (blob, 0 /* first face */);
   hb_blob_destroy (blob);
   blob = nullptr;
@@ -68,10 +85,13 @@ main (int argc, char **argv)
     while (true)
     {
       const char *p = line;
+      const char *end = p + strlen (p);
+      if (p < end && *(end - 1) == '\n')
+	  end--;
       if (!hb_buffer_deserialize_glyphs (buf,
-					 p, -1, &p,
+					 p, end - p, &p,
 					 font,
-					 HB_BUFFER_SERIALIZE_FORMAT_TEXT))
+					 format))
       {
         ret = false;
         break;
@@ -97,7 +117,8 @@ main (int argc, char **argv)
       unsigned len;
       offset += hb_buffer_serialize_glyphs (buf, offset, count,
 					    out, sizeof (out), &len,
-					    font, HB_BUFFER_SERIALIZE_FORMAT_TEXT,
+					    font,
+					    format,
 					    HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS);
       fwrite (out, 1, len, stdout);
     }

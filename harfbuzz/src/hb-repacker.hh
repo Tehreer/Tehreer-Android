@@ -35,6 +35,7 @@
 #include "graph/serialize.hh"
 
 using graph::graph_t;
+using graph::graph_result_t;
 
 /*
  * For a detailed writeup on the overflow resolution algorithm see:
@@ -69,7 +70,7 @@ struct lookup_size_t
 };
 
 static inline
-bool _presplit_subtables_if_needed (graph::gsubgpos_graph_context_t& ext_context)
+graph_result_t<void> _presplit_subtables_if_needed (graph::gsubgpos_graph_context_t& ext_context)
 {
   // For each lookup this will check the size of subtables and split them as needed
   // so that no subtable is at risk of overflowing. (where we support splitting for
@@ -79,14 +80,18 @@ bool _presplit_subtables_if_needed (graph::gsubgpos_graph_context_t& ext_context
   //                pass after this processing is done. Not super necessary as splits are
   //                only done where overflow is likely, so de-dup probably will get undone
   //                later anyways.
-  for (unsigned lookup_index : ext_context.lookups.keys ())
+
+  // The loop below can modify the contents of ext_context.lookups if new subtables are added
+  // to a lookup during a split. So save the initial set of lookup indices so the iteration doesn't
+  // risk access free'd memory if ext_context.lookups gets resized.
+  hb_set_t lookup_indices(ext_context.lookups.keys ());
+  for (unsigned lookup_index : lookup_indices)
   {
     graph::Lookup* lookup = ext_context.lookups.get(lookup_index);
-    if (!lookup->split_subtables_if_needed (ext_context, lookup_index))
-      return false;
+    TRY (lookup->split_subtables_if_needed (ext_context, lookup_index));
   }
 
-  return true;
+  return Ok();
 }
 
 /*
@@ -94,7 +99,7 @@ bool _presplit_subtables_if_needed (graph::gsubgpos_graph_context_t& ext_context
  * to extension lookups.
  */
 static inline
-bool _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context)
+graph_result_t<void> _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context)
 {
   // Simple Algorithm (v1, current):
   // 1. Calculate how many bytes each non-extension lookup consumes.
@@ -112,18 +117,22 @@ bool _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context
   // TODO(garretrieger): also support extension promotion during iterative resolution phase, then
   //                     we can use a less conservative threshold here.
   // TODO(grieger): skip this for the 24 bit case.
-  if (!ext_context.lookups) return true;
+  if (!ext_context.lookups) return Ok();
 
+  unsigned total_lookup_table_sizes = 0;
   hb_vector_t<lookup_size_t> lookup_sizes;
   lookup_sizes.alloc (ext_context.lookups.get_population (), true);
 
   for (unsigned lookup_index : ext_context.lookups.keys ())
   {
+    const auto& lookup_v = ext_context.graph.vertices_[lookup_index];
+    total_lookup_table_sizes += lookup_v.table_size ();
+
     const graph::Lookup* lookup = ext_context.lookups.get(lookup_index);
     hb_set_t visited;
     lookup_sizes.push (lookup_size_t {
         lookup_index,
-        ext_context.graph.find_subgraph_size (lookup_index, visited),
+        ext_context.graph.find_subgraph_size (lookup_index, visited).value_or (0),
         lookup->number_of_subtables (),
       });
   }
@@ -131,14 +140,16 @@ bool _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context
   lookup_sizes.qsort ();
 
   size_t lookup_list_size = ext_context.graph.vertices_[ext_context.lookup_list_index].table_size ();
-  size_t l2_l3_size = lookup_list_size; // Lookup List + Lookups
-  size_t l3_l4_size = 0; // Lookups + SubTables
+  size_t l2_l3_size = lookup_list_size + total_lookup_table_sizes; // Lookup List + Lookups
+  size_t l3_l4_size = total_lookup_table_sizes; // Lookups + SubTables
   size_t l4_plus_size = 0; // SubTables + their descendants
 
   // Start by assuming all lookups are using extension subtables, this size will be removed later
   // if it's decided to not make a lookup extension.
   for (auto p : lookup_sizes)
   {
+    // TODO(garretrieger): this overestimates the extension subtables size because some extension subtables may be
+    //                     reused. However, we can't correct this until we have connected component analysis in place.
     unsigned subtables_size = p.num_subtables * 8;
     l3_l4_size += subtables_size;
     l4_plus_size += subtables_size;
@@ -156,11 +167,10 @@ bool _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context
     {
       size_t lookup_size = ext_context.graph.vertices_[p.lookup_index].table_size ();
       hb_set_t visited;
-      size_t subtables_size = ext_context.graph.find_subgraph_size (p.lookup_index, visited, 1) - lookup_size;
+      size_t subtables_size = ext_context.graph.find_subgraph_size (p.lookup_index, visited, 1).value_or (0) - lookup_size;
       size_t remaining_size = p.size - subtables_size - lookup_size;
 
-      l2_l3_size   += lookup_size;
-      l3_l4_size   += lookup_size + subtables_size;
+      l3_l4_size   += subtables_size;
       l3_l4_size   -= p.num_subtables * 8;
       l4_plus_size += subtables_size + remaining_size;
 
@@ -171,16 +181,15 @@ bool _promote_extensions_if_needed (graph::gsubgpos_graph_context_t& ext_context
       layers_full = true;
     }
 
-    if (!ext_context.lookups.get(p.lookup_index)->make_extension (ext_context, p.lookup_index))
-      return false;
+    TRY (ext_context.lookups.get(p.lookup_index)->make_extension (ext_context, p.lookup_index));
   }
 
-  return true;
+  return Ok();
 }
 
 static inline
-bool _try_isolating_subgraphs (const hb_vector_t<graph::overflow_record_t>& overflows,
-                               graph_t& sorted_graph)
+graph_result_t<bool> _try_isolating_subgraphs (const hb_vector_t<graph::overflow_record_t>& overflows,
+                                               graph_t& sorted_graph)
 {
   unsigned space = 0;
   hb_set_t roots_to_isolate;
@@ -202,16 +211,22 @@ bool _try_isolating_subgraphs (const hb_vector_t<graph::overflow_record_t>& over
       roots_to_isolate.add(root);
   }
 
-  if (!roots_to_isolate) return false;
+  if (!roots_to_isolate) return Ok(false);
 
   unsigned maximum_to_move = hb_max ((sorted_graph.num_roots_for_space (space) / 2u), 1u);
   if (roots_to_isolate.get_population () > maximum_to_move) {
     // Only move at most half of the roots in a space at a time.
-    unsigned extra = roots_to_isolate.get_population () - maximum_to_move;
-    while (extra--) {
-      uint32_t root = HB_SET_VALUE_INVALID;
-      roots_to_isolate.previous (&root);
-      roots_to_isolate.del (root);
+    //
+    // Note: this was ported from non-stable ids to stable ids. So to retain the same behaviour
+    // with regards to which roots are removed from the set we need to remove them in the topological
+    // order, not the object id order.
+    int extra = roots_to_isolate.get_population () - maximum_to_move;
+    for (unsigned id : sorted_graph.ordering_) {
+      if (!extra) break;
+      if (roots_to_isolate.has(id)) {
+        roots_to_isolate.del(id);
+        extra--;
+      }
     }
   }
 
@@ -222,16 +237,65 @@ bool _try_isolating_subgraphs (const hb_vector_t<graph::overflow_record_t>& over
              roots_to_isolate.get_population (),
              sorted_graph.next_space ());
 
-  sorted_graph.isolate_subgraph (roots_to_isolate);
-  sorted_graph.move_to_new_space (roots_to_isolate);
+  TRY_ASSIGN (bool isolated, sorted_graph.isolate_subgraph (roots_to_isolate));
+  if (!isolated) return Ok(false);
+  TRY (sorted_graph.move_to_new_space (roots_to_isolate));
 
-  return true;
+  return Ok(true);
 }
 
 static inline
-bool _process_overflows (const hb_vector_t<graph::overflow_record_t>& overflows,
-                         hb_set_t& priority_bumped_parents,
-                         graph_t& sorted_graph)
+graph_result_t<bool> _resolve_shared_overflow(const hb_vector_t<graph::overflow_record_t>& overflows,
+                                              int overflow_index,
+                                              graph_t& sorted_graph)
+{
+  const graph::overflow_record_t& r = overflows[overflow_index];
+
+  // Find all of the parents in overflowing links that link to this
+  // same child node. We will then try duplicating the child node and
+  // re-assigning all of these parents to the duplicate.
+  hb_set_t parents;
+  parents.add(r.parent);
+  for (int i = overflow_index - 1; i >= 0; i--) {
+    const graph::overflow_record_t& r2 = overflows[i];
+    if (r2.child == r.child) {
+      parents.add(r2.parent);
+    }
+  }
+
+  auto result = sorted_graph.duplicate(&parents, r.child);
+  if (!result.is_ok () && parents.get_population() > 2) {
+    // All links to the child are overflowing, so we can't include all
+    // in the duplication. Remove one parent from the duplication.
+    // Remove the lowest index parent, which will be the closest to the child.
+    parents.del(parents.get_min());
+    result = sorted_graph.duplicate(&parents, r.child);
+  }
+
+  if (!result.is_ok ()) return Ok(false);
+
+  if (parents.get_population() > 1) {
+    // If the duplicated node has more than one parent pre-emptively raise it's priority to the maximum.
+    // This will place it close to the parents. Node's with only one parent, don't need this as normal overflow
+    // resolution will raise priority if needed.
+    //
+    // Reasoning: most of the parents to this child are likely at the same layer in the graph. Duplicating
+    // the child will theoretically allow it to be placed closer to it's parents. However, due to the shortest
+    // distance sort by default it's placement will remain in the same layer, thus it will remain in roughly the
+    // same position (and distance from parents) as the original child node. The overflow resolution will attempt
+    // to move nodes closer, but only for non-shared nodes. Since this node is shared, it will simply be given
+    // further duplication which defeats the attempt to duplicate with multiple parents. To fix this we
+    // pre-emptively raise priority now which allows the duplicated node to pack into the same layer as it's parents.
+    sorted_graph.vertices_[*result].give_max_priority();
+  }
+
+  return Ok(true);
+}
+
+static inline
+graph_result_t<bool> _process_overflows (const hb_vector_t<graph::overflow_record_t>& overflows,
+                                         hb_set_t& priority_bumped_parents,
+                                         graph_t& sorted_graph)
 {
   bool resolution_attempted = false;
 
@@ -239,16 +303,19 @@ bool _process_overflows (const hb_vector_t<graph::overflow_record_t>& overflows,
   for (int i = overflows.length - 1; i >= 0; i--)
   {
     const graph::overflow_record_t& r = overflows[i];
-    const auto& child = sorted_graph.vertices_[r.child];
-    if (child.is_shared ())
+    if (sorted_graph.vertices_[r.child].is_shared ())
     {
       // The child object is shared, we may be able to eliminate the overflow
       // by duplicating it.
-      if (sorted_graph.duplicate (r.parent, r.child) == (unsigned) -1) continue;
-      return true;
+      TRY_ASSIGN (bool resolved, _resolve_shared_overflow(overflows, i, sorted_graph));
+      if (resolved)
+        return Ok(true);
+
+      // Sometimes we can't duplicate a node which looks shared because it's not actually shared
+      // (eg. all links from the same parent) in this case continue on to other resolution options.
     }
 
-    if (child.is_leaf () && !priority_bumped_parents.has (r.parent))
+    if (sorted_graph.vertices_[r.child].is_leaf () && !priority_bumped_parents.has (r.parent))
     {
       // This object is too far from it's parent, attempt to move it closer.
       //
@@ -261,7 +328,8 @@ bool _process_overflows (const hb_vector_t<graph::overflow_record_t>& overflows,
       //                     is < then the total size of the children (and the parent can be moved).
       //                     Since in that case moving the parent will cause a smaller increase in
       //                     the length of other offsets.
-      if (sorted_graph.raise_childrens_priority (r.parent)) {
+      TRY_ASSIGN (bool raised, sorted_graph.raise_childrens_priority (r.parent));
+      if (raised) {
         priority_bumped_parents.add (r.parent);
         resolution_attempted = true;
       }
@@ -273,92 +341,119 @@ bool _process_overflows (const hb_vector_t<graph::overflow_record_t>& overflows,
     // - Table splitting.
   }
 
-  return resolution_attempted;
+  return Ok(resolution_attempted);
 }
 
-inline bool
+inline graph_result_t<void>
+_assign_spaces_and_sort (graph_t& sorted_graph /* IN/OUT */)
+{
+  DEBUG_MSG (SUBSET_REPACK, nullptr, "Assigning spaces to 32 bit subgraphs.");
+  TRY_ASSIGN (bool assigned, sorted_graph.assign_spaces ());
+  if (assigned)
+    return sorted_graph.sort_shortest_distance ();
+  else
+    return sorted_graph.sort_shortest_distance_if_needed ();
+}
+
+inline graph_result_t<void>
+_gsub_gpos_specialization (hb_tag_t table_tag,
+                           bool always_recalculate_extensions,
+                           graph_t& sorted_graph /* IN/OUT */)
+{
+  DEBUG_MSG (SUBSET_REPACK, nullptr, "Applying GSUB/GPOS repacking specializations.");
+  if (!always_recalculate_extensions) return _assign_spaces_and_sort (sorted_graph);
+
+  auto context_res = graph::gsubgpos_graph_context_t::create (table_tag, sorted_graph);
+
+  if (unlikely (context_res.is_err())) {
+    if (context_res.error() == graph::SANITIZE_FAILURE)
+      // Sanitize failures are ignored, and we just skip splitting/extension promotion which needs a valid
+      // GSUB/GPOS
+      return _assign_spaces_and_sort (sorted_graph);
+    else
+      // All other errors are propagated.
+      return Err(context_res.error());
+  }
+
+  // Otherwise we have a valid GSUB/GPOS table and can try extension promotion and splitting
+  auto& ext_context = *context_res;
+  DEBUG_MSG (SUBSET_REPACK, nullptr, "Splitting subtables if needed.");
+  TRY (_presplit_subtables_if_needed (ext_context));
+
+  DEBUG_MSG (SUBSET_REPACK, nullptr, "Promoting lookups to extensions if needed.");
+  TRY (_promote_extensions_if_needed (ext_context));
+
+  // an additional sorting is needed before assign_spaces () which requires
+  // correct topological ordering to find space roots
+  TRY (sorted_graph.sort_shortest_distance_if_needed ());
+
+  TRY_ASSIGN (bool will_overflow, graph::will_overflow (sorted_graph));
+  if (!will_overflow) return Ok();
+  return _assign_spaces_and_sort (sorted_graph);
+}
+
+inline graph_result_t<void>
 hb_resolve_graph_overflows (hb_tag_t table_tag,
                             unsigned max_rounds ,
-                            bool recalculate_extensions,
+                            bool always_recalculate_extensions,
                             graph_t& sorted_graph /* IN/OUT */)
 {
-  sorted_graph.sort_shortest_distance ();
-  if (sorted_graph.in_error ())
-  {
-    DEBUG_MSG (SUBSET_REPACK, nullptr, "Sorted graph in error state after initial sort.");
-    return false;
-  }
+  DEBUG_MSG (SUBSET_REPACK, nullptr, "Repacking %c%c%c%c.", HB_UNTAG(table_tag));
+  TRY (sorted_graph.sort_shortest_distance ());
 
-  bool will_overflow = graph::will_overflow (sorted_graph);
+  TRY_ASSIGN (bool will_overflow, graph::will_overflow (sorted_graph));
   if (!will_overflow)
-    return true;
+    return Ok();
 
-  graph::gsubgpos_graph_context_t ext_context (table_tag, sorted_graph);
-  if ((table_tag == HB_OT_TAG_GPOS
-       ||  table_tag == HB_OT_TAG_GSUB)
-      && will_overflow)
-  {
-    if (recalculate_extensions)
-    {
-      DEBUG_MSG (SUBSET_REPACK, nullptr, "Splitting subtables if needed.");
-      if (!_presplit_subtables_if_needed (ext_context)) {
-        DEBUG_MSG (SUBSET_REPACK, nullptr, "Subtable splitting failed.");
-        return false;
-      }
-
-      DEBUG_MSG (SUBSET_REPACK, nullptr, "Promoting lookups to extensions if needed.");
-      if (!_promote_extensions_if_needed (ext_context)) {
-        DEBUG_MSG (SUBSET_REPACK, nullptr, "Extensions promotion failed.");
-        return false;
-      }
-    }
-
-    DEBUG_MSG (SUBSET_REPACK, nullptr, "Assigning spaces to 32 bit subgraphs.");
-    if (sorted_graph.assign_spaces ())
-      sorted_graph.sort_shortest_distance ();
-    else
-      sorted_graph.sort_shortest_distance_if_needed ();
-  }
+  bool is_gsub_or_gpos = (table_tag == HB_OT_TAG_GPOS ||  table_tag == HB_OT_TAG_GSUB);
+  if (is_gsub_or_gpos)
+    TRY(_gsub_gpos_specialization (table_tag, always_recalculate_extensions, sorted_graph));
 
   unsigned round = 0;
+  unsigned total_iterations = 0;
   hb_vector_t<graph::overflow_record_t> overflows;
   // TODO(garretrieger): select a good limit for max rounds.
-  while (!sorted_graph.in_error ()
-         && graph::will_overflow (sorted_graph, &overflows)
-         && round < max_rounds) {
+  while (round < max_rounds && total_iterations < HB_REPACKER_MAX_ITERATIONS) {
+    TRY_ASSIGN (bool overflows_exist, graph::will_overflow (sorted_graph, &overflows));
+    if (!overflows_exist)
+      break;
+
     DEBUG_MSG (SUBSET_REPACK, nullptr, "=== Overflow resolution round %u ===", round);
     print_overflows (sorted_graph, overflows);
 
+    total_iterations++;
     hb_set_t priority_bumped_parents;
 
-    if (!_try_isolating_subgraphs (overflows, sorted_graph))
+    TRY_ASSIGN (bool isolated, _try_isolating_subgraphs (overflows, sorted_graph));
+    if (!isolated)
     {
-      // Don't count space isolation towards round limit. Only increment
-      // round counter if space isolation made no changes.
       round++;
-      if (!_process_overflows (overflows, priority_bumped_parents, sorted_graph))
+      TRY_ASSIGN (bool processed, _process_overflows (overflows, priority_bumped_parents, sorted_graph));
+      if (!processed)
       {
         DEBUG_MSG (SUBSET_REPACK, nullptr, "No resolution available :(");
         break;
       }
     }
 
-    sorted_graph.sort_shortest_distance ();
+    TRY (sorted_graph.sort_shortest_distance ());
   }
 
-  if (sorted_graph.in_error ())
+  TRY_ASSIGN (bool has_overflow, graph::will_overflow (sorted_graph));
+  if (unlikely (has_overflow))
   {
-    DEBUG_MSG (SUBSET_REPACK, nullptr, "Sorted graph in error state.");
-    return false;
-  }
+    if (is_gsub_or_gpos && !always_recalculate_extensions) {
+      // If this a GSUB/GPOS table and we didn't try to extension promotion and table splitting then
+      // as a last ditch effort, re-run the repacker with it enabled.
+      DEBUG_MSG (SUBSET_REPACK, nullptr, "Failed to find a resolution. Re-running with extension promotion and table splitting enabled.");
+      return hb_resolve_graph_overflows (table_tag, max_rounds, true, sorted_graph);
+    }
 
-  if (graph::will_overflow (sorted_graph))
-  {
     DEBUG_MSG (SUBSET_REPACK, nullptr, "Offset overflow resolution failed.");
-    return false;
+    return Err(graph::OVERFLOW_RESOLUTION_FAILED);
   }
 
-  return true;
+  return Ok();
 }
 
 /*
@@ -378,33 +473,34 @@ template<typename T>
 inline hb_blob_t*
 hb_resolve_overflows (const T& packed,
                       hb_tag_t table_tag,
-                      unsigned max_rounds = 20,
+                      unsigned max_rounds = 32,
                       bool recalculate_extensions = false) {
-  graph_t sorted_graph (packed);
-  if (sorted_graph.in_error ())
+  auto graph_res = graph_t::create (packed);
+  if (!graph_res.is_ok ())
   {
-    // Invalid graph definition.
-    return nullptr;
-  }
-
-  if (!sorted_graph.is_fully_connected ())
-  {
-    sorted_graph.print_orphaned_nodes ();
-    return nullptr;
-  }
-
-  if (sorted_graph.in_error ())
-  {
-    // Allocations failed somewhere
     DEBUG_MSG (SUBSET_REPACK, nullptr,
-               "Graph is in error, likely due to a memory allocation error.");
+               "Graph creation failed, cause: %s", graph::to_string(graph_res.error()));
+    return nullptr;
+  }
+  graph_t sorted_graph = std::move (*graph_res);
+
+  auto resolve_res = hb_resolve_graph_overflows (table_tag, max_rounds, recalculate_extensions, sorted_graph);
+  if (resolve_res.is_err ())
+  {
+    DEBUG_MSG (SUBSET_REPACK, nullptr,
+               "Overflow resolution failed, cause: %s", graph::to_string(resolve_res.error()));
     return nullptr;
   }
 
-  if (!hb_resolve_graph_overflows (table_tag, max_rounds, recalculate_extensions, sorted_graph))
+  auto serialize_res = graph::serialize (sorted_graph);
+  if (serialize_res.is_err ())
+  {
+    DEBUG_MSG (SUBSET_REPACK, nullptr,
+               "Serialization failed, cause: %s", graph::to_string(serialize_res.error()));
     return nullptr;
+  }
 
-  return graph::serialize (sorted_graph);
+  return *serialize_res;
 }
 
 #endif /* HB_REPACKER_HH */

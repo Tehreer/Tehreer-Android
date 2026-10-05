@@ -33,6 +33,11 @@
 
 /* v--- Add new shapers in the right place here. */
 
+#ifdef HAVE_WASM
+/* Only picks up fonts that have a "Wasm" table. */
+HB_SHAPER_IMPLEMENT (wasm)
+#endif
+
 #ifdef HAVE_GRAPHITE2
 /* Only picks up fonts that have a "Silf" table. */
 HB_SHAPER_IMPLEMENT (graphite2)
@@ -50,6 +55,14 @@ HB_SHAPER_IMPLEMENT (directwrite)
 #endif
 #ifdef HAVE_CORETEXT
 HB_SHAPER_IMPLEMENT (coretext)
+#endif
+
+#ifdef HAVE_HARFRUST
+HB_SHAPER_IMPLEMENT (harfrust)
+#endif
+
+#ifdef HAVE_KBTS
+HB_SHAPER_IMPLEMENT (kbts)
 #endif
 
 #ifndef HB_NO_FALLBACK_SHAPE

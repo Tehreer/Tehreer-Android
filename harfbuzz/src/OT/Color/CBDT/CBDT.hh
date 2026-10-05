@@ -204,10 +204,11 @@ struct IndexSubtable
   {
     TRACE_SANITIZE (this);
     if (!u.header.sanitize (c)) return_trace (false);
+    hb_barrier ();
     switch (u.header.indexFormat)
     {
-    case 1: return_trace (u.format1.sanitize (c, glyph_count));
-    case 3: return_trace (u.format3.sanitize (c, glyph_count));
+    case 1: hb_barrier (); return_trace (u.format1.sanitize (c, glyph_count));
+    case 3: hb_barrier (); return_trace (u.format3.sanitize (c, glyph_count));
     default:return_trace (true);
     }
   }
@@ -223,8 +224,9 @@ struct IndexSubtable
     unsigned int local_offset = cbdt_prime_len - u.header.imageDataOffset;
     switch (u.header.indexFormat)
     {
-    case 1: return_trace (u.format1.add_offset (c, local_offset, size));
+    case 1: hb_barrier (); return_trace (u.format1.add_offset (c, local_offset, size));
     case 3: {
+      hb_barrier ();
       if (!u.format3.add_offset (c, local_offset, size))
 	return_trace (false);
       if (!(num_glyphs & 0x01))  // Pad to 32-bit alignment if needed.
@@ -251,6 +253,7 @@ struct IndexSubtable
     switch (u.header.indexFormat)
     {
     case 1: {
+      hb_barrier ();
       for (unsigned int i = 0; i < num_missing; i++)
       {
 	if (unlikely (!u.format1.add_offset (c, local_offset, size)))
@@ -260,6 +263,7 @@ struct IndexSubtable
       return_trace (true);
     }
     case 3: {
+      hb_barrier ();
       for (unsigned int i = 0; i < num_missing; i++)
       {
 	if (unlikely (!u.format3.add_offset (c, local_offset, size)))
@@ -302,8 +306,8 @@ struct IndexSubtable
     TRACE_SERIALIZE (this);
     switch (u.header.indexFormat)
     {
-    case 1: return_trace (u.format1.add_offset (c, local_offset, size));
-    case 3: return_trace (u.format3.add_offset (c, local_offset, size));
+    case 1: hb_barrier (); return_trace (u.format1.add_offset (c, local_offset, size));
+    case 3: hb_barrier (); return_trace (u.format3.add_offset (c, local_offset, size));
     // TODO: Implement tables 2, 4, 5
     case 2:  // Should be a no-op.
     case 4: case 5:  // Handle sparse cases.
@@ -328,8 +332,8 @@ struct IndexSubtable
     *format = u.header.imageFormat;
     switch (u.header.indexFormat)
     {
-    case 1: return u.format1.get_image_data (idx, offset, length);
-    case 3: return u.format3.get_image_data (idx, offset, length);
+    case 1: hb_barrier (); return u.format1.get_image_data (idx, offset, length);
+    case 3: hb_barrier (); return u.format3.get_image_data (idx, offset, length);
     default: return false;
     }
   }
@@ -378,6 +382,7 @@ struct IndexSubtableRecord
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
 		  firstGlyphIndex <= lastGlyphIndex &&
 		  offsetToSubtable.sanitize (c, base, lastGlyphIndex - firstGlyphIndex + 1));
   }
@@ -397,7 +402,6 @@ struct IndexSubtableRecord
     TRACE_SERIALIZE (this);
 
     auto *subtable = c->serializer->start_embed<IndexSubtable> ();
-    if (unlikely (!subtable)) return_trace (false);
     if (unlikely (!c->serializer->extend_min (subtable))) return_trace (false);
 
     auto *old_subtable = get_subtable (base);
@@ -545,7 +549,8 @@ struct IndexSubtableArray
 		const IndexSubtableRecord*>> *lookup /* OUT */) const
   {
     bool start_glyph_is_set = false;
-    for (hb_codepoint_t new_gid = 0; new_gid < c->plan->num_output_glyphs (); new_gid++)
+    unsigned num_glyphs = c->plan->num_output_glyphs ();
+    for (hb_codepoint_t new_gid = 0; new_gid < num_glyphs; new_gid++)
     {
       hb_codepoint_t old_gid;
       if (unlikely (!c->plan->old_gid_for_new_gid (new_gid, &old_gid))) continue;
@@ -575,9 +580,6 @@ struct IndexSubtableArray
 	  cblc_bitmap_size_subset_context_t *bitmap_size_context) const
   {
     TRACE_SUBSET (this);
-
-    auto *dst = c->serializer->start_embed<IndexSubtableArray> ();
-    if (unlikely (!dst)) return_trace (false);
 
     hb_vector_t<hb_pair_t<hb_codepoint_t, const IndexSubtableRecord*>> lookup;
     build_lookup (c, bitmap_size_context, &lookup);
@@ -638,6 +640,7 @@ struct BitmapSizeTable
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
 		  indexSubtableArrayOffset.sanitize (c, base, numberOfIndexSubtables) &&
 		  horizontal.sanitize (c) &&
 		  vertical.sanitize (c));
@@ -741,7 +744,9 @@ struct CBLC
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
 		  likely (version.major == 2 || version.major == 3) &&
+		  hb_barrier () &&
 		  sizeTables.sanitize (c, this));
   }
 
@@ -880,10 +885,10 @@ struct CBDT
       {
 	float x_scale = upem / (float) strike.ppemX;
 	float y_scale = upem / (float) strike.ppemY;
-	extents->x_bearing = roundf (extents->x_bearing * x_scale);
-	extents->y_bearing = roundf (extents->y_bearing * y_scale);
-	extents->width = roundf (extents->width * x_scale);
-	extents->height = roundf (extents->height * y_scale);
+	extents->x_bearing = hb_clamp_to<hb_position_t> (roundf (extents->x_bearing * x_scale));
+	extents->y_bearing = hb_clamp_to<hb_position_t> (roundf (extents->y_bearing * y_scale));
+	extents->width = hb_clamp_to<hb_position_t> (roundf (extents->width * x_scale));
+	extents->height = hb_clamp_to<hb_position_t> (roundf (extents->height * y_scale));
       }
 
       return true;
@@ -939,31 +944,33 @@ struct CBDT
       }
     }
 
-    bool has_data () const { return cbdt.get_length (); }
+    bool has_data () const { return cbdt->version.major; }
 
     bool paint_glyph (hb_font_t *font, hb_codepoint_t glyph, hb_paint_funcs_t *funcs, void *data) const
     {
+      if (!has_data ()) return false;
+
       hb_glyph_extents_t extents;
       hb_glyph_extents_t pixel_extents;
-      hb_blob_t *blob = reference_png (font, glyph);
-
-      if (unlikely (blob == hb_blob_get_empty ()))
-        return false;
-
-      if (unlikely (!hb_font_get_glyph_extents (font, glyph, &extents)))
+      if (unlikely (!font->get_glyph_extents (glyph, &extents, false)))
         return false;
 
       if (unlikely (!get_extents (font, glyph, &pixel_extents, false)))
+        return false;
+
+      hb_blob_t *blob = reference_png (font, glyph);
+      if (unlikely (hb_blob_is_immutable (blob)))
         return false;
 
       bool ret = funcs->image (data,
 			       blob,
 			       pixel_extents.width, -pixel_extents.height,
 			       HB_PAINT_IMAGE_FORMAT_PNG,
-			       font->slant_xy,
+			       0.f,
 			       &extents);
 
       hb_blob_destroy (blob);
+
       return ret;
     }
 
@@ -978,6 +985,7 @@ struct CBDT
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
+		  hb_barrier () &&
 		  likely (version.major == 2 || version.major == 3));
   }
 
@@ -993,12 +1001,10 @@ CBLC::subset (hb_subset_context_t *c) const
 {
   TRACE_SUBSET (this);
 
-  auto *cblc_prime = c->serializer->start_embed<CBLC> ();
-
   // Use a vector as a secondary buffer as the tables need to be built in parallel.
   hb_vector_t<char> cbdt_prime;
 
-  if (unlikely (!cblc_prime)) return_trace (false);
+  auto *cblc_prime = c->serializer->start_embed<CBLC> ();
   if (unlikely (!c->serializer->extend_min (cblc_prime))) return_trace (false);
   cblc_prime->version = version;
 

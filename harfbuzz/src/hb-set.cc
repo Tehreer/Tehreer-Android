@@ -200,7 +200,7 @@ hb_set_copy (const hb_set_t *set)
 void
 hb_set_clear (hb_set_t *set)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->clear ();
 }
 
@@ -251,7 +251,7 @@ void
 hb_set_add (hb_set_t       *set,
 	    hb_codepoint_t  codepoint)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->add (codepoint);
 }
 
@@ -272,7 +272,7 @@ hb_set_add_sorted_array (hb_set_t             *set,
 		         const hb_codepoint_t *sorted_codepoints,
 		         unsigned int          num_codepoints)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->add_sorted_array (sorted_codepoints,
 		         num_codepoints,
 		         sizeof(hb_codepoint_t));
@@ -294,7 +294,7 @@ hb_set_add_range (hb_set_t       *set,
 		  hb_codepoint_t  first,
 		  hb_codepoint_t  last)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->add_range (first, last);
 }
 
@@ -311,7 +311,7 @@ void
 hb_set_del (hb_set_t       *set,
 	    hb_codepoint_t  codepoint)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->del (codepoint);
 }
 
@@ -334,7 +334,7 @@ hb_set_del_range (hb_set_t       *set,
 		  hb_codepoint_t  first,
 		  hb_codepoint_t  last)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->del_range (first, last);
 }
 
@@ -355,6 +355,24 @@ hb_set_is_equal (const hb_set_t *set,
 		 const hb_set_t *other)
 {
   return set->is_equal (*other);
+}
+
+/**
+ * hb_set_intersects:
+ * @set: A set
+ * @other: Another set
+ *
+ * Tests whether @set and @other have any elements in common.
+ *
+ * Return value: `true` if the two sets intersect, `false` otherwise.
+ *
+ * Since: 14.4.0
+ **/
+hb_bool_t
+hb_set_intersects (const hb_set_t *set,
+		   const hb_set_t *other)
+{
+  return set->intersects (*other);
 }
 
 /**
@@ -405,7 +423,7 @@ void
 hb_set_set (hb_set_t       *set,
 	    const hb_set_t *other)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->set (*other);
 }
 
@@ -422,7 +440,7 @@ void
 hb_set_union (hb_set_t       *set,
 	      const hb_set_t *other)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->union_ (*other);
 }
 
@@ -439,7 +457,7 @@ void
 hb_set_intersect (hb_set_t       *set,
 		  const hb_set_t *other)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->intersect (*other);
 }
 
@@ -456,7 +474,7 @@ void
 hb_set_subtract (hb_set_t       *set,
 		 const hb_set_t *other)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->subtract (*other);
 }
 
@@ -474,7 +492,7 @@ void
 hb_set_symmetric_difference (hb_set_t       *set,
 			     const hb_set_t *other)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->symmetric_difference (*other);
 }
 
@@ -489,7 +507,7 @@ hb_set_symmetric_difference (hb_set_t       *set,
 void
 hb_set_invert (hb_set_t *set)
 {
-  /* Immutible-safe. */
+  /* Immutable-safe. */
   set->invert ();
 }
 
