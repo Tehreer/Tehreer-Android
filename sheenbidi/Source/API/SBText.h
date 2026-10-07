@@ -22,82 +22,54 @@
 #if SB_TEXT_API_SUPPORTED
 
 #include <SheenBidi/SBAttributeRegistry.h>
-#include <SheenBidi/SBCodepointSequence.h>
-#include <SheenBidi/SBParagraph.h>
-#include <SheenBidi/SBScriptLocator.h>
 #include <SheenBidi/SBText.h>
 
-#include <Core/List.h>
 #include <Core/Object.h>
 #include <Text/AttributeManager.h>
+#include <Text/BidiTypesBuffer.h>
+#include <Text/TextAnalysis.h>
+#include <Text/TextBuffer.h>
 
-typedef struct _TextParagraph {
-    SBUInteger index;
-    SBUInteger length;
-    SBBoolean needsReanalysis;
-    SBParagraphRef bidiParagraph;
-    LIST(SBScript) scripts;
-} TextParagraph, *TextParagraphRef;
-
+/**
+ * A thin façade composing the code-unit buffer, the derived bidi types, the paragraph/script
+ * analysis, and the attribute overlay of a text object. Mutation entry points delegate to these
+ * layers rather than manipulating code units, bidi types, and paragraphs inline.
+ */
 typedef struct _SBText {
     ObjectBase _base;
-    SBStringEncoding encoding;
     SBBoolean isMutable;
-    SBLevel baseLevel;
     SBBoolean isEditing;
-    SBScriptLocatorRef scriptLocator;
     SBAttributeRegistryRef attributeRegistry;
+    TextBuffer buffer;
+    BidiTypesBuffer bidiTypes;
+    TextAnalysis analysis;
     AttributeManager attributeManager;
-    List codeUnits;
-    LIST(SBBidiType) bidiTypes;
-    LIST(TextParagraph) paragraphs;
 } SBText;
 
 /**
  * Creates a mutable text object with explicit parameters.
- * 
+ *
  * @param encoding
  *      String encoding.
  * @param attributeRegistry
  *      Attribute registry (can be `NULL`).
  * @param baseLevel
  *      Base bidirectional level.
+ * @param userInfoCallbacks
+ *      Lifecycle callbacks used to retain/release a paragraph's userInfo value; copied by value.
+ *      Can be `NULL`, in which case userInfo values are stored as-is with no lifecycle management.
+ * @param userInfoProvider
+ *      Callback used to (re)populate a paragraph's userInfo whenever it's invalidated (can be
+ *      `NULL`).
+ * @param userInfoProviderContext
+ *      Opaque pointer passed back to `userInfoProvider` unchanged.
  * @return
  *      New mutable text object, or `NULL` on failure.
  */
 SB_INTERNAL SBMutableTextRef SBTextCreateMutableWithParameters(SBStringEncoding encoding,
-    SBAttributeRegistryRef attributeRegistry, SBLevel baseLevel);
-
-/**
- * Finds the paragraph index containing the specified code unit index.
- * 
- * @param text
- *      The text object.
- * @param codeUnitIndex
- *      The code unit index to search for.
- * @return
- *      The index of the paragraph containing the code unit, or `SBInvalidIndex` if not found.
- */
-SB_INTERNAL SBUInteger SBTextGetCodeUnitParagraphIndex(SBTextRef text, SBUInteger codeUnitIndex);
-
-/**
- * Retrieves the first and last paragraphs that intersect with a specified code unit range. If the
- * range spans a single paragraph, both output parameters reference the same paragraph.
- *
- * @param text
- *      The text object.
- * @param rangeStart
- *      The starting code unit index (inclusive).
- * @param rangeEnd
- *      The ending code unit index (exclusive).
- * @param[out] firstParagraph
- *      Pointer to receive the first intersecting paragraph reference.
- * @param[out] lastParagraph
- *      Pointer to receive the last intersecting paragraph reference.
- */
-SB_INTERNAL void SBTextGetBoundaryParagraphs(SBTextRef text,
-    SBUInteger rangeStart, SBUInteger rangeEnd,
-    TextParagraphRef *firstParagraph, TextParagraphRef *lastParagraph);
+    SBAttributeRegistryRef attributeRegistry, SBLevel baseLevel,
+    const SBParagraphUserInfoCallbacks *userInfoCallbacks,
+    SBParagraphUserInfoProviderCallback userInfoProvider, void *userInfoProviderContext);
 
 #endif
 

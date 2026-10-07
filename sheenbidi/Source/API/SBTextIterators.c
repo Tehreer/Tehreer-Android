@@ -30,6 +30,7 @@
 #include <Core/Object.h>
 #include <Text/AttributeDictionary.h>
 #include <Text/AttributeManager.h>
+#include <Text/BidiTypesBuffer.h>
 
 #include "SBTextIterators.h"
 
@@ -68,7 +69,7 @@ static void InitializeTextIterator(TextIteratorRef iterator, SBTextRef text,
     iterator->text = SBTextRetain(text);
     iterator->visualDirectionMode = visualDirectionMode;
 
-    ResetTextIterator(iterator, 0, text->codeUnits.count);
+    ResetTextIterator(iterator, 0, text->buffer.codeUnits.count);
 }
 
 /**
@@ -108,7 +109,7 @@ static void ResetTextIterator(TextIteratorRef iterator, SBUInteger index, SBUInt
     SBBoolean forwardMode;
     SBUInteger paragraphIndex;
 
-    SBUIntegerNormalizeRange(text->codeUnits.count, &index, &length);
+    SBUIntegerNormalizeRange(text->buffer.codeUnits.count, &index, &length);
 
     /* Setup iterator boundary */
     startIndex = index;
@@ -118,19 +119,19 @@ static void ResetTextIterator(TextIteratorRef iterator, SBUInteger index, SBUInt
 
     if (length > 0) {
         /* Find out the index of the first paragraph */
-        paragraphIndex = SBTextGetCodeUnitParagraphIndex(text, index);
+        paragraphIndex = TextAnalysisGetCodeUnitParagraphIndex((TextAnalysisRef)&text->analysis, index);
 
         if (iterator->visualDirectionMode) {
-            TextParagraphRef textParagraph = ListGetRef(&text->paragraphs, paragraphIndex);
+            TextParagraphRef textParagraph = ListGetRef(&text->analysis.paragraphs, paragraphIndex);
             SBParagraphRef bidiParagraph = textParagraph->bidiParagraph;
 
             forwardMode = (bidiParagraph->baseLevel & 1) == 0;
 
             if (!forwardMode) {
-                SBUInteger paragraphEnd = bidiParagraph->offset + bidiParagraph->length;
+                SBUInteger paragraphEnd = textParagraph->index + textParagraph->length;
 
                 if (paragraphEnd < endIndex) {
-                    paragraphIndex = SBTextGetCodeUnitParagraphIndex(text, endIndex - 1);
+                    paragraphIndex = TextAnalysisGetCodeUnitParagraphIndex((TextAnalysisRef)&text->analysis, endIndex - 1);
                 }
             }
         }
@@ -156,7 +157,7 @@ static SBBoolean AdvanceTextIterator(TextIteratorRef iterator)
 
     if (remainingLength > 0) {
         /* Get the current paragraph and its boundaries */
-        TextParagraphRef textParagraph = ListGetRef(&text->paragraphs, iterator->paragraphIndex);
+        TextParagraphRef textParagraph = ListGetRef(&text->analysis.paragraphs, iterator->paragraphIndex);
         SBUInteger paragraphStart = textParagraph->index;
         SBUInteger paragraphEnd = paragraphStart + textParagraph->length;
 
@@ -209,6 +210,7 @@ static void InitializeParagraphInfo(SBParagraphInfo *info)
     info->index = SBInvalidIndex;
     info->length = 0;
     info->baseLevel = 0;
+    info->userInfo = NULL;
 }
 
 /**
@@ -270,6 +272,7 @@ SBBoolean SBParagraphIteratorMoveNext(SBParagraphIteratorRef iterator)
         currentInfo->index = parent->paragraphStart;
         currentInfo->length = parent->paragraphEnd - parent->paragraphStart;
         currentInfo->baseLevel = textParagraph->bidiParagraph->baseLevel;
+        currentInfo->userInfo = textParagraph->userInfo;
 
         return SBTrue;
     }
@@ -392,7 +395,7 @@ SBBoolean SBLogicalRunIteratorMoveNext(SBLogicalRunIteratorRef iterator)
 
         /* Get bidirectional information for the paragraph */
         bidiParagraph = textParagraph->bidiParagraph;
-        embeddingLevels = &bidiParagraph->fixedLevels[parent->paragraphStart - bidiParagraph->offset];
+        embeddingLevels = &bidiParagraph->fixedLevels[parent->paragraphStart - textParagraph->index];
         currentLevel = embeddingLevels[iterator->levelIndex];
 
         /* Find the end of the current level run */
@@ -532,7 +535,7 @@ SBBoolean SBScriptRunIteratorMoveNext(SBScriptRunIteratorRef iterator)
         SBScript currentScript;
 
         /* Get script information for the paragraph */
-        scriptArray = textParagraph->scripts.items;
+        scriptArray = &textParagraph->scripts.items[parent->paragraphStart - textParagraph->index];
         currentScript = scriptArray[iterator->scriptIndex];
 
         /* Find the end of the current script run */
@@ -571,207 +574,252 @@ void SBScriptRunIteratorRelease(SBScriptRunIteratorRef iterator)
 }
 
 /* ==========================================================================
- * Attribute Run Iterator Implementation
+ * Attribute Filter Implementation
+ * ========================================================================== */
+
+SBAttributeFilter SBAttributeFilterMakeID(SBAttributeID attributeID)
+{
+    SBAttributeFilter filter;
+    filter.kind = SBAttributeFilterKindID;
+    filter.value.attributeID = attributeID;
+    return filter;
+}
+
+SBAttributeFilter SBAttributeFilterMakeCollection(SBAttributeGroup attributeGroup,
+    SBAttributeScope attributeScope)
+{
+    SBAttributeFilter filter;
+    filter.kind = SBAttributeFilterKindCollection;
+    filter.value.collection.group = attributeGroup;
+    filter.value.collection.scope = attributeScope;
+    return filter;
+}
+
+SBAttributeFilter SBAttributeFilterMakeAny(void)
+{
+    SBAttributeFilter filter;
+    filter.kind = SBAttributeFilterKindAny;
+    return filter;
+}
+
+/**
+ * Resolves an `SBAttributeFilter` into the group/scope parameters expected by the group/scope
+ * based attribute-filtering routines, treating `SBAttributeFilterKindAny` (and any other
+ * non-collection kind) as "no group restriction, any scope."
+ *
+ * @param filter
+ *      The filter to resolve.
+ * @param filterGroup
+ *      Receives the attribute group to filter by.
+ * @param filterScope
+ *      Receives the attribute scope to filter by.
+ */
+SB_INTERNAL void GetCollectionFilterParams(SBAttributeFilter filter, SBAttributeGroup *filterGroup,
+    SBAttributeScope *filterScope)
+{
+    if (filter.kind == SBAttributeFilterKindCollection) {
+        *filterGroup = filter.value.collection.group;
+        *filterScope = filter.value.collection.scope;
+    } else {
+        *filterGroup = SBAttributeGroupNone;
+        *filterScope = AttributeScopeAny;
+    }
+}
+
+/* ==========================================================================
+ * Uniform Run Iterator Implementation
  * ========================================================================== */
 
 /**
- * Initializes an attribute run structure.
+ * Initializes a uniform run structure.
  *
- * Sets default values for an attribute run's properties including its position, length, and
- * attribute collection information.
+ * Sets default values for a uniform run's properties including its position, length, level, script,
+ * and attribute list.
  *
  * @param run
- *      Pointer to the attribute run structure to initialize.
+ *      Pointer to the uniform run structure to initialize.
  */
-static void InitializeAttributeRun(SBAttributeRun *run)
+static void InitializeUniformRun(SBUniformRun *run)
 {
     run->index = SBInvalidIndex;
     run->length = 0;
+    run->level = 0;
+    run->script = SBScriptNil;
     run->attributes = NULL;
 }
 
 /**
- * Cleans up resources associated with an attribute run iterator, including the text reference and
- * attribute item list.
+ * Cleans up resources associated with a uniform run iterator, including its attribute item list and
+ * parent text iterator.
  *
  * @param object
- *      The attribute run iterator to finalize.
+ *      The uniform run iterator to finalize.
  */
-static void FinalizeAttributeRunIterator(ObjectRef object)
+static void FinalizeUniformRunIterator(ObjectRef object)
 {
-    SBAttributeRunIteratorRef iterator = object;
+    SBUniformRunIteratorRef iterator = object;
 
-    SBTextRelease(iterator->text);
-    AttributeDictionaryFinalize(&iterator->items, NULL);
+    AttributeDictionaryFinalize(&iterator->items);
+    FinalizeTextIterator(&iterator->parent);
 }
 
-/**
- * Advances the iterator to find the next run of text that contains attributes matching the
- * specified ID filter.
- *
- * @param iterator
- *      The attribute run iterator.
- * @return
- *      `SBTrue` if a matching run was found, `SBFalse` if the end was reached.
- */
-static SBBoolean LoadOnwardAttributeRunByFilteringID(SBAttributeRunIteratorRef iterator)
+SB_INTERNAL SBUniformRunIteratorRef SBUniformRunIteratorCreate(SBTextRef text)
 {
-    SBTextRef text = iterator->text;
-    AttributeManagerRef manager = (AttributeManagerRef)&text->attributeManager;
-    SBAttributeRun *currentRun = &iterator->currentRun;
-    SBUInteger index;
-    SBBoolean result;
-
-    index = iterator->currentIndex;
-    result = AttributeManagerGetOnwardRunByFilteringID(manager, &index, iterator->endIndex,
-        iterator->filterAttributeID, &iterator->items);
-
-    /* Populate the current run */
-    currentRun->index = iterator->currentIndex;
-    currentRun->length = index - iterator->currentIndex;
-    currentRun->attributes = &iterator->items._list;
-
-    iterator->currentIndex = index;
-
-    return result;
-}
-
-/**
- * Advances the iterator to find the next run of text that contains attributes matching the
- * specified scope and group filters.
- *
- * @param iterator
- *      The attribute run iterator.
- * @return
- *      `SBTrue` if a matching run was found, `SBFalse` if the end was reached.
- */
-static SBBoolean LoadOnwardAttributeRunByFilteringCollection(SBAttributeRunIteratorRef iterator)
-{
-    SBTextRef text = iterator->text;
-    AttributeManagerRef manager = (AttributeManagerRef)&text->attributeManager;
-    SBAttributeRun *currentRun = &iterator->currentRun;
-    SBUInteger index;
-    SBBoolean result;
-
-    index = iterator->currentIndex;
-    result = AttributeManagerGetOnwardRunByFilteringCollection(manager, &index, iterator->endIndex,
-        iterator->filterScope, iterator->filterGroup, &iterator->items);
-
-    /* Populate the current run */
-    currentRun->index = iterator->currentIndex;
-    currentRun->length = index - iterator->currentIndex;
-    currentRun->attributes = &iterator->items._list;
-
-    iterator->currentIndex = index;
-
-    return result;
-}
-
-SB_INTERNAL SBAttributeRunIteratorRef SBAttributeRunIteratorCreate(SBTextRef text)
-{
-    const SBUInteger size = sizeof(SBAttributeRunIterator);
+    const SBUInteger size = sizeof(SBUniformRunIterator);
     void *pointer = NULL;
-    SBAttributeRunIteratorRef iterator;
+    SBUniformRunIteratorRef iterator;
 
     /* Text MUST be available. */
     SBAssert(text != NULL);
 
-    iterator = ObjectCreate(&size, 1, &pointer, FinalizeAttributeRunIterator);
+    iterator = ObjectCreate(&size, 1, &pointer, FinalizeUniformRunIterator);
 
     if (iterator) {
-        iterator->text = SBTextRetain(text);
-        iterator->startIndex = 0;
-        iterator->endIndex = text->codeUnits.count;
-        iterator->currentIndex = SBInvalidIndex;
-        iterator->filterAttributeID = SBAttributeIDNone;
-        iterator->filterGroup = SBAttributeGroupNone;
-        iterator->filterScope = SBAttributeScopeCharacter;
+        InitializeTextIterator(&iterator->parent, text, SBFalse);
+        InitializeUniformRun(&iterator->currentRun);
 
-        AttributeDictionaryInitialize(&iterator->items, text->attributeRegistry->valueSize);
-        InitializeAttributeRun(&iterator->currentRun);
+        iterator->rangeIndex = 0;
+        iterator->rangeLength = text->buffer.codeUnits.count;
+        iterator->boundaryIndex = SBInvalidIndex;
+        iterator->filter = SBAttributeFilterMakeAny();
+
+        AttributeDictionaryInitialize(&iterator->items, text->attributeRegistry);
     }
 
     return iterator;
 }
 
-SBTextRef SBAttributeRunIteratorGetText(SBAttributeRunIteratorRef iterator)
+SBTextRef SBUniformRunIteratorGetText(SBUniformRunIteratorRef iterator)
 {
-    return iterator->text;
+    return iterator->parent.text;
 }
 
-void SBAttributeRunIteratorSetupAttributeID(SBAttributeRunIteratorRef iterator, SBAttributeID attributeID)
+void SBUniformRunIteratorSetupFilter(SBUniformRunIteratorRef iterator, SBAttributeFilter filter)
 {
-    iterator->filterAttributeID = attributeID;
-    iterator->filterGroup = SBAttributeGroupNone;
+    iterator->filter = filter;
 
-    /* Reset the iterator */
-    iterator->currentIndex = SBInvalidIndex;
-    InitializeAttributeRun(&iterator->currentRun);
+    SBUniformRunIteratorReset(iterator, iterator->rangeIndex, iterator->rangeLength);
 }
 
-void SBAttributeRunIteratorSetupAttributeCollection(SBAttributeRunIteratorRef iterator,
-    SBAttributeGroup group, SBAttributeScope scope)
+void SBUniformRunIteratorReset(SBUniformRunIteratorRef iterator, SBUInteger index, SBUInteger length)
 {
-    iterator->filterAttributeID = SBAttributeIDNone;
-    iterator->filterGroup = group;
-    iterator->filterScope = scope;
+    iterator->rangeIndex = index;
+    iterator->rangeLength = length;
 
-    /* Reset the iterator */
-    iterator->currentIndex = SBInvalidIndex;
-    InitializeAttributeRun(&iterator->currentRun);
+    ResetTextIterator(&iterator->parent, index, length);
+    InitializeUniformRun(&iterator->currentRun);
+
+    iterator->boundaryIndex = SBInvalidIndex;
 }
 
-void SBAttributeRunIteratorReset(SBAttributeRunIteratorRef iterator,
-    SBUInteger index, SBUInteger length)
-{
-    iterator->startIndex = index;
-    iterator->endIndex = index + length;
-    iterator->currentIndex = SBInvalidIndex;
-    InitializeAttributeRun(&iterator->currentRun);
-}
-
-const SBAttributeRun *SBAttributeRunIteratorGetCurrent(SBAttributeRunIteratorRef iterator)
+const SBUniformRun *SBUniformRunIteratorGetCurrent(SBUniformRunIteratorRef iterator)
 {
     return &iterator->currentRun;
 }
 
-SBBoolean SBAttributeRunIteratorMoveNext(SBAttributeRunIteratorRef iterator)
+SBBoolean SBUniformRunIteratorMoveNext(SBUniformRunIteratorRef iterator)
 {
-    SBBoolean hasRun = SBFalse;
+    /* Get parent iterator and current paragraph */
+    TextIteratorRef parent = &iterator->parent;
+    TextParagraphRef textParagraph = parent->currentParagraph;
 
-    if (iterator->currentIndex == SBInvalidIndex) {
-        iterator->currentIndex = iterator->startIndex;
-    }
+    /* Check if we need to load a new paragraph */
+    if (iterator->boundaryIndex == SBInvalidIndex) {
+        SBUniformRun *currentRun = &iterator->currentRun;
+        SBUInteger runStart = parent->startIndex;
 
-    while (iterator->currentIndex < iterator->endIndex) {
-        if (iterator->filterAttributeID != SBAttributeIDNone) {
-            hasRun = LoadOnwardAttributeRunByFilteringID(iterator);
+        /* Attempt to load the next paragraph */
+        if (AdvanceTextIterator(parent)) {
+            textParagraph = parent->currentParagraph;
+            iterator->boundaryIndex = 0;
+            currentRun->index = runStart;
+            currentRun->length = 0;
         } else {
-            hasRun = LoadOnwardAttributeRunByFilteringCollection(iterator);
+            /* No more paragraphs available */
+            textParagraph = NULL;
+            InitializeUniformRun(currentRun);
         }
-
-        /* Skip the empty run */
-        if (hasRun && SBAttributeListSize(iterator->currentRun.attributes) == 0) {
-            hasRun = SBFalse;
-            continue;
-        }
-
-        break;
     }
 
-    if (!hasRun) {
-        InitializeAttributeRun(&iterator->currentRun);
+    if (textParagraph) {
+        SBTextRef text = parent->text;
+        AttributeManagerRef manager = (AttributeManagerRef)&text->attributeManager;
+        SBUniformRun *currentRun = &iterator->currentRun;
+        SBUInteger paragraphOffset = parent->paragraphStart - textParagraph->index;
+        SBUInteger paragraphLength = parent->paragraphEnd - parent->paragraphStart;
+        const SBLevel *embeddingLevels;
+        const SBScript *scriptArray;
+        SBUInteger runStart = iterator->boundaryIndex;
+        SBLevel currentLevel;
+        SBScript currentScript;
+        SBUInteger levelEnd = runStart;
+        SBUInteger scriptEnd = runStart;
+        SBUInteger attributeEnd = parent->paragraphStart + runStart;
+        SBUInteger mergedEnd;
+        SBAttributeGroup filterGroup;
+        SBAttributeScope filterScope;
+
+        /* Get bidirectional and script information for the paragraph */
+        embeddingLevels = &textParagraph->bidiParagraph->fixedLevels[paragraphOffset];
+        scriptArray = &textParagraph->scripts.items[paragraphOffset];
+        currentLevel = embeddingLevels[runStart];
+        currentScript = scriptArray[runStart];
+
+        /* Find the end of the current level run */
+        while (++levelEnd < paragraphLength && embeddingLevels[levelEnd] == currentLevel) {
+        }
+
+        /* Find the end of the current script run */
+        while (++scriptEnd < paragraphLength && scriptArray[scriptEnd] == currentScript) {
+        }
+
+        /* Find the end of the current attribute run, clamped to the paragraph boundary */
+        if (iterator->filter.kind == SBAttributeFilterKindID) {
+            AttributeManagerGetOnwardRunByFilteringID(manager, &attributeEnd, parent->paragraphEnd,
+                iterator->filter.value.attributeID, &iterator->items);
+        } else {
+            GetCollectionFilterParams(iterator->filter, &filterGroup, &filterScope);
+            AttributeManagerGetOnwardRunByFilteringCollection(manager, &attributeEnd, parent->paragraphEnd,
+                filterScope, filterGroup, &iterator->items);
+        }
+
+        /* Take the nearest of the level, script, and attribute boundaries */
+        mergedEnd = levelEnd;
+        if (scriptEnd < mergedEnd) {
+            mergedEnd = scriptEnd;
+        }
+        if (attributeEnd - parent->paragraphStart < mergedEnd) {
+            mergedEnd = attributeEnd - parent->paragraphStart;
+        }
+
+        /* Update the run information */
+        currentRun->index += currentRun->length;
+        currentRun->length = mergedEnd - runStart;
+        currentRun->level = currentLevel;
+        currentRun->script = currentScript;
+        currentRun->attributes = iterator->items._list;
+
+        iterator->boundaryIndex = mergedEnd;
+
+        /* Check if the end of the paragraph is reached */
+        if (mergedEnd == paragraphLength) {
+            /* Prepare for the next paragraph */
+            iterator->boundaryIndex = SBInvalidIndex;
+        }
+
+        return SBTrue;
     }
 
-    return hasRun;
+    /* No more runs available */
+    return SBFalse;
 }
 
-SBAttributeRunIteratorRef SBAttributeRunIteratorRetain(SBAttributeRunIteratorRef iterator)
+SBUniformRunIteratorRef SBUniformRunIteratorRetain(SBUniformRunIteratorRef iterator)
 {
     return ObjectRetain(iterator);
 }
 
-void SBAttributeRunIteratorRelease(SBAttributeRunIteratorRef iterator)
+void SBUniformRunIteratorRelease(SBUniformRunIteratorRef iterator)
 {
     ObjectRelease(iterator);
 }
@@ -816,7 +864,7 @@ static void FinalizeVisualRunIterator(ObjectRef object)
 
 SB_INTERNAL SBVisualRunIteratorRef SBVisualRunIteratorCreate(SBTextRef text)
 {
-    const SBUInteger size = sizeof(SBText);
+    const SBUInteger size = sizeof(SBVisualRunIterator);
     void *pointer = NULL;
     SBVisualRunIteratorRef iterator;
 
@@ -874,8 +922,13 @@ SBBoolean SBVisualRunIteratorMoveNext(SBVisualRunIteratorRef iterator)
             paragraphStart = parentIterator->paragraphStart;
             paragraphLength = parentIterator->paragraphEnd - paragraphStart;
 
-            /* Create a new bidirectional line from the paragraph */
-            bidiLine = SBParagraphCreateLine(bidiParagraph, paragraphStart, paragraphLength);
+            /* Create a new bidirectional line from the paragraph, sourcing bidi types fresh from
+               the text's current buffer rather than trusting the paragraph's own cached offset */
+            bidiLine = SBLineCreate(
+                BidiTypesBufferGetPtr((BidiTypesBufferRef)&parentIterator->text->bidiTypes, paragraphStart),
+                &bidiParagraph->fixedLevels[paragraphStart - textParagraph->index],
+                bidiParagraph->baseLevel, bidiParagraph->stringEncoding,
+                paragraphStart, paragraphLength);
 
             /* Initialize line processing */
             iterator->bidiLine = bidiLine;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Muhammad Tayyab Akram
+ * Copyright (C) 2025-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,24 @@
  */
 
 #include <API/SBBase.h>
-#include <Core/ThreadFence.h>
 
 #include "Once.h"
 
 SB_INTERNAL SBBoolean OnceTryExecute(OnceRef once, void(*func)(void *info), void *info)
 {
     SBBoolean result = SBTrue;
+    SBUInteger state;
 
-    if (!once->executed) {
-        result = AtomicFlagTestAndSet(&once->flag) == SBFalse;
+    state = AtomicUIntLoad(&once->state);
 
-        if (result) {
+    if (state != OnceStateDone) {
+        SBUInteger expected = OnceStateIdle;
+
+        if (AtomicUIntCompareAndSet(&once->state, &expected, OnceStateRunning)) {
             func(info);
-            ThreadFence();
-            once->executed = SBTrue;
+            AtomicUIntStore(&once->state, OnceStateDone);
+        } else {
+            result = SBFalse;
         }
     }
 

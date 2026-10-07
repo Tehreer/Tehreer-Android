@@ -19,18 +19,91 @@
 #if SB_TEXT_API_SUPPORTED
 
 #include <API/SBAttributeInfo.h>
+#include <API/SBAttributeRegistry.h>
 #include <Core/List.h>
+#include <Core/Object.h>
 
 #include "SBAttributeList.h"
 
 #define ALIGN_VALUE_SIZE(x, a) (((x) + ((a) - 1)) & ~((a) - 1))
 
-SB_INTERNAL void SBAttributeListInitialize(SBAttributeListRef list, SBUInteger valueSize)
+/**
+ * Cleans up resources associated with a retained attribute list, releasing every item's value
+ * through the list's own registry and freeing its underlying storage.
+ */
+static void FinalizeAttributeList(ObjectRef object)
 {
-    const SBUInteger idSize = sizeof(SBAttributeID);
-    const SBUInteger itemSize = idSize + ALIGN_VALUE_SIZE(valueSize, idSize);
+    SBAttributeListRef list = (SBAttributeListRef)object;
 
-    ListInitialize(&list->_list, itemSize);
+    SBAttributeListClear(list);
+    SBAttributeRegistryRelease(list->registry);
+    ListFinalize(&list->_list);
+}
+
+SB_INTERNAL SBAttributeListRef SBAttributeListCreate(SBAttributeRegistryRef registry)
+{
+    const SBUInteger size = sizeof(SBAttributeList);
+    void *pointer = NULL;
+    SBAttributeListRef list = NULL;
+
+    list = ObjectCreate(&size, 1, &pointer, &FinalizeAttributeList);
+
+    if (list) {
+        SBUInteger idSize = sizeof(SBAttributeID);
+        SBUInteger valueSize = registry->valueSize;
+        SBUInteger itemSize = idSize + ALIGN_VALUE_SIZE(valueSize, idSize);
+
+        list->registry = SBAttributeRegistryRetain(registry);
+        ListInitialize(&list->_list, itemSize);
+    }
+
+    return list;
+}
+
+SB_INTERNAL void SBAttributeListInsertItem(SBAttributeListRef list, SBUInteger index,
+    SBAttributeID attributeID, const void *value)
+{
+    const void *retainedValue = SBAttributeRegistryRetainAttribute(list->registry, value);
+    SBAttributeItem *item;
+
+    ListReserveRange(&list->_list, index, 1);
+    item = ListGetPtr(&list->_list, index);
+    SBAttributeItemSet(item, attributeID, retainedValue);
+}
+
+SB_INTERNAL void SBAttributeListReplaceItemValue(SBAttributeListRef list, SBUInteger index,
+    const void *value)
+{
+    SBAttributeItem *item = ListGetPtr(&list->_list, index);
+    const void *previousValue;
+    const void *retainedValue;
+
+    previousValue = SBAttributeItemGetValuePtr(item);
+    retainedValue = SBAttributeRegistryRetainAttribute(list->registry, value);
+
+    SBAttributeRegistryReleaseAttribute(list->registry, previousValue);
+    SBAttributeItemSetValue(item, retainedValue);
+}
+
+SB_INTERNAL void SBAttributeListRemoveItem(SBAttributeListRef list, SBUInteger index)
+{
+    SBAttributeItem *item = ListGetPtr(&list->_list, index);
+
+    SBAttributeRegistryReleaseAttribute(list->registry, SBAttributeItemGetValuePtr(item));
+    ListRemoveAt(&list->_list, index);
+}
+
+SB_INTERNAL void SBAttributeListClear(SBAttributeListRef list)
+{
+    SBUInteger itemCount = list->_list.count;
+    SBUInteger itemIndex;
+
+    for (itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+        SBAttributeItem *item = ListGetPtr(&list->_list, itemIndex);
+        SBAttributeRegistryReleaseAttribute(list->registry, SBAttributeItemGetValuePtr(item));
+    }
+
+    ListRemoveAll(&list->_list);
 }
 
 SB_INTERNAL SBUInteger SBAttributeListBinarySearchIndex(SBAttributeListRef list,
@@ -75,6 +148,16 @@ const SBAttributeItem *SBAttributeListGetItem(SBAttributeListRef list, SBUIntege
 SBUInteger SBAttributeListGetCount(SBAttributeListRef list)
 {
     return list->_list.count;
+}
+
+SBAttributeListRef SBAttributeListRetain(SBAttributeListRef list)
+{
+    return ObjectRetain((ObjectRef)list);
+}
+
+void SBAttributeListRelease(SBAttributeListRef list)
+{
+    ObjectRelease((ObjectRef)list);
 }
 
 #endif

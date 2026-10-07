@@ -22,37 +22,85 @@
 #if SB_TEXT_API_SUPPORTED
 
 #include <SheenBidi/SBAttributeList.h>
+#include <SheenBidi/SBAttributeRegistry.h>
+
 #include <Core/List.h>
+#include <Core/Object.h>
 
 typedef struct _SBAttributeList {
+    ObjectBase _base;
+    SBAttributeRegistryRef registry;
     List _list;
 } SBAttributeList;
 
-SB_INTERNAL void SBAttributeListInitialize(SBAttributeListRef list, SBUInteger valueSize);
-
-#define SBAttributeListFinalize(list_)                      \
-    ListFinalize(&(list_)->_list)
+/**
+ * Creates a new, independently-retained attribute list bound to `registry`.
+ *
+ * The returned list is a genuine `ObjectCreate`-backed object (unlike, for example,
+ * `SBUniformRun.attributes`, which is a borrowed view) — callers may retain/release it via
+ * `SBAttributeListRetain`/`SBAttributeListRelease`. Its finalizer releases every remaining item's
+ * value through `registry` before freeing the underlying storage.
+ *
+ * @param registry
+ *      The attribute registry to bind to the list; retained for the list's lifetime and used to
+ *      retain/release attribute values as they are inserted or removed.
+ * @return
+ *      A new, retained attribute list, or `NULL` on allocation failure.
+ */
+SB_INTERNAL SBAttributeListRef SBAttributeListCreate(SBAttributeRegistryRef registry);
 
 #define SBAttributeListSize(list_)                          \
     ((list_)->_list.count)
 
-#define SBAttributeListReserveRange(list_, index_, count_)  \
-    ListReserveRange(&(list_)->_list, index_, count_)
-
-#define SBAttributeListReserveEnd(list_, count_)            \
-    ListReserveRange(&(list_)->_list, (list_)->_list.count, count_)
-
 #define SBAttributeListGetAt(list_, index_)                 \
     ListGetPtr(&(list_)->_list, index_)
 
-#define SBAttributeListGetLast(list_)                       \
-    ListGetPtr(&(list_)->_list, (list_)->_list.count - 1)
+/**
+ * Inserts a new item at `index`, retaining `value` through the list's own registry.
+ *
+ * @param list
+ *      The attribute list to modify.
+ * @param index
+ *      The index at which to insert the new item.
+ * @param attributeID
+ *      The attribute ID of the new item.
+ * @param value
+ *      The attribute value to insert; retained through `list`'s registry.
+ */
+SB_INTERNAL void SBAttributeListInsertItem(SBAttributeListRef list, SBUInteger index,
+    SBAttributeID attributeID, const void *value);
 
-#define SBAttributeListRemoveAt(list_, index_)              \
-    ListRemoveAt(&(list_)->_list, index_)
+/**
+ * Replaces the value of the item at `index`, retaining `value` and releasing the item's previous
+ * value, both through the list's own registry.
+ *
+ * @param list
+ *      The attribute list to modify.
+ * @param index
+ *      The index of the item whose value should be replaced.
+ * @param value
+ *      The new attribute value; retained through `list`'s registry.
+ */
+SB_INTERNAL void SBAttributeListReplaceItemValue(SBAttributeListRef list, SBUInteger index,
+    const void *value);
 
-#define SBAttributeListRemoveAll(list_)                     \
-    ListRemoveAll(&(list_)->_list)
+/**
+ * Removes the item at `index`, releasing its value through the list's own registry.
+ *
+ * @param list
+ *      The attribute list to modify.
+ * @param index
+ *      The index of the item to remove.
+ */
+SB_INTERNAL void SBAttributeListRemoveItem(SBAttributeListRef list, SBUInteger index);
+
+/**
+ * Removes all items, releasing each one's value through the list's own registry.
+ *
+ * @param list
+ *      The attribute list to clear.
+ */
+SB_INTERNAL void SBAttributeListClear(SBAttributeListRef list);
 
 /**
  * Finds the index where an attribute with the specified ID is located or should be inserted.

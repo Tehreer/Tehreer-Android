@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _SB_PUBLIC_TEXT_TYPE_H
-#define _SB_PUBLIC_TEXT_TYPE_H
+#ifndef _SHEENBIDI_TEXT_TYPE_H
+#define _SHEENBIDI_TEXT_TYPE_H
 
 #include <SheenBidi/SBBase.h>
 
@@ -25,11 +25,18 @@ SB_EXTERN_C_BEGIN
 
 /**
  * Opaque reference to an immutable text object.
+ *
+ * All query functions, such as those retrieving code units, bidirectional types, or resolved
+ * levels, accept `SBTextRef`. Since `SBMutableTextRef` implicitly converts to `SBTextRef`, these
+ * functions also work on a mutable text object.
  */
 typedef const struct _SBText *SBTextRef;
 
 /**
- *  Opaque reference to a mutable text object.
+ * Opaque reference to a mutable text object.
+ *
+ * In addition to everything a `SBTextRef` supports, a mutable text object can be edited, e.g. by
+ * inserting, deleting, or replacing code units, and by applying attributes.
  */
 typedef struct _SBText *SBMutableTextRef;
 

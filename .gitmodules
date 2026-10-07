@@ -1,2 +1,5 @@
 
 
+[submodule "tehreer-core"]
+	path = tehreer-core
+	url = https://github.com/Tehreer/Tehreer-Core.git

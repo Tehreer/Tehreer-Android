@@ -23,14 +23,13 @@
 
 #include <SheenBidi/SBAttributeInfo.h>
 #include <SheenBidi/SBAttributeRegistry.h>
-#include <SheenBidi/SBText.h>
 
 #include <Core/List.h>
 #include <Text/AttributeDictionary.h>
+#include <Text/TextAnalysis.h>
 
 typedef struct _AttributeDictionaryCache {
     LIST(AttributeDictionaryRef) _attributeDicts;
-    SBUInt8 _valueSize;
 } AttributeDictionaryCache, *AttributeDictionaryCacheRef;
 
 typedef struct _AttributeEntry {
@@ -39,7 +38,7 @@ typedef struct _AttributeEntry {
 } AttributeEntry;
 
 typedef struct _AttributeManager {
-    SBTextRef parent;
+    TextAnalysisRef analysis;
     SBAttributeRegistryRef _registry;
     SBUInteger _stringLength;
     AttributeDictionaryCache _cache;
@@ -58,14 +57,15 @@ typedef struct _AttributeManager {
  *
  * @param manager
  *      The attribute manager to initialize.
- * @param parent
- *      The parent text object that owns this manager.
+ * @param analysis
+ *      The text analysis this manager looks up paragraph boundaries through, for expanding and
+ *      shrinking paragraph-scoped attribute ranges. Borrowed; not retained.
  * @param registry
  *      The attribute registry for managing attribute retention and release. If NULL, the manager
  *      will not allocate resources and all operations will be skipped.
  */
 SB_INTERNAL void AttributeManagerInitialize(AttributeManagerRef manager,
-    SBTextRef parent, SBAttributeRegistryRef registry);
+    TextAnalysisRef analysis, SBAttributeRegistryRef registry);
 
 /**
  * Finalizes an attribute manager and releases all resources.

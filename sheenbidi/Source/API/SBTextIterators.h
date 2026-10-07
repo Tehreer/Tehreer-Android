@@ -27,6 +27,7 @@
 #include <API/SBText.h>
 #include <Core/Object.h>
 #include <Text/AttributeDictionary.h>
+#include <Text/TextAnalysis.h>
 
 typedef struct _TextIterator {
     SBTextRef text;
@@ -60,18 +61,16 @@ typedef struct _SBScriptRunIterator {
     SBScriptRun currentRun;
 } SBScriptRunIterator;
 
-typedef struct _SBAttributeRunIterator {
+typedef struct _SBUniformRunIterator {
     ObjectBase _base;
-    SBTextRef text;
+    TextIterator parent;
     AttributeDictionary items;
-    SBUInteger startIndex;
-    SBUInteger endIndex;
-    SBUInteger currentIndex;
-    SBAttributeRun currentRun;
-    SBAttributeID filterAttributeID;
-    SBAttributeGroup filterGroup;
-    SBAttributeScope filterScope;
-} SBAttributeRunIterator;
+    SBUInteger rangeIndex;
+    SBUInteger rangeLength;
+    SBUInteger boundaryIndex;
+    SBAttributeFilter filter;
+    SBUniformRun currentRun;
+} SBUniformRunIterator;
 
 typedef struct _SBVisualRunIterator {
     ObjectBase _base;
@@ -117,16 +116,32 @@ SB_INTERNAL SBLogicalRunIteratorRef SBLogicalRunIteratorCreate(SBTextRef text);
 SB_INTERNAL SBScriptRunIteratorRef SBScriptRunIteratorCreate(SBTextRef text);
 
 /**
- * Creates and initializes an iterator that can traverse through runs of text with consistent
- * attribute properties. Attribute runs represent text segments that share common formatting or
- * metadata attributes.
+ * Resolves an `SBAttributeFilter` into the group/scope parameters expected by the group/scope
+ * based attribute-filtering routines, treating `SBAttributeFilterKindAny` (and any other
+ * non-collection kind) as "no group restriction, any scope."
+ *
+ * @param filter
+ *      The filter to resolve.
+ * @param filterGroup
+ *      Receives the attribute group to filter by.
+ * @param filterScope
+ *      Receives the attribute scope to filter by.
+ */
+SB_INTERNAL void GetCollectionFilterParams(SBAttributeFilter filter, SBAttributeGroup *filterGroup,
+    SBAttributeScope *filterScope);
+
+/**
+ * Creates and initializes an iterator that can traverse through runs of text that are
+ * simultaneously uniform in bidirectional embedding level, script, and a caller-specified attribute
+ * filter. Each run is the intersection of the corresponding logical run, script run, and attribute
+ * run, making it the finest-grained unit safe to process as one piece (e.g. for text shaping).
  *
  * @param text
  *      The text to iterate through.
  * @return
- *      A new attribute run iterator object, or NULL if creation fails.
+ *      A new uniform run iterator object, or NULL if creation fails.
  */
-SB_INTERNAL SBAttributeRunIteratorRef SBAttributeRunIteratorCreate(SBTextRef text);
+SB_INTERNAL SBUniformRunIteratorRef SBUniformRunIteratorCreate(SBTextRef text);
 
 /**
  * Creates and initializes an iterator that can traverse through runs of text in visual order

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _SB_PUBLIC_TEXT_H
-#define _SB_PUBLIC_TEXT_H
+#ifndef _SHEENBIDI_TEXT_H
+#define _SHEENBIDI_TEXT_H
 
 #include <SheenBidi/SBAttributeRegistry.h>
 #include <SheenBidi/SBBase.h>
@@ -41,7 +41,7 @@ SB_EXTERN_C_BEGIN
  * @param encoding
  *      String encoding (UTF-8, UTF-16, or UTF-32).
  * @param config
- *      Non-NULL configuration that supplies the attribute registry and defaults.
+ *      Configuration that supplies the attribute registry and defaults; must not be `NULL`.
  * @return
  *      A reference to a text object if the call was successful, `NULL` otherwise.
  */
@@ -89,7 +89,7 @@ SB_PUBLIC SBStringEncoding SBTextGetEncoding(SBTextRef text);
  * Returns a borrowed reference to the attribute registry associated with the text object.
  *
  * The registry defines the valid attribute IDs and their value management callbacks.
- * 
+ *
  * @param text
  *      Text object.
  * @return
@@ -99,7 +99,7 @@ SB_PUBLIC SBAttributeRegistryRef SBTextGetAttributeRegistry(SBTextRef text);
 
 /**
  * Returns the number of code units in the text object.
- * 
+ *
  * @param text
  *      Text object.
  * @return
@@ -149,7 +149,7 @@ SB_PUBLIC void SBTextGetBidiTypes(SBTextRef text, SBUInteger index, SBUInteger l
 
 /**
  * Copies script identifications for a code-unit range.
- * 
+ *
  * @param text
  *      Text object.
  * @param index
@@ -168,7 +168,7 @@ SB_PUBLIC void SBTextGetScripts(SBTextRef text, SBUInteger index, SBUInteger len
 
 /**
  * Copies resolved bidirectional levels for a code-unit range.
- * 
+ *
  * @param text
  *      Text object.
  * @param index
@@ -176,7 +176,7 @@ SB_PUBLIC void SBTextGetScripts(SBTextRef text, SBUInteger index, SBUInteger len
  * @param length
  *      Number of code units to copy the bidirectional levels for.
  * @param buffer
- *      Output array of SBLevel with `length` entries.
+ *      Output array of `SBLevel` with `length` entries.
  *
  * @warning
  *      Behavior is undefined if buffer is too small, range is invalid, or text is currently being
@@ -187,7 +187,7 @@ SB_PUBLIC void SBTextGetResolvedLevels(SBTextRef text, SBUInteger index, SBUInte
 
 /**
  * Retrieves information for the paragraph containing a specific code unit.
- * 
+ *
  * @param text
  *      Text object.
  * @param index
@@ -204,8 +204,9 @@ SB_PUBLIC void SBTextGetCodeUnitParagraphInfo(SBTextRef text, SBUInteger index,
 /**
  * Creates a new paragraph iterator that can traverse all paragraphs in the text object.
  *
- * The iterator starts before the first paragraph and must be advanced with MoveNext().
- * 
+ * The iterator starts before the first paragraph and must be advanced with
+ * `SBParagraphIteratorMoveNext`.
+ *
  * @param text
  *      Text object.
  * @return
@@ -218,7 +219,7 @@ SB_PUBLIC SBParagraphIteratorRef SBTextCreateParagraphIterator(SBTextRef text);
  * order.
  *
  * Logical runs represent contiguous sequences of text with the same resolved bidirectional level.
- * 
+ *
  * @param text
  *      Text object.
  * @return
@@ -230,7 +231,7 @@ SB_PUBLIC SBLogicalRunIteratorRef SBTextCreateLogicalRunIterator(SBTextRef text)
  * Creates a new script run iterator that can traverse all script runs in the text.
  *
  * Script runs represent contiguous sequences of text with the same Unicode script property.
- * 
+ *
  * @param text
  *      Text object.
  * @return
@@ -239,27 +240,53 @@ SB_PUBLIC SBLogicalRunIteratorRef SBTextCreateLogicalRunIterator(SBTextRef text)
 SB_PUBLIC SBScriptRunIteratorRef SBTextCreateScriptRunIterator(SBTextRef text);
 
 /**
- * Creates a new attribute run iterator that can traverse all attribute runs in the text.
+ * Retrieves the attributes matching `filter` at `index`, and the length of the run over which
+ * they apply (the extent, starting at `index`, over which the filtered attribute set stays the
+ * same — an empty run if none match).
  *
- * Initially, the iterator has no filter applied and will return all attribute runs. Use the Setup
- * functions to apply filtering by attribute ID or group/scope.
- * 
+ * @param text
+ *      Text object.
+ * @param filter
+ *      The filter selecting which attributes to match, constructed via `SBAttributeFilterMakeID`,
+ *      `SBAttributeFilterMakeCollection`, or `SBAttributeFilterMakeAny`.
+ * @param index
+ *      Code-unit index to query. Must be less than the text's length.
+ * @param outLength
+ *      Receives the run length in code units.
+ * @return
+ *      A new, retained attribute list; the caller must release it via `SBAttributeListRelease`
+ *      when done.
+ */
+SB_PUBLIC SBAttributeListRef SBTextGetAttributes(SBTextRef text, SBAttributeFilter filter,
+    SBUInteger index, SBUInteger *outLength);
+
+/**
+ * Creates a new uniform run iterator that can traverse runs of text that are simultaneously uniform
+ * in bidirectional embedding level, script, and a caller-specified attribute filter.
+ *
+ * Each run is the intersection of the corresponding logical run, script run, and attribute run,
+ * making it the finest-grained unit that can be safely processed as one piece (for example, handed
+ * to a text shaping engine). Initially, the iterator has no attribute filter applied (equivalent to
+ * `SBAttributeFilterMakeAny`); use `SBUniformRunIteratorSetupFilter` with a filter from
+ * `SBAttributeFilterMakeID` or `SBAttributeFilterMakeCollection` to filter by attribute ID or
+ * group/scope.
+ *
  * @param text
  *      Text object.
  * @return
- *      Attribute iterator on success, `NULL` on failure.
+ *      Uniform run iterator on success, `NULL` on failure.
  */
-SB_PUBLIC SBAttributeRunIteratorRef SBTextCreateAttributeRunIterator(SBTextRef text);
+SB_PUBLIC SBUniformRunIteratorRef SBTextCreateUniformRunIterator(SBTextRef text);
 
 /**
  * Creates a new visual run iterator that can traverse bidirectional runs in visual order for a
  * specific line range.
  *
  * Visual runs represent text as it should appear on screen after bidirectional reordering.
- * 
+ *
  * @param text
  *      Text object.
- * @param index 
+ * @param index
  *      Start index of the line (in code units).
  * @param length
  *      Length of the line (in code units).
@@ -271,7 +298,7 @@ SB_PUBLIC SBVisualRunIteratorRef SBTextCreateVisualRunIterator(SBTextRef text, S
 
 /**
  * Increments the reference count of a text object.
- * 
+ *
  * @param text
  *      The text object whose reference count will be incremented.
  * @return
@@ -288,7 +315,6 @@ SB_PUBLIC SBTextRef SBTextRetain(SBTextRef text);
  */
 SB_PUBLIC void SBTextRelease(SBTextRef text);
 
-
 /* ----------------------------------
  * Mutable Text
  * ---------------------------------- */
@@ -296,11 +322,11 @@ SB_PUBLIC void SBTextRelease(SBTextRef text);
 /**
  * Creates a new mutable text object that starts empty but can be modified through the mutable text
  * interface. The encoding and attribute registry are fixed at creation.
- * 
+ *
  * @param encoding
  *      Target encoding for the new text (UTF-8/16/32).
  * @param config
- *      Non-NULL configuration with registry and defaults.
+ *      Configuration with registry and defaults; must not be `NULL`.
  * @return
  *      A reference to a mutable text object if the call was successful, `NULL` otherwise.
  */
@@ -308,9 +334,9 @@ SB_PUBLIC SBMutableTextRef SBTextCreateMutable(SBStringEncoding encoding, SBText
 
 /**
  * Signals the start of a batch of editing operations. While in editing mode, text analysis
- * (bidirectional processing, script identification) is deferred until SBTextEndEditing() is called.
- * This improves performance when making multiple sequential modifications.
- * 
+ * (bidirectional processing, script identification) is deferred until `SBTextEndEditing` is
+ * called. This improves performance when making multiple sequential modifications.
+ *
  * @param text
  *      Mutable text object.
  */
@@ -320,7 +346,7 @@ SB_PUBLIC void SBTextBeginEditing(SBMutableTextRef text);
  * Signals the end of a batch editing session and triggers text analysis for all modified
  * paragraphs. This includes bidirectional analysis, script identification, and paragraph boundary
  * detection.
- * 
+ *
  * @param text
  *      Mutable text object.
  */
@@ -329,7 +355,7 @@ SB_PUBLIC void SBTextEndEditing(SBMutableTextRef text);
 /**
  * Adds new code units to the end of the text object. If the text is not in editing mode, analysis
  * is performed immediately on the new content.
- * 
+ *
  * @param text
  *      Mutable text object.
  * @param codeUnitBuffer
@@ -344,7 +370,7 @@ SB_PUBLIC void SBTextAppendCodeUnits(SBMutableTextRef text, const void *codeUnit
  * Inserts new code units at the specified position in the text. Existing content at and after the
  * insertion point is shifted right. If the text is not in editing mode, analysis is performed
  * immediately.
- * 
+ *
  * @param text
  *      Mutable text object.
  * @param index
@@ -380,13 +406,13 @@ SB_PUBLIC void SBTextDeleteCodeUnits(SBMutableTextRef text, SBUInteger index, SB
 /**
  * Completely replaces the current text content with the new code units. This is equivalent to
  * deleting all existing content and then inserting the new content at position 0.
- * 
+ *
  * @param text
  *      Mutable text object.
  * @param codeUnitBuffer
  *      Pointer to code units in the text's encoding.
  * @param codeUnitCount
- *      Number of code units in codeUnitBuffer.
+ *      Number of code units in `codeUnitBuffer`.
  *
  * @warning
  *      All existing content and attributes are removed.
@@ -398,7 +424,7 @@ SB_PUBLIC void SBTextSetCodeUnits(SBMutableTextRef text, const void *codeUnitBuf
 /**
  * Replaces a contiguous range of existing code units with new content. If the text is not in
  * editing mode, analysis is performed immediately.
- * 
+ *
  * @param text
  *      Mutable text object.
  * @param index
@@ -421,7 +447,9 @@ SB_PUBLIC void SBTextReplaceCodeUnits(SBMutableTextRef text, SBUInteger index, S
  * Applies the specified attribute with the given value to the range of code units. If the attribute
  * already exists in parts of the range, those values are replaced. The attribute value is managed
  * according to the callbacks defined in the attribute registry.
- * 
+ *
+ * If `attributeID` is not registered in the text's attribute registry, this call has no effect.
+ *
  * @param text
  *      Mutable text object.
  * @param index
@@ -432,12 +460,9 @@ SB_PUBLIC void SBTextReplaceCodeUnits(SBMutableTextRef text, SBUInteger index, S
  *      ID of the attribute to set.
  * @param attributeValue
  *      Value pointer to associate; retained via registry callbacks if applicable.
- * @return
- *      `SBTrue` on success, `SBFalse` on failure.
  *
  * @warning
  *      The range must be within the current text bounds.
- *      The attribute ID must be registered in the text's attribute registry.
  *      The attribute value must be compatible with the attribute's value type as defined in the
  *      registry.
  */
@@ -447,6 +472,8 @@ SB_PUBLIC void SBTextSetAttribute(SBMutableTextRef text, SBUInteger index, SBUIn
 /**
  * Removes the specified attribute from the given range of code units. If the attribute is not
  * present in the range, this operation has no effect.
+ *
+ * If `attributeID` is not registered in the text's attribute registry, this call has no effect.
  *
  * @param text
  *      Mutable text object.
@@ -459,7 +486,6 @@ SB_PUBLIC void SBTextSetAttribute(SBMutableTextRef text, SBUInteger index, SBUIn
  *
  * @warning
  *      The range must be within the current text bounds.
- *      The attribute ID must be registered in the text's attribute registry.
  */
 SB_PUBLIC void SBTextRemoveAttribute(SBMutableTextRef text, SBUInteger index, SBUInteger length,
     SBAttributeID attributeID);

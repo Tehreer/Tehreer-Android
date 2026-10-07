@@ -107,6 +107,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         Script/ScriptStack.c
         Text/AttributeDictionary.c
         Text/AttributeManager.c
+        Text/BidiTypesBuffer.c
+        Text/TextAnalysis.c
+        Text/TextBuffer.c
         UBA/BidiChain.c
         UBA/BracketQueue.c
         UBA/IsolatingRun.c
@@ -123,6 +126,7 @@ list(TRANSFORM SB_FILE_LIST PREPEND ${SB_SOURCE_PATH}/)
 add_library(sheenbidi STATIC ${SB_FILE_LIST})
 target_include_directories(sheenbidi PUBLIC ${SB_HEADERS_PATH} PRIVATE ${SB_SOURCE_PATH})
 target_compile_definitions(sheenbidi PRIVATE SB_CONFIG_DISABLE_SCRATCH_MEMORY ${SB_UNITY})
+target_compile_definitions(sheenbidi PUBLIC SB_CONFIG_EXPERIMENTAL_TEXT_API)
 ###########################################################
 
 #########################HARFBUZZ##########################
@@ -138,6 +142,37 @@ target_compile_definitions(harfbuzz PRIVATE
     HAVE_FT_DONE_MM_VAR
 )
 target_link_libraries(harfbuzz PUBLIC freetype)
+###########################################################
+
+#########################UNIBREAK##########################
+set(UB_ROOT_PATH ${ROOT_PATH}/unibreak)
+set(UB_SOURCE_PATH ${UB_ROOT_PATH}/src)
+
+# The data files are included by the definition files.
+set(UB_FILE_LIST
+    eastasianwidthdef.c
+    emojidef.c
+    graphemebreak.c
+    linebreak.c
+    linebreakdata.c
+    linebreakdef.c
+    unibreakbase.c
+    unibreakdef.c
+    wordbreak.c
+)
+list(TRANSFORM UB_FILE_LIST PREPEND ${UB_SOURCE_PATH}/)
+
+add_library(unibreak STATIC ${UB_FILE_LIST})
+target_include_directories(unibreak PUBLIC ${UB_SOURCE_PATH})
+###########################################################
+
+#######################TEHREER CORE########################
+set(TR_ROOT_PATH ${ROOT_PATH}/tehreer-core)
+
+add_library(tehreer STATIC ${TR_ROOT_PATH}/Source/Tehreer.c)
+target_include_directories(tehreer PUBLIC ${TR_ROOT_PATH}/Headers PRIVATE ${TR_ROOT_PATH}/Source)
+target_compile_definitions(tehreer PRIVATE TR_CONFIG_UNITY)
+target_link_libraries(tehreer PRIVATE freetype harfbuzz unibreak PUBLIC sheenbidi)
 ###########################################################
 
 ##########################TEHREER##########################
@@ -167,6 +202,6 @@ set(FILE_LIST
 )
 
 add_library(tehreerjni SHARED ${FILE_LIST})
-target_link_libraries(tehreerjni PRIVATE harfbuzz sheenbidi freetype atomic android jnigraphics log)
+target_link_libraries(tehreerjni PRIVATE tehreer harfbuzz sheenbidi freetype atomic android jnigraphics log)
 target_link_options(tehreerjni PRIVATE $<$<NOT:$<CONFIG:Debug>>:-s>)
 ###########################################################
