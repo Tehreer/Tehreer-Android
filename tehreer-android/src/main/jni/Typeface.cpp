@@ -278,6 +278,12 @@ static jstring toJavaString(JNIEnv *env, const TRStringView *view)
     }
 }
 
+static jlong getCoreHandle(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    return reinterpret_cast<jlong>(typeface->core());
+}
+
 static jstring getFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
@@ -612,6 +618,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
+    { "nGetCoreHandle", "(J)J", (void *)getCoreHandle },
     { "nGetFamilyName", "(J)Ljava/lang/String;", (void *)getFamilyName },
     { "nGetStyleName", "(J)Ljava/lang/String;", (void *)getStyleName },
     { "nGetFullName", "(J)Ljava/lang/String;", (void *)getFullName },

@@ -24,20 +24,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.layout.BreakResolver;
-import com.mta.tehreer.internal.layout.ParagraphCollection;
-import com.mta.tehreer.internal.layout.RunCollection;
-import com.mta.tehreer.internal.layout.ShapeResolver;
-import com.mta.tehreer.internal.layout.TokenResolver;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.util.StringUtils;
 import com.mta.tehreer.layout.style.TypeSizeSpan;
 import com.mta.tehreer.layout.style.TypefaceSpan;
-import com.mta.tehreer.unicode.BreakClassifier;
 
 import java.util.Collections;
 import java.util.List;
-
-import kotlin.Pair;
+import java.util.Map;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
@@ -47,12 +41,26 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  * breaking, and do other contextual analysis based on the characters in the string.
  */
 public class Typesetter {
+    static {
+        JniBridge.loadLibrary();
+    }
+
+    private class Finalizable {
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                nDispose(mNativeTypesetter);
+            } finally {
+                super.finalize();
+            }
+        }
+    }
+
     private String mText;
     private Spanned mSpanned;
-    private ParagraphCollection mBidiParagraphs;
-    private RunCollection mIntrinsicRuns;
-    private LineResolver mLineResolver;
-    private BreakResolver mBreakResolver;
+    private long mNativeTypesetter;
+    private Map<Long, Typeface> mTypefaces;
+    private final @NonNull Finalizable mFinalizable = new Finalizable();
 
     /**
      * Constructs the typesetter object using given text, typeface and type size.
@@ -101,15 +109,18 @@ public class Typesetter {
             defaultSpans = Collections.emptyList();
         }
 
-        ShapeResolver shapeResolver = new ShapeResolver(mText, mSpanned, defaultSpans);
-        Pair<ParagraphCollection, RunCollection> shapeResult = shapeResolver.createParagraphsAndRuns();
-        mBidiParagraphs = shapeResult.getFirst();
-        mIntrinsicRuns = shapeResult.getSecond();
+        TypesetterInput input = new TypesetterInput(text, spanned, defaultSpans);
 
-        mLineResolver = new LineResolver(spanned, mBidiParagraphs, mIntrinsicRuns);
+        mNativeTypesetter = nCreate(text, input.getRunCount(), input.getRunBounds(),
+                                    input.getTypefaces(), input.getTypeSizes(), input.getScaleXs(),
+                                    input.getBaselineShifts(), input.getHolders(),
+                                    input.getHolderLeadings(), input.getHolderBlocks(),
+                                    input.getColorCount(), input.getColorBounds(), input.getColors());
+        if (mNativeTypesetter == 0) {
+            throw new RuntimeException("Could not create the typesetter");
+        }
 
-        BreakClassifier breakClassifier = new BreakClassifier(text);
-        mBreakResolver = new BreakResolver(mText, mBidiParagraphs, mIntrinsicRuns, breakClassifier);
+        mTypefaces = input.getTypefaceMap();
     }
 
     /**
@@ -121,14 +132,8 @@ public class Typesetter {
         return mSpanned;
     }
 
-    ParagraphCollection getParagraphs() {
-        return mBidiParagraphs;
-    }
-
-    RunCollection getRuns() {
-        return mIntrinsicRuns;
-    }
-
+    
+    
     private void checkSubRange(int charStart, int charEnd) {
         checkArgument(charStart >= 0, "Char Start: " + charStart);
         checkArgument(charEnd <= mText.length(), "Char End: " + charEnd + ", Text Length: " + mText.length());
@@ -155,7 +160,7 @@ public class Typesetter {
         checkNotNull(breakMode, "breakMode");
         checkSubRange(charStart, charEnd);
 
-        return mBreakResolver.suggestForwardBreak(charStart, charEnd, breakExtent, breakMode);
+        return nSuggestForwardBreak(mNativeTypesetter, charStart, charEnd, breakExtent, breakMode.ordinal());
     }
 
     /**
@@ -178,7 +183,7 @@ public class Typesetter {
         checkNotNull(breakMode, "breakMode");
         checkSubRange(charStart, charEnd);
 
-        return mBreakResolver.suggestBackwardBreak(charStart, charEnd, breakExtent, breakMode);
+        return nSuggestBackwardBreak(mNativeTypesetter, charStart, charEnd, breakExtent, breakMode.ordinal());
     }
 
     /**
@@ -195,7 +200,7 @@ public class Typesetter {
 	public @NonNull ComposedLine createSimpleLine(int charStart, int charEnd) {
         checkSubRange(charStart, charEnd);
 
-        return mLineResolver.createSimpleLine(charStart, charEnd);
+        return makeLine(nCreateSimpleLine(mNativeTypesetter, charStart, charEnd));
 	}
 
     /**
@@ -205,7 +210,7 @@ public class Typesetter {
     @NonNull ComposedLine createSimpleLine(int charStart, int charEnd, float layoutWidth) {
         checkSubRange(charStart, charEnd);
 
-        return mLineResolver.createSimpleLine(charStart, charEnd, layoutWidth);
+        return makeLine(nCreateFrameLine(mNativeTypesetter, charStart, charEnd, layoutWidth));
     }
 
     /**
@@ -233,8 +238,9 @@ public class Typesetter {
         checkNotNull(truncationPlace, "truncationPlace");
         checkSubRange(charStart, charEnd);
 
-        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
-                TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, null));
+        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+                makeLine(nCreateTruncationToken(mNativeTypesetter, charStart, charEnd,
+                                                truncationPlace.ordinal(), null)));
     }
 
     /**
@@ -265,8 +271,9 @@ public class Typesetter {
         checkSubRange(charStart, charEnd);
         checkArgument(truncationToken.length() > 0, "Truncation token is empty");
 
-        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode, truncationPlace,
-                TokenResolver.createToken(mIntrinsicRuns, charStart, charEnd, truncationPlace, truncationToken));
+        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace,
+                makeLine(nCreateTruncationToken(mNativeTypesetter, charStart, charEnd,
+                                                truncationPlace.ordinal(), truncationToken)));
     }
 
     /**
@@ -296,14 +303,19 @@ public class Typesetter {
         checkNotNull(truncationToken, "truncationToken");
         checkSubRange(charStart, charEnd);
 
-        return mLineResolver.createCompactLine(charStart, charEnd, maxWidth, mBreakResolver, breakMode,
-                                               truncationPlace, truncationToken);
+        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace, truncationToken);
     }
 
     @NonNull ComposedLine createJustifiedLine(@NonNull ComposedLine line,
                                               float justificationFactor,
                                               float justificationWidth) {
-        return mLineResolver.createJustifiedLine(line, justificationFactor, justificationWidth);
+        // A line that shows a token cannot be made again from its text, as the token would be lost.
+        if (line.isTruncated()) {
+            return line;
+        }
+
+        return makeLine(nCreateJustifiedLine(mNativeTypesetter, line.getCharStart(), line.getCharEnd(),
+                                             justificationFactor, justificationWidth));
     }
 
     /**
@@ -326,8 +338,8 @@ public class Typesetter {
                                                      float justificationWidth) {
         checkSubRange(charStart, charEnd);
 
-        return mLineResolver.createJustifiedLine(charStart, charEnd, justificationFactor,
-                                                 justificationWidth);
+        return makeLine(nCreateJustifiedLine(mNativeTypesetter, charStart, charEnd,
+                                             justificationFactor, justificationWidth));
     }
 
     /**
@@ -356,4 +368,47 @@ public class Typesetter {
 
         return resolver.createFrame(charStart, charEnd);
     }
+
+    private @NonNull ComposedLine createTruncated(int charStart, int charEnd, float maxWidth,
+                                                  @NonNull BreakMode breakMode,
+                                                  @NonNull TruncationPlace truncationPlace,
+                                                  @NonNull ComposedLine token) {
+        return makeLine(nCreateTruncatedLine(mNativeTypesetter, charStart, charEnd, maxWidth,
+                                             breakMode.ordinal(), truncationPlace.ordinal(),
+                                             token.getNativeLine()));
+    }
+
+    private @NonNull ComposedLine makeLine(long nativeLine) {
+        if (nativeLine == 0) {
+            throw new RuntimeException("Could not create the line");
+        }
+
+        return new ComposedLine(nativeLine, mText, mTypefaces);
+    }
+
+    /**
+     * Returns the paragraph that has a character: its start, its end, and its base level.
+     */
+    @NonNull int[] getParagraph(int charIndex) {
+        int[] values = new int[3];
+        nGetParagraph(mNativeTypesetter, charIndex, values);
+
+        return values;
+    }
+
+    private static native long nCreate(String text, int runCount, int[] runBounds, Typeface[] typefaces,
+                                       float[] typeSizes, float[] scaleXs, float[] baselineShifts,
+                                       Object[] holders, float[] holderLeadings, boolean[] holderBlocks,
+                                       int colorCount, int[] colorBounds, int[] colors);
+    private static native void nDispose(long nativeTypesetter);
+
+    private static native void nGetParagraph(long nativeTypesetter, int charIndex, int[] values);
+    private static native int nSuggestForwardBreak(long nativeTypesetter, int charStart, int charEnd, float extent, int breakMode);
+    private static native int nSuggestBackwardBreak(long nativeTypesetter, int charStart, int charEnd, float extent, int breakMode);
+
+    private static native long nCreateSimpleLine(long nativeTypesetter, int charStart, int charEnd);
+    private static native long nCreateFrameLine(long nativeTypesetter, int charStart, int charEnd, float layoutWidth);
+    private static native long nCreateTruncationToken(long nativeTypesetter, int charStart, int charEnd, int place, String token);
+    private static native long nCreateTruncatedLine(long nativeTypesetter, int charStart, int charEnd, float extent, int breakMode, int place, long nativeToken);
+    private static native long nCreateJustifiedLine(long nativeTypesetter, int charStart, int charEnd, float factor, float extent);
 }

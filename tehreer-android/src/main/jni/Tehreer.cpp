@@ -38,6 +38,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_tables_SfntTables(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Renderer(env) == JNI_OK
+          && register_com_mta_tehreer_layout_Typesetter(env) == JNI_OK
+          && register_com_mta_tehreer_layout_ComposedLine(env) == JNI_OK
+          && register_com_mta_tehreer_layout_GlyphRun(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingEngine(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingResult(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiAlgorithm(env) == JNI_OK

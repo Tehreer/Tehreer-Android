@@ -31,7 +31,6 @@ import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.graphics.Typeface;
-import com.mta.tehreer.internal.layout.CaretEdgesBuilder;
 import com.mta.tehreer.subject.UnsafeSubjectBuilder;
 import com.mta.tehreer.util.DescriptionBuilder;
 import com.mta.tehreer.util.TypefaceStore;
@@ -466,36 +465,19 @@ public abstract class ShapingResultTestSuite extends DisposableTestSuite<Shaping
     }
 
     @Test
-    public void testGetCaretEdgesWithBuilderInput() {
+    public void testGetCaretEdgesWithCaretStops() {
         buildSubject((subject) -> {
-            subject = spy(subject);
-
-            boolean isBackward = false;
-            boolean isRTL = true;
-            FloatList glyphAdvances = DEFAULT_GLYPH_ADVANCES;
-            IntList clusterMap = DEFAULT_CLUSTER_MAP;
-            boolean[] caretStops = new boolean[text.length()];
-            CaretEdgesBuilder caretEdgesBuilder = spy(new CaretEdgesBuilder());
-            float[] caretEdges = new float[] { };
-
-            doReturn(isBackward).when (subject).isBackward();
-            doReturn(isRTL).when (subject).isRTL();
-            doReturn(glyphAdvances).when (subject).getGlyphAdvances();
-            doReturn(clusterMap).when (subject).getClusterMap();
-            doReturn(caretEdgesBuilder).when (subject).createCaretEdgesBuilder();
-            doReturn(caretEdges).when(caretEdgesBuilder).build();
+            // Given
+            boolean[] caretStops = new boolean[(subject.getCharEnd() - subject.getCharStart())];
+            Arrays.fill(caretStops, true);
 
             // When
-            float[] array = subject.getCaretEdges(caretStops);
+            float[] withStops = subject.getCaretEdges(caretStops);
+            float[] withoutStops = subject.getCaretEdges(null);
 
-            // Then
-            assertSame(array, caretEdges);
-            verify(caretEdgesBuilder).setBackward(isBackward);
-            verify(caretEdgesBuilder).setRTL(isRTL);
-            verify(caretEdgesBuilder).setGlyphAdvances(glyphAdvances);
-            verify(caretEdgesBuilder).setClusterMap(clusterMap);
-            verify(caretEdgesBuilder).setCaretStops(caretStops);
-            verify(caretEdgesBuilder).build();
+            // Then: a stop before every code unit is the same as having no stops at all.
+            assertEquals((subject.getCharEnd() - subject.getCharStart()) + 1, withStops.length);
+            assertArrayEquals(withoutStops, withStops, 0.0f);
         });
     }
 

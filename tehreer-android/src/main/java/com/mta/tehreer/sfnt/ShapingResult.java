@@ -26,7 +26,6 @@ import com.mta.tehreer.collections.PointList;
 import com.mta.tehreer.internal.Constants;
 import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Raw;
-import com.mta.tehreer.internal.layout.CaretEdgesBuilder;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkArrayBounds;
 import static com.mta.tehreer.internal.util.Preconditions.checkElementIndex;
@@ -443,10 +442,6 @@ public class ShapingResult implements Disposable {
         return getCaretEdges(null);
     }
 
-    CaretEdgesBuilder createCaretEdgesBuilder() {
-        return new CaretEdgesBuilder();
-    }
-
     /**
      * Returns a list of caret edges.
      *
@@ -461,13 +456,10 @@ public class ShapingResult implements Disposable {
             }
         }
 
-        return createCaretEdgesBuilder()
-                .setBackward(isBackward())
-                .setRTL(isRTL())
-                .setGlyphAdvances(getGlyphAdvances())
-                .setClusterMap(getClusterMap())
-                .setCaretStops(caretStops)
-                .build();
+        float[] caretEdges = new float[charCount + 1];
+        nGetCaretEdges(nativeResult, caretStops, caretEdges);
+
+        return caretEdges;
     }
 
 	@Override
@@ -504,6 +496,7 @@ public class ShapingResult implements Disposable {
     private static native float nGetGlyphAdvance(long nativeResult, int index);
     private static native long nGetClusterMapPtr(long nativeResult);
 
+    private static native void nGetCaretEdges(long nativeResult, boolean[] caretStops, float[] caretEdges);
     private static native void nCopyGlyphIds(long nativeResult, int offset, int length, @NonNull int[] destination, int index);
     private static native void nCopyGlyphOffsets(long nativeResult, int offset, int length, @NonNull float[] destination, int index);
     private static native void nCopyGlyphAdvances(long nativeResult, int offset, int length, @NonNull float[] destination, int index);

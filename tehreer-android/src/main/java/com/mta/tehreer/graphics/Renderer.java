@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
@@ -90,6 +91,31 @@ public class Renderer {
         setStrokeCap(StrokeCap.BUTT);
         setStrokeJoin(StrokeJoin.ROUND);
         setStrokeMiter(1.0f);
+    }
+
+    /**
+     * Returns the handle of the renderer of Core. It is only for the layout package.
+     *
+     * @hidden
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public long getNativeHandle() {
+        return mNativeRenderer;
+    }
+
+    /**
+     * Sets the properties of the renderer of Core again, as measuring a run with it changes them.
+     *
+     * @hidden
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void syncNative() {
+        nSetTypeface(mNativeRenderer, mTypeface);
+        nSetTypeSize(mNativeRenderer, mTypeSize);
+        nSetScaleX(mNativeRenderer, mScaleX);
+        nSetScaleY(mNativeRenderer, mScaleY);
+        nSetSkewX(mNativeRenderer, mSlantAngle);
+        nSetWritingDirection(mNativeRenderer, mWritingDirection == WritingDirection.RIGHT_TO_LEFT ? 1 : 0);
     }
 
     private void syncShadowLayer() {

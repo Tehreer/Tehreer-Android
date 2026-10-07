@@ -15,6 +15,7 @@
  */
 
 #include <jni.h>
+#include <vector>
 
 #include <Tehreer/TRShapingResult.h>
 
@@ -72,6 +73,11 @@ void ShapingResult::setup(TRShapingResultRef core, jint charStart, jint charEnd)
             m_clusterMap[i] = static_cast<jint>(clusterMap[i]);
         }
     }
+}
+
+void ShapingResult::getCaretEdges(const TRBoolean *caretStops, jfloat *caretEdges) const
+{
+    TRShapingResultGetCaretEdges(m_core, caretStops, caretEdges);
 }
 
 void ShapingResult::copyGlyphIds(jint offset, jint length, jint *destination) const
@@ -188,6 +194,29 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
     return reinterpret_cast<jlong>(clusterMapPtr);
 }
 
+static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle, jbooleanArray caretStops,
+    jfloatArray caretEdges)
+{
+    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
+    jint length = env->GetArrayLength(caretEdges) - 1;
+    std::vector<TRBoolean> stops;
+
+    if (caretStops) {
+        std::vector<jboolean> values(length);
+        env->GetBooleanArrayRegion(caretStops, 0, length, values.data());
+
+        stops.resize(length);
+        for (jint i = 0; i < length; i++) {
+            stops[i] = (values[i] ? TRTrue : TRFalse);
+        }
+    }
+
+    std::vector<jfloat> edges(length + 1);
+    shapingResult->getCaretEdges(caretStops ? stops.data() : nullptr, edges.data());
+
+    env->SetFloatArrayRegion(caretEdges, 0, length + 1, edges.data());
+}
+
 static void copyGlyphIds(JNIEnv *env, jobject obj, jlong resultHandle, jint offset, jint length,
     jintArray destination, jint index)
 {
@@ -238,6 +267,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetGlyphYOffset", "(JI)F", (void *)getGlyphYOffset },
     { "nGetGlyphAdvance", "(JI)F", (void *)getGlyphAdvance },
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
+    { "nGetCaretEdges", "(J[Z[F)V", (void *)getCaretEdges },
     { "nCopyGlyphIds", "(JII[II)V", (void *)copyGlyphIds },
     { "nCopyGlyphOffsets", "(JII[FI)V", (void *)copyGlyphOffsets },
     { "nCopyGlyphAdvances", "(JII[FI)V", (void *)copyGlyphAdvances },

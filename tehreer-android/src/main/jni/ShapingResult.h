@@ -51,6 +51,7 @@ public:
      * Java side reads 32-bit values. */
     const jint *clusterMapPtr() const { return m_clusterMap.data(); }
 
+    void getCaretEdges(const TRBoolean *caretStops, jfloat *caretEdges) const;
     void copyGlyphIds(jint offset, jint length, jint *destination) const;
     void copyGlyphOffsets(jint offset, jint length, jfloat *destination) const;
     void copyGlyphAdvances(jint offset, jint length, jfloat *destination) const;

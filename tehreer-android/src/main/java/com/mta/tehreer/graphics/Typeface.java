@@ -24,6 +24,7 @@ import android.graphics.Rect;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.mta.tehreer.font.ColorPalette;
 import com.mta.tehreer.font.NamedStyle;
@@ -623,6 +624,17 @@ public class Typeface {
         nDispose(nativeTypeface);
     }
 
+    /**
+     * Returns the handle of the typeface of Core, which the runs of a line point to. It is only
+     * for the layout package.
+     *
+     * @hidden
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public long getCoreHandle() {
+        return nGetCoreHandle(nativeTypeface);
+    }
+
     @Override
     public String toString() {
         return "Typeface{familyName=" + getFamilyName()
@@ -650,6 +662,7 @@ public class Typeface {
 
 	private static native void nDispose(long nativeTypeface);
 
+    private static native long nGetCoreHandle(long nativeTypeface);
     private static native String nGetFamilyName(long nativeTypeface);
     private static native String nGetStyleName(long nativeTypeface);
     private static native String nGetFullName(long nativeTypeface);

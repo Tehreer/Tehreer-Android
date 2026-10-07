@@ -195,6 +195,7 @@ set(FILE_LIST
     StreamUtils.cpp
     Tehreer.cpp
     Typeface.cpp
+    Typesetter.cpp
     Unicode.cpp
 )
 

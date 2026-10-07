@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.internal.graphics
+#ifndef _TEHREER__TYPESETTER_H
+#define _TEHREER__TYPESETTER_H
 
-import android.graphics.Canvas
-import com.mta.tehreer.graphics.Renderer
+#include <jni.h>
 
-internal interface TextRunDrawing {
-    fun draw(renderer: Renderer, canvas: Canvas)
-}
+jint register_com_mta_tehreer_layout_Typesetter(JNIEnv *env);
+jint register_com_mta_tehreer_layout_ComposedLine(JNIEnv *env);
+jint register_com_mta_tehreer_layout_GlyphRun(JNIEnv *env);
+
+#endif

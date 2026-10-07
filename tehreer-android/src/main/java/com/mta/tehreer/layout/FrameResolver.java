@@ -30,8 +30,6 @@ import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.mta.tehreer.internal.layout.ParagraphCollection;
-import com.mta.tehreer.unicode.BidiParagraph;
 import com.mta.tehreer.layout.style.ViewSpan;
 
 import java.util.ArrayList;
@@ -46,7 +44,6 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
 public class FrameResolver {
     private Typesetter mTypesetter;
     private Spanned mSpanned;
-    private ParagraphCollection mParagraphs;
 
     private @NonNull RectF mFrameBounds = new RectF(0, 0, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
     private boolean mFitsHorizontally = false;
@@ -85,11 +82,9 @@ public class FrameResolver {
         if (typesetter == null) {
             mTypesetter = null;
             mSpanned = null;
-            mParagraphs = null;
         } else {
             mTypesetter = typesetter;
             mSpanned = typesetter.getSpanned();
-            mParagraphs = typesetter.getParagraphs();
         }
     }
 
@@ -428,20 +423,18 @@ public class FrameResolver {
         setupMaxLines(context);
         setupJustificationMultiplier(context);
 
-        int paragraphIndex = mParagraphs.binarySearch(charStart);
-
         int segmentStart = charStart;
         int segmentEnd;
 
         // Iterate over all paragraphs in provided range.
         do {
-            final BidiParagraph paragraph = mParagraphs.get(paragraphIndex);
-            segmentEnd = Math.min(charEnd, paragraph.getCharEnd());
+            final int[] paragraph = mTypesetter.getParagraph(segmentStart);
+            segmentEnd = Math.min(charEnd, paragraph[1]);
 
             // Setup the frame context and add the lines.
             context.startIndex = segmentStart;
             context.endIndex = segmentEnd;
-            context.baseLevel = paragraph.getBaseLevel();
+            context.baseLevel = (byte) paragraph[2];
 
             resolveParagraphLines(context);
 
@@ -450,7 +443,6 @@ public class FrameResolver {
             }
 
             segmentStart = segmentEnd;
-            paragraphIndex++;
         } while (segmentStart < charEnd);
 
         resolveTruncation(context, charEnd);

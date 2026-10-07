@@ -23,10 +23,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Size;
 
 import com.mta.tehreer.graphics.Renderer;
+import com.mta.tehreer.graphics.Typeface;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.internal.Description;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
 
@@ -34,12 +39,31 @@ import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
  * Represents a line of text consisting of an array of <code>GlyphRun</code> objects in visual order.
  */
 public class ComposedLine {
+    static {
+        JniBridge.loadLibrary();
+    }
+
+    private class Finalizable {
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                nDispose(mNativeLine);
+            } finally {
+                super.finalize();
+            }
+        }
+    }
+
+    private final long mNativeLine;
+    private final @NonNull Finalizable mFinalizable = new Finalizable();
+
 	private final int lineStart;
 	private final int lineEnd;
     private final int breakEnd;
     private final byte paragraphLevel;
     private final float extent;
     private final float trailingWhitespaceExtent;
+    private final boolean mTruncated;
 	private final @NonNull List<GlyphRun> runList;
 
     private Object[] mSpans;
@@ -56,20 +80,49 @@ public class ComposedLine {
     private float mOriginX;
     private float mOriginY;
 
-	ComposedLine(int charStart, int charEnd, int breakEnd, byte paragraphLevel,
-                 float ascent, float descent, float leading, float extent,
-                 float trailingWhitespaceExtent, @NonNull List<GlyphRun> runList) {
-	    this.lineStart = charStart;
-	    this.lineEnd = charEnd;
-        this.breakEnd = breakEnd;
-	    this.paragraphLevel = paragraphLevel;
-	    this.extent = extent;
-	    this.trailingWhitespaceExtent = trailingWhitespaceExtent;
-	    this.runList = runList;
+    /**
+     * Wraps a line of Core, which this object disposes when it is collected.
+     */
+	ComposedLine(long nativeLine, @NonNull String text, @NonNull Map<Long, Typeface> typefaces) {
+        mNativeLine = nativeLine;
 
-	    mAscent = ascent;
-	    mDescent = descent;
-	    mLeading = leading;
+        int[] ints = new int[6];
+        float[] floats = new float[5];
+
+        nGetInts(nativeLine, ints);
+        nGetFloats(nativeLine, floats);
+
+	    this.lineStart = ints[0];
+	    this.lineEnd = ints[1];
+        this.breakEnd = ints[1];
+	    this.paragraphLevel = (byte) ints[2];
+        this.mBlock = (ints[3] != 0);
+        this.mTruncated = (ints[4] != 0);
+
+	    mAscent = floats[0];
+	    mDescent = floats[1];
+	    mLeading = floats[2];
+	    this.extent = floats[3];
+	    this.trailingWhitespaceExtent = floats[4];
+
+        int runCount = ints[5];
+        List<GlyphRun> runs = new ArrayList<>(runCount);
+        for (int i = 0; i < runCount; i++) {
+            runs.add(new GlyphRun(this, nGetRun(nativeLine, i), typefaces));
+        }
+
+	    this.runList = Collections.unmodifiableList(runs);
+    }
+
+    long getNativeLine() {
+        return mNativeLine;
+    }
+
+    /**
+     * Returns whether this line shows a token in place of some of its text.
+     */
+    boolean isTruncated() {
+        return mTruncated;
     }
 
     /**
@@ -441,4 +494,9 @@ public class ComposedLine {
                 + ", runs=" + Description.forIterable(runList)
                 + "}";
     }
+
+    private static native void nDispose(long nativeLine);
+    private static native void nGetInts(long nativeLine, int[] values);
+    private static native void nGetFloats(long nativeLine, float[] values);
+    private static native long nGetRun(long nativeLine, int index);
 }

@@ -29,6 +29,7 @@
 #include "ScriptClassifier.h"
 #include "SfntTables.h"
 #include "Renderer.h"
+#include "Typesetter.h"
 #include "ShapingEngine.h"
 #include "ShapingResult.h"
 #include "Typeface.h"
