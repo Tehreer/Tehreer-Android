@@ -158,29 +158,14 @@ FontFile *FontFile::createFromStream(const JavaBridge &bridge, jobject stream)
 
 FontFile *FontFile::createWithArgs(const FT_Open_Args *args, TRFontFileRef core)
 {
-    std::mutex &mutex = FreeType::mutex();
-    mutex.lock();
-
-    FT_Face ftFace = nullptr;
-    FT_Long numFaces = 0;
-    FT_Error error = FT_Open_Face(FreeType::library(), args, -1, &ftFace);
-    if (error == FT_Err_Ok) {
-        numFaces = ftFace->num_faces;
-        FT_Done_Face(ftFace);
-    }
-
-    mutex.unlock();
-
-    return new FontFile(args, (void *)args->memory_base, args->stream, numFaces, core);
+    return new FontFile(args, (void *)args->memory_base, args->stream, core);
 }
 
-FontFile::FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces,
-                   TRFontFileRef core)
+FontFile::FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, TRFontFileRef core)
 {
     m_args = *args;
     m_buffer = buffer;
     m_stream = stream;
-    m_numFaces = numFaces;
     m_core = core;
     m_retainCount = 1;
 }

@@ -43,7 +43,7 @@ public:
 
     ~FontFile();
 
-    FT_Long numFaces() const { return m_numFaces; }
+    FT_Long numFaces() const { return static_cast<FT_Long>(TRFontFileGetFaceCount(m_core)); }
     TRFontFileRef core() const { return m_core; }
     RenderableFace *createRenderableFace(FT_Long faceIndex);
 
@@ -55,14 +55,12 @@ private:
 
     void *m_buffer;
     FT_Stream m_stream;
-    FT_Long m_numFaces;
     TRFontFileRef m_core;
     std::atomic_int m_retainCount;
 
     static FontFile *createWithArgs(const FT_Open_Args *args, TRFontFileRef core);
 
-    FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces,
-             TRFontFileRef core);
+    FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, TRFontFileRef core);
 };
 
 }
