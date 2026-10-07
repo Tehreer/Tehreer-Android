@@ -17,9 +17,16 @@
 package com.mta.tehreer.graphics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Path;
 import android.graphics.RectF;
 
 import com.mta.tehreer.collections.FloatList;
@@ -273,7 +280,8 @@ public class RendererTest {
         RectF bbox = subject.computeBoundingBox(glyphId);
 
         // Then
-        assertEquals(bbox, new RectF(1.0f, 14.0f, 24.0f, 29.0f));
+        // The y axis points downward, so the glyph is above the baseline.
+        assertEquals(bbox, new RectF(1.0f, -14.0f, 24.0f, 1.0f));
     }
 
     @Test
@@ -291,6 +299,148 @@ public class RendererTest {
         RectF bbox = subject.computeBoundingBox(glyphIds, glyphOffsets, glyphAdvancess);
 
         // Then
-        assertEquals(bbox, new RectF(-3.0f, -17.0f, 51.0f, 9.0f));
+        // The positions are rounded to the nearest pixel, also where they are negative.
+        assertEquals(bbox, new RectF(-4.0f, -18.0f, 50.0f, 8.0f));
+    }
+
+    private Bitmap drawGlyph(int glyphId, float originX) {
+        Bitmap bitmap = Bitmap.createBitmap(200, 100, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.translate(originX, 70.0f);
+
+        subject.drawGlyphs(canvas, IntList.of(glyphId), PointList.of(0.0f, 0.0f), FloatList.of(20.0f));
+
+        return bitmap;
+    }
+
+    private int[] inkedColumns(Bitmap bitmap) {
+        int first = -1;
+        int last = -1;
+
+        for (int x = 0; x < bitmap.getWidth(); x++) {
+            for (int y = 0; y < bitmap.getHeight(); y++) {
+                if (Color.alpha(bitmap.getPixel(x, y)) != 0) {
+                    first = (first == -1 ? x : first);
+                    last = x;
+                    break;
+                }
+            }
+        }
+
+        return new int[] { first, last };
+    }
+
+    @Test
+    public void testDrawGlyphsFillsPixels() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+        subject.setFillColor(Color.RED);
+
+        // When
+        Bitmap bitmap = drawGlyph(glyphId, 50.0f);
+
+        // Then
+        int[] columns = inkedColumns(bitmap);
+        assertTrue(columns[0] >= 45 && columns[1] < 100);
+
+        boolean hasRed = false;
+        for (int x = 0; x < bitmap.getWidth() && !hasRed; x++) {
+            for (int y = 0; y < bitmap.getHeight(); y++) {
+                hasRed |= (bitmap.getPixel(x, y) == Color.RED);
+            }
+        }
+        assertTrue(hasRed);
+    }
+
+    @Test
+    public void testDrawGlyphsInRightToLeftMode() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+
+        // When
+        int[] leftToRight = inkedColumns(drawGlyph(glyphId, 100.0f));
+        subject.setWritingDirection(WritingDirection.RIGHT_TO_LEFT);
+        int[] rightToLeft = inkedColumns(drawGlyph(glyphId, 100.0f));
+
+        // Then: the pen moves left by the advance before the glyph is drawn.
+        assertEquals(leftToRight[0] - rightToLeft[0], 20, 1);
+        assertEquals(leftToRight[1] - rightToLeft[1], 20, 1);
+    }
+
+    @Test
+    public void testDrawGlyphsInStrokeStyle() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+        subject.setStrokeWidth(3.0f);
+
+        // When
+        subject.setRenderingStyle(RenderingStyle.FILL);
+        Bitmap fill = drawGlyph(glyphId, 50.0f);
+        subject.setRenderingStyle(RenderingStyle.STROKE);
+        Bitmap stroke = drawGlyph(glyphId, 50.0f);
+
+        // Then
+        assertFalse(fill.sameAs(stroke));
+        assertTrue(inkedColumns(stroke)[0] != -1);
+    }
+
+    @Test
+    public void testDrawGlyphsOfTinySizeDrawsNothing() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(0.0f);
+
+        // When
+        Bitmap bitmap = drawGlyph(glyphId, 50.0f);
+
+        // Then
+        assertEquals(inkedColumns(bitmap)[0], -1);
+    }
+
+    @Test
+    public void testGeneratePath() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+
+        // When
+        Path path = subject.generatePath(glyphId);
+        RectF bounds = new RectF();
+        path.computeBounds(bounds, true);
+
+        // Then: the path points downward from the baseline.
+        assertNotNull(path);
+        assertFalse(bounds.isEmpty());
+        assertTrue(bounds.top < 0.0f || bounds.bottom > 0.0f);
+    }
+
+    @Test
+    public void testGenerateCumulativePath() {
+        // Given
+        int glyphId = typeface.getGlyphId('ت');
+        subject.setTypeface(typeface);
+        subject.setTypeSize(typeSize);
+
+        // When
+        Path single = subject.generatePath(glyphId);
+        Path run = subject.generatePath(IntList.of(glyphId, glyphId),
+                                        PointList.of(0.0f, 0.0f, 0.0f, 0.0f), FloatList.of(40.0f, 40.0f));
+        RectF singleBounds = new RectF();
+        RectF runBounds = new RectF();
+        single.computeBounds(singleBounds, true);
+        run.computeBounds(runBounds, true);
+
+        // Then: the second glyph is moved by the advance of the first one.
+        assertEquals(runBounds.right, singleBounds.right + 40.0f, 1.0f);
+        assertEquals(runBounds.left, singleBounds.left, 1.0f);
+        assertNotEquals(runBounds.width(), singleBounds.width(), 1.0f);
     }
 }

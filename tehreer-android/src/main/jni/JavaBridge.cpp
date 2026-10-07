@@ -34,8 +34,6 @@ static jobject   BITMAP_CONFIG__ARGB_8888;
 static jclass    BITMAP;
 static jmethodID BITMAP__CREATE_BITMAP;
 
-static jclass    GLYPH_IMAGE;
-static jmethodID GLYPH_IMAGE__CONSTRUCTOR;
 
 static jmethodID INPUT_STREAM__READ;
 
@@ -86,9 +84,6 @@ void JavaBridge::load(JNIEnv* env)
     field = env->GetStaticObjectField(clazz, fieldID);
     BITMAP_CONFIG__ARGB_8888 = env->NewGlobalRef(field);
 
-    clazz = env->FindClass("com/mta/tehreer/graphics/GlyphImage");
-    GLYPH_IMAGE = (jclass)env->NewGlobalRef(clazz);
-    GLYPH_IMAGE__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(Landroid/graphics/Bitmap;II)V");
 
     clazz = env->FindClass("java/io/InputStream");
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
@@ -172,11 +167,6 @@ void JavaBridge::Bitmap_setPixels(jobject bitmap, const void *pixels, size_t len
     AndroidBitmap_lockPixels(m_env, bitmap, &source);
     memcpy(source, pixels, length);
     AndroidBitmap_unlockPixels(m_env, bitmap);
-}
-
-jobject JavaBridge::GlyphImage_construct(jobject bitmap, jint left, jint top) const
-{
-    return m_env->NewObject(GLYPH_IMAGE, GLYPH_IMAGE__CONSTRUCTOR, bitmap, left, top);
 }
 
 jint JavaBridge::InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const

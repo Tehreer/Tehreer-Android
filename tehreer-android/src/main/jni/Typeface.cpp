@@ -82,82 +82,17 @@ Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
 Typeface::Typeface(TRTypefaceRef core, RenderableFace &renderableFace)
     : m_core(core)
     , m_renderableFace(renderableFace.retain())
-    , m_ftSize(nullptr)
-    , m_ftStroker(nullptr)
-    , m_palette({})
 {
-    setupSize();
-    setupDefaultCoordinates();
-    setupPalette();
-}
-
-Typeface::Typeface(const Typeface &parent, TRTypefaceRef core, RenderableFace &renderableFace)
-    : m_core(core)
-    , m_renderableFace(renderableFace.retain())
-    , m_ftSize(nullptr)
-    , m_ftStroker(nullptr)
-    , m_palette(parent.m_palette)
-{
-    setupSize();
 }
 
 Typeface::Typeface(const Typeface &parent, TRTypefaceRef core)
     : m_core(core)
     , m_renderableFace(parent.renderableFace().retain())
-    , m_ftSize(nullptr)
-    , m_ftStroker(nullptr)
-    , m_palette({})
 {
-    setupSize();
-    setupPalette();
-}
-
-void Typeface::setupSize()
-{
-    FT_New_Size(m_renderableFace.ftFace(), &m_ftSize);
-}
-
-void Typeface::setupDefaultCoordinates()
-{
-    /* The face of FreeType has to follow the default design coordinates of the font. */
-    const TRVariationAxis *axes = TRTypefaceGetVariationAxesPtr(m_core);
-    TRUInteger axisCount = TRTypefaceGetVariationAxisCount(m_core);
-
-    if (axes && axisCount > 0) {
-        std::vector<float> coordinates(axisCount);
-
-        for (TRUInteger i = 0; i < axisCount; i++) {
-            coordinates[i] = axes[i].defaultValue;
-        }
-
-        m_renderableFace.setupCoordinates(coordinates.data(), coordinates.size());
-    }
-}
-
-void Typeface::setupPalette()
-{
-    const TRColor *colors = TRTypefaceGetAssociatedColorsPtr(m_core);
-    TRUInteger colorCount = TRTypefaceGetPaletteEntryCount(m_core);
-
-    m_palette.clear();
-
-    if (colors) {
-        for (TRUInteger i = 0; i < colorCount; i++) {
-            m_palette.push_back(toFTColor(colors[i]));
-        }
-    }
 }
 
 Typeface::~Typeface()
 {
-    if (m_ftStroker) {
-        FT_Stroker_Done(m_ftStroker);
-    }
-    if (m_ftSize) {
-        FaceLock lock(m_renderableFace);
-        FT_Done_Size(m_ftSize);
-    }
-
     m_renderableFace.release();
 
     TRTypefaceRelease(m_core);
@@ -170,17 +105,7 @@ Typeface *Typeface::deriveVariation(const float *coordArray, size_t coordCount)
         return nullptr;
     }
 
-    RenderableFace *renderableFace = m_renderableFace.deriveVariation(coordArray, coordCount);
-    if (!renderableFace) {
-        TRTypefaceRelease(core);
-        return nullptr;
-    }
-
-    auto instance = new Typeface(*this, core, *renderableFace);
-
-    renderableFace->release();
-
-    return instance;
+    return new Typeface(*this, core);
 }
 
 Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
@@ -191,45 +116,6 @@ Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
     }
 
     return new Typeface(*this, core);
-}
-
-FT_Stroker Typeface::ftStroker()
-{
-    if (!m_ftStroker) {
-        m_mutex.lock();
-
-        if (!m_ftStroker) {
-            /*
-             * There is no need to lock 'library' as it is only taken to have access to FreeType's
-             * memory handling functions.
-             */
-            FT_Stroker_New(FreeType::library(), &m_ftStroker);
-        }
-
-        m_mutex.unlock();
-    }
-
-    return m_ftStroker;
-}
-
-size_t Typeface::getTableLength(uint32_t tag)
-{
-    FaceLock lock(m_renderableFace);
-    FT_Face ftFace = m_renderableFace.ftFace();
-
-    FT_ULong length = 0;
-    FT_Load_Sfnt_Table(ftFace, tag, 0, nullptr, &length);
-
-    return length;
-}
-
-void Typeface::getTableData(uint32_t tag, void *buffer)
-{
-    FaceLock lock(m_renderableFace);
-    FT_Face ftFace = m_renderableFace.ftFace();
-
-    auto ftBuffer = reinterpret_cast<FT_Byte *>(buffer);
-    FT_Load_Sfnt_Table(ftFace, tag, 0, ftBuffer, nullptr);
 }
 
 jobject Typeface::getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex)
@@ -268,64 +154,6 @@ uint16_t Typeface::getGlyphID(uint32_t codePoint)
 float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
 {
     return TRTypefaceGetGlyphAdvance(m_core, glyphID, typeSize, vertical ? TRTrue : TRFalse);
-}
-
-jobject Typeface::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
-{
-    jobject glyphPath = nullptr;
-
-    FT_Error error = FT_Load_Glyph(ftFace(), glyphID, FT_LOAD_NO_BITMAP);
-    if (error == FT_Err_Ok) {
-        struct PathContext {
-            JavaBridge bridge;
-            jobject path;
-        };
-
-        FT_Outline_Funcs funcs;
-        funcs.move_to = [](const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_moveTo(context->path,
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.line_to = [](const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_lineTo(context->path,
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.conic_to = [](const FT_Vector *control1, const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_quadTo(context->path,
-                                        f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                        f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.cubic_to = [](const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) -> int
-        {
-            auto context = reinterpret_cast<PathContext *>(user);
-            context->bridge.Path_cubicTo(context->path,
-                                         f26Dot6PosToFloat(control1->x), f26Dot6PosToFloat(control1->y),
-                                         f26Dot6PosToFloat(control2->x), f26Dot6PosToFloat(control2->y),
-                                         f26Dot6PosToFloat(to->x), f26Dot6PosToFloat(to->y));
-            return 0;
-        };
-        funcs.shift = 0;
-        funcs.delta = 0;
-
-        PathContext context = { bridge, bridge.Path_construct() };
-
-        FT_Outline *outline = &ftFace()->glyph->outline;
-        error = FT_Outline_Decompose(outline, &funcs, &context);
-        if (error == FT_Err_Ok) {
-            glyphPath = context.path;
-        }
-    }
-
-    return glyphPath;
 }
 
 jobject Typeface::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
@@ -647,18 +475,17 @@ static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto inputTag = static_cast<uint32_t>(tableTag);
+    auto inputTag = static_cast<TRTag>(tableTag);
 
-    size_t tableLength = typeface->getTableLength(inputTag);
+    TRUInteger tableLength = TRTypefaceGetTableData(typeface->core(), inputTag, nullptr, 0);
     if (tableLength == 0) {
         return nullptr;
     }
 
-    jint dataLength = static_cast<jint>(tableLength);
-    jbyteArray dataArray = env->NewByteArray(dataLength);
+    jbyteArray dataArray = env->NewByteArray(static_cast<jint>(tableLength));
     void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-    typeface->getTableData(inputTag, dataBuffer);
+    TRTypefaceGetTableData(typeface->core(), inputTag, dataBuffer, tableLength);
 
     env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 

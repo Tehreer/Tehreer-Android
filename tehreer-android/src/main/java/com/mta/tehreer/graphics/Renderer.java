@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.mta.tehreer.collections.FloatList;
 import com.mta.tehreer.collections.IntList;
 import com.mta.tehreer.collections.PointList;
+import com.mta.tehreer.internal.JniBridge;
 import com.mta.tehreer.sfnt.WritingDirection;
 
 import static com.mta.tehreer.internal.util.Preconditions.checkArgument;
@@ -40,9 +41,25 @@ import static com.mta.tehreer.internal.util.Preconditions.checkNotNull;
  * glyph paths, measure their bounding boxes and draw them on a <code>Canvas</code> object.
  */
 public class Renderer {
+    static {
+        JniBridge.loadLibrary();
+    }
+
     private static final String TAG = Renderer.class.getSimpleName();
 
-    private @NonNull GlyphAttributes mGlyphAttributes = new GlyphAttributes();
+    private class Finalizable {
+        @Override
+        protected void finalize() throws Throwable {
+            try {
+                nDispose(mNativeRenderer);
+            } finally {
+                super.finalize();
+            }
+        }
+    }
+
+    private final long mNativeRenderer = nCreate();
+    private final @NonNull Finalizable mFinalizable = new Finalizable();
 
     private @NonNull Paint mPaint = new Paint();
     private boolean mShadowLayerSynced = true;
@@ -69,22 +86,10 @@ public class Renderer {
      * Constructs a renderer object.
      */
     public Renderer() {
-        updatePixelSizes();
-        updateTransform();
-
         setStrokeWidth(1.0f);
         setStrokeCap(StrokeCap.BUTT);
         setStrokeJoin(StrokeJoin.ROUND);
         setStrokeMiter(1.0f);
-    }
-
-    private void updatePixelSizes() {
-        mGlyphAttributes.setPixelWidth(mTypeSize * mScaleX);
-        mGlyphAttributes.setPixelHeight(mTypeSize * mScaleY);
-    }
-
-    private void updateTransform() {
-        mGlyphAttributes.setSkewX(mSlantAngle);
     }
 
     private void syncShadowLayer() {
@@ -110,7 +115,7 @@ public class Renderer {
      */
     public void setFillColor(@ColorInt int fillColor) {
         mFillColor = fillColor;
-        mGlyphAttributes.setForegroundColor(fillColor);
+        nSetForegroundColor(mNativeRenderer, fillColor);
     }
 
     /**
@@ -153,6 +158,7 @@ public class Renderer {
     public void setWritingDirection(@NonNull WritingDirection writingDirection) {
         checkNotNull(writingDirection);
         mWritingDirection = writingDirection;
+        nSetWritingDirection(mNativeRenderer, writingDirection == WritingDirection.RIGHT_TO_LEFT ? 1 : 0);
     }
 
     /**
@@ -171,7 +177,7 @@ public class Renderer {
      */
     public void setTypeface(Typeface typeface) {
         mTypeface = typeface;
-        mGlyphAttributes.setTypeface(typeface);
+        nSetTypeface(mNativeRenderer, typeface);
     }
 
     /**
@@ -193,7 +199,7 @@ public class Renderer {
     public void setTypeSize(float typeSize) {
         checkArgument(typeSize >= 0.0f, "The value of type size is negative");
         mTypeSize = typeSize;
-        updatePixelSizes();
+        nSetTypeSize(mNativeRenderer, typeSize);
     }
 
     /**
@@ -212,7 +218,7 @@ public class Renderer {
      */
     public void setSlantAngle(float slantAngle) {
         mSlantAngle = slantAngle;
-        updateTransform();
+        nSetSkewX(mNativeRenderer, slantAngle);
     }
 
     /**
@@ -234,7 +240,7 @@ public class Renderer {
     public void setScaleX(float scaleX) {
         checkArgument(scaleX >= 0.0, "Scale value is negative");
         mScaleX = scaleX;
-        updatePixelSizes();
+        nSetScaleX(mNativeRenderer, scaleX);
     }
 
     /**
@@ -256,7 +262,7 @@ public class Renderer {
     public void setScaleY(float scaleY) {
         checkArgument(scaleY >= 0.0, "Scale value is negative");
         mScaleY = scaleY;
-        updatePixelSizes();
+        nSetScaleY(mNativeRenderer, scaleY);
     }
 
     /**
@@ -295,7 +301,7 @@ public class Renderer {
     public void setStrokeWidth(float strokeWidth) {
         checkArgument(strokeWidth >= 0.0f, "Stroke width is negative");
         mStrokeWidth = strokeWidth;
-        mGlyphAttributes.setLineRadius(strokeWidth / 2.0f);
+        nSetStrokeWidth(mNativeRenderer, strokeWidth);
     }
 
     /**
@@ -317,7 +323,7 @@ public class Renderer {
     public void setStrokeCap(@NonNull StrokeCap strokeCap) {
         checkNotNull(strokeCap);
         mStrokeCap = strokeCap;
-        mGlyphAttributes.setLineCap(strokeCap.value);
+        nSetStrokeCap(mNativeRenderer, strokeCap.value);
     }
 
     /**
@@ -337,7 +343,7 @@ public class Renderer {
     public void setStrokeJoin(@NonNull StrokeJoin strokeJoin) {
         checkNotNull(strokeJoin);
         mStrokeJoin = strokeJoin;
-        mGlyphAttributes.setLineJoin(strokeJoin.value);
+        nSetStrokeJoin(mNativeRenderer, strokeJoin.value);
     }
 
     /**
@@ -361,7 +367,7 @@ public class Renderer {
     public void setStrokeMiter(float strokeMiter) {
         checkArgument(strokeMiter >= 1.0f, "Stroke miter is less than one");
         mStrokeMiter = strokeMiter;
-        mGlyphAttributes.setMiterLimit(strokeMiter);
+        nSetStrokeMiter(mNativeRenderer, strokeMiter);
     }
 
     /**
@@ -444,10 +450,6 @@ public class Renderer {
         mShadowLayerSynced = false;
     }
 
-    private @NonNull Path getGlyphPath(int glyphId) {
-        return GlyphCache.getInstance().getGlyphPath(mGlyphAttributes, glyphId);
-    }
-
     /**
      * Generates the path of the specified glyph.
      *
@@ -455,10 +457,7 @@ public class Renderer {
      * @return The path of the glyph specified by <code>glyphId</code>.
      */
     public @NonNull Path generatePath(int glyphId) {
-        Path glyphPath = new Path();
-        glyphPath.addPath(getGlyphPath(glyphId));
-
-        return glyphPath;
+        return nGetGlyphPath(mNativeRenderer, glyphId);
     }
 
     /**
@@ -471,32 +470,10 @@ public class Renderer {
      */
     public @NonNull Path generatePath(@NonNull IntList glyphIds,
                                       @NonNull PointList offsets, @NonNull FloatList advances) {
-        Path cumulativePath = new Path();
-        float penX = 0.0f;
-
         int size = glyphIds.size();
 
-        for (int i = 0; i < size; i++) {
-            int glyphId = glyphIds.get(i);
-            float xOffset = offsets.getX(i);
-            float yOffset = offsets.getY(i);
-            float advance = advances.get(i);
-
-            Path glyphPath = getGlyphPath(glyphId);
-            cumulativePath.addPath(glyphPath, penX + xOffset, yOffset);
-
-            penX += advance;
-        }
-
-        return cumulativePath;
-    }
-
-    private void getBoundingBox(int glyphId, @NonNull RectF boundingBox) {
-        GlyphImage glyphImage = GlyphCache.getInstance().getGlyphImage(mGlyphAttributes, glyphId);
-        if (glyphImage != null) {
-            boundingBox.set(glyphImage.left(), glyphImage.top(),
-                            glyphImage.right(), glyphImage.bottom());
-        }
+        return nGetRunPath(mNativeRenderer, glyphIds.toArray(), offsets.toArray(),
+                           advances.toArray(), size);
     }
 
     /**
@@ -506,8 +483,12 @@ public class Renderer {
      * @return A rectangle that tightly encloses the path of the specified glyph.
      */
     public @NonNull RectF computeBoundingBox(int glyphId) {
+        float[] box = new float[4];
         RectF boundingBox = new RectF();
-        getBoundingBox(glyphId, boundingBox);
+
+        if (nGetGlyphBoundingBox(mNativeRenderer, glyphId, box)) {
+            boundingBox.set(box[0], box[1], box[2], box[3]);
+        }
 
         return boundingBox;
     }
@@ -522,82 +503,37 @@ public class Renderer {
      */
     public @NonNull RectF computeBoundingBox(@NonNull IntList glyphIds,
                                              @NonNull PointList offsets, @NonNull FloatList advances) {
-        RectF glyphBBox = new RectF();
-        RectF cumulativeBBox = new RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
-                                         Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
+        float[] box = new float[4];
+        boolean hasBox = nGetRunBoundingBox(mNativeRenderer, glyphIds.toArray(), offsets.toArray(),
+                                            advances.toArray(), glyphIds.size(), box);
 
-        boolean reverseMode = (mWritingDirection == WritingDirection.RIGHT_TO_LEFT);
-        float totalAdvance = 0.0f;
-        float penX = 0.0f;
-
-        int size = glyphIds.size();
-
-        for (int i = 0; i < size; i++) {
-            int glyphId = glyphIds.get(i);
-            float xOffset = offsets.getX(i);
-            float yOffset = offsets.getY(i);
-            float advance = advances.get(i);
-
-            if (reverseMode) {
-                penX -= advance;
-            }
-
-            getBoundingBox(glyphId, glyphBBox);
-
-            float width = glyphBBox.width();
-            float height = glyphBBox.height();
-
-            int left = (int) (penX + xOffset + glyphBBox.left + 0.5f);
-            int top = (int) (-yOffset - glyphBBox.top + 0.5f);
-
-            cumulativeBBox.union(left, top, left + width, top + height);
-
-            if (!reverseMode) {
-                penX += advance;
-            }
-
-            totalAdvance += advance;
+        // A run without any image has no box, which is the empty one that the union starts from.
+        if (!hasBox) {
+            return new RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+                             Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
         }
 
-        if (reverseMode) {
-            cumulativeBBox.offset((float) Math.ceil(totalAdvance), 0.0f);
-        }
-
-        return cumulativeBBox;
+        return new RectF(box[0], box[1], box[2], box[3]);
     }
 
     private void drawGlyphs(@NonNull Canvas canvas,
                             @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances,
                             boolean strokeMode) {
-        GlyphCache cache = GlyphCache.getInstance();
-        boolean reverseMode = (mWritingDirection == WritingDirection.RIGHT_TO_LEFT);
-        float penX = 0.0f;
-
         int size = glyphIds.size();
+        if (size == 0) {
+            return;
+        }
+
+        Bitmap[] bitmaps = new Bitmap[size];
+        int[] positions = new int[size * 2];
+
+        nGetPlacements(mNativeRenderer, strokeMode ? 1 : 0, glyphIds.toArray(), offsets.toArray(),
+                       advances.toArray(), size, bitmaps, positions);
 
         for (int i = 0; i < size; i++) {
-            int glyphId = glyphIds.get(i);
-            float xOffset = offsets.getX(i);
-            float yOffset = offsets.getY(i);
-            float advance = advances.get(i);
-
-            if (reverseMode) {
-                penX -= advance;
-            }
-
-            GlyphImage glyphImage = (!strokeMode
-                                     ? cache.getGlyphImage(mGlyphAttributes, glyphId)
-                                     : cache.getStrokeImage(mGlyphAttributes, glyphId));
-            if (glyphImage != null) {
-                Bitmap bitmap = glyphImage.bitmap();
-                int left = (int) (penX + xOffset + glyphImage.left() + 0.5f);
-                int top = (int) (-yOffset - glyphImage.top() + 0.5f);
-
-                canvas.drawBitmap(bitmap, left, top, mPaint);
-            }
-
-            if (!reverseMode) {
-                penX += advance;
+            Bitmap bitmap = bitmaps[i];
+            if (bitmap != null) {
+                canvas.drawBitmap(bitmap, positions[i * 2], positions[i * 2 + 1], mPaint);
             }
         }
     }
@@ -613,7 +549,7 @@ public class Renderer {
      */
     public void drawGlyphs(@NonNull Canvas canvas,
                            @NonNull IntList glyphIds, @NonNull PointList offsets, @NonNull FloatList advances) {
-        if (mGlyphAttributes.isRenderable()) {
+        if (nIsRenderable(mNativeRenderer)) {
             syncShadowLayer();
 
             if (mShadowRadius > 0.0f && canvas.isHardwareAccelerated()) {
@@ -631,4 +567,27 @@ public class Renderer {
             }
         }
     }
+
+    private static native long nCreate();
+    private static native void nDispose(long nativeRenderer);
+
+    private static native void nSetTypeface(long nativeRenderer, Typeface typeface);
+    private static native void nSetTypeSize(long nativeRenderer, float typeSize);
+    private static native void nSetScaleX(long nativeRenderer, float scaleX);
+    private static native void nSetScaleY(long nativeRenderer, float scaleY);
+    private static native void nSetSkewX(long nativeRenderer, float skewX);
+    private static native void nSetWritingDirection(long nativeRenderer, int writingDirection);
+    private static native void nSetForegroundColor(long nativeRenderer, int color);
+    private static native void nSetStrokeWidth(long nativeRenderer, float strokeWidth);
+    private static native void nSetStrokeCap(long nativeRenderer, int strokeCap);
+    private static native void nSetStrokeJoin(long nativeRenderer, int strokeJoin);
+    private static native void nSetStrokeMiter(long nativeRenderer, float strokeMiter);
+
+    private static native boolean nIsRenderable(long nativeRenderer);
+
+    private static native Path nGetGlyphPath(long nativeRenderer, int glyphId);
+    private static native Path nGetRunPath(long nativeRenderer, int[] glyphIds, float[] offsets, float[] advances, int count);
+    private static native boolean nGetGlyphBoundingBox(long nativeRenderer, int glyphId, float[] box);
+    private static native boolean nGetRunBoundingBox(long nativeRenderer, int[] glyphIds, float[] offsets, float[] advances, int count, float[] box);
+    private static native void nGetPlacements(long nativeRenderer, int kind, int[] glyphIds, float[] offsets, float[] advances, int count, Bitmap[] bitmaps, int[] positions);
 }

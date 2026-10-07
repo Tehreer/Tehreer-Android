@@ -184,10 +184,9 @@ set(FILE_LIST
     BidiParagraph.cpp
     FontFile.cpp
     FreeType.cpp
-    GlyphOutline.cpp
-    GlyphRasterizer.cpp
     JavaBridge.cpp
     Raw.cpp
+    Renderer.cpp
     RenderableFace.cpp
     ScriptClassifier.cpp
     SfntTables.cpp

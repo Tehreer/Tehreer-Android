@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2021 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.graphics
+#ifndef _TEHREER__RENDERER_H
+#define _TEHREER__RENDERER_H
 
-import com.mta.tehreer.internal.JniBridge.loadLibrary
+#include <jni.h>
 
-internal class GlyphOutline(
-    var nativeOutline: Long
-) {
-    protected fun finalize() {
-        if (nativeOutline != 0L) {
-            nDispose(nativeOutline)
-        }
-    }
+jint register_com_mta_tehreer_graphics_Renderer(JNIEnv *env);
 
-    companion object {
-        init {
-            loadLibrary()
-        }
-
-        @JvmStatic private external fun nDispose(nativeOutline: Long)
-    }
-}
+#endif

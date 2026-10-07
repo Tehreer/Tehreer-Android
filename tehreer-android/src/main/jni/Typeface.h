@@ -41,8 +41,6 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    using Palette = std::vector<FT_Color>;
-
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
 
     ~Typeface();
@@ -57,11 +55,6 @@ public:
 
     inline RenderableFace &renderableFace() const { return m_renderableFace; }
     inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
-    inline FT_Size ftSize() const { return m_ftSize; }
-    FT_Stroker ftStroker();
-
-    inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
-    inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
     inline uint16_t unitsPerEM() const { return TRTypefaceGetUnitsPerEM(m_core); }
     inline int16_t ascent() const { return TRTypefaceGetAscent(m_core); }
@@ -76,38 +69,23 @@ public:
     inline int16_t strikeoutPosition() const { return TRTypefaceGetStrikeoutPosition(m_core); }
     inline int16_t strikeoutThickness() const { return TRTypefaceGetStrikeoutThickness(m_core); }
 
-    size_t getTableLength(uint32_t tag);
-    void getTableData(uint32_t tag, void *buffer);
-
     jobject getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex);
     jstring getNameString(const JavaBridge &javaBridge, int32_t nameIndex);
 
     uint16_t getGlyphID(uint32_t codePoint);
     float getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical);
 
-    jobject unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID);
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:
-    std::mutex m_mutex;
-
-    /* The typeface of Core answers everything about the font; the rest serves the parts that are
-     * still to move. */
+    /* The typeface of Core answers everything about the font. The face of FreeType only serves the
+     * tables and the names that the sfnt package reads, which do not depend on the variations or
+     * the colors, so the instances of a typeface share it. */
     TRTypefaceRef m_core;
 
     RenderableFace &m_renderableFace;
-    FT_Size m_ftSize;
-    FT_Stroker m_ftStroker;
-
-    Palette m_palette;
-
     Typeface(TRTypefaceRef core, RenderableFace &renderableFace);
-    Typeface(const Typeface &parent, TRTypefaceRef core, RenderableFace &renderableFace);
     Typeface(const Typeface &parent, TRTypefaceRef core);
-
-    void setupSize();
-    void setupDefaultCoordinates();
-    void setupPalette();
 };
 
 }

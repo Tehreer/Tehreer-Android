@@ -23,19 +23,19 @@ public enum StrokeCap {
     /**
      * The stroke ends with the path, and does not project beyond it.
      */
-    BUTT(GlyphAttributes.LINECAP_BUTT),
+    BUTT(0),
     /**
      * The stroke projects out as a semicircle, with the center at the end of the path.
      */
-    ROUND(GlyphAttributes.LINECAP_ROUND),
+    ROUND(1),
     /**
      * The stroke projects out as a square, with the center at the end of the path.
      */
-    SQUARE(GlyphAttributes.LINECAP_SQUARE);
+    SQUARE(2);
 
-    final @GlyphAttributes.LineCap int value;
+    final int value;
 
-    StrokeCap(@GlyphAttributes.LineCap int value) {
+    StrokeCap(int value) {
         this.value = value;
     }
 }

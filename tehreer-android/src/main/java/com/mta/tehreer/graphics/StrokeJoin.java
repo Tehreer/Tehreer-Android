@@ -23,19 +23,19 @@ public enum StrokeJoin {
     /**
      * The outer edges of a join meet with a straight line.
      */
-    BEVEL(GlyphAttributes.LINEJOIN_BEVEL),
+    BEVEL(1),
     /**
      * The outer edges of a join meet at a sharp angle.
      */
-    MITER(GlyphAttributes.LINEJOIN_MITER_VARIABLE),
+    MITER(2),
     /**
      * The outer edges of a join meet in a circular arc.
      */
-    ROUND(GlyphAttributes.LINEJOIN_ROUND);
+    ROUND(0);
 
-    final @GlyphAttributes.LineJoin int value;
+    final int value;
 
-    StrokeJoin(@GlyphAttributes.LineJoin int value) {
+    StrokeJoin(int value) {
         this.value = value;
     }
 }
