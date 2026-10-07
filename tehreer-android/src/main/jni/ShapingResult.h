@@ -18,35 +18,37 @@
 #define _TEHREER__SHAPING_RESULT_H
 
 #include <cstdint>
-#include <hb.h>
 #include <jni.h>
 #include <vector>
 
+#include <Tehreer/TRShapingResult.h>
+
 namespace Tehreer {
 
+/**
+ * Holds the result of Core, which is replaced each time that text is shaped into it. The glyphs of
+ * Core are already in the order of the writing direction, and in the unit of the type size.
+ */
 class ShapingResult {
 public:
     ShapingResult();
     ~ShapingResult();
 
-    hb_buffer_t *hbBuffer() const { return m_hbBuffer; }
+    void setup(TRShapingResultRef core, jint charStart, jint charEnd);
 
-    void setup(jfloat sizeByEm, bool isBackward, bool isRTL, jint charStart, jint charEnd);
-
-    jfloat sizeByEm() const { return m_sizeByEm; }
-    bool isBackward() const { return m_isBackward; }
-    bool isRTL() const { return m_isRTL; }
+    bool isBackward() const { return m_core && TRShapingResultIsBackward(m_core); }
+    bool isRTL() const { return m_core && TRShapingResultIsRTL(m_core); }
     jint charStart() const { return m_charStart; }
     jint charEnd() const { return m_charEnd; }
     unsigned int glyphCount() const { return m_glyphCount; }
 
-    hb_codepoint_t glyphIdAt(jint index) const { return m_glyphInfos[at(index)].codepoint; }
-    uint32_t glyphClusterAt(jint index) const { return m_glyphInfos[at(index)].cluster; }
+    jint glyphIdAt(jint index) const { return m_glyphIds[index]; }
+    jfloat glyphXOffsetAt(jint index) const { return m_glyphOffsets[index].x; }
+    jfloat glyphYOffsetAt(jint index) const { return m_glyphOffsets[index].y; }
+    jfloat glyphAdvanceAt(jint index) const { return m_glyphAdvances[index]; }
 
-    jfloat glyphXOffsetAt(jint index) const { return m_glyphPositions[at(index)].x_offset * m_sizeByEm; }
-    jfloat glyphYOffsetAt(jint index) const { return m_glyphPositions[at(index)].y_offset * m_sizeByEm; }
-    jfloat glyphAdvanceAt(jint index) const { return m_glyphPositions[at(index)].x_advance * m_sizeByEm; }
-
+    /* The cluster map of Core has an element for each code unit as large as a pointer, while the
+     * Java side reads 32-bit values. */
     const jint *clusterMapPtr() const { return m_clusterMap.data(); }
 
     void copyGlyphIds(jint offset, jint length, jint *destination) const;
@@ -54,23 +56,15 @@ public:
     void copyGlyphAdvances(jint offset, jint length, jfloat *destination) const;
 
 private:
-    hb_buffer_t *m_hbBuffer;
-    hb_glyph_info_t *m_glyphInfos;
-    hb_glyph_position_t *m_glyphPositions;
+    TRShapingResultRef m_core;
+    const TRGlyphID *m_glyphIds;
+    const TRPoint *m_glyphOffsets;
+    const TRFloat *m_glyphAdvances;
     unsigned int m_glyphCount;
     std::vector<jint> m_clusterMap;
 
-    jfloat m_sizeByEm;
-    bool m_isBackward;
-    bool m_isRTL;
     jint m_charStart;
     jint m_charEnd;
-
-    inline jint at(jint index) const {
-        return m_isRTL ? m_glyphCount - index - 1 : index;
-    }
-
-    std::vector<jint> buildClusterMap() const;
 };
 
 }

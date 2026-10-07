@@ -493,7 +493,6 @@ public class ShapingResult implements Disposable {
 
 	private static native boolean nIsBackward(long nativeResult);
     private static native boolean nIsRTL(long nativeResult);
-    private static native float nGetSizeByEm(long nativeResult);
 	private static native int nGetCharStart(long nativeResult);
 	private static native int nGetCharEnd(long nativeResult);
     private static native int nGetCharCount(long nativeResult);

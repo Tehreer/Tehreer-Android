@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include <hb.h>
 #include <jni.h>
+
+#include <Tehreer/TRShapingResult.h>
 
 #include "JavaBridge.h"
 #include "ShapingResult.h"
@@ -24,14 +25,12 @@ using namespace std;
 using namespace Tehreer;
 
 ShapingResult::ShapingResult()
-    : m_hbBuffer(hb_buffer_create())
-    , m_glyphInfos(nullptr)
-    , m_glyphPositions(nullptr)
+    : m_core(nullptr)
+    , m_glyphIds(nullptr)
+    , m_glyphOffsets(nullptr)
+    , m_glyphAdvances(nullptr)
     , m_glyphCount(0)
     , m_clusterMap()
-    , m_sizeByEm(0.0)
-    , m_isBackward(false)
-    , m_isRTL(false)
     , m_charStart(0)
     , m_charEnd(0)
 {
@@ -39,106 +38,63 @@ ShapingResult::ShapingResult()
 
 ShapingResult::~ShapingResult()
 {
-    hb_buffer_destroy(m_hbBuffer);
+    if (m_core) {
+        TRShapingResultRelease(m_core);
+    }
 }
 
-void ShapingResult::setup(jfloat sizeByEm, bool isBackward, bool isRTL, jint charStart, jint charEnd)
+void ShapingResult::setup(TRShapingResultRef core, jint charStart, jint charEnd)
 {
-    m_glyphInfos = hb_buffer_get_glyph_infos(m_hbBuffer, &m_glyphCount);
-    m_glyphPositions = hb_buffer_get_glyph_positions(m_hbBuffer, nullptr);
+    if (m_core) {
+        TRShapingResultRelease(m_core);
+    }
 
-    m_sizeByEm = sizeByEm;
-    m_isBackward = isBackward;
-    m_isRTL = isRTL;
+    m_core = core;
     m_charStart = charStart;
     m_charEnd = charEnd;
+    m_glyphIds = nullptr;
+    m_glyphOffsets = nullptr;
+    m_glyphAdvances = nullptr;
+    m_glyphCount = 0;
+    m_clusterMap.clear();
 
-    m_clusterMap = buildClusterMap();
-}
+    if (core) {
+        auto codeUnitCount = static_cast<size_t>(TRShapingResultGetCodeUnitCount(core));
+        const TRUInteger *clusterMap = TRShapingResultGetClusterMapPtr(core);
 
-vector<jint> ShapingResult::buildClusterMap() const {
-    jint codeUnitCount = m_charEnd - m_charStart;
-    jint association = 0;
+        m_glyphIds = TRShapingResultGetGlyphIDsPtr(core);
+        m_glyphOffsets = TRShapingResultGetGlyphOffsetsPtr(core);
+        m_glyphAdvances = TRShapingResultGetGlyphAdvancesPtr(core);
+        m_glyphCount = static_cast<unsigned int>(TRShapingResultGetGlyphCount(core));
 
-    vector<jint> array(codeUnitCount, -1);
-
-    /* Traverse in reverse order so that first glyph takes priority in case of multiple
-     * substitution. */
-    for (jint i = m_glyphCount - 1; i >= 0; i--) {
-        association = glyphClusterAt(i);
-        array[association] = i;
-    }
-
-    if (isBackward()) {
-        /* Assign the same glyph index to preceding codeunits. */
-        for (jint i = codeUnitCount - 1; i >= 0; i--) {
-            if (array[i] == -1) {
-                array[i] = association;
-            }
-
-            association = array[i];
-        }
-    } else {
-        /* Assign the same glyph index to subsequent codeunits. */
-        for (jint i = 0; i < codeUnitCount; i++) {
-            if (array[i] == -1) {
-                array[i] = association;
-            }
-
-            association = array[i];
+        m_clusterMap.resize(codeUnitCount);
+        for (size_t i = 0; i < codeUnitCount; i++) {
+            m_clusterMap[i] = static_cast<jint>(clusterMap[i]);
         }
     }
-
-    return array;
 }
 
 void ShapingResult::copyGlyphIds(jint offset, jint length, jint *destination) const
 {
-    if (m_isRTL) {
-        jint last = m_glyphCount - offset - 1;
-
-        for (int i = 0; i < length; i++) {
-            destination[i] = m_glyphInfos[last - i].codepoint;
-        }
-    } else {
-        for (jint i = 0; i < length; i++) {
-            destination[i] = m_glyphInfos[offset + i].codepoint;
-        }
+    for (jint i = 0; i < length; i++) {
+        destination[i] = m_glyphIds[offset + i];
     }
 }
 
 void ShapingResult::copyGlyphOffsets(jint offset, jint length, jfloat *destination) const
 {
-    if (m_isRTL) {
-        jint last = m_glyphCount - offset - 1;
-        jint index = 0;
+    jint index = 0;
 
-        for (int i = 0; i < length; i++) {
-            destination[index++] = m_glyphPositions[last - i].x_offset * m_sizeByEm;
-            destination[index++] = m_glyphPositions[last - i].y_offset * m_sizeByEm;
-        }
-    } else {
-        jint index = 0;
-
-        for (jint i = 0; i < length; i++) {
-            destination[index++] = m_glyphPositions[offset + i].x_offset * m_sizeByEm;
-            destination[index++] = m_glyphPositions[offset + i].y_offset * m_sizeByEm;
-        }
+    for (jint i = 0; i < length; i++) {
+        destination[index++] = m_glyphOffsets[offset + i].x;
+        destination[index++] = m_glyphOffsets[offset + i].y;
     }
 }
 
 void ShapingResult::copyGlyphAdvances(jint offset, jint length, jfloat *destination) const
 {
-    if (m_isRTL) {
-        jint last = m_glyphCount - offset - 1;
-
-        for (int i = 0; i < length; i++) {
-            destination[i] = m_glyphPositions[last - i].x_advance * m_sizeByEm;
-        }
-    } else {
-        for (jint i = 0; i < length; i++) {
-            destination[i] = m_glyphPositions[offset + i].x_advance * m_sizeByEm;
-        }
+    for (jint i = 0; i < length; i++) {
+        destination[i] = m_glyphAdvances[offset + i];
     }
 }
 
@@ -164,14 +120,6 @@ static jboolean isRTL(JNIEnv *env, jobject obj, jlong resultHandle)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
     return shapingResult->isRTL();
-}
-
-static jfloat getSizeByEm(JNIEnv *env, jobject obj, jlong resultHandle)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jfloat sizeByEm = shapingResult->sizeByEm();
-
-    return sizeByEm;
 }
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong resultHandle)
@@ -209,7 +157,7 @@ static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
 static jint getGlyphId(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
 {
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    hb_codepoint_t glyphId = shapingResult->glyphIdAt(index);
+    jint glyphId = shapingResult->glyphIdAt(index);
 
     return static_cast<jint>(glyphId);
 }
@@ -281,7 +229,6 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
     { "nIsBackward", "(J)Z", (void *)isBackward },
     { "nIsRTL", "(J)Z", (void *)isRTL },
-    { "nGetSizeByEm", "(J)F", (void *)getSizeByEm },
     { "nGetCharStart", "(J)I", (void *)getCharStart },
     { "nGetCharEnd", "(J)I", (void *)getCharEnd },
     { "nGetCharCount", "(J)I", (void *)getCharCount },

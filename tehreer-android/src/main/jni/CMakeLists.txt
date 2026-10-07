@@ -177,7 +177,6 @@ target_link_libraries(tehreer PRIVATE freetype harfbuzz unibreak PUBLIC sheenbid
 
 ##########################TEHREER##########################
 set(FILE_LIST
-    AdvanceCache.cpp
     BidiAlgorithm.cpp
     BidiBuffer.cpp
     BidiLine.cpp
@@ -192,7 +191,6 @@ set(FILE_LIST
     RenderableFace.cpp
     ScriptClassifier.cpp
     SfntTables.cpp
-    ShapableFace.cpp
     ShapingEngine.cpp
     ShapingResult.cpp
     StreamUtils.cpp
@@ -202,6 +200,6 @@ set(FILE_LIST
 )
 
 add_library(tehreerjni SHARED ${FILE_LIST})
-target_link_libraries(tehreerjni PRIVATE tehreer harfbuzz sheenbidi freetype atomic android jnigraphics log)
+target_link_libraries(tehreerjni PRIVATE tehreer sheenbidi freetype atomic android jnigraphics log)
 target_link_options(tehreerjni PRIVATE $<$<NOT:$<CONFIG:Debug>>:-s>)
 ###########################################################

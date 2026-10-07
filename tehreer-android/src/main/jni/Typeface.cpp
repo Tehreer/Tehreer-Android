@@ -45,7 +45,6 @@ extern "C" {
 #include "JavaBridge.h"
 #include "RenderableFace.h"
 #include "SfntTables.h"
-#include "ShapableFace.h"
 #include "Typeface.h"
 
 using namespace std;
@@ -85,11 +84,9 @@ Typeface::Typeface(TRTypefaceRef core, RenderableFace &renderableFace)
     , m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
-    , m_shapableFace(nullptr)
     , m_palette({})
 {
     setupSize();
-    setupHarfBuzz();
     setupDefaultCoordinates();
     setupPalette();
 }
@@ -99,11 +96,9 @@ Typeface::Typeface(const Typeface &parent, TRTypefaceRef core, RenderableFace &r
     , m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
-    , m_shapableFace(nullptr)
     , m_palette(parent.m_palette)
 {
     setupSize();
-    setupHarfBuzz(parent.m_shapableFace);
 }
 
 Typeface::Typeface(const Typeface &parent, TRTypefaceRef core)
@@ -111,7 +106,6 @@ Typeface::Typeface(const Typeface &parent, TRTypefaceRef core)
     , m_renderableFace(parent.renderableFace().retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
-    , m_shapableFace(&parent.m_shapableFace->retain())
     , m_palette({})
 {
     setupSize();
@@ -154,19 +148,8 @@ void Typeface::setupPalette()
     }
 }
 
-void Typeface::setupHarfBuzz(ShapableFace *parent)
-{
-    if (parent) {
-        m_shapableFace = &parent->deriveVariation(m_renderableFace);
-    } else {
-        m_shapableFace = &ShapableFace::create(m_renderableFace);
-    }
-}
-
 Typeface::~Typeface()
 {
-    m_shapableFace->release();
-
     if (m_ftStroker) {
         FT_Stroker_Done(m_ftStroker);
     }

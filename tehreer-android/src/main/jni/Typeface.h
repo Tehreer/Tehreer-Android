@@ -26,7 +26,6 @@ extern "C" {
 
 #include <cstddef>
 #include <cstdint>
-#include <hb.h>
 #include <jni.h>
 #include <mutex>
 #include <vector>
@@ -37,7 +36,6 @@ extern "C" {
 #include "JavaBridge.h"
 #include "RenderableFace.h"
 #include "SfntTables.h"
-#include "ShapableFace.h"
 
 namespace Tehreer {
 
@@ -61,9 +59,6 @@ public:
     inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
     inline FT_Size ftSize() const { return m_ftSize; }
     FT_Stroker ftStroker();
-
-    inline ShapableFace &shapableFace() const { return *m_shapableFace; }
-    inline hb_font_t *hbFont() const { return shapableFace().hbFont(); }
 
     inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
@@ -104,8 +99,6 @@ private:
     FT_Size m_ftSize;
     FT_Stroker m_ftStroker;
 
-    ShapableFace *m_shapableFace;
-
     Palette m_palette;
 
     Typeface(TRTypefaceRef core, RenderableFace &renderableFace);
@@ -115,7 +108,6 @@ private:
     void setupSize();
     void setupDefaultCoordinates();
     void setupPalette();
-    void setupHarfBuzz(ShapableFace *parent = nullptr);
 };
 
 }

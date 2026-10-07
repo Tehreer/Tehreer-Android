@@ -19,64 +19,53 @@
 
 #include <cstdint>
 #include <jni.h>
-#include <memory>
 #include <vector>
 
-#include "Typeface.h"
+#include <Tehreer/TRShapingEngine.h>
+
 #include "ShapingResult.h"
 
 namespace Tehreer {
 
-enum ShapingOrder : uint32_t {
-    FORWARD = 0,
-    BACKWARD = 1,
-};
-
-enum WritingDirection : uint32_t {
-    LEFT_TO_RIGHT = 0,
-    RIGHT_TO_LEFT = 1,
-};
-
+/**
+ * Shapes text with the shaping engine of Core. The engine of Core has no getters, so the settings
+ * are kept here too.
+ */
 class ShapingEngine {
 public:
-    static WritingDirection getScriptDefaultDirection(uint32_t scriptTag);
+    static TRWritingDirection getScriptDefaultDirection(uint32_t scriptTag);
 
     ShapingEngine();
     ~ShapingEngine();
 
-    const Typeface *typeface() const { return m_typeface; }
-    void setTypeface(Typeface *typeface) { m_typeface = typeface; }
+    void setTypeface(TRTypefaceRef typeface);
 
     jfloat typeSize() const { return m_typeSize; }
-    void setTypeSize(jfloat typeSize) { m_typeSize = typeSize; }
+    void setTypeSize(jfloat typeSize);
 
     uint32_t scriptTag() const { return m_scriptTag; }
-    void setScriptTag(uint32_t scriptTag) { m_scriptTag = scriptTag; }
+    void setScriptTag(uint32_t scriptTag);
 
     uint32_t languageTag() const { return m_languageTag; }
-    void setLanguageTag(uint32_t languageTag) { m_languageTag = languageTag; }
+    void setLanguageTag(uint32_t languageTag);
 
     void setOpenTypeFeatures(const std::vector<uint32_t> &featureTags, const std::vector<uint16_t> &featureValues);
 
-    ShapingOrder shapingOrder() const { return m_shapingOrder; }
-    void setShapingOrder(ShapingOrder shapingOrder);
+    TRShapingOrder shapingOrder() const { return m_shapingOrder; }
+    void setShapingOrder(TRShapingOrder shapingOrder);
 
-    WritingDirection writingDirection() const { return m_writingDirection; }
-    void setWritingDirection(WritingDirection writingDirection);
+    TRWritingDirection writingDirection() const { return m_writingDirection; }
+    void setWritingDirection(TRWritingDirection writingDirection);
 
     void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd);
 
 private:
-    Typeface *m_typeface;
+    TRShapingEngineRef m_core;
     jfloat m_typeSize;
     uint32_t m_scriptTag;
     uint32_t m_languageTag;
-    std::vector<uint32_t> m_featureTags;
-    std::vector<uint16_t> m_featureValues;
-    ShapingOrder m_shapingOrder;
-    WritingDirection m_writingDirection;
-
-    bool isRTL();
+    TRShapingOrder m_shapingOrder;
+    TRWritingDirection m_writingDirection;
 };
 
 }

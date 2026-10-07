@@ -14,127 +14,98 @@
  * limitations under the License.
  */
 
-extern "C" {
-#include <ft2build.h>
-#include FT_SIZES_H
-#include FT_TYPES_H
-}
-
-#include <cmath>
 #include <cstdint>
-#include <hb.h>
-#include <hb-ot.h>
 #include <jni.h>
 #include <vector>
 
+#include <Tehreer/TRShapingEngine.h>
+
 #include "JavaBridge.h"
+#include "Typeface.h"
 #include "ShapingEngine.h"
 
 using namespace std;
 using namespace Tehreer;
 
-WritingDirection ShapingEngine::getScriptDefaultDirection(uint32_t scriptTag)
+TRWritingDirection ShapingEngine::getScriptDefaultDirection(uint32_t scriptTag)
 {
-    hb_script_t script = hb_ot_tag_to_script(scriptTag);
-    hb_direction_t direction = hb_script_get_horizontal_direction(script);
-
-    if (direction == HB_DIRECTION_RTL) {
-        return WritingDirection::RIGHT_TO_LEFT;
-    }
-
-    return WritingDirection::LEFT_TO_RIGHT;
+    return TRShapingEngineGetScriptDefaultDirection(scriptTag);
 }
 
 ShapingEngine::ShapingEngine()
-    : m_typeface(nullptr)
+    : m_core(TRShapingEngineCreate())
     , m_typeSize(16.0)
-    , m_scriptTag(FT_MAKE_TAG('D', 'F', 'L', 'T'))
-    , m_languageTag(FT_MAKE_TAG('d', 'f', 'l', 't'))
-    , m_shapingOrder(ShapingOrder::FORWARD)
-    , m_writingDirection(WritingDirection::LEFT_TO_RIGHT)
+    , m_scriptTag(TRTagMake('D', 'F', 'L', 'T'))
+    , m_languageTag(TRTagMake('d', 'f', 'l', 't'))
+    , m_shapingOrder(TRShapingOrderForward)
+    , m_writingDirection(TRWritingDirectionLeftToRight)
 {
 }
 
 ShapingEngine::~ShapingEngine()
 {
+    TRShapingEngineRelease(m_core);
+}
+
+void ShapingEngine::setTypeface(TRTypefaceRef typeface)
+{
+    TRShapingEngineSetTypeface(m_core, typeface);
+}
+
+void ShapingEngine::setTypeSize(jfloat typeSize)
+{
+    m_typeSize = typeSize;
+    TRShapingEngineSetTypeSize(m_core, typeSize);
+}
+
+void ShapingEngine::setScriptTag(uint32_t scriptTag)
+{
+    m_scriptTag = scriptTag;
+    TRShapingEngineSetScriptTag(m_core, scriptTag);
+}
+
+void ShapingEngine::setLanguageTag(uint32_t languageTag)
+{
+    m_languageTag = languageTag;
+    TRShapingEngineSetLanguageTag(m_core, languageTag);
 }
 
 void ShapingEngine::setOpenTypeFeatures(const vector<uint32_t> &featureTags, const vector<uint16_t> &featureValues)
 {
-    m_featureTags = featureTags;
-    m_featureValues = featureValues;
-}
+    vector<TROpenTypeFeature> features(featureTags.size());
 
-void ShapingEngine::setShapingOrder(ShapingOrder shapingOrder)
-{
-    m_shapingOrder = shapingOrder;
-}
-
-void ShapingEngine::setWritingDirection(WritingDirection writingDirection)
-{
-    m_writingDirection = writingDirection;
-}
-
-bool ShapingEngine::isRTL()
-{
-    if (m_shapingOrder == ShapingOrder::BACKWARD) {
-        return m_writingDirection != WritingDirection::RIGHT_TO_LEFT;
+    for (size_t i = 0; i < features.size(); i++) {
+        features[i].tag = featureTags[i];
+        features[i].value = featureValues[i];
     }
 
-    return m_writingDirection == WritingDirection::RIGHT_TO_LEFT;
+    TRShapingEngineSetOpenTypeFeatures(m_core, features.data(), features.size());
+}
+
+void ShapingEngine::setShapingOrder(TRShapingOrder shapingOrder)
+{
+    m_shapingOrder = shapingOrder;
+    TRShapingEngineSetShapingOrder(m_core, shapingOrder);
+}
+
+void ShapingEngine::setWritingDirection(TRWritingDirection writingDirection)
+{
+    m_writingDirection = writingDirection;
+    TRShapingEngineSetWritingDirection(m_core, writingDirection);
 }
 
 void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
 {
-    hb_script_t script = hb_ot_tag_to_script(m_scriptTag);
-    hb_language_t language = hb_ot_tag_to_language(m_languageTag);
-    hb_direction_t direction;
+    TRShapingResultRef core = TRShapingEngineShape(m_core, charArray + charStart,
+        static_cast<TRUInteger>(charEnd - charStart), TRStringEncodingUTF16);
 
-    if (m_writingDirection == WritingDirection::RIGHT_TO_LEFT) {
-        direction = HB_DIRECTION_RTL;
-    } else {
-        direction = HB_DIRECTION_LTR;
-    }
-
-    hb_buffer_t *buffer = shapingResult.hbBuffer();
-    hb_buffer_clear_contents(buffer);
-    hb_buffer_set_script(buffer, script);
-    hb_buffer_set_language(buffer, language);
-    hb_buffer_set_direction(buffer, direction);
-
-    const jchar *codeUnits = charArray + charStart;
-    jint length = charEnd - charStart;
-
-    hb_buffer_add_utf16(buffer, codeUnits, length, 0, length);
-
-    size_t numFeatures = m_featureTags.size();
-    hb_feature_t features[numFeatures];
-
-    for (size_t i = 0; i < m_featureTags.size(); i++) {
-        features[i].tag = m_featureTags[i];
-        features[i].value = m_featureValues[i];
-        features[i].start = 0;
-        features[i].end = length;
-    }
-
-    hb_font_t *hbFont = hb_font_create_sub_font(m_typeface->hbFont());
-    auto ppem = lround(m_typeSize);
-    hb_font_set_ppem(hbFont, ppem, ppem);
-
-    hb_shape(hbFont, shapingResult.hbBuffer(), features, numFeatures);
-
-    hb_font_destroy(hbFont);
-
-    jfloat sizeByEm = m_typeSize / m_typeface->unitsPerEM();
-    bool isBackward = m_shapingOrder == ShapingOrder::BACKWARD;
-
-    shapingResult.setup(sizeByEm, isBackward, isRTL(), charStart, charEnd);
+    shapingResult.setup(core, charStart, charEnd);
 }
 
 static jint getScriptDefaultDirection(JNIEnv *env, jobject obj, jint scriptTag)
 {
     auto inputTag = static_cast<uint32_t>(scriptTag);
-    WritingDirection defaultDirection = ShapingEngine::getScriptDefaultDirection(inputTag);
+    TRWritingDirection defaultDirection = ShapingEngine::getScriptDefaultDirection(inputTag);
 
     return static_cast<jint>(defaultDirection);
 }
@@ -154,11 +125,11 @@ static void dispose(JNIEnv *env, jobject obj, jlong engineHandle)
 static void setTypeface(JNIEnv *env, jobject obj, jlong engineHandle, jobject jtypeface)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    Typeface *typeface = nullptr;
+    TRTypefaceRef typeface = nullptr;
 
     if (jtypeface) {
         jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-        typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+        typeface = reinterpret_cast<Typeface *>(typefaceHandle)->core();
     }
 
     shapingEngine->setTypeface(typeface);
@@ -231,7 +202,7 @@ static void setOpenTypeFeatures(JNIEnv *env, jobject obj, jlong engineHandle, ji
 static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    WritingDirection writingDirection = shapingEngine->writingDirection();
+    TRWritingDirection writingDirection = shapingEngine->writingDirection();
 
     return static_cast<jint>(writingDirection);
 }
@@ -239,7 +210,7 @@ static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
 static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint writingDirection)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    auto layoutDirection = static_cast<WritingDirection>(writingDirection);
+    auto layoutDirection = static_cast<TRWritingDirection>(writingDirection);
 
     shapingEngine->setWritingDirection(layoutDirection);
 }
@@ -247,7 +218,7 @@ static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, ji
 static jint getShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    ShapingOrder shapingOrder = shapingEngine->shapingOrder();
+    TRShapingOrder shapingOrder = shapingEngine->shapingOrder();
 
     return static_cast<jint>(shapingOrder);
 }
@@ -255,7 +226,7 @@ static jint getShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle)
 static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingOrder)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
-    auto memoryOrder = static_cast<ShapingOrder>(shapingOrder);
+    auto memoryOrder = static_cast<TRShapingOrder>(shapingOrder);
 
     shapingEngine->setShapingOrder(memoryOrder);
 }
