@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.graphics;
 
-import android.annotation.SuppressLint;
 import android.content.res.AssetManager;
 import android.graphics.Matrix;
 import android.graphics.Path;
@@ -30,18 +29,12 @@ import com.mta.tehreer.font.ColorPalette;
 import com.mta.tehreer.font.NamedStyle;
 import com.mta.tehreer.font.VariationAxis;
 import com.mta.tehreer.internal.JniBridge;
-import com.mta.tehreer.internal.sfnt.tables.cpal.ColorPaletteTable;
-import com.mta.tehreer.internal.sfnt.tables.cpal.ColorRecordsArray;
-import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteLabelsArray;
-import com.mta.tehreer.internal.sfnt.tables.cpal.PaletteTypesArray;
-import com.mta.tehreer.internal.sfnt.tables.fvar.FontVariationsTable;
-import com.mta.tehreer.internal.sfnt.tables.fvar.InstanceRecord;
-import com.mta.tehreer.internal.sfnt.tables.fvar.VariationAxisRecord;
 import com.mta.tehreer.sfnt.SfntTag;
 
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -168,17 +161,14 @@ public class Typeface {
 
     private void init(long nativeTypeface) {
         this.nativeTypeface = nativeTypeface;
-        this.defaults = null;
+        this.defaults = new DefaultProperties();
         this.design = null;
         this.names = null;
 
-        setupDefaultProperties();
-        setupDefaultCoordinates();
-        setupStrikeout();
+        setupVariations();
+        setupPalettes();
         setupDesignCharacteristics();
         setupNames();
-        setupVariableDescription();
-        setupDefaultPalette();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull float[] coordinates) {
@@ -187,10 +177,8 @@ public class Typeface {
         this.design = null;
         this.names = null;
 
-        setupStrikeout();
         setupDesignCharacteristics();
         setupNames();
-        setupVariableDescription();
     }
 
     private Typeface(@NonNull Typeface typeface, @NonNull int[] colors) {
@@ -200,97 +188,36 @@ public class Typeface {
         this.names = typeface.names;
     }
 
-    private void setupDefaultProperties() {
-        defaults = new DefaultProperties();
-
-        setupVariations();
-        setupPalettes();
-    }
-
-    @SuppressLint ("Range")
     private void setupVariations() {
-        FontVariationsTable fvarTable = FontVariationsTable.from(this);
-        if (fvarTable == null) {
+        final int axisCount = nGetVariationAxisCount(nativeTypeface);
+        if (axisCount == 0) {
             return;
         }
 
-        VariationAxisRecord[] axisRecords = fvarTable.axisRecords();
-        InstanceRecord[] instanceRecords = fvarTable.instanceRecords();
+        final int[] tagsAndFlags = new int[axisCount * 2];
+        final float[] values = new float[axisCount * 3];
+        final String[] axisNames = new String[axisCount];
+        nGetVariationAxes(nativeTypeface, tagsAndFlags, values, axisNames);
 
-        List<VariationAxis> variationAxes = new ArrayList<>(axisRecords.length);
+        final List<VariationAxis> variationAxes = new ArrayList<>(axisCount);
 
-        for (VariationAxisRecord axisRecord : axisRecords) {
-            final int axisTag = axisRecord.axisTag();
-            final float minValue = axisRecord.minValue();
-            final float defaultValue = axisRecord.defaultValue();
-            final float maxValue = axisRecord.maxValue();
-            final int flags = axisRecord.flags();
-            final int axisNameId = axisRecord.axisNameId();
-
-            String axisName = searchNameString(axisNameId);
-            if (axisName == null) {
-                axisName = "";
-            }
-
-            variationAxes.add(VariationAxis.of(axisTag, axisName, flags,
-                                               defaultValue, minValue, maxValue));
+        for (int i = 0; i < axisCount; i++) {
+            variationAxes.add(VariationAxis.of(tagsAndFlags[i * 2], axisNames[i], tagsAndFlags[i * 2 + 1],
+                                               values[i * 3 + 1], values[i * 3], values[i * 3 + 2]));
         }
 
-        List<NamedStyle> namedStyles = new ArrayList<>(instanceRecords.length);
-        boolean hasDefaultInstance = false;
+        final int styleCount = nGetNamedStyleCount(nativeTypeface);
+        final String[] styleNames = new String[styleCount];
+        final String[] postScriptNames = new String[styleCount];
+        final float[] coordinates = new float[styleCount * axisCount];
+        nGetNamedStyles(nativeTypeface, styleNames, postScriptNames, coordinates);
 
-        for (InstanceRecord instanceRecord : instanceRecords) {
-            final int styleNameId = instanceRecord.subfamilyNameID();
-            final float[] coordinates = instanceRecord.coordinates();
-            final int postScriptNameId = instanceRecord.postScriptNameID();
+        final List<NamedStyle> namedStyles = new ArrayList<>(styleCount);
 
-            String styleName = searchNameString(styleNameId);
-            if (styleName == null) {
-                styleName = "";
-            }
+        for (int i = 0; i < styleCount; i++) {
+            final float[] styleCoordinates = Arrays.copyOfRange(coordinates, i * axisCount, (i + 1) * axisCount);
 
-            String postScriptName = null;
-            if (postScriptNameId > -1) {
-                postScriptName = searchNameString(postScriptNameId);
-            }
-
-            if (!hasDefaultInstance) {
-                final float minValue = 1.0f / 0x10000;
-                final int axesCount = variationAxes.size();
-                boolean matched = true;
-
-                // Check if this is the default instance.
-                for (int i = 0; i < axesCount; i++) {
-                    VariationAxis axis = variationAxes.get(i);
-
-                    if (Math.abs(coordinates[i] - axis.defaultValue()) >= minValue) {
-                        matched = false;
-                        break;
-                    }
-                }
-
-                if (matched) {
-                    hasDefaultInstance = true;
-                }
-            }
-
-            namedStyles.add(NamedStyle.of(styleName, coordinates, postScriptName));
-        }
-
-        if (!hasDefaultInstance) {
-            final int axesCount = variationAxes.size();
-            final float[] coordinates = new float[axesCount];
-
-            for (int i = 0; i < axesCount; i++) {
-                coordinates[i] = variationAxes.get(i).defaultValue();
-            }
-
-            String styleName = nGetDefaultStyleName(nativeTypeface);
-            if (styleName == null) {
-                styleName = "";
-            }
-
-            namedStyles.add(0, NamedStyle.of(styleName, coordinates, null));
+            namedStyles.add(NamedStyle.of(styleNames[i], styleCoordinates, postScriptNames[i]));
         }
 
         defaults.variationAxes = variationAxes;
@@ -298,208 +225,44 @@ public class Typeface {
     }
 
     private void setupPalettes() {
-        ColorPaletteTable cpalTable = ColorPaletteTable.from(this);
-        if (cpalTable == null) {
+        final int entryCount = nGetPaletteEntryCount(nativeTypeface);
+        if (entryCount == 0) {
             return;
         }
 
-        final int numPaletteEntries = cpalTable.numPaletteEntries();
-        final int numPalettes = cpalTable.numPalettes();
+        final String[] entryNames = new String[entryCount];
+        nGetPaletteEntryNames(nativeTypeface, entryNames);
 
-        ColorRecordsArray colorRecords = cpalTable.colorRecords();
-        PaletteTypesArray paletteTypes = cpalTable.paletteTypes();
-        PaletteLabelsArray paletteLabels = cpalTable.paletteLabels();
-        PaletteLabelsArray paletteEntryLabels = cpalTable.paletteEntryLabels();
+        final int paletteCount = nGetPredefinedPaletteCount(nativeTypeface);
+        final String[] paletteNames = new String[paletteCount];
+        final int[] paletteFlags = new int[paletteCount];
+        final int[] paletteColors = new int[paletteCount * entryCount];
+        nGetPredefinedPalettes(nativeTypeface, paletteNames, paletteFlags, paletteColors);
 
-        List<ColorPalette> predefinedPalettes = new ArrayList<>(numPalettes);
+        final List<ColorPalette> predefinedPalettes = new ArrayList<>(paletteCount);
 
-        /* Populate predefined palettes. */
-        for (int i = 0; i < numPalettes; i++) {
-            String name = null;
-            int flags = 0;
-            int[] colors = new int[numPaletteEntries];
+        for (int i = 0; i < paletteCount; i++) {
+            final int[] colors = Arrays.copyOfRange(paletteColors, i * entryCount, (i + 1) * entryCount);
 
-            if (paletteLabels != null) {
-                final int nameId = paletteLabels.get(i);
-
-                if (nameId != 0xFFFF) {
-                    name = searchNameString(nameId);
-                }
-            }
-            if (name == null) {
-                name = "";
-            }
-
-            if (paletteTypes != null) {
-                flags = paletteTypes.get(i);
-            }
-
-            final int firstColorIndex = cpalTable.colorRecordIndexAt(i);
-            for (int j = 0; j < numPaletteEntries; j++) {
-                colors[j] = colorRecords.get(firstColorIndex + j);
-            }
-
-            predefinedPalettes.add(ColorPalette.of(name, flags, colors));
-        }
-
-        List<String> paletteEntryNames = new ArrayList<>(numPaletteEntries);
-
-        /* Populate palette entry names. */
-        if (paletteEntryLabels == null) {
-            for (int i = 0; i < numPaletteEntries; i++) {
-                paletteEntryNames.add("");
-            }
-        } else {
-            for (int i = 0; i < numPaletteEntries; i++) {
-                final int nameId = paletteEntryLabels.get(i);
-                String name = null;
-
-                if (nameId != 0xFFFF) {
-                    name = searchNameString(nameId);
-                }
-                if (name == null) {
-                    name = "";
-                }
-
-                paletteEntryNames.add(name);
-            }
+            predefinedPalettes.add(ColorPalette.of(paletteNames[i], paletteFlags[i], colors));
         }
 
         defaults.predefinedPalettes = predefinedPalettes;
-        defaults.paletteEntryNames = paletteEntryNames;
-    }
-
-    private void setupDefaultCoordinates() {
-        final float[] coordinates = getDefaultCoordinates();
-        if (coordinates != null) {
-            nSetupCoordinates(nativeTypeface, coordinates);
-        }
-    }
-
-    private void setupStrikeout() {
-        nSetupStrikeout(nativeTypeface);
+        defaults.paletteEntryNames = Arrays.asList(entryNames);
     }
 
     private void setupDesignCharacteristics() {
         design = new DesignCharacteristics();
-        design.weight = TypeWeight.valueOf(nGetDefaultWeight(nativeTypeface));
-        design.width = TypeWidth.valueOf(nGetDefaultWidth(nativeTypeface));
-        design.slope = TypeSlope.valueOf(nGetDefaultSlope(nativeTypeface));
+        design.weight = TypeWeight.valueOf(nGetWeight(nativeTypeface));
+        design.width = TypeWidth.valueOf(nGetWidth(nativeTypeface));
+        design.slope = TypeSlope.valueOf(nGetSlope(nativeTypeface));
     }
 
     private void setupNames() {
         names = new StandardNames();
-
-        final String familyName = nGetDefaultFamilyName(nativeTypeface);
-        final String styleName = nGetDefaultStyleName(nativeTypeface);
-        final String fullName = nGetDefaultFullName(nativeTypeface);
-
-        if (familyName != null) {
-            names.familyName = familyName;
-        }
-        if (styleName != null) {
-            names.styleName = styleName;
-        }
-        if (fullName != null) {
-            names.fullName = fullName;
-        } else {
-            generateFullName();
-        }
-    }
-
-    private void generateFullName() {
-        final String familyName = getFamilyName();
-        final String styleName = getStyleName();
-
-        if (!familyName.isEmpty()) {
-            names.fullName = familyName;
-
-            if (!styleName.isEmpty()) {
-                names.fullName += ' ' + styleName;
-            }
-        } else {
-            names.fullName = getStyleName();
-        }
-    }
-
-    private void setupVariableDescription() {
-        final float[] coordinates = getVariationCoordinates();
-        if (coordinates == null || coordinates.length == 0) {
-            return;
-        }
-
-        final List<NamedStyle> namedStyles = getNamedStyles();
-        if (namedStyles != null) {
-            // Reset the style name and the full name.
-            names.styleName = "";
-            names.fullName = "";
-
-            final int coordCount = coordinates.length;
-            final float minValue = 1.0f / 0x10000;
-
-            // Get the style name of this instance.
-            for (NamedStyle instance : namedStyles) {
-                final String name = instance.styleName();
-                if (name.isEmpty()) {
-                    continue;
-                }
-
-                final float[] namedCoords = instance.coordinates();
-                boolean matched = true;
-
-                for (int i = 0; i < coordCount; i++) {
-                    if (Math.abs(coordinates[i] - namedCoords[i]) >= minValue) {
-                        matched = false;
-                        break;
-                    }
-                }
-
-                if (matched) {
-                    names.styleName = name;
-                    generateFullName();
-                    break;
-                }
-            }
-        }
-
-        final List<VariationAxis> variationAxes = getVariationAxes();
-        if (variationAxes != null) {
-            final int axisCount = variationAxes.size();
-
-            final int ital = SfntTag.make("ital");
-            final int slnt = SfntTag.make("slnt");
-            final int wdth = SfntTag.make("wdth");
-            final int wght = SfntTag.make("wght");
-
-            // Get the values of variation axes.
-            for (int i = 0; i < axisCount; i++) {
-                final VariationAxis axis = variationAxes.get(i);
-                final int tag = axis.tag();
-
-                if (tag == ital) {
-                    design.slope = TypeSlope.fromItal(coordinates[i]);
-                } else if (tag == slnt) {
-                    design.slope = TypeSlope.fromSlnt(coordinates[i]);
-                } else if (tag == wdth) {
-                    design.width = TypeWidth.fromWdth(coordinates[i]);
-                } else if (tag == wght) {
-                    design.weight = TypeWeight.fromWght(coordinates[i]);
-                }
-            }
-        }
-    }
-
-    private void setupDefaultPalette() {
-        final List<ColorPalette> predefinedPalettes = getPredefinedPalettes();
-
-        // Select first palette by default.
-        if (predefinedPalettes!= null) {
-            nSetupColors(nativeTypeface, predefinedPalettes.get(0).colors());
-        }
-    }
-
-    private @Nullable String searchNameString(int nameId) {
-        return nSearchNameString(nativeTypeface, nameId);
+        names.familyName = nGetFamilyName(nativeTypeface);
+        names.styleName = nGetStyleName(nativeTypeface);
+        names.fullName = nGetFullName(nativeTypeface);
     }
 
     /**
@@ -543,22 +306,6 @@ public class Typeface {
         final List<VariationAxis> variationAxes = defaults.variationAxes;
         if (variationAxes != null && !variationAxes.isEmpty()) {
             return Collections.unmodifiableList(variationAxes);
-        }
-
-        return null;
-    }
-
-    private @Nullable float[] getDefaultCoordinates() {
-        final List<VariationAxis> variationAxes = getVariationAxes();
-        if (variationAxes != null) {
-            final int coordCount = variationAxes.size();
-            float[] coordinates = new float[coordCount];
-
-            for (int i = 0; i < coordCount; i++) {
-                coordinates[i] = variationAxes.get(i).defaultValue();
-            }
-
-            return coordinates;
         }
 
         return null;
@@ -901,20 +648,24 @@ public class Typeface {
     private static native long nCreateWithFile(String path);
     private static native long nCreateFromStream(InputStream stream);
 
-    private static native void nSetupCoordinates(long nativeTypeface, float[] coordinates);
-    private static native void nSetupStrikeout(long nativeTypeface);
-    private static native void nSetupColors(long nativeTypeface, int[] colors);
-
 	private static native void nDispose(long nativeTypeface);
 
-    private static native String nSearchNameString(long nativeTypeface, int nameId);
-    private static native String nGetDefaultFamilyName(long nativeTypeface);
-    private static native String nGetDefaultStyleName(long nativeTypeface);
-    private static native String nGetDefaultFullName(long nativeTypeface);
+    private static native String nGetFamilyName(long nativeTypeface);
+    private static native String nGetStyleName(long nativeTypeface);
+    private static native String nGetFullName(long nativeTypeface);
 
-    private static native int nGetDefaultWeight(long nativeTypeface);
-    private static native int nGetDefaultWidth(long nativeTypeface);
-    private static native int nGetDefaultSlope(long nativeTypeface);
+    private static native int nGetWeight(long nativeTypeface);
+    private static native int nGetWidth(long nativeTypeface);
+    private static native int nGetSlope(long nativeTypeface);
+
+    private static native int nGetVariationAxisCount(long nativeTypeface);
+    private static native void nGetVariationAxes(long nativeTypeface, int[] tagsAndFlags, float[] values, String[] names);
+    private static native int nGetNamedStyleCount(long nativeTypeface);
+    private static native void nGetNamedStyles(long nativeTypeface, String[] styleNames, String[] postScriptNames, float[] coordinates);
+    private static native int nGetPaletteEntryCount(long nativeTypeface);
+    private static native void nGetPaletteEntryNames(long nativeTypeface, String[] names);
+    private static native int nGetPredefinedPaletteCount(long nativeTypeface);
+    private static native void nGetPredefinedPalettes(long nativeTypeface, String[] names, int[] flags, int[] colors);
 
     private static native long nGetVariationInstance(long nativeTypeface, float[] coordinates);
 	private static native void nGetVariationCoordinates(long nativeTypeface, float[] coordinates);

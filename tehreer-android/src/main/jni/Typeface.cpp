@@ -34,6 +34,10 @@ extern "C" {
 #include <cstring>
 #include <jni.h>
 #include <mutex>
+#include <string>
+#include <vector>
+
+#include <Tehreer/TRTypeface.h>
 
 #include "Convert.h"
 #include "FontFile.h"
@@ -52,141 +56,66 @@ using namespace Tehreer::SFNT::OS2;
 
 using FaceLock = lock_guard<RenderableFace>;
 
-static int32_t searchEnglishName(FT_Face face, uint16_t nameID)
-{
-    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(face);
-    int32_t candidate = -1;
-
-    for (FT_UInt i = 0; i < nameCount; i++) {
-        FT_SfntName record;
-        FT_Get_Sfnt_Name(face, i, &record);
-
-        if (record.name_id != nameID) {
-            continue;
-        }
-
-        Locale locale(record.platform_id, record.language_id);
-        const string *language = locale.language();
-
-        if (language && *language == "en") {
-            const string *region = locale.region();
-
-            if (record.platform_id == PlatformID::WINDOWS && region && *region == "US") {
-                return static_cast<int32_t>(i);
-            }
-
-            if (candidate == -1 || record.platform_id == PlatformID::MACINTOSH) {
-                candidate = static_cast<int32_t>(i);
-            }
-        }
-    }
-
-    return candidate;
-}
-
-static int32_t searchFamilyName(FT_Face face, TT_OS2 *os2Table)
-{
-    int32_t familyName = -1;
-
-    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        familyName = searchEnglishName(face, NameID::WWS_FAMILY);
-    }
-    if (familyName == -1) {
-        familyName = searchEnglishName(face, NameID::TYPOGRAPHIC_FAMILY);
-    }
-    if (familyName == -1) {
-        familyName = searchEnglishName(face, NameID::FONT_FAMILY);
-    }
-
-    return familyName;
-}
-
-static int32_t searchStyleName(FT_Face face, TT_OS2 *os2Table)
-{
-    int32_t styleName = -1;
-
-    if (os2Table && (os2Table->fsSelection & FSSelection::WWS)) {
-        styleName = searchEnglishName(face, NameID::WWS_SUBFAMILY);
-    }
-    if (styleName == -1) {
-        styleName = searchEnglishName(face, NameID::TYPOGRAPHIC_SUBFAMILY);
-    }
-    if (styleName == -1) {
-        styleName = searchEnglishName(face, NameID::FONT_SUBFAMILY);
-    }
-
-    return styleName;
-}
-
-static int32_t searchFullName(FT_Face face)
-{
-    return searchEnglishName(face, NameID::FULL);
-}
-
 Typeface *Typeface::createFromFile(FontFile *fontFile, FT_Long faceIndex)
 {
     if (!fontFile) {
         return nullptr;
     }
 
-    RenderableFace *renderableFace = fontFile->createRenderableFace(faceIndex);
-    if (!renderableFace) {
+    TRTypefaceRef core = TRTypefaceCreate(fontFile->core(), static_cast<TRUInteger>(faceIndex));
+    if (!core) {
         return nullptr;
     }
 
-    auto typeface = new Typeface(*renderableFace);
+    RenderableFace *renderableFace = fontFile->createRenderableFace(faceIndex);
+    if (!renderableFace) {
+        TRTypefaceRelease(core);
+        return nullptr;
+    }
+
+    auto typeface = new Typeface(core, *renderableFace);
 
     renderableFace->release();
 
     return typeface;
 }
 
-Typeface::Typeface(RenderableFace &renderableFace)
-    : m_renderableFace(renderableFace.retain())
+Typeface::Typeface(TRTypefaceRef core, RenderableFace &renderableFace)
+    : m_core(core)
+    , m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
-    , m_defaults(DefaultProperties())
-    , m_strikeoutPosition(0)
-    , m_strikeoutThickness(0)
     , m_palette({})
 {
     setupSize();
     setupHarfBuzz();
-    setupDefaultDescription();
+    setupDefaultCoordinates();
+    setupPalette();
 }
 
-Typeface::Typeface(const Typeface &parent, RenderableFace &renderableFace)
-    : m_renderableFace(renderableFace.retain())
+Typeface::Typeface(const Typeface &parent, TRTypefaceRef core, RenderableFace &renderableFace)
+    : m_core(core)
+    , m_renderableFace(renderableFace.retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(nullptr)
-    , m_defaults(parent.m_defaults)
-    , m_strikeoutPosition(0)
-    , m_strikeoutThickness(0)
     , m_palette(parent.m_palette)
 {
     setupSize();
     setupHarfBuzz(parent.m_shapableFace);
 }
 
-Typeface::Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount)
-    : m_renderableFace(parent.renderableFace().retain())
+Typeface::Typeface(const Typeface &parent, TRTypefaceRef core)
+    : m_core(core)
+    , m_renderableFace(parent.renderableFace().retain())
     , m_ftSize(nullptr)
     , m_ftStroker(nullptr)
     , m_shapableFace(&parent.m_shapableFace->retain())
-    , m_defaults(parent.m_defaults)
-    , m_strikeoutPosition(parent.m_strikeoutPosition)
-    , m_strikeoutThickness(parent.m_strikeoutThickness)
     , m_palette({})
 {
     setupSize();
-    setupColors(colorArray, colorCount);
-}
-
-void Typeface::setupCoordinates(const float *coordArray, size_t coordCount)
-{
-    m_renderableFace.setupCoordinates(coordArray, coordCount);
+    setupPalette();
 }
 
 void Typeface::setupSize()
@@ -194,53 +123,34 @@ void Typeface::setupSize()
     FT_New_Size(m_renderableFace.ftFace(), &m_ftSize);
 }
 
-void Typeface::setupDefaultDescription()
+void Typeface::setupDefaultCoordinates()
 {
-    FT_Face ftFace = m_renderableFace.ftFace();
-    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
-    auto headTable = static_cast<TT_Header *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_HEAD));
+    /* The face of FreeType has to follow the default design coordinates of the font. */
+    const TRVariationAxis *axes = TRTypefaceGetVariationAxesPtr(m_core);
+    TRUInteger axisCount = TRTypefaceGetVariationAxisCount(m_core);
 
-    Description description;
-    description.familyName = searchFamilyName(ftFace, os2Table);
-    description.styleName = searchStyleName(ftFace, os2Table);
-    description.fullName = searchFullName(ftFace);
+    if (axes && axisCount > 0) {
+        std::vector<float> coordinates(axisCount);
 
-    if (os2Table) {
-        description.weight = os2Table->usWeightClass;
-        description.width = os2Table->usWidthClass;
-
-        if (os2Table->fsSelection & FSSelection::OBLIQUE) {
-            description.slope = Slope::OBLIQUE;
-        } else if (os2Table->fsSelection & FSSelection::ITALIC) {
-            description.slope = Slope::ITALIC;
-        }
-    } else if (headTable) {
-        if (headTable->Mac_Style & MacStyle::BOLD) {
-            description.weight = Weight::BOLD;
+        for (TRUInteger i = 0; i < axisCount; i++) {
+            coordinates[i] = axes[i].defaultValue;
         }
 
-        if (headTable->Mac_Style & MacStyle::CONDENSED) {
-            description.width = Width::CONDENSED;
-        } else if (headTable->Mac_Style & MacStyle::EXTENDED) {
-            description.width = Width::EXPANDED;
-        }
-
-        if (headTable->Mac_Style & MacStyle::ITALIC) {
-            description.slope = Slope::ITALIC;
-        }
+        m_renderableFace.setupCoordinates(coordinates.data(), coordinates.size());
     }
-
-    m_defaults.description = description;
 }
 
-void Typeface::setupStrikeout()
+void Typeface::setupPalette()
 {
-    FT_Face ftFace = m_renderableFace.ftFace();
-    auto os2Table = static_cast<TT_OS2 *>(FT_Get_Sfnt_Table(ftFace, FT_SFNT_OS2));
+    const TRColor *colors = TRTypefaceGetAssociatedColorsPtr(m_core);
+    TRUInteger colorCount = TRTypefaceGetPaletteEntryCount(m_core);
 
-    if (os2Table) {
-        m_strikeoutPosition = os2Table->yStrikeoutPosition;
-        m_strikeoutThickness = os2Table->yStrikeoutSize;
+    m_palette.clear();
+
+    if (colors) {
+        for (TRUInteger i = 0; i < colorCount; i++) {
+            m_palette.push_back(toFTColor(colors[i]));
+        }
     }
 }
 
@@ -251,11 +161,6 @@ void Typeface::setupHarfBuzz(ShapableFace *parent)
     } else {
         m_shapableFace = &ShapableFace::create(m_renderableFace);
     }
-}
-
-void Typeface::setupColors(const FT_Color *colorArray, size_t colorCount)
-{
-    m_palette = Palette(colorArray, colorArray + colorCount);
 }
 
 Typeface::~Typeface()
@@ -271,16 +176,24 @@ Typeface::~Typeface()
     }
 
     m_renderableFace.release();
+
+    TRTypefaceRelease(m_core);
 }
 
 Typeface *Typeface::deriveVariation(const float *coordArray, size_t coordCount)
 {
-    RenderableFace *renderableFace = m_renderableFace.deriveVariation(coordArray, coordCount);
-    if (!renderableFace) {
+    TRTypefaceRef core = TRTypefaceCreateWithVariation(m_core, coordArray, coordCount);
+    if (!core) {
         return nullptr;
     }
 
-    auto instance = new Typeface(*this, *renderableFace);
+    RenderableFace *renderableFace = m_renderableFace.deriveVariation(coordArray, coordCount);
+    if (!renderableFace) {
+        TRTypefaceRelease(core);
+        return nullptr;
+    }
+
+    auto instance = new Typeface(*this, core, *renderableFace);
 
     renderableFace->release();
 
@@ -289,14 +202,12 @@ Typeface *Typeface::deriveVariation(const float *coordArray, size_t coordCount)
 
 Typeface *Typeface::deriveColor(const uint32_t *colorArray, size_t colorCount)
 {
-    FT_Color colors[colorCount];
-    Palette palette;
-
-    for (size_t i = 0; i < colorCount; i++) {
-        colors[i] = toFTColor(colorArray[i]);
+    TRTypefaceRef core = TRTypefaceCreateWithColors(m_core, colorArray, colorCount);
+    if (!core) {
+        return nullptr;
     }
 
-    return new Typeface(*this, colors, colorCount);
+    return new Typeface(*this, core);
 }
 
 FT_Stroker Typeface::ftStroker()
@@ -338,16 +249,6 @@ void Typeface::getTableData(uint32_t tag, void *buffer)
     FT_Load_Sfnt_Table(ftFace, tag, 0, ftBuffer, nullptr);
 }
 
-int32_t Typeface::searchNameIndex(uint16_t nameID)
-{
-    FaceLock lock(m_renderableFace);
-
-    FT_Face ftFace = m_renderableFace.ftFace();
-    int32_t nameIndex = searchEnglishName(ftFace, nameID);
-
-    return nameIndex;
-}
-
 jobject Typeface::getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex)
 {
     lock();
@@ -378,32 +279,12 @@ jstring Typeface::getNameString(const JavaBridge &javaBridge, int32_t nameIndex)
 
 uint16_t Typeface::getGlyphID(uint32_t codePoint)
 {
-    FaceLock lock(m_renderableFace);
-
-    FT_Face ftFace = m_renderableFace.ftFace();
-    FT_UInt glyphID = FT_Get_Char_Index(ftFace, codePoint);
-
-    return static_cast<uint16_t>(glyphID);
+    return TRTypefaceGetGlyphID(m_core, codePoint);
 }
 
 float Typeface::getGlyphAdvance(uint16_t glyphID, float typeSize, bool vertical)
 {
-    FT_Int32 loadFlags = FT_LOAD_DEFAULT;
-    if (vertical) {
-        loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
-    }
-
-    FaceLock lock(m_renderableFace);
-    FT_Face ftFace = m_renderableFace.ftFace();
-
-    FT_Activate_Size(ftSize());
-    FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);
-    FT_Set_Transform(ftFace, nullptr, nullptr);
-
-    FT_Fixed advance;
-    FT_Get_Advance(ftFace, glyphID, loadFlags, &advance);
-
-    return f16Dot16toFloat(advance);
+    return TRTypefaceGetGlyphAdvance(m_core, glyphID, typeSize, vertical ? TRTrue : TRFalse);
 }
 
 jobject Typeface::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
@@ -466,36 +347,53 @@ jobject Typeface::unsafeGetGlyphPath(JavaBridge bridge, uint16_t glyphID)
 
 jobject Typeface::getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform)
 {
-    FT_Matrix matrix;
-    FT_Vector delta;
-
-    if (!transform) {
-        matrix = { 0x10000, 0, 0, -0x10000 };
-        delta = { 0, 0 };
-    } else {
-        FT_Matrix actual = {
-            toF16Dot16(transform[0]), toF16Dot16(transform[1]),
-            toF16Dot16(transform[3]), toF16Dot16(transform[4]),
-        };
-        FT_Matrix flip = { 1, 0, 0, -1 };
-
-        matrix = {
-            (actual.xx * flip.xx) + (actual.xy * flip.yx), (actual.xx * flip.xy) + (actual.xy * flip.yy),
-            (actual.yx * flip.xx) + (actual.yy * flip.yx), (actual.yx * flip.xy) + (actual.yy * flip.yy)
-        };
-        delta = {
-                toF26Dot6(transform[2]), toF26Dot6(transform[5]),
-        };
+    TRPathRef corePath = TRTypefaceCreateGlyphPath(m_core, glyphID, typeSize);
+    if (!corePath) {
+        return nullptr;
     }
 
-    FaceLock lock(m_renderableFace);
-    FT_Face ftFace = m_renderableFace.ftFace();
+    /* The path of Core points downward, which is how the transform expects it. */
+    TRAffineTransform matrix = { 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
+    if (transform) {
+        matrix.a = transform[0];
+        matrix.c = transform[1];
+        matrix.tx = transform[2];
+        matrix.b = transform[3];
+        matrix.d = transform[4];
+        matrix.ty = transform[5];
+    }
 
-    FT_Activate_Size(ftSize());
-    FT_Set_Char_Size(ftFace, 0, toF26Dot6(typeSize), 0, 0);
-    FT_Set_Transform(ftFace, &matrix, &delta);
+    struct PathContext {
+        JavaBridge bridge;
+        jobject path;
+    };
 
-    return unsafeGetGlyphPath(bridge, glyphID);
+    TRPathCallbacks callbacks = {};
+    callbacks.moveTo = [](void *user, TRFloat x, TRFloat y) {
+        auto context = reinterpret_cast<PathContext *>(user);
+        context->bridge.Path_moveTo(context->path, x, y);
+    };
+    callbacks.lineTo = [](void *user, TRFloat x, TRFloat y) {
+        auto context = reinterpret_cast<PathContext *>(user);
+        context->bridge.Path_lineTo(context->path, x, y);
+    };
+    callbacks.quadTo = [](void *user, TRFloat controlX, TRFloat controlY, TRFloat x, TRFloat y) {
+        auto context = reinterpret_cast<PathContext *>(user);
+        context->bridge.Path_quadTo(context->path, controlX, controlY, x, y);
+    };
+    callbacks.cubicTo = [](void *user, TRFloat control1X, TRFloat control1Y,
+                           TRFloat control2X, TRFloat control2Y, TRFloat x, TRFloat y) {
+        auto context = reinterpret_cast<PathContext *>(user);
+        context->bridge.Path_cubicTo(context->path, control1X, control1Y,
+                                     control2X, control2Y, x, y);
+    };
+
+    PathContext context = { bridge, bridge.Path_construct() };
+    TRPathEnumerate(corePath, &matrix, &callbacks, &context);
+
+    TRPathRelease(corePath);
+
+    return context.path;
 }
 
 static jlong createWithAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)
@@ -541,109 +439,176 @@ static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
     return 0;
 }
 
-void setupCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-
-    jint coordLength = env->GetArrayLength(coordinates);
-    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-
-    auto *coordArray = static_cast<float *>(coordBuffer);
-    auto coordCount = static_cast<size_t>(coordLength);
-
-    typeface->setupCoordinates(coordArray, coordCount);
-
-    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
-}
-
-void setupStrikeout(JNIEnv *env, jobject obj, jlong typefaceHandle)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    typeface->setupStrikeout();
-}
-
-void setupColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
-{
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-
-    jint numColors = env->GetArrayLength(colors);
-    void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
-
-    auto *intColors = static_cast<uint32_t *>(colorBuffer);
-    auto colorCount = static_cast<size_t>(numColors);
-
-    FT_Color colorArray[colorCount];
-
-    for (size_t i = 0; i < colorCount; i++) {
-        colorArray[i] = toFTColor(intColors[i]);
-    }
-
-    typeface->setupColors(colorArray, colorCount);
-
-    env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
-}
-
 static void dispose(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
     delete typeface;
 }
 
-static jstring searchNameString(JNIEnv *env, jobject obj, jlong typefaceHandle, jint nameID)
+static jstring toJavaString(JNIEnv *env, const TRStringView *view)
 {
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto inputID = static_cast<uint16_t>(nameID);
-    int32_t nameIndex = typeface->searchNameIndex(inputID);
+    if (!view || !view->buffer) {
+        return env->NewStringUTF("");
+    }
 
-    return typeface->getNameString(JavaBridge(env), nameIndex);
+    switch (view->encoding) {
+    case TRStringEncodingUTF16:
+        return env->NewString(static_cast<const jchar *>(view->buffer),
+                              static_cast<jsize>(view->length));
+
+    case TRStringEncodingUTF8: {
+        /* The string is not null-terminated, so it has to be copied. */
+        std::string utf8(static_cast<const char *>(view->buffer), view->length);
+        return env->NewStringUTF(utf8.c_str());
+    }
+
+    default:
+        return env->NewStringUTF("");
+    }
 }
 
-static jstring getDefaultFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jstring getFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultFamilyNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
+    return toJavaString(env, TRTypefaceGetFamilyName(typeface->core()));
 }
 
-static jstring getDefaultStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jstring getStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultStyleNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
+    return toJavaString(env, TRTypefaceGetSubfamilyName(typeface->core()));
 }
 
-static jstring getDefaultFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jstring getFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    int32_t nameIndex = typeface->defaultFullNameIndex();
-
-    return typeface->getNameString(JavaBridge(env), nameIndex);
+    return toJavaString(env, TRTypefaceGetFullName(typeface->core()));
 }
 
-static jint getDefaultWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t weight = typeface->defaultWeight();
-
-    return static_cast<jint>(weight);
+    return static_cast<jint>(TRTypefaceGetWeight(typeface->core()));
 }
 
-static jint getDefaultWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t width = typeface->defaultWidth();
-
-    return static_cast<jint>(width);
+    return static_cast<jint>(TRTypefaceGetWidth(typeface->core()));
 }
 
-static jint getDefaultSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
+static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    uint16_t slope = typeface->defaultSlope();
+    return static_cast<jint>(TRTypefaceGetSlope(typeface->core()));
+}
 
-    return static_cast<jint>(slope);
+static jint getVariationAxisCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    return static_cast<jint>(TRTypefaceGetVariationAxisCount(typeface->core()));
+}
+
+/* Fills the tags and flags in pairs, the minimum, default and maximum values in triples. */
+static void getVariationAxes(JNIEnv *env, jobject obj, jlong typefaceHandle,
+    jintArray tagsAndFlags, jfloatArray values, jobjectArray names)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    const TRVariationAxis *axes = TRTypefaceGetVariationAxesPtr(typeface->core());
+    TRUInteger count = TRTypefaceGetVariationAxisCount(typeface->core());
+
+    for (TRUInteger i = 0; i < count; i++) {
+        jint pair[2] = { static_cast<jint>(axes[i].tag), static_cast<jint>(axes[i].flags) };
+        jfloat triple[3] = { axes[i].minValue, axes[i].defaultValue, axes[i].maxValue };
+
+        env->SetIntArrayRegion(tagsAndFlags, static_cast<jsize>(i * 2), 2, pair);
+        env->SetFloatArrayRegion(values, static_cast<jsize>(i * 3), 3, triple);
+
+        jstring name = toJavaString(env, axes[i].name);
+        env->SetObjectArrayElement(names, static_cast<jsize>(i), name);
+        env->DeleteLocalRef(name);
+    }
+}
+
+static jint getNamedStyleCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    return static_cast<jint>(TRTypefaceGetNamedStyleCount(typeface->core()));
+}
+
+/* Fills the coordinates of each style one after the other. A missing post script name is null. */
+static void getNamedStyles(JNIEnv *env, jobject obj, jlong typefaceHandle,
+    jobjectArray styleNames, jobjectArray postScriptNames, jfloatArray coordinates)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    const TRNamedStyle *styles = TRTypefaceGetNamedStylesPtr(typeface->core());
+    TRUInteger count = TRTypefaceGetNamedStyleCount(typeface->core());
+    jsize offset = 0;
+
+    for (TRUInteger i = 0; i < count; i++) {
+        jstring styleName = toJavaString(env, styles[i].subfamilyName);
+        env->SetObjectArrayElement(styleNames, static_cast<jsize>(i), styleName);
+        env->DeleteLocalRef(styleName);
+
+        if (styles[i].postScriptName) {
+            jstring postScriptName = toJavaString(env, styles[i].postScriptName);
+            env->SetObjectArrayElement(postScriptNames, static_cast<jsize>(i), postScriptName);
+            env->DeleteLocalRef(postScriptName);
+        }
+
+        auto coordCount = static_cast<jsize>(styles[i].coordinateCount);
+        env->SetFloatArrayRegion(coordinates, offset, coordCount, styles[i].coordinatesPtr);
+        offset += coordCount;
+    }
+}
+
+static jint getPaletteEntryCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    return static_cast<jint>(TRTypefaceGetPaletteEntryCount(typeface->core()));
+}
+
+static jint getPredefinedPaletteCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    return static_cast<jint>(TRTypefaceGetPredefinedPaletteCount(typeface->core()));
+}
+
+static void getPaletteEntryNames(JNIEnv *env, jobject obj, jlong typefaceHandle, jobjectArray names)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    const TRPaletteEntry *entries = TRTypefaceGetPaletteEntriesPtr(typeface->core());
+    TRUInteger count = TRTypefaceGetPaletteEntryCount(typeface->core());
+
+    for (TRUInteger i = 0; i < count; i++) {
+        jstring name = toJavaString(env, entries[i].name);
+        env->SetObjectArrayElement(names, static_cast<jsize>(i), name);
+        env->DeleteLocalRef(name);
+    }
+}
+
+/* Fills the colors of each palette one after the other. */
+static void getPredefinedPalettes(JNIEnv *env, jobject obj, jlong typefaceHandle,
+    jobjectArray names, jintArray flags, jintArray colors)
+{
+    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
+    const TRPredefinedPalette *palettes = TRTypefaceGetPredefinedPalettesPtr(typeface->core());
+    TRUInteger count = TRTypefaceGetPredefinedPaletteCount(typeface->core());
+    jsize offset = 0;
+
+    for (TRUInteger i = 0; i < count; i++) {
+        jstring name = toJavaString(env, palettes[i].name);
+        env->SetObjectArrayElement(names, static_cast<jsize>(i), name);
+        env->DeleteLocalRef(name);
+
+        auto paletteFlags = static_cast<jint>(palettes[i].flags);
+        env->SetIntArrayRegion(flags, static_cast<jsize>(i), 1, &paletteFlags);
+
+        auto colorCount = static_cast<jsize>(palettes[i].colorCount);
+        env->SetIntArrayRegion(colors, offset,
+                               colorCount, reinterpret_cast<const jint *>(palettes[i].colorsPtr));
+        offset += colorCount;
+    }
 }
 
 static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
@@ -664,16 +629,10 @@ static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle
 static void getVariationCoordinates(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    const CoordArray *values = typeface->coordinates();
+    const TRFloat *values = TRTypefaceGetVariationCoordinatesPtr(typeface->core());
+    jint count = env->GetArrayLength(coordinates);
 
-    void *coordBuffer = env->GetPrimitiveArrayCritical(coordinates, nullptr);
-    auto coordValues = static_cast<jfloat *>(coordBuffer);
-
-    for (size_t i = 0; i < values->size(); i++) {
-        coordValues[i] = values->at(i);
-    }
-
-    env->ReleasePrimitiveArrayCritical(coordinates, coordBuffer, 0);
+    env->SetFloatArrayRegion(coordinates, 0, count, values);
 }
 
 static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
@@ -696,17 +655,10 @@ static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, ji
 static void getAssociatedColors(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    const Typeface::Palette &palette = *typeface->palette();
+    const TRColor *values = TRTypefaceGetAssociatedColorsPtr(typeface->core());
+    jint count = env->GetArrayLength(colors);
 
-    void *colorBuffer = env->GetPrimitiveArrayCritical(colors, nullptr);
-    auto colorValues = static_cast<jint *>(colorBuffer);
-
-    for (size_t i = 0; i < palette.size(); i++) {
-        uint32_t currentColor = toIntColor(palette[i]);
-        colorValues[i] = static_cast<jint>(currentColor);
-    }
-
-    env->ReleasePrimitiveArrayCritical(colors, colorBuffer, 0);
+    env->SetIntArrayRegion(colors, 0, count, reinterpret_cast<const jint *>(values));
 }
 
 static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
@@ -804,12 +756,13 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint
 static void getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle, jobject rect)
 {
     auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_BBox bbox = baseFace->bbox;
+    TRRect box = TRTypefaceGetBoundingBox(typeface->core());
 
     JavaBridge(env).Rect_set(rect,
-                             static_cast<jint>(bbox.xMin), static_cast<jint>(bbox.yMin),
-                             static_cast<jint>(bbox.xMax), static_cast<jint>(bbox.yMax));
+                             static_cast<jint>(box.origin.x),
+                             static_cast<jint>(box.origin.y),
+                             static_cast<jint>(box.origin.x + box.size.width),
+                             static_cast<jint>(box.origin.y + box.size.height));
 }
 
 static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -848,17 +801,21 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
     { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
-    { "nSetupCoordinates", "(J[F)V", (void *)setupCoordinates },
-    { "nSetupStrikeout", "(J)V", (void *)setupStrikeout },
-    { "nSetupColors", "(J[I)V", (void *)setupColors },
     { "nDispose", "(J)V", (void *)dispose },
-    { "nSearchNameString", "(JI)Ljava/lang/String;", (void *)searchNameString },
-    { "nGetDefaultFamilyName", "(J)Ljava/lang/String;", (void *)getDefaultFamilyName },
-    { "nGetDefaultStyleName", "(J)Ljava/lang/String;", (void *)getDefaultStyleName },
-    { "nGetDefaultFullName", "(J)Ljava/lang/String;", (void *)getDefaultFullName },
-    { "nGetDefaultWeight", "(J)I", (void *)getDefaultWeight },
-    { "nGetDefaultWidth", "(J)I", (void *)getDefaultWidth },
-    { "nGetDefaultSlope", "(J)I", (void *)getDefaultSlope },
+    { "nGetFamilyName", "(J)Ljava/lang/String;", (void *)getFamilyName },
+    { "nGetStyleName", "(J)Ljava/lang/String;", (void *)getStyleName },
+    { "nGetFullName", "(J)Ljava/lang/String;", (void *)getFullName },
+    { "nGetWeight", "(J)I", (void *)getWeight },
+    { "nGetWidth", "(J)I", (void *)getWidth },
+    { "nGetSlope", "(J)I", (void *)getSlope },
+    { "nGetVariationAxisCount", "(J)I", (void *)getVariationAxisCount },
+    { "nGetVariationAxes", "(J[I[F[Ljava/lang/String;)V", (void *)getVariationAxes },
+    { "nGetNamedStyleCount", "(J)I", (void *)getNamedStyleCount },
+    { "nGetNamedStyles", "(J[Ljava/lang/String;[Ljava/lang/String;[F)V", (void *)getNamedStyles },
+    { "nGetPaletteEntryCount", "(J)I", (void *)getPaletteEntryCount },
+    { "nGetPaletteEntryNames", "(J[Ljava/lang/String;)V", (void *)getPaletteEntryNames },
+    { "nGetPredefinedPaletteCount", "(J)I", (void *)getPredefinedPaletteCount },
+    { "nGetPredefinedPalettes", "(J[Ljava/lang/String;[I[I)V", (void *)getPredefinedPalettes },
     { "nGetVariationInstance", "(J[F)J", (void *)getVariationInstance },
     { "nGetVariationCoordinates", "(J[F)V", (void *)getVariationCoordinates },
     { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },

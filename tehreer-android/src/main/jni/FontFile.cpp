@@ -88,6 +88,19 @@ FontFile *FontFile::createFromAsset(AAssetManager *assetManager, const char *pat
 {
     FT_Stream stream = createStream(assetManager, path);
     if (stream) {
+        /* Core keeps its own copy of the data, as it cannot read from an asset on demand. */
+        auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
+        const void *data = AAsset_getBuffer(asset);
+        TRFontFileRef core = nullptr;
+
+        if (data) {
+            core = TRFontFileCreateFromMemory(data, static_cast<TRUInteger>(AAsset_getLength(asset)));
+        }
+        if (!core) {
+            disposeStream(stream);
+            return nullptr;
+        }
+
         FT_Open_Args args;
         args.flags = FT_OPEN_STREAM;
         args.memory_base = nullptr;
@@ -95,7 +108,7 @@ FontFile *FontFile::createFromAsset(AAssetManager *assetManager, const char *pat
         args.pathname = nullptr;
         args.stream = stream;
 
-        return createWithArgs(&args);
+        return createWithArgs(&args, core);
     }
 
     return nullptr;
@@ -103,6 +116,11 @@ FontFile *FontFile::createFromAsset(AAssetManager *assetManager, const char *pat
 
 FontFile *FontFile::createFromPath(const char *path)
 {
+    TRFontFileRef core = TRFontFileCreateFromPath(path);
+    if (!core) {
+        return nullptr;
+    }
+
     FT_Open_Args args;
     args.flags = FT_OPEN_PATHNAME;
     args.memory_base = nullptr;
@@ -110,7 +128,7 @@ FontFile *FontFile::createFromPath(const char *path)
     args.pathname = const_cast<FT_String *>(path);
     args.stream = nullptr;
 
-    return createWithArgs(&args);
+    return createWithArgs(&args, core);
 }
 
 FontFile *FontFile::createFromStream(const JavaBridge &bridge, jobject stream)
@@ -119,6 +137,12 @@ FontFile *FontFile::createFromStream(const JavaBridge &bridge, jobject stream)
     void *buffer = StreamUtils::toRawBuffer(bridge, stream, &length);
 
     if (buffer) {
+        TRFontFileRef core = TRFontFileCreateFromMemory(buffer, static_cast<TRUInteger>(length));
+        if (!core) {
+            free(buffer);
+            return nullptr;
+        }
+
         FT_Open_Args args;
         args.flags = FT_OPEN_MEMORY;
         args.memory_base = static_cast<const FT_Byte *>(buffer);
@@ -126,13 +150,13 @@ FontFile *FontFile::createFromStream(const JavaBridge &bridge, jobject stream)
         args.pathname = nullptr;
         args.stream = nullptr;
 
-        return createWithArgs(&args);
+        return createWithArgs(&args, core);
     }
 
     return nullptr;
 }
 
-FontFile *FontFile::createWithArgs(const FT_Open_Args *args)
+FontFile *FontFile::createWithArgs(const FT_Open_Args *args, TRFontFileRef core)
 {
     std::mutex &mutex = FreeType::mutex();
     mutex.lock();
@@ -147,20 +171,24 @@ FontFile *FontFile::createWithArgs(const FT_Open_Args *args)
 
     mutex.unlock();
 
-    return new FontFile(args, (void *)args->memory_base, args->stream, numFaces);
+    return new FontFile(args, (void *)args->memory_base, args->stream, numFaces, core);
 }
 
-FontFile::FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces)
+FontFile::FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces,
+                   TRFontFileRef core)
 {
     m_args = *args;
     m_buffer = buffer;
     m_stream = stream;
     m_numFaces = numFaces;
+    m_core = core;
     m_retainCount = 1;
 }
 
 FontFile::~FontFile()
 {
+    TRFontFileRelease(m_core);
+
     if (m_stream) {
         disposeStream(m_stream);
     }

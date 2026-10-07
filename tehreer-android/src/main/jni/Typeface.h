@@ -31,6 +31,8 @@ extern "C" {
 #include <mutex>
 #include <vector>
 
+#include <Tehreer/TRTypeface.h>
+
 #include "FontFile.h"
 #include "JavaBridge.h"
 #include "RenderableFace.h"
@@ -41,19 +43,9 @@ namespace Tehreer {
 
 class Typeface {
 public:
-    enum Slope : uint16_t {
-        PLAIN = 0,
-        ITALIC = 1,
-        OBLIQUE = 2,
-    };
-
     using Palette = std::vector<FT_Color>;
 
     static Typeface *createFromFile(FontFile *fontFile, FT_Long faceIndex);
-
-    void setupCoordinates(const float *coordArray, size_t coordCount);
-    void setupStrikeout();
-    void setupColors(const FT_Color *colorArray, size_t colorCount);
 
     ~Typeface();
 
@@ -62,6 +54,8 @@ public:
 
     void lock() { m_renderableFace.lock(); };
     void unlock() { m_renderableFace.unlock(); }
+
+    inline TRTypefaceRef core() const { return m_core; }
 
     inline RenderableFace &renderableFace() const { return m_renderableFace; }
     inline FT_Face ftFace() const { return m_renderableFace.ftFace(); }
@@ -74,31 +68,22 @@ public:
     inline const CoordArray *coordinates() const { return m_renderableFace.coordinates(); }
     inline const Palette *palette() const { return m_palette.size() == 0 ? nullptr : &m_palette; }
 
-    inline int32_t defaultFamilyNameIndex() const { return m_defaults.description.familyName; }
-    inline int32_t defaultStyleNameIndex() const { return m_defaults.description.styleName; }
-    inline int32_t defaultFullNameIndex() const { return m_defaults.description.fullName; }
+    inline uint16_t unitsPerEM() const { return TRTypefaceGetUnitsPerEM(m_core); }
+    inline int16_t ascent() const { return TRTypefaceGetAscent(m_core); }
+    inline int16_t descent() const { return TRTypefaceGetDescent(m_core); }
+    inline int16_t leading() const { return TRTypefaceGetLeading(m_core); }
 
-    inline uint16_t defaultWeight() const { return m_defaults.description.weight; }
-    inline uint16_t defaultWidth() const { return m_defaults.description.width; }
-    inline uint16_t defaultSlope() const { return m_defaults.description.slope; }
+    inline int32_t glyphCount() const { return (int32_t)TRTypefaceGetGlyphCount(m_core); }
 
-    inline uint16_t unitsPerEM() const { return ftFace()->units_per_EM; }
-    inline int16_t ascent() const { return ftFace()->ascender; }
-    inline int16_t descent() const { return -ftFace()->descender; }
-    inline int16_t leading() const { return ftFace()->height - (ascent() + descent()); }
+    inline int16_t underlinePosition() const { return TRTypefaceGetUnderlinePosition(m_core); }
+    inline int16_t underlineThickness() const { return TRTypefaceGetUnderlineThickness(m_core); }
 
-    inline int32_t glyphCount() const { return (int32_t)ftFace()->num_glyphs; }
-
-    inline int16_t underlinePosition() const { return ftFace()->underline_position; }
-    inline int16_t underlineThickness() const { return ftFace()->underline_thickness; }
-
-    inline int16_t strikeoutPosition() const { return m_strikeoutPosition; }
-    inline int16_t strikeoutThickness() const { return m_strikeoutThickness; }
+    inline int16_t strikeoutPosition() const { return TRTypefaceGetStrikeoutPosition(m_core); }
+    inline int16_t strikeoutThickness() const { return TRTypefaceGetStrikeoutThickness(m_core); }
 
     size_t getTableLength(uint32_t tag);
     void getTableData(uint32_t tag, void *buffer);
 
-    int32_t searchNameIndex(uint16_t nameID);
     jobject getNameRecord(const JavaBridge &javaBridge, int32_t nameIndex);
     jstring getNameString(const JavaBridge &javaBridge, int32_t nameIndex);
 
@@ -109,31 +94,11 @@ public:
     jobject getGlyphPath(JavaBridge bridge, uint16_t glyphID, float typeSize, float *transform);
 
 private:
-    struct Description {
-        int32_t familyName;
-        int32_t styleName;
-        int32_t fullName;
-
-        uint16_t weight;
-        uint16_t width;
-        uint16_t slope;
-
-        Description() {
-            familyName = -1;
-            styleName = -1;
-            fullName = -1;
-
-            weight = SFNT::OS2::Weight::REGULAR;
-            width = SFNT::OS2::Width::NORMAL;
-            slope = Slope::PLAIN;
-        }
-    };
-
-    struct DefaultProperties {
-        Description description;
-    };
-
     std::mutex m_mutex;
+
+    /* The typeface of Core answers everything about the font; the rest serves the parts that are
+     * still to move. */
+    TRTypefaceRef m_core;
 
     RenderableFace &m_renderableFace;
     FT_Size m_ftSize;
@@ -141,19 +106,15 @@ private:
 
     ShapableFace *m_shapableFace;
 
-    DefaultProperties m_defaults;
-
-    int16_t m_strikeoutPosition;
-    int16_t m_strikeoutThickness;
-
     Palette m_palette;
 
-    Typeface(RenderableFace &renderableFace);
-    Typeface(const Typeface &parent, RenderableFace &renderableFace);
-    Typeface(const Typeface &parent, const FT_Color *colorArray, size_t colorCount);
+    Typeface(TRTypefaceRef core, RenderableFace &renderableFace);
+    Typeface(const Typeface &parent, TRTypefaceRef core, RenderableFace &renderableFace);
+    Typeface(const Typeface &parent, TRTypefaceRef core);
 
     void setupSize();
-    void setupDefaultDescription();
+    void setupDefaultCoordinates();
+    void setupPalette();
     void setupHarfBuzz(ShapableFace *parent = nullptr);
 };
 

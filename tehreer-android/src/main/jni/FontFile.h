@@ -23,6 +23,8 @@ extern "C" {
 #include FT_SYSTEM_H
 }
 
+#include <Tehreer/TRFontFile.h>
+
 #include <android/asset_manager.h>
 #include <atomic>
 #include <jni.h>
@@ -42,6 +44,7 @@ public:
     ~FontFile();
 
     FT_Long numFaces() const { return m_numFaces; }
+    TRFontFileRef core() const { return m_core; }
     RenderableFace *createRenderableFace(FT_Long faceIndex);
 
     FontFile &retain();
@@ -53,11 +56,13 @@ private:
     void *m_buffer;
     FT_Stream m_stream;
     FT_Long m_numFaces;
+    TRFontFileRef m_core;
     std::atomic_int m_retainCount;
 
-    static FontFile *createWithArgs(const FT_Open_Args *args);
+    static FontFile *createWithArgs(const FT_Open_Args *args, TRFontFileRef core);
 
-    FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces);
+    FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, FT_Long numFaces,
+             TRFontFileRef core);
 };
 
 }
