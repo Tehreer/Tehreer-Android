@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,14 +40,13 @@ public:
 
     jobject BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const;
 
+    void Canvas_drawBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jobject paint) const;
+
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
     void Bitmap_setPixels(jobject bitmap, const void *pixels, size_t length) const;
 
 
     jint InputStream_read(jobject inputStream, jbyteArray buffer, jint offset, jint length) const;
-
-    jobject NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const;
-    jstring NameTableRecord_string(jobject nameRecord) const;
 
     jobject Path_construct() const;
     void Path_close(jobject path) const;
@@ -56,12 +55,9 @@ public:
     void Path_moveTo(jobject path, jfloat dx, jfloat dy) const;
     void Path_quadTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jfloat y2) const;
 
-    void Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const;
+    jobject RectF_construct(jfloat left, jfloat top, jfloat right, jfloat bottom) const;
+    jobject Rect_construct(jint left, jint top, jint right, jint bottom) const;
 
-    jclass String_class() const;
-
-    jobject Typeface_construct(jlong typefaceHandle) const;
-    jlong Typeface_getNativeTypeface(jobject typeface) const;
 
 private:
     JNIEnv *m_env;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <Tehreer/TRRenderer.h>
 
 #include "JavaBridge.h"
+#include "PathBuilder.h"
 #include "Typeface.h"
 #include "Renderer.h"
 
@@ -126,40 +127,6 @@ static jobject getBitmap(JNIEnv *env, TRGlyphImageRef image)
 
 namespace {
 
-struct PathContext {
-    JavaBridge bridge;
-    jobject path;
-};
-
-TRPathCallbacks makePathCallbacks()
-{
-    TRPathCallbacks callbacks = {};
-    callbacks.moveTo = [](void *user, TRFloat x, TRFloat y) {
-        auto context = static_cast<PathContext *>(user);
-        context->bridge.Path_moveTo(context->path, x, y);
-    };
-    callbacks.lineTo = [](void *user, TRFloat x, TRFloat y) {
-        auto context = static_cast<PathContext *>(user);
-        context->bridge.Path_lineTo(context->path, x, y);
-    };
-    callbacks.quadTo = [](void *user, TRFloat controlX, TRFloat controlY, TRFloat x, TRFloat y) {
-        auto context = static_cast<PathContext *>(user);
-        context->bridge.Path_quadTo(context->path, controlX, controlY, x, y);
-    };
-    callbacks.cubicTo = [](void *user, TRFloat control1X, TRFloat control1Y,
-                           TRFloat control2X, TRFloat control2Y, TRFloat x, TRFloat y) {
-        auto context = static_cast<PathContext *>(user);
-        context->bridge.Path_cubicTo(context->path, control1X, control1Y,
-                                     control2X, control2Y, x, y);
-    };
-    callbacks.close = [](void *user) {
-        auto context = static_cast<PathContext *>(user);
-        context->bridge.Path_close(context->path);
-    };
-
-    return callbacks;
-}
-
 /** The glyphs of a run, copied from the arrays of Java into those that Core reads. */
 struct RunData {
     vector<TRGlyphID> glyphIds;
@@ -190,177 +157,169 @@ struct RunData {
 
 }
 
-static jlong create(JNIEnv *env, jobject obj)
+static jlong create(JNIEnv *env, jclass clazz)
 {
     return reinterpret_cast<jlong>(TRRendererCreate());
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong handle)
+static void dispose(JNIEnv *env, jclass clazz, jlong handle)
 {
     TRRendererRelease(toRenderer(handle));
 }
 
-static void setTypeface(JNIEnv *env, jobject obj, jlong handle, jobject jtypeface)
+static void setTypeface(JNIEnv *env, jclass clazz, jlong handle, jlong typefaceHandle)
 {
-    TRTypefaceRef typeface = nullptr;
-
-    if (jtypeface) {
-        jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-        typeface = reinterpret_cast<Typeface *>(typefaceHandle)->core();
-    }
-
-    TRRendererSetTypeface(toRenderer(handle), typeface);
+    TRRendererSetTypeface(toRenderer(handle), toTypeface(typefaceHandle));
 }
 
-static void setTypeSize(JNIEnv *env, jobject obj, jlong handle, jfloat typeSize)
+static void setTypeSize(JNIEnv *env, jclass clazz, jlong handle, jfloat typeSize)
 {
     TRRendererSetTypeSize(toRenderer(handle), typeSize);
 }
 
-static void setScaleX(JNIEnv *env, jobject obj, jlong handle, jfloat scaleX)
+static void setScaleX(JNIEnv *env, jclass clazz, jlong handle, jfloat scaleX)
 {
     TRRendererSetScaleX(toRenderer(handle), scaleX);
 }
 
-static void setScaleY(JNIEnv *env, jobject obj, jlong handle, jfloat scaleY)
+static void setScaleY(JNIEnv *env, jclass clazz, jlong handle, jfloat scaleY)
 {
     TRRendererSetScaleY(toRenderer(handle), scaleY);
 }
 
-static void setSkewX(JNIEnv *env, jobject obj, jlong handle, jfloat skewX)
+static void setSkewX(JNIEnv *env, jclass clazz, jlong handle, jfloat skewX)
 {
     TRRendererSetSkewX(toRenderer(handle), skewX);
 }
 
-static void setWritingDirection(JNIEnv *env, jobject obj, jlong handle, jint writingDirection)
+static void setWritingDirection(JNIEnv *env, jclass clazz, jlong handle, jint writingDirection)
 {
     TRRendererSetWritingDirection(toRenderer(handle), static_cast<TRWritingDirection>(writingDirection));
 }
 
-static void setForegroundColor(JNIEnv *env, jobject obj, jlong handle, jint color)
+static void setForegroundColor(JNIEnv *env, jclass clazz, jlong handle, jint color)
 {
     TRRendererSetForegroundColor(toRenderer(handle), static_cast<TRColor>(color));
 }
 
-static void setStrokeWidth(JNIEnv *env, jobject obj, jlong handle, jfloat strokeWidth)
+static void setStrokeWidth(JNIEnv *env, jclass clazz, jlong handle, jfloat strokeWidth)
 {
     TRRendererSetStrokeWidth(toRenderer(handle), strokeWidth);
 }
 
-static void setStrokeCap(JNIEnv *env, jobject obj, jlong handle, jint strokeCap)
+static void setStrokeCap(JNIEnv *env, jclass clazz, jlong handle, jint strokeCap)
 {
     TRRendererSetStrokeCap(toRenderer(handle), static_cast<TRStrokeCap>(strokeCap));
 }
 
-static void setStrokeJoin(JNIEnv *env, jobject obj, jlong handle, jint strokeJoin)
+static void setStrokeJoin(JNIEnv *env, jclass clazz, jlong handle, jint strokeJoin)
 {
     TRRendererSetStrokeJoin(toRenderer(handle), static_cast<TRStrokeJoin>(strokeJoin));
 }
 
-static void setStrokeMiter(JNIEnv *env, jobject obj, jlong handle, jfloat strokeMiter)
+static void setStrokeMiter(JNIEnv *env, jclass clazz, jlong handle, jfloat strokeMiter)
 {
     TRRendererSetStrokeMiter(toRenderer(handle), strokeMiter);
 }
 
-static jboolean isRenderable(JNIEnv *env, jobject obj, jlong handle)
+static jboolean isRenderable(JNIEnv *env, jclass clazz, jlong handle)
 {
     return TRRendererIsRenderable(toRenderer(handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
+static jobject getGlyphPath(JNIEnv *env, jclass clazz, jlong handle, jint glyphId)
 {
-    JavaBridge bridge(env);
-    PathContext context = { bridge, bridge.Path_construct() };
+    PathBuilder builder(env);
 
     TRPathRef corePath = TRRendererGetGlyphPath(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
     if (corePath) {
-        TRPathCallbacks callbacks = makePathCallbacks();
-        TRPathEnumerate(corePath, nullptr, &callbacks, &context);
+        TRPathCallbacks callbacks = PathBuilder::callbacks();
+        TRPathEnumerate(corePath, nullptr, &callbacks, &builder);
         TRPathRelease(corePath);
     }
 
-    return context.path;
+    return builder.path;
 }
 
-static jobject getRunPath(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
+static jobject getRunPath(JNIEnv *env, jclass clazz, jlong handle, jintArray glyphIds,
     jfloatArray offsets, jfloatArray advances, jint count)
 {
-    JavaBridge bridge(env);
-    PathContext context = { bridge, bridge.Path_construct() };
+    PathBuilder builder(env);
     RunData run(env, glyphIds, offsets, advances, count);
 
-    TRPathCallbacks callbacks = makePathCallbacks();
+    TRPathCallbacks callbacks = PathBuilder::callbacks();
     TRRendererEnumerateGlyphPaths(toRenderer(handle), run.glyphIds.data(), run.offsets.data(),
                                   run.advances.data(), static_cast<TRUInteger>(count),
-                                  &callbacks, &context);
+                                  &callbacks, &builder);
 
-    return context.path;
+    return builder.path;
 }
 
-static jboolean getGlyphBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphId, jfloatArray box)
+/* A glyph without any image has no box, which is null. */
+static jobject makeBox(JNIEnv *env, const TRRect &rect)
 {
-    TRRect rect = TRRendererGetGlyphBoundingBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
-    jfloat values[4] = { rect.origin.x, rect.origin.y,
-                         rect.origin.x + rect.size.width, rect.origin.y + rect.size.height };
+    if (rect.size.width > 0.0f || rect.size.height > 0.0f) {
+        return JavaBridge(env).RectF_construct(rect.origin.x, rect.origin.y,
+                                               rect.origin.x + rect.size.width,
+                                               rect.origin.y + rect.size.height);
+    }
 
-    env->SetFloatArrayRegion(box, 0, 4, values);
-
-    return (rect.size.width > 0.0f || rect.size.height > 0.0f) ? JNI_TRUE : JNI_FALSE;
+    return nullptr;
 }
 
-static jboolean getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
-    jfloatArray offsets, jfloatArray advances, jint count, jfloatArray box)
+static jobject getGlyphBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jint glyphId)
+{
+    return makeBox(env, TRRendererGetGlyphBoundingBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
+}
+
+static jobject getRunBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jintArray glyphIds,
+    jfloatArray offsets, jfloatArray advances, jint count)
 {
     RunData run(env, glyphIds, offsets, advances, count);
 
-    TRRect rect = TRRendererGetRunBoundingBox(toRenderer(handle), run.glyphIds.data(),
-                                              run.offsets.data(), run.advances.data(),
-                                              static_cast<TRUInteger>(count));
-    jfloat values[4] = { rect.origin.x, rect.origin.y,
-                         rect.origin.x + rect.size.width, rect.origin.y + rect.size.height };
-
-    env->SetFloatArrayRegion(box, 0, 4, values);
-
-    return (rect.size.width > 0.0f || rect.size.height > 0.0f) ? JNI_TRUE : JNI_FALSE;
+    return makeBox(env, TRRendererGetRunBoundingBox(toRenderer(handle), run.glyphIds.data(),
+                                                    run.offsets.data(), run.advances.data(),
+                                                    static_cast<TRUInteger>(count)));
 }
 
-/* Fills the bitmap and the position of each glyph. The positions are in pairs, in pixels. */
-static void getPlacements(JNIEnv *env, jobject obj, jlong handle, jint kind, jintArray glyphIds,
-    jfloatArray offsets, jfloatArray advances, jint count, jobjectArray bitmaps, jintArray positions)
+struct DrawTarget {
+    JNIEnv *env;
+    jobject canvas;
+    jobject paint;
+};
+
+/* Draws the bitmap of each glyph at its position, in pixels. */
+static void drawPlacement(void *userData, TRUInteger index, TRGlyphImageRef image, TRPoint origin)
+{
+    auto target = static_cast<DrawTarget *>(userData);
+    JNIEnv *env = target->env;
+    jobject bitmap = getBitmap(env, image);
+
+    if (bitmap) {
+        JavaBridge(env).Canvas_drawBitmap(target->canvas, bitmap, origin.x, origin.y, target->paint);
+        env->DeleteLocalRef(bitmap);
+    }
+}
+
+static void drawGlyphs(JNIEnv *env, jclass clazz, jlong handle, jint kind, jintArray glyphIds,
+    jfloatArray offsets, jfloatArray advances, jint count, jobject canvas, jobject paint)
 {
     if (count <= 0) {
         return;
     }
 
     RunData run(env, glyphIds, offsets, advances, count);
-    vector<TRGlyphPlacement> placements(count);
+    DrawTarget target = { env, canvas, paint };
 
-    TRRendererGetGlyphPlacements(toRenderer(handle), static_cast<TRGlyphImageKind>(kind),
-                                 run.glyphIds.data(), run.offsets.data(), run.advances.data(),
-                                 static_cast<TRUInteger>(count), placements.data());
-
-    for (jint i = 0; i < count; i++) {
-        if (placements[i].image) {
-            jobject bitmap = getBitmap(env, placements[i].image);
-
-            if (bitmap) {
-                jint position[2] = { static_cast<jint>(placements[i].origin.x),
-                                     static_cast<jint>(placements[i].origin.y) };
-
-                env->SetObjectArrayElement(bitmaps, i, bitmap);
-                env->SetIntArrayRegion(positions, i * 2, 2, position);
-                env->DeleteLocalRef(bitmap);
-            }
-        }
-    }
-
-    TRRendererReleaseGlyphPlacements(placements.data(), static_cast<TRUInteger>(count));
+    TRRendererEnumerateGlyphPlacements(toRenderer(handle), static_cast<TRGlyphImageKind>(kind),
+                                       run.glyphIds.data(), run.offsets.data(), run.advances.data(),
+                                       static_cast<TRUInteger>(count), drawPlacement, &target);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
-    { "nSetTypeface", "(JLcom/mta/tehreer/graphics/Typeface;)V", (void *)setTypeface },
+    { "nSetTypeface", "(JJ)V", (void *)setTypeface },
     { "nSetTypeSize", "(JF)V", (void *)setTypeSize },
     { "nSetScaleX", "(JF)V", (void *)setScaleX },
     { "nSetScaleY", "(JF)V", (void *)setScaleY },
@@ -374,9 +333,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nIsRenderable", "(J)Z", (void *)isRenderable },
     { "nGetGlyphPath", "(JI)Landroid/graphics/Path;", (void *)getGlyphPath },
     { "nGetRunPath", "(J[I[F[FI)Landroid/graphics/Path;", (void *)getRunPath },
-    { "nGetGlyphBoundingBox", "(JI[F)Z", (void *)getGlyphBoundingBox },
-    { "nGetRunBoundingBox", "(J[I[F[FI[F)Z", (void *)getRunBoundingBox },
-    { "nGetPlacements", "(JI[I[F[FI[Landroid/graphics/Bitmap;[I)V", (void *)getPlacements },
+    { "nGetGlyphBoundingBox", "(JI)Landroid/graphics/RectF;", (void *)getGlyphBoundingBox },
+    { "nGetRunBoundingBox", "(J[I[F[FI)Landroid/graphics/RectF;", (void *)getRunBoundingBox },
+    { "nDrawGlyphs", "(JI[I[F[FILandroid/graphics/Canvas;Landroid/graphics/Paint;)V", (void *)drawGlyphs },
 };
 
 jint register_com_mta_tehreer_graphics_Renderer(JNIEnv *env)

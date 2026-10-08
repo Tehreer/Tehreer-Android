@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,51 +17,17 @@
 #ifndef _TEHREER__FONT_FILE_H
 #define _TEHREER__FONT_FILE_H
 
-extern "C" {
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_SYSTEM_H
-}
+#include <jni.h>
 
 #include <Tehreer/TRFontFile.h>
 
-#include <android/asset_manager.h>
-#include <atomic>
-#include <jni.h>
-
-#include "JavaBridge.h"
-
 namespace Tehreer {
 
-class RenderableFace;
-
-class FontFile {
-public:
-    static FontFile *createFromAsset(AAssetManager *assetManager, const char *path);
-    static FontFile *createFromPath(const char *path);
-    static FontFile *createFromStream(const JavaBridge &bridge, jobject stream);
-
-    ~FontFile();
-
-    FT_Long numFaces() const { return static_cast<FT_Long>(TRFontFileGetFaceCount(m_core)); }
-    TRFontFileRef core() const { return m_core; }
-    RenderableFace *createRenderableFace(FT_Long faceIndex);
-
-    FontFile &retain();
-    void release();
-
-private:
-    FT_Open_Args m_args;
-
-    void *m_buffer;
-    FT_Stream m_stream;
-    TRFontFileRef m_core;
-    std::atomic_int m_retainCount;
-
-    static FontFile *createWithArgs(const FT_Open_Args *args, TRFontFileRef core);
-
-    FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, TRFontFileRef core);
-};
+/* The functions create a font file of Core, which the caller has to release. They return null if
+ * the argument is null or does not give a usable font. */
+TRFontFileRef createFontFileFromAsset(JNIEnv *env, jobject assetManager, jstring path);
+TRFontFileRef createFontFileFromPath(JNIEnv *env, jstring path);
+TRFontFileRef createFontFileFromStream(JNIEnv *env, jobject stream);
 
 }
 

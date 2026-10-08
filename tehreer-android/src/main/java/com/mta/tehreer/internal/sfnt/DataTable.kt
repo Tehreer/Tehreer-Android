@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,6 @@ internal class DataTable(
     private inline fun getAsInt(offset: Int) = data[offset].toInt()
 
     private inline fun getAsLong(offset: Int) = data[offset].toLong()
-
-    override fun readInt8(offset: Int): Byte {
-        return data[offset]
-    }
-
-    override fun readUInt8(offset: Int): Short {
-        return (getAsInt(offset) and 0xFF).toShort()
-    }
 
     override fun readInt16(offset: Int): Short {
         return ((getAsInt(offset + 0) and 0xFF) shl 8

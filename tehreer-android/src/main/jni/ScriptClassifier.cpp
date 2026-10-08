@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2018-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ extern "C" {
 #include <SheenBidi/SBScriptLocator.h>
 }
 
+#include <cstdint>
+#include <cstdlib>
 #include <jni.h>
 
 #include "JavaBridge.h"
@@ -27,13 +29,16 @@ extern "C" {
 
 using namespace Tehreer;
 
-static void classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
+/*
+ * Resolves the script of each character of the text, and returns the memory that holds them, one
+ * byte for each character. It belongs to the caller, who has to dispose it.
+ */
+static jlong classify(JNIEnv *env, jclass clazz, jstring text)
 {
     const jchar *charArray = env->GetStringChars(text, nullptr);
     jsize charCount = env->GetStringLength(text);
 
-    void *scriptsPtr = env->GetPrimitiveArrayCritical(scripts, nullptr);
-    auto scriptArray = static_cast<jbyte *>(scriptsPtr);
+    auto scriptArray = static_cast<uint8_t *>(malloc(charCount > 0 ? charCount : 1));
 
     SBCodepointSequence codepointSequence;
     codepointSequence.stringEncoding = SBStringEncodingUTF16;
@@ -50,18 +55,25 @@ static void classify(JNIEnv *env, jobject obj, jstring text, jbyteArray scripts)
         SBScript script = scriptAgent->script;
 
         for (SBUInteger i = start; i < limit; i++) {
-            scriptArray[i] = script;
+            scriptArray[i] = static_cast<uint8_t>(script);
         }
     }
 
     SBScriptLocatorRelease(scriptLocator);
 
-    env->ReleasePrimitiveArrayCritical(scripts, scriptsPtr, 0);
     env->ReleaseStringChars(text, charArray);
+
+    return reinterpret_cast<jlong>(scriptArray);
+}
+
+static void dispose(JNIEnv *env, jclass clazz, jlong scriptsHandle)
+{
+    free(reinterpret_cast<void *>(scriptsHandle));
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nClassify", "(Ljava/lang/String;[B)V", (void *)classify },
+    { "nClassify", "(Ljava/lang/String;)J", (void *)classify },
+    { "nDispose", "(J)V", (void *)dispose },
 };
 
 jint register_com_mta_tehreer_unicode_ScriptClassifier(JNIEnv *env)

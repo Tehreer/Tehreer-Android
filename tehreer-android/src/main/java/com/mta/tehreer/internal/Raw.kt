@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ package com.mta.tehreer.internal
 
 import com.mta.tehreer.internal.JniBridge.loadLibrary
 
+/**
+ * Reads the memory that native code owns. The pointers must stay valid while they are read, which
+ * is the job of the object that owns the memory.
+ */
 internal object Raw {
     init {
         loadLibrary()
@@ -26,14 +30,16 @@ internal object Raw {
     const val INT8_SIZE = 1
     const val INT16_SIZE = 2
     const val INT32_SIZE = 4
+    const val FLOAT_SIZE = 4
     val POINTER_SIZE = sizeOfIntPtr()
 
-    private external fun sizeOfIntPtr(): Int
+    @JvmStatic private external fun sizeOfIntPtr(): Int
 
     @JvmStatic external fun getInt8Value(pointer: Long): Byte
     @JvmStatic external fun getInt16Value(pointer: Long): Short
     @JvmStatic external fun getInt32Value(pointer: Long): Int
     @JvmStatic external fun getIntPtrValue(pointer: Long): Long
+    @JvmStatic external fun getFloatValue(pointer: Long): Float
 
     @JvmStatic external fun copyInt8Buffer(
         pointer: Long,
@@ -42,5 +48,21 @@ internal object Raw {
     @JvmStatic external fun copyUInt8Buffer(
         pointer: Long,
         destination: IntArray, start: Int, length: Int
+    )
+    @JvmStatic external fun copyUInt16Buffer(
+        pointer: Long,
+        destination: IntArray, start: Int, length: Int
+    )
+    @JvmStatic external fun copyInt32Buffer(
+        pointer: Long,
+        destination: IntArray, start: Int, length: Int
+    )
+    @JvmStatic external fun copyUIntPtrBuffer(
+        pointer: Long,
+        destination: IntArray, start: Int, length: Int
+    )
+    @JvmStatic external fun copyFloatBuffer(
+        pointer: Long,
+        destination: FloatArray, start: Int, length: Int
     )
 }

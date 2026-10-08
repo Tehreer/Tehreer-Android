@@ -176,7 +176,7 @@ class TTextViewLayoutTest {
         showLongText()
         assertTrue(host.lineViews().all { it.renderer.fillColor == Color.BLACK })
 
-        onMain { host.view.setTextColor(Color.RED) }
+        onMain { host.view.textColor = Color.RED }
 
         val lineViews = host.lineViews()
         assertTrue(lineViews.isNotEmpty())
@@ -203,7 +203,7 @@ class TTextViewLayoutTest {
         showLongText()
         assertTrue(host.lineViews().all { it.separatorColor == Color.TRANSPARENT })
 
-        onMain { host.view.setSeparatorColor(Color.BLUE) }
+        onMain { host.view.separatorColor = Color.BLUE }
 
         assertTrue(host.lineViews().all { it.separatorColor == Color.BLUE })
 

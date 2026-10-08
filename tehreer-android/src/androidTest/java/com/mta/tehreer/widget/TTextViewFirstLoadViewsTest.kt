@@ -116,11 +116,11 @@ class TTextViewFirstLoadViewsTest {
         val span = TestViewSpan(ViewSpan.Placement.BLOCK, roomHeight = 200)
 
         assertNeverShowsViewsBeforeText(span) {
-            host.view.setSpanned(spannedOf {
+            host.view.spanned = spannedOf {
                 append("￼\n")
                 setSpan(span, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 append(arabicText(2200))
-            })
+            }
         }
     }
 
@@ -134,7 +134,7 @@ class TTextViewFirstLoadViewsTest {
             append(arabicText(2200))
         }
 
-        val typeface = TypefaceStore.getNafeesWeb()
+        val typeface = TypefaceStore.nafeesWeb
         val defaultSpans = listOf<Any>(TypefaceSpan(typeface), TypeSizeSpan(32.0f))
         val typesetter = Typesetter(spanned, defaultSpans)
 
@@ -162,11 +162,11 @@ class TTextViewFirstLoadViewsTest {
         val secondSpan = TestViewSpan(ViewSpan.Placement.BLOCK, roomHeight = 200)
 
         assertNeverShowsViewsBeforeText(secondSpan) {
-            host.view.setSpanned(spannedOf {
+            host.view.spanned = spannedOf {
                 append("￼\n")
                 setSpan(secondSpan, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 append(arabicText(2200))
-            })
+            }
         }
 
         assertTrue(onMain { secondSpan.created.isNotEmpty() })

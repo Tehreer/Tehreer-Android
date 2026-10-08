@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,9 @@ public:
     uint32_t languageTag() const { return m_languageTag; }
     void setLanguageTag(uint32_t languageTag);
 
-    void setOpenTypeFeatures(const std::vector<uint32_t> &featureTags, const std::vector<uint16_t> &featureValues);
+    /* The features are given one by one, and take effect together when they are applied. */
+    void addOpenTypeFeature(uint32_t tag, uint16_t value);
+    void applyOpenTypeFeatures();
 
     TRShapingOrder shapingOrder() const { return m_shapingOrder; }
     void setShapingOrder(TRShapingOrder shapingOrder);
@@ -66,6 +68,7 @@ private:
     uint32_t m_languageTag;
     TRShapingOrder m_shapingOrder;
     TRWritingDirection m_writingDirection;
+    std::vector<TROpenTypeFeature> m_pendingFeatures;
 };
 
 }

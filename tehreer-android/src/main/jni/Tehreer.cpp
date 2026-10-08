@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,16 +31,18 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
     }
 
     JavaBridge::load(env);
-    FreeType::load(env);
 
     result = register_com_mta_tehreer_font_FontFile(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_tables_SfntTables(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Renderer(env) == JNI_OK
+          && register_com_mta_tehreer_layout_TypesetterInput(env) == JNI_OK
           && register_com_mta_tehreer_layout_Typesetter(env) == JNI_OK
           && register_com_mta_tehreer_layout_ComposedLine(env) == JNI_OK
           && register_com_mta_tehreer_layout_GlyphRun(env) == JNI_OK
+          && register_com_mta_tehreer_layout_FrameResolver(env) == JNI_OK
+          && register_com_mta_tehreer_layout_ComposedFrame(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingEngine(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingResult(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiAlgorithm(env) == JNI_OK

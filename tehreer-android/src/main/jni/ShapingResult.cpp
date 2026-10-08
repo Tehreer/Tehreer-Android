@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ using namespace Tehreer;
 
 ShapingResult::ShapingResult()
     : m_core(nullptr)
-    , m_glyphIds(nullptr)
-    , m_glyphOffsets(nullptr)
-    , m_glyphAdvances(nullptr)
-    , m_glyphCount(0)
-    , m_clusterMap()
     , m_charStart(0)
     , m_charEnd(0)
 {
@@ -53,156 +48,92 @@ void ShapingResult::setup(TRShapingResultRef core, jint charStart, jint charEnd)
     m_core = core;
     m_charStart = charStart;
     m_charEnd = charEnd;
-    m_glyphIds = nullptr;
-    m_glyphOffsets = nullptr;
-    m_glyphAdvances = nullptr;
-    m_glyphCount = 0;
-    m_clusterMap.clear();
-
-    if (core) {
-        auto codeUnitCount = static_cast<size_t>(TRShapingResultGetCodeUnitCount(core));
-        const TRUInteger *clusterMap = TRShapingResultGetClusterMapPtr(core);
-
-        m_glyphIds = TRShapingResultGetGlyphIDsPtr(core);
-        m_glyphOffsets = TRShapingResultGetGlyphOffsetsPtr(core);
-        m_glyphAdvances = TRShapingResultGetGlyphAdvancesPtr(core);
-        m_glyphCount = static_cast<unsigned int>(TRShapingResultGetGlyphCount(core));
-
-        m_clusterMap.resize(codeUnitCount);
-        for (size_t i = 0; i < codeUnitCount; i++) {
-            m_clusterMap[i] = static_cast<jint>(clusterMap[i]);
-        }
-    }
 }
 
-void ShapingResult::getCaretEdges(const TRBoolean *caretStops, jfloat *caretEdges) const
+static ShapingResult *toResult(jlong handle)
 {
-    TRShapingResultGetCaretEdges(m_core, caretStops, caretEdges);
+    return reinterpret_cast<ShapingResult *>(handle);
 }
 
-void ShapingResult::copyGlyphIds(jint offset, jint length, jint *destination) const
+static jlong create(JNIEnv *env, jclass clazz)
 {
-    for (jint i = 0; i < length; i++) {
-        destination[i] = m_glyphIds[offset + i];
-    }
+    return reinterpret_cast<jlong>(new ShapingResult());
 }
 
-void ShapingResult::copyGlyphOffsets(jint offset, jint length, jfloat *destination) const
+static void dispose(JNIEnv *env, jclass clazz, jlong handle)
 {
-    jint index = 0;
-
-    for (jint i = 0; i < length; i++) {
-        destination[index++] = m_glyphOffsets[offset + i].x;
-        destination[index++] = m_glyphOffsets[offset + i].y;
-    }
+    delete toResult(handle);
 }
 
-void ShapingResult::copyGlyphAdvances(jint offset, jint length, jfloat *destination) const
+static jboolean isBackward(JNIEnv *env, jclass clazz, jlong handle)
 {
-    for (jint i = 0; i < length; i++) {
-        destination[i] = m_glyphAdvances[offset + i];
-    }
+    TRShapingResultRef core = toResult(handle)->core();
+
+    return (core && TRShapingResultIsBackward(core)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jlong create(JNIEnv *env, jobject obj)
+static jboolean isRTL(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = new ShapingResult();
-    return reinterpret_cast<jlong>(shapingResult);
+    TRShapingResultRef core = toResult(handle)->core();
+
+    return (core && TRShapingResultIsRTL(core)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static void dispose(JNIEnv *env, jobject obj, jlong resultHandle)
+static jint getCharStart(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    delete shapingResult;
+    return toResult(handle)->charStart();
 }
 
-static jboolean isBackward(JNIEnv *env, jobject obj, jlong resultHandle)
+static jint getCharEnd(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    return shapingResult->isBackward();
+    return toResult(handle)->charEnd();
 }
 
-static jboolean isRTL(JNIEnv *env, jobject obj, jlong resultHandle)
+static jint getGlyphCount(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    return shapingResult->isRTL();
+    TRShapingResultRef core = toResult(handle)->core();
+
+    return core ? static_cast<jint>(TRShapingResultGetGlyphCount(core)) : 0;
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong resultHandle)
+/* The memory belongs to the result of Core, and lives until it is replaced or disposed. */
+static jlong getGlyphIdsPtr(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jint charStart = shapingResult->charStart();
+    TRShapingResultRef core = toResult(handle)->core();
 
-    return charStart;
+    return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphIDsPtr(core) : nullptr);
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong resultHandle)
+static jlong getGlyphOffsetsPtr(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jint charEnd = shapingResult->charEnd();
+    TRShapingResultRef core = toResult(handle)->core();
 
-    return charEnd;
+    return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphOffsetsPtr(core) : nullptr);
 }
 
-static jint getCharCount(JNIEnv *env, jobject obj, jlong resultHandle)
+static jlong getGlyphAdvancesPtr(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jint charCount = shapingResult->charEnd() - shapingResult->charStart();
+    TRShapingResultRef core = toResult(handle)->core();
 
-    return charCount;
+    return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphAdvancesPtr(core) : nullptr);
 }
 
-static jint getGlyphCount(JNIEnv *env, jobject obj, jlong resultHandle)
+static jlong getClusterMapPtr(JNIEnv *env, jclass clazz, jlong handle)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    unsigned int glyphCount = shapingResult->glyphCount();
+    TRShapingResultRef core = toResult(handle)->core();
 
-    return static_cast<jint>(glyphCount);
+    return reinterpret_cast<jlong>(core ? TRShapingResultGetClusterMapPtr(core) : nullptr);
 }
 
-static jint getGlyphId(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
+/* Returns the caret edges of the shaped characters, one more than their count. */
+static jfloatArray getCaretEdges(JNIEnv *env, jclass clazz, jlong handle, jbooleanArray caretStops)
 {
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jint glyphId = shapingResult->glyphIdAt(index);
-
-    return static_cast<jint>(glyphId);
-}
-
-static jfloat getGlyphXOffset(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    return shapingResult->glyphXOffsetAt(index);
-}
-
-static jfloat getGlyphYOffset(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    return shapingResult->glyphYOffsetAt(index);
-}
-
-static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong resultHandle, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    return shapingResult->glyphAdvanceAt(index);
-}
-
-static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong resultHandle)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    const jint *clusterMapPtr = shapingResult->clusterMapPtr();
-
-    return reinterpret_cast<jlong>(clusterMapPtr);
-}
-
-static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle, jbooleanArray caretStops,
-    jfloatArray caretEdges)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    jint length = env->GetArrayLength(caretEdges) - 1;
-    std::vector<TRBoolean> stops;
+    ShapingResult *result = toResult(handle);
+    jint length = result->charEnd() - result->charStart();
+    vector<TRBoolean> stops;
 
     if (caretStops) {
-        std::vector<jboolean> values(length);
+        vector<jboolean> values(length);
         env->GetBooleanArrayRegion(caretStops, 0, length, values.data());
 
         stops.resize(length);
@@ -211,46 +142,13 @@ static void getCaretEdges(JNIEnv *env, jobject obj, jlong resultHandle, jboolean
         }
     }
 
-    std::vector<jfloat> edges(length + 1);
-    shapingResult->getCaretEdges(caretStops ? stops.data() : nullptr, edges.data());
+    vector<jfloat> edges(length + 1);
+    TRShapingResultGetCaretEdges(result->core(), caretStops ? stops.data() : nullptr, edges.data());
 
-    env->SetFloatArrayRegion(caretEdges, 0, length + 1, edges.data());
-}
+    jfloatArray array = env->NewFloatArray(length + 1);
+    env->SetFloatArrayRegion(array, 0, length + 1, edges.data());
 
-static void copyGlyphIds(JNIEnv *env, jobject obj, jlong resultHandle, jint offset, jint length,
-    jintArray destination, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    auto values = static_cast<jint *>(raw) + index;
-
-    shapingResult->copyGlyphIds(offset, length, values);
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
-}
-
-static void copyGlyphOffsets(JNIEnv *env, jobject obj, jlong resultHandle, jint offset, jint length,
-    jfloatArray destination, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    auto values = static_cast<jfloat *>(raw) + index;
-
-    shapingResult->copyGlyphOffsets(offset, length, values);
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
-}
-
-static void copyGlyphAdvances(JNIEnv *env, jobject obj, jlong resultHandle,
-    jint offset, jint length, jfloatArray destination, jint index)
-{
-    auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);
-    void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
-    auto values = static_cast<jfloat *>(raw) + index;
-
-    shapingResult->copyGlyphAdvances(offset, length, values);
-
-    env->ReleasePrimitiveArrayCritical(destination, raw, 0);
+    return array;
 }
 
 static JNINativeMethod JNI_METHODS[] = {
@@ -260,17 +158,12 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nIsRTL", "(J)Z", (void *)isRTL },
     { "nGetCharStart", "(J)I", (void *)getCharStart },
     { "nGetCharEnd", "(J)I", (void *)getCharEnd },
-    { "nGetCharCount", "(J)I", (void *)getCharCount },
     { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
-    { "nGetGlyphId", "(JI)I", (void *)getGlyphId },
-    { "nGetGlyphXOffset", "(JI)F", (void *)getGlyphXOffset },
-    { "nGetGlyphYOffset", "(JI)F", (void *)getGlyphYOffset },
-    { "nGetGlyphAdvance", "(JI)F", (void *)getGlyphAdvance },
+    { "nGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
+    { "nGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },
+    { "nGetGlyphAdvancesPtr", "(J)J", (void *)getGlyphAdvancesPtr },
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
-    { "nGetCaretEdges", "(J[Z[F)V", (void *)getCaretEdges },
-    { "nCopyGlyphIds", "(JII[II)V", (void *)copyGlyphIds },
-    { "nCopyGlyphOffsets", "(JII[FI)V", (void *)copyGlyphOffsets },
-    { "nCopyGlyphAdvances", "(JII[FI)V", (void *)copyGlyphAdvances },
+    { "nGetCaretEdges", "(J[Z)[F", (void *)getCaretEdges },
 };
 
 jint register_com_mta_tehreer_sfnt_ShapingResult(JNIEnv *env)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,33 +25,7 @@
 namespace Tehreer {
 namespace SFNT {
 
-namespace head {
-
-enum MacStyle : uint16_t {
-    BOLD = 1 << 0,
-    ITALIC = 1 << 1,
-    CONDENSED = 1 << 5,
-    EXTENDED = 1 << 6,
-};
-
-}
-
 namespace name {
-
-enum PlatformID : uint16_t {
-    MACINTOSH = 1,
-    WINDOWS = 3,
-};
-
-enum NameID : uint16_t {
-    FONT_FAMILY = 1,
-    FONT_SUBFAMILY = 2,
-    FULL = 4,
-    TYPOGRAPHIC_FAMILY = 16,
-    TYPOGRAPHIC_SUBFAMILY = 17,
-    WWS_FAMILY = 21,
-    WWS_SUBFAMILY = 22,
-};
 
 class Locale {
 public:
@@ -77,41 +51,6 @@ private:
 };
 
 }
-
-namespace OS2 {
-
-enum FSSelection : uint16_t {
-    ITALIC = 1 << 0,
-    WWS = 1 << 8,
-    OBLIQUE = 1 << 9,
-};
-
-enum Weight : uint16_t {
-    THIN = 100,
-    EXTRA_LIGHT = 200,
-    LIGHT = 300,
-    REGULAR = 400,
-    MEDIUM = 500,
-    SEMI_BOLD = 600,
-    BOLD = 700,
-    EXTRA_BOLD = 800,
-    HEAVY = 900,
-};
-
-enum Width : uint16_t {
-    ULTRA_CONDENSED = 1,
-    EXTRA_CONDENSED = 2,
-    CONDENSED = 3,
-    SEMI_CONDENSED = 4,
-    NORMAL = 5,
-    SEMI_EXPANDED = 6,
-    EXPANDED = 7,
-    EXTRA_EXPANDED = 8,
-    ULTRA_EXPANDED = 9,
-};
-
-}
-
 }
 }
 

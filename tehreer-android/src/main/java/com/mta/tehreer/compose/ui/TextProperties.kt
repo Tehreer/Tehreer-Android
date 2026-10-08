@@ -65,8 +65,10 @@ internal data class TextProperties(
     fun textSource(): TextSource {
         typesetter?.let { return TextSource.TypesetterSource(it) }
 
+        val typeface = typeface ?: return TextSource.None
+
         spanned?.let { s ->
-            if (typeface != null && s.isNotEmpty()) {
+            if (s.isNotEmpty()) {
                 val defaults = listOf(
                     TypefaceSpan(typeface) as Any,
                     TypeSizeSpan(textSize)
@@ -76,7 +78,7 @@ internal data class TextProperties(
         }
 
         string?.let { s ->
-            if (typeface != null && s.isNotEmpty()) {
+            if (s.isNotEmpty()) {
                 val defaults = listOf(
                     TypefaceSpan(typeface) as Any,
                     TypeSizeSpan(textSize)

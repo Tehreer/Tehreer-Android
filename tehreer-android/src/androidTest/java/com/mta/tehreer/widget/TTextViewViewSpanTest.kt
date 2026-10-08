@@ -506,7 +506,7 @@ class TTextViewViewSpanTest {
         })
         assertEquals(2, host.spanViews().size)
 
-        onMain { host.view.setSpanned(null) }
+        onMain { host.view.spanned = null }
         host.awaitUntil("the text is gone") { host.spanViews().isEmpty() && host.lineViews().isEmpty() }
 
         assertNull(span.view)
@@ -527,7 +527,7 @@ class TTextViewViewSpanTest {
             appendView(span)
             append(arabicText(6))
         })
-        onMain { host.view.setOnSpanClickListener { _, _ -> throw AssertionError("A span was clicked") } }
+        onMain { host.view.onSpanClickListener = TTextView.OnSpanClickListener { _, _ -> throw AssertionError("A span was clicked") } }
 
         val (ox, oy) = host.containerOrigin()
         val rect = rectOf(span)
@@ -548,7 +548,7 @@ class TTextViewViewSpanTest {
             appendView(span)
             append(arabicText(6))
         })
-        onMain { host.view.setOnSpanClickListener { _, _ -> throw AssertionError("A span was clicked") } }
+        onMain { host.view.onSpanClickListener = TTextView.OnSpanClickListener { _, _ -> throw AssertionError("A span was clicked") } }
 
         val (ox, oy) = host.containerOrigin()
         val rect = rectOf(span)

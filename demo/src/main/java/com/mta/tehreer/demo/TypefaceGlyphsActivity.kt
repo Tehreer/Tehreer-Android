@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ private class GlyphAdapter(
     val renderer: Renderer
 ) : BaseAdapter() {
     override fun getCount(): Int {
-        return renderer.typeface.glyphCount
+        return renderer.typeface!!.glyphCount
     }
 
     override fun getItem(i: Int): Any {
@@ -89,7 +89,7 @@ private class GlyphDrawable(
     val fontDescent: Float
 
     init {
-        val typeface = renderer.typeface
+        val typeface = renderer.typeface!!
         val sizeByEm = renderer.typeSize / typeface.unitsPerEm
 
         this.renderer = renderer

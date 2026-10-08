@@ -41,18 +41,6 @@ internal class ReplacementHolder(
     val isBlock: Boolean
         get() = (span as? ViewSpan)?.isBlock == true
 
-    /** The extra space below the span, which is not decided by the width of the frame. */
-    val leading: Float by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        if (span is ViewSpan) {
-            0.0f
-        } else {
-            val metrics = makeMetrics()
-            span.getSize(Paint(), text, start, end, metrics)
-
-            metrics.leading.toFloat()
-        }
-    }
-
     private fun makeMetrics(): FontMetricsInt {
         val metrics = FontMetricsInt()
         metrics.ascent = -(typefaceAscent + 0.5f).toInt()

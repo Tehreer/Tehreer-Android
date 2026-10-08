@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,16 +32,16 @@ class LinkableLabel : TLabel {
     private var activeLinkSpan: URLSpan? = null
     private var activeLinkPath: Path? = null
 
-    constructor(context: Context?) : super(context) {
+    constructor(context: Context) : super(context) {
         setup()
     }
 
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         setup()
     }
 
     constructor(
-        context: Context?,
+        context: Context,
         attrs: AttributeSet?,
         defStyleAttr: Int
     ) : super(context, attrs, defStyleAttr) {
@@ -54,9 +54,9 @@ class LinkableLabel : TLabel {
     }
 
     private fun urlSpanAtIndex(charIndex: Int): URLSpan? {
-        if (spanned == null || composedFrame == null) {
-            return null
-        }
+        val spanned = spanned ?: return null
+        val composedFrame = composedFrame ?: return null
+
         if (charIndex < composedFrame.charStart || charIndex >= composedFrame.charEnd) {
             return null
         }
@@ -71,6 +71,10 @@ class LinkableLabel : TLabel {
     }
 
     private fun refreshActiveLink() {
+        val spanned = spanned
+        val composedFrame = composedFrame
+        val activeLinkSpan = activeLinkSpan
+
         if (spanned != null && composedFrame != null && activeLinkSpan != null) {
             val spanStart = spanned.getSpanStart(activeLinkSpan)
             val spanEnd = spanned.getSpanEnd(activeLinkSpan)

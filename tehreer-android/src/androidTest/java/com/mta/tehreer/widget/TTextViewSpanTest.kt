@@ -90,7 +90,7 @@ class TTextViewSpanTest {
 
     private fun listen(consume: Boolean = false) {
         onMain {
-            host.view.setOnSpanClickListener { _, span ->
+            host.view.onSpanClickListener = TTextView.OnSpanClickListener { _, span ->
                 clicked.add(span)
                 consume
             }

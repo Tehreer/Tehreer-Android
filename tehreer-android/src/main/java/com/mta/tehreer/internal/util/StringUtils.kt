@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,36 +17,6 @@
 package com.mta.tehreer.internal.util
 
 import android.text.GetChars
-
-internal fun CharSequence.getLeadingWhitespaceEnd(charStart: Int, charEnd: Int): Int {
-    for (i in charStart until charEnd) {
-        if (!Character.isWhitespace(this[i])) {
-            return i
-        }
-    }
-
-    return charEnd
-}
-
-internal fun CharSequence.getTrailingWhitespaceStart(charStart: Int, charEnd: Int): Int {
-    for (i in charEnd - 1 downTo charStart) {
-        if (!Character.isWhitespace(this[i])) {
-            return i + 1
-        }
-    }
-
-    return charStart
-}
-
-internal fun CharSequence.getNextSpace(charStart: Int, charEnd: Int): Int {
-    for (i in charStart until charEnd) {
-        if (Character.isWhitespace(this[i])) {
-            return i
-        }
-    }
-
-    return charEnd
-}
 
 internal object StringUtils {
     @JvmStatic

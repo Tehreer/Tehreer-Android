@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,11 @@
 #include "BidiLine.h"
 #include "BidiMirrorLocator.h"
 #include "BidiParagraph.h"
+#include "ComposedLine.h"
 #include "FontFile.h"
-#include "FreeType.h"
+#include "FrameResolver.h"
+#include "GlyphRun.h"
+#include "JavaBridge.h"
 #include "Miscellaneous.h"
 #include "Raw.h"
 #include "ScriptClassifier.h"

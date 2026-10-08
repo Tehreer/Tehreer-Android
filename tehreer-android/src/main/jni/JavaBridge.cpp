@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,6 @@ static jmethodID BITMAP__CREATE_BITMAP;
 
 static jmethodID INPUT_STREAM__READ;
 
-static jclass    NAME_TABLE_RECORD;
-static jmethodID NAME_TABLE_RECORD__CONSTRUCTOR;
-static jmethodID NAME_TABLE_RECORD__STRING;
-
 static jclass    PATH;
 static jmethodID PATH__CONSTRUCTOR;
 static jmethodID PATH__CLOSE;
@@ -49,13 +45,15 @@ static jmethodID PATH__LINE_TO;
 static jmethodID PATH__MOVE_TO;
 static jmethodID PATH__QUAD_TO;
 
-static jmethodID RECT__SET;
+static jclass    RECT;
+static jmethodID RECT__CONSTRUCTOR;
 
-static jclass    STRING;
+static jmethodID CANVAS__DRAW_BITMAP;
 
-static jclass    TYPEFACE;
-static jmethodID TYPEFACE__CONSTRUCTOR;
-static jfieldID  TYPEFACE__NATIVE_TYPEFACE;
+static jclass    RECT_F;
+static jmethodID RECT_F__CONSTRUCTOR;
+
+
 
 void JavaBridge::load(JNIEnv* env)
 {
@@ -88,11 +86,6 @@ void JavaBridge::load(JNIEnv* env)
     clazz = env->FindClass("java/io/InputStream");
     INPUT_STREAM__READ = env->GetMethodID(clazz, "read", "([BII)I");
 
-    clazz = env->FindClass("com/mta/tehreer/sfnt/tables/NameTable$Record");
-    NAME_TABLE_RECORD = (jclass)env->NewGlobalRef(clazz);
-    NAME_TABLE_RECORD__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII[B)V");
-    NAME_TABLE_RECORD__STRING = env->GetMethodID(clazz, "string", "()Ljava/lang/String;");
-
     clazz = env->FindClass("android/graphics/Path");
     PATH = (jclass)env->NewGlobalRef(clazz);
     PATH__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "()V");
@@ -103,15 +96,17 @@ void JavaBridge::load(JNIEnv* env)
     PATH__QUAD_TO = env->GetMethodID(clazz, "quadTo", "(FFFF)V");
 
     clazz = env->FindClass("android/graphics/Rect");
-    RECT__SET = env->GetMethodID(clazz, "set", "(IIII)V");
+    RECT = (jclass)env->NewGlobalRef(clazz);
+    RECT__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(IIII)V");
 
-    clazz = env->FindClass("java/lang/String");
-    STRING = (jclass)env->NewGlobalRef(clazz);
+    clazz = env->FindClass("android/graphics/Canvas");
+    CANVAS__DRAW_BITMAP = env->GetMethodID(clazz, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
 
-    clazz = env->FindClass("com/mta/tehreer/graphics/Typeface");
-    TYPEFACE = (jclass)env->NewGlobalRef(clazz);
-    TYPEFACE__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(J)V");
-    TYPEFACE__NATIVE_TYPEFACE = env->GetFieldID(clazz, "nativeTypeface", "J");
+    clazz = env->FindClass("android/graphics/RectF");
+    RECT_F = (jclass)env->NewGlobalRef(clazz);
+    RECT_F__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(FFFF)V");
+
+
 }
 
 jint JavaBridge::registerClass(JNIEnv *env, const char *className, const JNINativeMethod *methodArray, jint methodCount)
@@ -174,16 +169,6 @@ jint JavaBridge::InputStream_read(jobject inputStream, jbyteArray buffer, jint o
     return m_env->CallIntMethod(inputStream, INPUT_STREAM__READ, buffer, offset, length);
 }
 
-jobject JavaBridge::NameTableRecord_construct(jint nameId, jint platformId, jint languageId, jint encodingId, jbyteArray bytes) const
-{
-    return m_env->NewObject(NAME_TABLE_RECORD, NAME_TABLE_RECORD__CONSTRUCTOR, nameId, platformId, languageId, encodingId, bytes);
-}
-
-jstring JavaBridge::NameTableRecord_string(jobject nameRecord) const
-{
-    return static_cast<jstring>(m_env->CallObjectMethod(nameRecord, NAME_TABLE_RECORD__STRING));
-}
-
 jobject JavaBridge::Path_construct() const
 {
     return m_env->NewObject(PATH, PATH__CONSTRUCTOR);
@@ -214,22 +199,17 @@ void JavaBridge::Path_quadTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jflo
     m_env->CallVoidMethod(path, PATH__QUAD_TO, x1, y1, x2, y2);
 }
 
-void JavaBridge::Rect_set(jobject rect, jint left, jint top, jint right, jint bottom) const
+jobject JavaBridge::RectF_construct(jfloat left, jfloat top, jfloat right, jfloat bottom) const
 {
-    m_env->CallVoidMethod(rect, RECT__SET, left, top, right, bottom);
+    return m_env->NewObject(RECT_F, RECT_F__CONSTRUCTOR, left, top, right, bottom);
 }
 
-jclass JavaBridge::String_class() const
+jobject JavaBridge::Rect_construct(jint left, jint top, jint right, jint bottom) const
 {
-    return STRING;
+    return m_env->NewObject(RECT, RECT__CONSTRUCTOR, left, top, right, bottom);
 }
 
-jobject JavaBridge::Typeface_construct(jlong typefaceHandle) const
+void JavaBridge::Canvas_drawBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jobject paint) const
 {
-    return m_env->NewObject(TYPEFACE, TYPEFACE__CONSTRUCTOR, typefaceHandle);
-}
-
-jlong JavaBridge::Typeface_getNativeTypeface(jobject typeface) const
-{
-    return m_env->GetLongField(typeface, TYPEFACE__NATIVE_TYPEFACE);
+    m_env->CallVoidMethod(canvas, CANVAS__DRAW_BITMAP, bitmap, left, top, paint);
 }

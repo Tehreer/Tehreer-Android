@@ -182,12 +182,13 @@ set(FILE_LIST
     BidiLine.cpp
     BidiMirrorLocator.cpp
     BidiParagraph.cpp
+    ComposedLine.cpp
     FontFile.cpp
-    FreeType.cpp
+    FrameResolver.cpp
+    GlyphRun.cpp
     JavaBridge.cpp
     Raw.cpp
     Renderer.cpp
-    RenderableFace.cpp
     ScriptClassifier.cpp
     SfntTables.cpp
     ShapingEngine.cpp
@@ -200,6 +201,6 @@ set(FILE_LIST
 )
 
 add_library(tehreerjni SHARED ${FILE_LIST})
-target_link_libraries(tehreerjni PRIVATE tehreer sheenbidi freetype atomic android jnigraphics log)
+target_link_libraries(tehreerjni PRIVATE tehreer sheenbidi atomic android jnigraphics log)
 target_link_options(tehreerjni PRIVATE $<$<NOT:$<CONFIG:Debug>>:-s>)
 ###########################################################

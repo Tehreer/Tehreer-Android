@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,17 @@
  */
 
 
-extern "C" {
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_TRUETYPE_TABLES_H
-#include FT_SFNT_NAMES_H
-}
-
 #include <cstdint>
 #include <jni.h>
 #include <map>
 #include <string>
 #include <vector>
 
+#include <Tehreer/TRTypeface.h>
+
 #include "JavaBridge.h"
-#include "Typeface.h"
 #include "SfntTables.h"
+#include "Typeface.h"
 
 using namespace std;
 using namespace Tehreer;
@@ -532,29 +527,40 @@ Encoding::Encoding(uint16_t platformID, uint16_t encodingID)
     }
 }
 
-jobjectArray getNameLocale(JNIEnv *env, jobject obj, jint platformId, jint languageId)
+static jstring toJavaString(JNIEnv *env, const string *value)
 {
-    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
-    const string *language = locale.language();
-    const string *region = locale.region();
-    const string *script = locale.script();
-    const string *variant = locale.variant();
-
-    jstring first = language ? env->NewStringUTF(language->c_str()) : nullptr;
-    jstring second = region ? env->NewStringUTF(region->c_str()) : nullptr;
-    jstring third = script ? env->NewStringUTF(script->c_str()) : nullptr;
-    jstring fourth = variant ? env->NewStringUTF(variant->c_str()) : nullptr;
-
-    jobjectArray values = env->NewObjectArray(4, JavaBridge(env).String_class(), nullptr);
-    env->SetObjectArrayElement(values, 0, first);
-    env->SetObjectArrayElement(values, 1, second);
-    env->SetObjectArrayElement(values, 2, third);
-    env->SetObjectArrayElement(values, 3, fourth);
-
-    return values;
+    return value ? env->NewStringUTF(value->c_str()) : nullptr;
 }
 
-jstring getNameCharset(JNIEnv *env, jobject obj, jint platformId, jint encodingId)
+static jstring getNameLanguage(JNIEnv *env, jclass clazz, jint platformId, jint languageId)
+{
+    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+
+    return toJavaString(env, locale.language());
+}
+
+static jstring getNameRegion(JNIEnv *env, jclass clazz, jint platformId, jint languageId)
+{
+    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+
+    return toJavaString(env, locale.region());
+}
+
+static jstring getNameScript(JNIEnv *env, jclass clazz, jint platformId, jint languageId)
+{
+    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+
+    return toJavaString(env, locale.script());
+}
+
+static jstring getNameVariant(JNIEnv *env, jclass clazz, jint platformId, jint languageId)
+{
+    Locale locale(static_cast<uint16_t>(platformId), static_cast<uint16_t>(languageId));
+
+    return toJavaString(env, locale.variant());
+}
+
+static jstring getNameCharset(JNIEnv *env, jclass clazz, jint platformId, jint encodingId)
 {
     Encoding encoding(static_cast<uint16_t>(platformId), static_cast<uint16_t>(encodingId));
     jstring charset = env->NewStringUTF(encoding.name());
@@ -562,55 +568,23 @@ jstring getNameCharset(JNIEnv *env, jobject obj, jint platformId, jint encodingI
     return charset;
 }
 
-jint getNameCount(JNIEnv *env, jobject obj, jobject jtypeface)
+static jstring getGlyphName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint glyphId)
 {
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    FT_UInt nameCount = FT_Get_Sfnt_Name_Count(baseFace);
-
-    return static_cast<jint>(nameCount);
-}
-
-jobject getNameRecord(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
-{
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    auto inputIndex = static_cast<int32_t>(index);
-
-    return typeface->getNameRecord(JavaBridge(env), inputIndex);
-}
-
-jstring getGlyphName(JNIEnv *env, jobject obj, jobject jtypeface, jint index)
-{
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-
     char buffer[96];
-    FT_Get_Glyph_Name(baseFace, index, buffer, sizeof(buffer));
+
+    TRTypefaceGetGlyphName(toTypeface(typefaceHandle), static_cast<TRGlyphID>(glyphId),
+                           buffer, sizeof(buffer));
 
     return env->NewStringUTF(buffer);
 }
 
-jlong getTablePointer(JNIEnv *env, jobject obj, jobject jtypeface, jint table)
-{
-    jlong typefaceHandle = JavaBridge(env).Typeface_getNativeTypeface(jtypeface);
-    auto typeface = reinterpret_cast<Typeface *>(typefaceHandle);
-    FT_Face baseFace = typeface->ftFace();
-    auto tableTag = static_cast<FT_Sfnt_Tag>(table);
-    void *tableStruct = FT_Get_Sfnt_Table(baseFace, tableTag);
-
-    return reinterpret_cast<jlong>(tableStruct);
-}
-
 static JNINativeMethod JNI_METHODS[] = {
-    { "getNameLocale", "(II)[Ljava/lang/String;", (void *)getNameLocale },
+    { "getNameLanguage", "(II)Ljava/lang/String;", (void *)getNameLanguage },
+    { "getNameRegion", "(II)Ljava/lang/String;", (void *)getNameRegion },
+    { "getNameScript", "(II)Ljava/lang/String;", (void *)getNameScript },
+    { "getNameVariant", "(II)Ljava/lang/String;", (void *)getNameVariant },
     { "getNameCharset", "(II)Ljava/lang/String;", (void *)getNameCharset },
-    { "getNameCount", "(Lcom/mta/tehreer/graphics/Typeface;)I", (void *)getNameCount },
-    { "getNameRecord", "(Lcom/mta/tehreer/graphics/Typeface;I)Lcom/mta/tehreer/sfnt/tables/NameTable$Record;", (void *)getNameRecord },
-    { "getGlyphName", "(Lcom/mta/tehreer/graphics/Typeface;I)Ljava/lang/String;", (void *)getGlyphName },
-    { "getTablePointer", "(Lcom/mta/tehreer/graphics/Typeface;I)J", (void *)getTablePointer },
+    { "getGlyphName", "(JI)Ljava/lang/String;", (void *)getGlyphName },
 };
 
 jint register_com_mta_tehreer_sfnt_tables_SfntTables(JNIEnv *env)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2021 Muhammad Tayyab Akram
+ * Copyright (C) 2019-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,277 +14,112 @@
  * limitations under the License.
  */
 
-extern "C" {
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_SYSTEM_H
-}
-
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <cstdlib>
 #include <jni.h>
-#include <mutex>
 
-#include "FreeType.h"
-#include "JavaBridge.h"
-#include "Miscellaneous.h"
-#include "RenderableFace.h"
-#include "Typeface.h"
-#include "StreamUtils.h"
+#include <Tehreer/TRFontFile.h>
+#include <Tehreer/TRTypeface.h>
+
 #include "FontFile.h"
+#include "JavaBridge.h"
+#include "StreamUtils.h"
+#include "Typeface.h"
 
 using namespace Tehreer;
 
-static FT_Stream createStream(AAssetManager *assetManager, const char *path)
+static TRFontFileRef toFontFile(jlong handle)
 {
-    AAsset *asset = AAssetManager_open(assetManager, path, AASSET_MODE_UNKNOWN);
-    if (!asset) {
-        return nullptr;
-    }
-
-    off_t size = AAsset_getLength(asset);
-    if (size == 0) {
-        return nullptr;
-    }
-
-    FT_Stream stream;
-    stream = (FT_Stream)malloc(sizeof(*stream));
-    stream->base = nullptr;
-    stream->size = static_cast<unsigned long>(size);
-    stream->pos = 0;
-    stream->descriptor.pointer = asset;
-    stream->pathname.pointer = nullptr;
-    stream->read = [](FT_Stream stream, unsigned long offset,
-                      unsigned char *buffer, unsigned long count) -> unsigned long {
-        auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
-        int bytesRead = 0;
-
-        if (count == 0 && offset > stream->size) {
-            return 1;
-        }
-
-        if (stream->pos != offset) {
-            AAsset_seek(asset, offset, SEEK_SET);
-        }
-        bytesRead = AAsset_read(asset, buffer, count);
-
-        return static_cast<unsigned long>(bytesRead);
-    };
-    stream->close = nullptr;
-
-    return stream;
+    return reinterpret_cast<TRFontFileRef>(handle);
 }
 
-static void disposeStream(FT_Stream stream)
+TRFontFileRef Tehreer::createFontFileFromAsset(JNIEnv *env, jobject assetManager, jstring path)
 {
-    auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
-    AAsset_close(asset);
+    TRFontFileRef fontFile = nullptr;
 
-    free(stream);
-}
-
-FontFile *FontFile::createFromAsset(AAssetManager *assetManager, const char *path)
-{
-    FT_Stream stream = createStream(assetManager, path);
-    if (stream) {
-        /* Core keeps its own copy of the data, as it cannot read from an asset on demand. */
-        auto asset = static_cast<AAsset *>(stream->descriptor.pointer);
-        const void *data = AAsset_getBuffer(asset);
-        TRFontFileRef core = nullptr;
-
-        if (data) {
-            core = TRFontFileCreateFromMemory(data, static_cast<TRUInteger>(AAsset_getLength(asset)));
-        }
-        if (!core) {
-            disposeStream(stream);
-            return nullptr;
-        }
-
-        FT_Open_Args args;
-        args.flags = FT_OPEN_STREAM;
-        args.memory_base = nullptr;
-        args.memory_size = 0;
-        args.pathname = nullptr;
-        args.stream = stream;
-
-        return createWithArgs(&args, core);
-    }
-
-    return nullptr;
-}
-
-FontFile *FontFile::createFromPath(const char *path)
-{
-    TRFontFileRef core = TRFontFileCreateFromPath(path);
-    if (!core) {
-        return nullptr;
-    }
-
-    FT_Open_Args args;
-    args.flags = FT_OPEN_PATHNAME;
-    args.memory_base = nullptr;
-    args.memory_size = 0;
-    args.pathname = const_cast<FT_String *>(path);
-    args.stream = nullptr;
-
-    return createWithArgs(&args, core);
-}
-
-FontFile *FontFile::createFromStream(const JavaBridge &bridge, jobject stream)
-{
-    size_t length;
-    void *buffer = StreamUtils::toRawBuffer(bridge, stream, &length);
-
-    if (buffer) {
-        TRFontFileRef core = TRFontFileCreateFromMemory(buffer, static_cast<TRUInteger>(length));
-        if (!core) {
-            free(buffer);
-            return nullptr;
-        }
-
-        FT_Open_Args args;
-        args.flags = FT_OPEN_MEMORY;
-        args.memory_base = static_cast<const FT_Byte *>(buffer);
-        args.memory_size = length;
-        args.pathname = nullptr;
-        args.stream = nullptr;
-
-        return createWithArgs(&args, core);
-    }
-
-    return nullptr;
-}
-
-FontFile *FontFile::createWithArgs(const FT_Open_Args *args, TRFontFileRef core)
-{
-    return new FontFile(args, (void *)args->memory_base, args->stream, core);
-}
-
-FontFile::FontFile(const FT_Open_Args *args, void *buffer, FT_Stream stream, TRFontFileRef core)
-{
-    m_args = *args;
-    m_buffer = buffer;
-    m_stream = stream;
-    m_core = core;
-    m_retainCount = 1;
-}
-
-FontFile::~FontFile()
-{
-    TRFontFileRelease(m_core);
-
-    if (m_stream) {
-        disposeStream(m_stream);
-    }
-    if (m_buffer) {
-        free(m_buffer);
-    }
-}
-
-FontFile &FontFile::retain()
-{
-    m_retainCount++;
-    return *this;
-}
-
-void FontFile::release()
-{
-    if (--m_retainCount == 0) {
-        delete this;
-    }
-}
-
-RenderableFace *FontFile::createRenderableFace(FT_Long faceIndex)
-{
-    std::mutex &mutex = FreeType::mutex();
-    mutex.lock();
-
-    FT_Face ftFace = nullptr;
-    FT_Error error = FT_Open_Face(FreeType::library(), &m_args, faceIndex, &ftFace);
-    if (error == FT_Err_Ok) {
-        if (!FT_IS_SCALABLE(ftFace)) {
-            FT_Done_Face(ftFace);
-            ftFace = nullptr;
-        }
-    }
-
-    mutex.unlock();
-
-    if (ftFace) {
-        return RenderableFace::create(*this, ftFace);
-    }
-
-    return nullptr;
-}
-
-static jlong createFromAsset(JNIEnv *env, jobject obj, jobject assetManager, jstring path)
-{
-    if (path) {
+    if (assetManager && path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
         AAssetManager *nativeAssetManager = AAssetManager_fromJava(env, assetManager);
-        FontFile *fontFile = FontFile::createFromAsset(nativeAssetManager, utfChars);
+        AAsset *asset = AAssetManager_open(nativeAssetManager, utfChars, AASSET_MODE_BUFFER);
+
+        if (asset) {
+            /* Core keeps its own copy of the data, so the asset is not needed afterwards. */
+            const void *data = AAsset_getBuffer(asset);
+            if (data) {
+                fontFile = TRFontFileCreateFromMemory(data, static_cast<TRUInteger>(AAsset_getLength64(asset)));
+            }
+
+            AAsset_close(asset);
+        }
 
         env->ReleaseStringUTFChars(path, utfChars);
-
-        return reinterpret_cast<jlong>(fontFile);
     }
 
-    return 0;
+    return fontFile;
 }
 
-static jlong createFromPath(JNIEnv *env, jobject obj, jstring path)
+TRFontFileRef Tehreer::createFontFileFromPath(JNIEnv *env, jstring path)
 {
+    TRFontFileRef fontFile = nullptr;
+
     if (path) {
         const char *utfChars = env->GetStringUTFChars(path, nullptr);
-        FontFile *fontFile = FontFile::createFromPath(utfChars);
+
+        fontFile = TRFontFileCreateFromPath(utfChars);
 
         env->ReleaseStringUTFChars(path, utfChars);
-
-        return reinterpret_cast<jlong>(fontFile);
     }
 
-    return 0;
+    return fontFile;
 }
 
-static jlong createFromStream(JNIEnv *env, jobject obj, jobject stream)
+TRFontFileRef Tehreer::createFontFileFromStream(JNIEnv *env, jobject stream)
 {
+    TRFontFileRef fontFile = nullptr;
+
     if (stream) {
-        FontFile *fontFile = FontFile::createFromStream(JavaBridge(env), stream);
-        return reinterpret_cast<jlong>(fontFile);
+        size_t length;
+        void *buffer = StreamUtils::toRawBuffer(JavaBridge(env), stream, &length);
+
+        if (buffer) {
+            fontFile = TRFontFileCreateFromMemory(buffer, static_cast<TRUInteger>(length));
+            free(buffer);
+        }
     }
 
-    return 0;
+    return fontFile;
 }
 
-static void release(JNIEnv *env, jobject obj, jlong fontFileHandle)
+static jlong createFromAsset(JNIEnv *env, jclass clazz, jobject assetManager, jstring path)
 {
-    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
-    fontFile->release();
+    return reinterpret_cast<jlong>(createFontFileFromAsset(env, assetManager, path));
 }
 
-static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
+static jlong createFromPath(JNIEnv *env, jclass clazz, jstring path)
 {
-    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
-    FT_Long numFaces = fontFile->numFaces();
-
-    return static_cast<jint>(numFaces);
+    return reinterpret_cast<jlong>(createFontFileFromPath(env, path));
 }
 
-static jobject createTypeface(JNIEnv *env, jobject obj,
-    jlong fontFileHandle, jint faceIndex)
+static jlong createFromStream(JNIEnv *env, jclass clazz, jobject stream)
 {
-    auto fontFile = reinterpret_cast<FontFile *>(fontFileHandle);
-    Typeface *typeface = Typeface::createFromFile(fontFile, faceIndex);
+    return reinterpret_cast<jlong>(createFontFileFromStream(env, stream));
+}
 
-    if (typeface) {
-        auto typefaceHandle = reinterpret_cast<jlong>(typeface);
-        JavaBridge bridge(env);
+static void release(JNIEnv *env, jclass clazz, jlong fontFileHandle)
+{
+    TRFontFileRelease(toFontFile(fontFileHandle));
+}
 
-        return bridge.Typeface_construct(typefaceHandle);
-    }
+static jint getFaceCount(JNIEnv *env, jclass clazz, jlong fontFileHandle)
+{
+    return static_cast<jint>(TRFontFileGetFaceCount(toFontFile(fontFileHandle)));
+}
 
-    return nullptr;
+static jlong createTypeface(JNIEnv *env, jclass clazz, jlong fontFileHandle, jint faceIndex)
+{
+    return reinterpret_cast<jlong>(TRTypefaceCreate(toFontFile(fontFileHandle),
+                                                    static_cast<TRUInteger>(faceIndex)));
 }
 
 static JNINativeMethod JNI_METHODS[] = {
@@ -293,7 +128,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nRelease", "(J)V", (void *)release },
     { "nGetFaceCount", "(J)I", (void *)getFaceCount },
-    { "nCreateTypeface", "(JI)Lcom/mta/tehreer/graphics/Typeface;", (void *)createTypeface },
+    { "nCreateTypeface", "(JI)J", (void *)createTypeface },
 };
 
 jint register_com_mta_tehreer_font_FontFile(JNIEnv *env)

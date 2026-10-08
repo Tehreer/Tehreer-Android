@@ -211,7 +211,7 @@ class TTextViewReframeBufferingTest {
         }
         assertTrue(oldLines.isNotEmpty())
 
-        onMain { host.view.setSpanned(spannedOf { append(arabicText(300)) }) }
+        onMain { host.view.spanned = spannedOf { append(arabicText(300)) } }
 
         host.awaitUntil("the new text is there, with none of the old text's lines") {
             host.view.composedFrame != null && host.lineViews().isNotEmpty() &&

@@ -115,9 +115,9 @@ internal class TextViewHost(
 
     init {
         onMain {
-            view.typeface = TypefaceStore.getNafeesWeb()
+            view.typeface = TypefaceStore.nafeesWeb
             view.textSize = 32.0f
-            view.setTextColor(Color.BLACK)
+            view.textColor = Color.BLACK
         }
     }
 
@@ -140,7 +140,7 @@ internal class TextViewHost(
 
     /** Shows [text] and waits until its lines are on screen. */
     fun show(text: Spanned) {
-        onMain { view.setSpanned(text) }
+        onMain { view.spanned = text }
         awaitLines()
     }
 

@@ -160,12 +160,12 @@ class TTextViewFrameTimeTest {
         val span = FlexibleSpan(ratio = 0.5f, roomMargins = Rect(0, 12, 0, 8))
         var start = 0
 
-        onMain { host.view.setSpanned(spannedOf {
+        onMain { host.view.spanned = spannedOf {
             append(arabicText(6))
             append("\n")
             start = appendView(span)
             append(arabicText(6))
-        }) }
+        } }
 
         // The very first frame that appears is right: the view is half as tall as the text is wide.
         host.awaitUntil("the first frame") { host.view.composedFrame != null }
@@ -453,7 +453,7 @@ class TTextViewFrameTimeTest {
         assertEquals(0, host.scrollY)
 
         host.scrollTo(300)
-        onMain { host.view.setTypesetter(com.mta.tehreer.layout.Typesetter(arabicText(55), host.view.typeface, 32f)) }
+        onMain { host.view.typesetter = com.mta.tehreer.layout.Typesetter(arabicText(55), host.view.typeface!!, 32f) }
         host.awaitUntil("the typesetter is new") { host.view.composedFrame?.charEnd == arabicText(55).length }
         assertEquals(0, host.scrollY)
     }
@@ -519,7 +519,7 @@ class TTextViewFrameTimeTest {
         val char = 700
 
         onMain {
-            host.view.setSpanned(restored)
+            host.view.spanned = restored
             host.view.scrollToCharIndex(char, false)
         }
         host.awaitUntil("the text is there") { host.view.composedFrame != null && host.lineViews().isNotEmpty() }
