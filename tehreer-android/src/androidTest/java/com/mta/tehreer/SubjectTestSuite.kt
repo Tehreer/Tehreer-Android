@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package com.mta.tehreer.subject
+package com.mta.tehreer
 
-import com.mta.tehreer.Disposable
+import com.mta.tehreer.subject.SubjectBuilder
 
-class DisposableSubjectBuilder<T : Disposable>(
-    private val builder: UnsafeSubjectBuilder<T>
-) : SubjectBuilder<T> {
-    override fun buildSubject(): T {
-        return builder.buildSubject()
+abstract class SubjectTestSuite<T>(private val subjectBuilder: SubjectBuilder<T>) {
+    protected var onPreBuildSubject: ((SubjectBuilder<*>) -> Unit)? = null
+    protected var onPostBuildSubject: ((SubjectBuilder<*>) -> Unit)? = null
+
+    protected fun buildSubject(): T {
+        onPreBuildSubject?.invoke(subjectBuilder)
+        val subject = subjectBuilder.buildSubject()
+        onPostBuildSubject?.invoke(subjectBuilder)
+
+        return subject
     }
 
-    override fun buildSubject(consumer: ((T) -> Unit)?) {
-        var subject: T? = null
-
-        try {
-            subject = buildSubject()
-            consumer?.invoke(subject)
-        } finally {
-            subject?.dispose()
-        }
+    protected fun buildSubject(consumer: (T) -> Unit) {
+        consumer(buildSubject())
     }
 }

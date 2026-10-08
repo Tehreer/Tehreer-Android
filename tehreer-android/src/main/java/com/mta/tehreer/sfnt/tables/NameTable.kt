@@ -40,8 +40,7 @@ class NameTable private constructor(data: ByteArray) {
      * @throws RuntimeException if `typeface` does not contain `name' table.
      */
     constructor(typeface: Typeface) : this(
-        typeface.getTableData(SfntTag.make("name"))
-            ?: throw RuntimeException("The typeface does not contain `name' table")
+        checkNotNull(typeface.getTableData(SfntTag.make("name"))) { "The typeface does not contain `name' table" }
     )
 
     /**
@@ -181,7 +180,6 @@ class NameTable private constructor(data: ByteArray) {
          * @return A new `NameTable` object, or `null` if `name' table does not exist in the
          *         specified typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): NameTable? {
             return typeface.getTableData(SfntTag.make("name"))?.let { NameTable(it) }
         }

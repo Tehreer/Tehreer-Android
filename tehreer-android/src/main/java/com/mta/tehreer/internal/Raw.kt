@@ -35,34 +35,34 @@ internal object Raw {
 
     @JvmStatic private external fun sizeOfIntPtr(): Int
 
-    @JvmStatic external fun getInt8Value(pointer: Long): Byte
-    @JvmStatic external fun getInt16Value(pointer: Long): Short
-    @JvmStatic external fun getInt32Value(pointer: Long): Int
-    @JvmStatic external fun getIntPtrValue(pointer: Long): Long
-    @JvmStatic external fun getFloatValue(pointer: Long): Float
+    @JvmStatic external fun getInt8Value(owner: Any?, pointer: Long): Byte
+    @JvmStatic external fun getInt16Value(owner: Any?, pointer: Long): Short
+    @JvmStatic external fun getInt32Value(owner: Any?, pointer: Long): Int
+    @JvmStatic external fun getIntPtrValue(owner: Any?, pointer: Long): Long
+    @JvmStatic external fun getFloatValue(owner: Any?, pointer: Long): Float
 
     @JvmStatic external fun copyInt8Buffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: ByteArray, start: Int, length: Int
     )
     @JvmStatic external fun copyUInt8Buffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: IntArray, start: Int, length: Int
     )
     @JvmStatic external fun copyUInt16Buffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: IntArray, start: Int, length: Int
     )
     @JvmStatic external fun copyInt32Buffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: IntArray, start: Int, length: Int
     )
     @JvmStatic external fun copyUIntPtrBuffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: IntArray, start: Int, length: Int
     )
     @JvmStatic external fun copyFloatBuffer(
-        pointer: Long,
+        owner: Any?, pointer: Long,
         destination: FloatArray, start: Int, length: Int
     )
 }

@@ -20,7 +20,6 @@ import android.content.res.AssetManager
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.Rect
-import androidx.annotation.RestrictTo
 import com.mta.tehreer.font.ColorPalette
 import com.mta.tehreer.font.NamedStyle
 import com.mta.tehreer.font.VariationAxis
@@ -52,14 +51,14 @@ class Typeface {
         val variationAxes: List<VariationAxis>? by lazy {
             val handle = root.nativeTypeface
 
-            List(nGetVariationAxisCount(handle)) {
+            List(root.nGetVariationAxisCount(handle)) {
                 VariationAxis.of(
-                    nGetVariationAxisTag(handle, it),
-                    nGetVariationAxisName(handle, it),
-                    nGetVariationAxisFlags(handle, it),
-                    nGetVariationAxisDefaultValue(handle, it),
-                    nGetVariationAxisMinValue(handle, it),
-                    nGetVariationAxisMaxValue(handle, it)
+                    root.nGetVariationAxisTag(handle, it),
+                    root.nGetVariationAxisName(handle, it),
+                    root.nGetVariationAxisFlags(handle, it),
+                    root.nGetVariationAxisDefaultValue(handle, it),
+                    root.nGetVariationAxisMinValue(handle, it),
+                    root.nGetVariationAxisMaxValue(handle, it)
                 )
             }.takeIf { it.isNotEmpty() }
         }
@@ -69,11 +68,11 @@ class Typeface {
             val axisCount = variationAxes?.size ?: 0
 
             if (axisCount > 0) {
-                List(nGetNamedStyleCount(handle)) {
+                List(root.nGetNamedStyleCount(handle)) {
                     NamedStyle.of(
-                        nGetNamedStyleName(handle, it),
-                        FloatBufferList(root, nGetNamedStyleCoordinatesPtr(handle, it), axisCount).toArray(),
-                        nGetNamedStylePostScriptName(handle, it)
+                        root.nGetNamedStyleName(handle, it),
+                        FloatBufferList(root, root.nGetNamedStyleCoordinatesPtr(handle, it), axisCount).toArray(),
+                        root.nGetNamedStylePostScriptName(handle, it)
                     )
                 }.takeIf { it.isNotEmpty() }
             } else {
@@ -84,7 +83,7 @@ class Typeface {
         val paletteEntryNames: List<String>? by lazy {
             val handle = root.nativeTypeface
 
-            List(nGetPaletteEntryCount(handle)) { nGetPaletteEntryName(handle, it) }
+            List(root.nGetPaletteEntryCount(handle)) { root.nGetPaletteEntryName(handle, it) }
                 .takeIf { it.isNotEmpty() }
         }
 
@@ -93,11 +92,11 @@ class Typeface {
             val entryCount = paletteEntryNames?.size ?: 0
 
             if (entryCount > 0) {
-                List(nGetPredefinedPaletteCount(handle)) {
+                List(root.nGetPredefinedPaletteCount(handle)) {
                     ColorPalette.of(
-                        nGetPredefinedPaletteName(handle, it),
-                        nGetPredefinedPaletteFlags(handle, it),
-                        Int32BufferIntList(root, nGetPredefinedPaletteColorsPtr(handle, it), entryCount).toArray()
+                        root.nGetPredefinedPaletteName(handle, it),
+                        root.nGetPredefinedPaletteFlags(handle, it),
+                        Int32BufferIntList(root, root.nGetPredefinedPaletteColorsPtr(handle, it), entryCount).toArray()
                     )
                 }.takeIf { it.isNotEmpty() }
             } else {
@@ -465,16 +464,6 @@ class Typeface {
     val strikeoutThickness: Int
         get() = nGetStrikeoutThickness(nativeTypeface)
 
-    /**
-     * Returns the handle of the typeface of Core, which is the native handle of this typeface. It is
-     * only for the other packages of the library.
-     *
-     * @hidden
-     */
-    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    val coreHandle: Long
-        get() = nativeTypeface
-
     override fun toString(): String {
         return "Typeface{familyName=$familyName" +
             ", styleName=$styleName" +
@@ -495,6 +484,53 @@ class Typeface {
             "}"
     }
 
+    private external fun nGetFamilyName(nativeTypeface: Long): String
+    private external fun nGetStyleName(nativeTypeface: Long): String
+    private external fun nGetFullName(nativeTypeface: Long): String
+    private external fun nGetWeight(nativeTypeface: Long): Int
+    private external fun nGetWidth(nativeTypeface: Long): Int
+    private external fun nGetSlope(nativeTypeface: Long): Int
+    private external fun nGetVariationAxisCount(nativeTypeface: Long): Int
+    private external fun nGetVariationAxisTag(nativeTypeface: Long, index: Int): Int
+    private external fun nGetVariationAxisFlags(nativeTypeface: Long, index: Int): Int
+    private external fun nGetVariationAxisName(nativeTypeface: Long, index: Int): String
+    private external fun nGetVariationAxisMinValue(nativeTypeface: Long, index: Int): Float
+    private external fun nGetVariationAxisDefaultValue(nativeTypeface: Long, index: Int): Float
+    private external fun nGetVariationAxisMaxValue(nativeTypeface: Long, index: Int): Float
+    private external fun nGetNamedStyleCount(nativeTypeface: Long): Int
+    private external fun nGetNamedStyleName(nativeTypeface: Long, index: Int): String
+    private external fun nGetNamedStylePostScriptName(nativeTypeface: Long, index: Int): String?
+    private external fun nGetNamedStyleCoordinatesPtr(nativeTypeface: Long, index: Int): Long
+    private external fun nGetVariationInstance(nativeTypeface: Long, coordinates: FloatArray): Long
+    private external fun nGetVariationCoordinatesPtr(nativeTypeface: Long): Long
+    private external fun nGetPaletteEntryCount(nativeTypeface: Long): Int
+    private external fun nGetPaletteEntryName(nativeTypeface: Long, index: Int): String
+    private external fun nGetPredefinedPaletteCount(nativeTypeface: Long): Int
+    private external fun nGetPredefinedPaletteName(nativeTypeface: Long, index: Int): String
+    private external fun nGetPredefinedPaletteFlags(nativeTypeface: Long, index: Int): Int
+    private external fun nGetPredefinedPaletteColorsPtr(nativeTypeface: Long, index: Int): Long
+    private external fun nGetColorInstance(nativeTypeface: Long, colors: IntArray): Long
+    private external fun nGetAssociatedColorsPtr(nativeTypeface: Long): Long
+    private external fun nGetTableData(nativeTypeface: Long, tableTag: Int): ByteArray?
+    private external fun nGetUnitsPerEm(nativeTypeface: Long): Int
+    private external fun nGetAscent(nativeTypeface: Long): Int
+    private external fun nGetDescent(nativeTypeface: Long): Int
+    private external fun nGetLeading(nativeTypeface: Long): Int
+    private external fun nGetGlyphCount(nativeTypeface: Long): Int
+    private external fun nGetGlyphId(nativeTypeface: Long, codePoint: Int): Int
+    private external fun nGetGlyphAdvance(
+        nativeTypeface: Long, glyphId: Int, typeSize: Float, vertical: Boolean
+    ): Float
+    private external fun nGetGlyphPath(
+        nativeTypeface: Long, glyphId: Int, typeSize: Float,
+        scaleX: Float, skewX: Float, translateX: Float,
+        skewY: Float, scaleY: Float, translateY: Float
+    ): Path
+    private external fun nGetBoundingBox(nativeTypeface: Long): Rect
+    private external fun nGetUnderlinePosition(nativeTypeface: Long): Int
+    private external fun nGetUnderlineThickness(nativeTypeface: Long): Int
+    private external fun nGetStrikeoutPosition(nativeTypeface: Long): Int
+    private external fun nGetStrikeoutThickness(nativeTypeface: Long): Int
     private companion object {
         init {
             JniBridge.loadLibrary()
@@ -506,64 +542,5 @@ class Typeface {
 
         @JvmStatic external fun nDispose(nativeTypeface: Long)
 
-        @JvmStatic external fun nGetFamilyName(nativeTypeface: Long): String
-        @JvmStatic external fun nGetStyleName(nativeTypeface: Long): String
-        @JvmStatic external fun nGetFullName(nativeTypeface: Long): String
-
-        @JvmStatic external fun nGetWeight(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetWidth(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetSlope(nativeTypeface: Long): Int
-
-        @JvmStatic external fun nGetVariationAxisCount(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetVariationAxisTag(nativeTypeface: Long, index: Int): Int
-        @JvmStatic external fun nGetVariationAxisFlags(nativeTypeface: Long, index: Int): Int
-        @JvmStatic external fun nGetVariationAxisName(nativeTypeface: Long, index: Int): String
-        @JvmStatic external fun nGetVariationAxisMinValue(nativeTypeface: Long, index: Int): Float
-        @JvmStatic external fun nGetVariationAxisDefaultValue(nativeTypeface: Long, index: Int): Float
-        @JvmStatic external fun nGetVariationAxisMaxValue(nativeTypeface: Long, index: Int): Float
-
-        @JvmStatic external fun nGetNamedStyleCount(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetNamedStyleName(nativeTypeface: Long, index: Int): String
-        @JvmStatic external fun nGetNamedStylePostScriptName(nativeTypeface: Long, index: Int): String?
-        @JvmStatic external fun nGetNamedStyleCoordinatesPtr(nativeTypeface: Long, index: Int): Long
-
-        @JvmStatic external fun nGetVariationInstance(nativeTypeface: Long, coordinates: FloatArray): Long
-        @JvmStatic external fun nGetVariationCoordinatesPtr(nativeTypeface: Long): Long
-
-        @JvmStatic external fun nGetPaletteEntryCount(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetPaletteEntryName(nativeTypeface: Long, index: Int): String
-        @JvmStatic external fun nGetPredefinedPaletteCount(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetPredefinedPaletteName(nativeTypeface: Long, index: Int): String
-        @JvmStatic external fun nGetPredefinedPaletteFlags(nativeTypeface: Long, index: Int): Int
-        @JvmStatic external fun nGetPredefinedPaletteColorsPtr(nativeTypeface: Long, index: Int): Long
-
-        @JvmStatic external fun nGetColorInstance(nativeTypeface: Long, colors: IntArray): Long
-        @JvmStatic external fun nGetAssociatedColorsPtr(nativeTypeface: Long): Long
-
-        @JvmStatic external fun nGetTableData(nativeTypeface: Long, tableTag: Int): ByteArray?
-
-        @JvmStatic external fun nGetUnitsPerEm(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetAscent(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetDescent(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetLeading(nativeTypeface: Long): Int
-
-        @JvmStatic external fun nGetGlyphCount(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetGlyphId(nativeTypeface: Long, codePoint: Int): Int
-        @JvmStatic external fun nGetGlyphAdvance(
-            nativeTypeface: Long, glyphId: Int, typeSize: Float, vertical: Boolean
-        ): Float
-        @JvmStatic external fun nGetGlyphPath(
-            nativeTypeface: Long, glyphId: Int, typeSize: Float,
-            scaleX: Float, skewX: Float, translateX: Float,
-            skewY: Float, scaleY: Float, translateY: Float
-        ): Path
-
-        @JvmStatic external fun nGetBoundingBox(nativeTypeface: Long): Rect
-
-        @JvmStatic external fun nGetUnderlinePosition(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetUnderlineThickness(nativeTypeface: Long): Int
-
-        @JvmStatic external fun nGetStrikeoutPosition(nativeTypeface: Long): Int
-        @JvmStatic external fun nGetStrikeoutThickness(nativeTypeface: Long): Int
     }
 }

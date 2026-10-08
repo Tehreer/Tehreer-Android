@@ -31,8 +31,7 @@ class OS2Table private constructor(private val table: SfntTable) {
      * @throws RuntimeException if `typeface` does not contain `OS/2' table.
      */
     constructor(typeface: Typeface) : this(
-        SfntTables.readTable(typeface, "OS/2", TABLE_LENGTH)
-            ?: throw RuntimeException("The typeface does not contain `OS/2' table")
+        checkNotNull(SfntTables.readTable(typeface, "OS/2", TABLE_LENGTH)) { "The typeface does not contain `OS/2' table" }
     )
 
     fun version(): Int = table.readUInt16(VERSION)
@@ -125,7 +124,6 @@ class OS2Table private constructor(private val table: SfntTable) {
          * @return A new `OS2Table` object, or `null` if `OS/2' table does not exist in the specified
          *         typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): OS2Table? {
             return SfntTables.readTable(typeface, "OS/2", TABLE_LENGTH)?.let { OS2Table(it) }
         }

@@ -16,56 +16,42 @@
 
 package com.mta.tehreer.sfnt
 
-import com.mta.tehreer.Disposable
 import com.mta.tehreer.graphics.Typeface
-import com.mta.tehreer.internal.Constants
 import com.mta.tehreer.internal.Description
 import com.mta.tehreer.internal.JniBridge
 
 /**
  * The `ShapingEngine` class represents text shaping engine.
  */
-open class ShapingEngine : Disposable {
-    private class Finalizable(parent: ShapingEngine) : ShapingEngine(parent) {
-        override fun dispose() {
-            throw UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT)
-        }
-
+class ShapingEngine {
+    private class Finalizable(private val nativeEngine: Long) {
         @Suppress("unused")
         protected fun finalize() {
-            super.dispose()
+            nDispose(nativeEngine)
         }
     }
 
-    private class Base {
-        var typeface: Typeface? = null
-        var features: Set<OpenTypeFeature> = emptySet()
-    }
-
-    private val base: Base
-    @JvmField internal var nativeEngine: Long
+    internal val nativeEngine: Long
+    private val finalizable: Finalizable
+    private var currentTypeface: Typeface? = null
+    private var currentFeatures: Set<OpenTypeFeature> = emptySet()
 
     /**
      * Constructs a shaping engine object.
      */
     constructor() {
-        base = Base()
         nativeEngine = nCreate()
-    }
-
-    private constructor(other: ShapingEngine) {
-        base = other.base
-        nativeEngine = other.nativeEngine
+        finalizable = Finalizable(nativeEngine)
     }
 
     /**
      * The typeface which this shaping engine will use for shaping text.
      */
     var typeface: Typeface?
-        get() = base.typeface
+        get() = currentTypeface
         set(value) {
-            base.typeface = value
-            nSetTypeface(nativeEngine, value?.coreHandle ?: 0)
+            currentTypeface = value
+            nSetTypeface(nativeEngine, value?.nativeTypeface ?: 0)
         }
 
     /**
@@ -107,9 +93,9 @@ open class ShapingEngine : Disposable {
      * alternate glyph at this position.
      */
     var openTypeFeatures: Set<OpenTypeFeature>
-        get() = base.features.toSet()
+        get() = currentFeatures.toSet()
         set(value) {
-            base.features = LinkedHashSet(value)
+            currentFeatures = LinkedHashSet(value)
 
             for (feature in value) {
                 nAddOpenTypeFeature(nativeEngine, feature.tag(), feature.value().toShort())
@@ -153,14 +139,14 @@ open class ShapingEngine : Disposable {
      * @param text The text to shape into glyphs.
      * @param fromIndex The index of the first character (inclusive) to be shaped.
      * @param toIndex The index of the last character (exclusive) to be shaped.
-     * @return A non-finalizable instance of a `ShapingResult` object.
+     * @return A `ShapingResult` object holding the shaped glyphs.
      *
      * @throws IllegalStateException if current typeface is `null`.
      * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than
      *         `text.length`, or `fromIndex` is greater than `toIndex`
      */
     fun shapeText(text: String, fromIndex: Int, toIndex: Int): ShapingResult {
-        check(base.typeface != null) { "Typeface has not been set" }
+        check(currentTypeface != null) { "Typeface has not been set" }
         require(fromIndex >= 0) { "From Index: $fromIndex" }
         require(toIndex <= text.length) { "To Index: $toIndex, Text Length: ${text.length}" }
         require(toIndex >= fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
@@ -169,10 +155,6 @@ open class ShapingEngine : Disposable {
         nShapeText(nativeEngine, result.nativeResult, text, fromIndex, toIndex)
 
         return result
-    }
-
-    override fun dispose() {
-        nDispose(nativeEngine)
     }
 
     override fun toString(): String {
@@ -186,41 +168,25 @@ open class ShapingEngine : Disposable {
             "}"
     }
 
+    private external fun nSetTypeface(nativeEngine: Long, nativeTypeface: Long)
+    private external fun nGetTypeSize(nativeEngine: Long): Float
+    private external fun nSetTypeSize(nativeEngine: Long, typeSize: Float)
+    private external fun nGetScriptTag(nativeEngine: Long): Int
+    private external fun nSetScriptTag(nativeEngine: Long, scriptTag: Int)
+    private external fun nGetLanguageTag(nativeEngine: Long): Int
+    private external fun nSetLanguageTag(nativeEngine: Long, languageTag: Int)
+    private external fun nAddOpenTypeFeature(nativeEngine: Long, tag: Int, value: Short)
+    private external fun nApplyOpenTypeFeatures(nativeEngine: Long)
+    private external fun nGetWritingDirection(nativeEngine: Long): Int
+    private external fun nSetWritingDirection(nativeEngine: Long, writingDirection: Int)
+    private external fun nGetShapingOrder(nativeEngine: Long): Int
+    private external fun nSetShapingOrder(nativeEngine: Long, shapingOrder: Int)
+    private external fun nShapeText(
+        nativeEngine: Long, nativeResult: Long, text: String, fromIndex: Int, toIndex: Int
+    )
     companion object {
         init {
             JniBridge.loadLibrary()
-        }
-
-        /**
-         * Wraps a shaping engine object into a finalizable instance which is guaranteed to be
-         * disposed automatically by the GC when no longer in use. After calling this method,
-         * `dispose()` should not be called on either original object or returned object. Calling
-         * `dispose()` on returned object will throw an `UnsupportedOperationException`.
-         *
-         * **Note:** The behavior is undefined if the passed-in object is already disposed or
-         * wrapped into another finalizable instance.
-         *
-         * @param shapingEngine The shaping engine object to wrap into a finalizable instance.
-         * @return The finalizable instance of the passed-in shaping engine object.
-         */
-        @JvmStatic
-        fun finalizable(shapingEngine: ShapingEngine): ShapingEngine {
-            return when (shapingEngine.javaClass) {
-                ShapingEngine::class.java -> Finalizable(shapingEngine)
-                Finalizable::class.java -> shapingEngine
-                else -> throw IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED)
-            }
-        }
-
-        /**
-         * Checks whether a shaping engine object is finalizable or not.
-         *
-         * @param shapingEngine The shaping engine object to check.
-         * @return `true` if the passed-in shaping engine object is finalizable, `false` otherwise.
-         */
-        @JvmStatic
-        fun isFinalizable(shapingEngine: ShapingEngine): Boolean {
-            return shapingEngine.javaClass == Finalizable::class.java
         }
 
         /**
@@ -229,7 +195,6 @@ open class ShapingEngine : Disposable {
          * @param scriptTag The tag of the script whose default direction is returned.
          * @return The default writing direction of the script identified by `scriptTag`.
          */
-        @JvmStatic
         fun getScriptDirection(scriptTag: Int): WritingDirection {
             return WritingDirection.valueOf(nGetScriptDefaultDirection(scriptTag))!!
         }
@@ -239,28 +204,5 @@ open class ShapingEngine : Disposable {
         @JvmStatic private external fun nCreate(): Long
         @JvmStatic private external fun nDispose(nativeEngine: Long)
 
-        @JvmStatic private external fun nSetTypeface(nativeEngine: Long, nativeTypeface: Long)
-
-        @JvmStatic private external fun nGetTypeSize(nativeEngine: Long): Float
-        @JvmStatic private external fun nSetTypeSize(nativeEngine: Long, typeSize: Float)
-
-        @JvmStatic private external fun nGetScriptTag(nativeEngine: Long): Int
-        @JvmStatic private external fun nSetScriptTag(nativeEngine: Long, scriptTag: Int)
-
-        @JvmStatic private external fun nGetLanguageTag(nativeEngine: Long): Int
-        @JvmStatic private external fun nSetLanguageTag(nativeEngine: Long, languageTag: Int)
-
-        @JvmStatic private external fun nAddOpenTypeFeature(nativeEngine: Long, tag: Int, value: Short)
-        @JvmStatic private external fun nApplyOpenTypeFeatures(nativeEngine: Long)
-
-        @JvmStatic private external fun nGetWritingDirection(nativeEngine: Long): Int
-        @JvmStatic private external fun nSetWritingDirection(nativeEngine: Long, writingDirection: Int)
-
-        @JvmStatic private external fun nGetShapingOrder(nativeEngine: Long): Int
-        @JvmStatic private external fun nSetShapingOrder(nativeEngine: Long, shapingOrder: Int)
-
-        @JvmStatic private external fun nShapeText(
-            nativeEngine: Long, nativeResult: Long, text: String, fromIndex: Int, toIndex: Int
-        )
     }
 }

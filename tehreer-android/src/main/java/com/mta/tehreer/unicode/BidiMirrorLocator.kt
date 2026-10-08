@@ -16,13 +16,16 @@
 
 package com.mta.tehreer.unicode
 
-import com.mta.tehreer.Disposable
 import com.mta.tehreer.internal.JniBridge
 
-internal class BidiMirrorLocator : Disposable {
-    @JvmField var nativeMirrorLocator: Long = nCreate()
+internal class BidiMirrorLocator {
+    val nativeMirrorLocator: Long = nCreate()
+
+    /** The native locator keeps pointing into the data of the loaded line while it is iterating. */
+    private var loadedLine: BidiLine? = null
 
     fun loadLine(line: BidiLine) {
+        loadedLine = line
         nLoadLine(nativeMirrorLocator, line.nativeLine, line.nativeBuffer)
     }
 
@@ -30,7 +33,8 @@ internal class BidiMirrorLocator : Disposable {
         return nGetNextPair(nativeMirrorLocator)
     }
 
-    override fun dispose() {
+    @Suppress("unused")
+    protected fun finalize() {
         nDispose(nativeMirrorLocator)
     }
 

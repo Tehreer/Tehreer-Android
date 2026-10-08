@@ -123,7 +123,6 @@ abstract class ByteList : Primitive {
          * @param values The elements of the byte list.
          * @return A new byte list.
              */
-        @JvmStatic
         fun of(vararg values: Byte): ByteList {
             return JByteArrayList(values, 0, values.size)
         }

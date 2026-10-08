@@ -39,7 +39,6 @@ object TypefaceManager {
      * @throws IllegalArgumentException if `typeface` is already registered, or `tag` is already
      *         taken.
      */
-    @JvmStatic
     fun registerTypeface(typeface: Typeface, tag: Any?) {
         synchronized(this) {
             require(!typefaces.contains(typeface)) { "This typeface is already registered" }
@@ -63,7 +62,6 @@ object TypefaceManager {
      *
      * @throws IllegalArgumentException if `typeface` is not registered.
      */
-    @JvmStatic
     fun unregisterTypeface(typeface: Typeface) {
         synchronized(this) {
             require(typefaces.remove(typeface)) { "This typeface is not registered" }
@@ -80,7 +78,6 @@ object TypefaceManager {
      * @return The registered typeface, or `null` if no typeface is registered against the specified
      *         tag.
      */
-    @JvmStatic
     fun getTypeface(tag: Any): Typeface? {
         synchronized(this) {
             return tags[tag]
@@ -95,7 +92,6 @@ object TypefaceManager {
      *
      * @throws IllegalArgumentException if `typeface` is not registered.
      */
-    @JvmStatic
     fun getTypefaceTag(typeface: Typeface): Any? {
         synchronized(this) {
             require(typefaces.contains(typeface)) { "This typeface is not registered" }
@@ -110,7 +106,6 @@ object TypefaceManager {
      * @param familyName The name of the family.
      * @return A type family having specified family name.
      */
-    @JvmStatic
     fun getTypeFamily(familyName: String): TypeFamily? {
         val entries = synchronized(this) {
             sortTypefaces()
@@ -127,7 +122,6 @@ object TypefaceManager {
      * @param fullName The full name of the typeface.
      * @return The typeface having specified full name, or `null` if no such typeface is registered.
      */
-    @JvmStatic
     fun getTypefaceByName(fullName: String): Typeface? {
         synchronized(this) {
             return typefaces.firstOrNull { it.fullName.equals(fullName, ignoreCase = true) }
@@ -139,7 +133,6 @@ object TypefaceManager {
      *
      * @return A list of available type families.
      */
-    @JvmStatic
     fun getAvailableFamilies(): List<TypeFamily> {
         val familyMap = java.util.TreeMap<String, MutableList<Typeface>>(String.CASE_INSENSITIVE_ORDER)
 
@@ -160,7 +153,6 @@ object TypefaceManager {
      *
      * @return A list of available typefaces.
      */
-    @JvmStatic
     fun getAvailableTypefaces(): List<Typeface> {
         synchronized(this) {
             sortTypefaces()

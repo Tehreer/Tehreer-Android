@@ -33,7 +33,6 @@ internal object Paragraphs {
      * Returns the start and the end (exclusive) of each paragraph of a text, one after the other.
      * The end of a paragraph is the start of the next.
      */
-    @JvmStatic
     fun boundsOf(text: CharSequence): IntArray {
         val bounds = ArrayList<Int>()
         var start = 0
@@ -62,7 +61,6 @@ internal object Paragraphs {
     }
 
     /** Returns the index of the paragraph that has a character, among those of [boundsOf]. */
-    @JvmStatic
     fun indexOf(bounds: IntArray, charIndex: Int): Int {
         var low = 0
         var high = bounds.size / 2 - 1

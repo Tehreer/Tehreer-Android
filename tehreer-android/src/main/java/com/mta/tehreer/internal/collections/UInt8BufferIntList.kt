@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.mta.tehreer.internal.Raw.getInt8Value
 import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
 import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
-import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 
 private const val UNSIGNED_MASK = 0xFF
 
@@ -38,14 +37,13 @@ internal class UInt8BufferIntList(
 
     override fun get(index: Int): Int {
         checkElementIndex(index, size)
-        return getInt8Value(pointer + index * Raw.INT8_SIZE).toInt() and UNSIGNED_MASK
+        return getInt8Value(owner, pointer + index * Raw.INT8_SIZE).toInt() and UNSIGNED_MASK
     }
 
     override fun copyTo(array: IntArray, atIndex: Int) {
-        checkNotNull(array)
         checkArrayBounds(array, atIndex, size)
 
-        copyUInt8Buffer(pointer, array, atIndex, size)
+        copyUInt8Buffer(owner, pointer, array, atIndex, size)
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): IntList {

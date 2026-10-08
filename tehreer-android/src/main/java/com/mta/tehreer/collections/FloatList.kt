@@ -123,7 +123,6 @@ abstract class FloatList : Primitive {
          * @param values The elements of the float list.
          * @return A new float list.
              */
-        @JvmStatic
         fun of(vararg values: Float): FloatList {
             return JFloatArrayList(values, 0, values.size)
         }

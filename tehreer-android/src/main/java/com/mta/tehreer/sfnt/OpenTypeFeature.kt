@@ -72,7 +72,6 @@ class OpenTypeFeature private constructor(
          * @param value The value of the feature that modifies its behaviour.
          * @return A new open type feature object.
          */
-        @JvmStatic
         fun of(tag: Int, value: Int): OpenTypeFeature {
             return OpenTypeFeature(tag, value)
         }

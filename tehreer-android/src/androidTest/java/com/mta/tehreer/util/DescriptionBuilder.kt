@@ -63,7 +63,6 @@ class DescriptionBuilder<T> private constructor(private val clazz: Class<T>) {
     }
 
     companion object {
-        @JvmStatic
         fun <T> of(clazz: Class<T>): DescriptionBuilder<T> {
             return DescriptionBuilder(clazz)
         }

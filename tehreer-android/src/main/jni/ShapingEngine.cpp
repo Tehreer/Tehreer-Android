@@ -125,26 +125,26 @@ static void dispose(JNIEnv *env, jclass clazz, jlong engineHandle)
     delete shapingEngine;
 }
 
-static void setTypeface(JNIEnv *env, jclass clazz, jlong engineHandle, jlong typefaceHandle)
+static void setTypeface(JNIEnv *env, jobject obj, jlong engineHandle, jlong typefaceHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
 
     shapingEngine->setTypeface(toTypeface(typefaceHandle));
 }
 
-static jfloat getTypeSize(JNIEnv *env, jclass clazz, jlong engineHandle)
+static jfloat getTypeSize(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     return shapingEngine->typeSize();
 }
 
-static void setTypeSize(JNIEnv *env, jclass clazz, jlong engineHandle, jfloat typeSize)
+static void setTypeSize(JNIEnv *env, jobject obj, jlong engineHandle, jfloat typeSize)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     shapingEngine->setTypeSize(typeSize);
 }
 
-static jint getScriptTag(JNIEnv *env, jclass clazz, jlong engineHandle)
+static jint getScriptTag(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     uint32_t scriptTag = shapingEngine->scriptTag();
@@ -152,7 +152,7 @@ static jint getScriptTag(JNIEnv *env, jclass clazz, jlong engineHandle)
     return static_cast<jint>(scriptTag);
 }
 
-static void setScriptTag(JNIEnv *env, jclass clazz, jlong engineHandle, jint scriptTag)
+static void setScriptTag(JNIEnv *env, jobject obj, jlong engineHandle, jint scriptTag)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     auto inputTag = static_cast<uint32_t>(scriptTag);
@@ -160,7 +160,7 @@ static void setScriptTag(JNIEnv *env, jclass clazz, jlong engineHandle, jint scr
     shapingEngine->setScriptTag(inputTag);
 }
 
-static jint getLanguageTag(JNIEnv *env, jclass clazz, jlong engineHandle)
+static jint getLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     uint32_t languageTag = shapingEngine->languageTag();
@@ -168,7 +168,7 @@ static jint getLanguageTag(JNIEnv *env, jclass clazz, jlong engineHandle)
     return static_cast<jint>(languageTag);
 }
 
-static void setLanguageTag(JNIEnv *env, jclass clazz, jlong engineHandle, jint languageTag)
+static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint languageTag)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     auto inputTag = static_cast<uint32_t>(languageTag);
@@ -176,21 +176,21 @@ static void setLanguageTag(JNIEnv *env, jclass clazz, jlong engineHandle, jint l
     shapingEngine->setLanguageTag(inputTag);
 }
 
-static void addOpenTypeFeature(JNIEnv *env, jclass clazz, jlong engineHandle, jint tag, jshort value)
+static void addOpenTypeFeature(JNIEnv *env, jobject obj, jlong engineHandle, jint tag, jshort value)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
 
     shapingEngine->addOpenTypeFeature(static_cast<uint32_t>(tag), static_cast<uint16_t>(value));
 }
 
-static void applyOpenTypeFeatures(JNIEnv *env, jclass clazz, jlong engineHandle)
+static void applyOpenTypeFeatures(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
 
     shapingEngine->applyOpenTypeFeatures();
 }
 
-static jint getWritingDirection(JNIEnv *env, jclass clazz, jlong engineHandle)
+static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     TRWritingDirection writingDirection = shapingEngine->writingDirection();
@@ -198,7 +198,7 @@ static jint getWritingDirection(JNIEnv *env, jclass clazz, jlong engineHandle)
     return static_cast<jint>(writingDirection);
 }
 
-static void setWritingDirection(JNIEnv *env, jclass clazz, jlong engineHandle, jint writingDirection)
+static void setWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle, jint writingDirection)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     auto layoutDirection = static_cast<TRWritingDirection>(writingDirection);
@@ -206,7 +206,7 @@ static void setWritingDirection(JNIEnv *env, jclass clazz, jlong engineHandle, j
     shapingEngine->setWritingDirection(layoutDirection);
 }
 
-static jint getShapingOrder(JNIEnv *env, jclass clazz, jlong engineHandle)
+static jint getShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     TRShapingOrder shapingOrder = shapingEngine->shapingOrder();
@@ -214,7 +214,7 @@ static jint getShapingOrder(JNIEnv *env, jclass clazz, jlong engineHandle)
     return static_cast<jint>(shapingOrder);
 }
 
-static void setShapingOrder(JNIEnv *env, jclass clazz, jlong engineHandle, jint shapingOrder)
+static void setShapingOrder(JNIEnv *env, jobject obj, jlong engineHandle, jint shapingOrder)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     auto memoryOrder = static_cast<TRShapingOrder>(shapingOrder);
@@ -222,7 +222,7 @@ static void setShapingOrder(JNIEnv *env, jclass clazz, jlong engineHandle, jint 
     shapingEngine->setShapingOrder(memoryOrder);
 }
 
-static void shapeText(JNIEnv *env, jclass clazz, jlong engineHandle, jlong resultHandle, jstring text, jint fromIndex, jint toIndex)
+static void shapeText(JNIEnv *env, jobject obj, jlong engineHandle, jlong resultHandle, jstring text, jint fromIndex, jint toIndex)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
     auto shapingResult = reinterpret_cast<ShapingResult *>(resultHandle);

@@ -85,7 +85,6 @@ class NamedStyle private constructor(
          * @param postScriptName The post script name.
          * @return A new named style object.
          */
-        @JvmStatic
         fun of(
             styleName: String,
             @Size(min = 1) coordinates: FloatArray,

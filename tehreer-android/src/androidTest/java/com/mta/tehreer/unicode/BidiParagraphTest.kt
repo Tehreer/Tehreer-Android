@@ -25,29 +25,32 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 
-import com.mta.tehreer.DisposableTestSuite
+import com.mta.tehreer.SubjectTestSuite
 import com.mta.tehreer.collections.ByteList
 import com.mta.tehreer.internal.collections.Int8BufferByteList
-import com.mta.tehreer.subject.UnsafeSubjectBuilder
+import com.mta.tehreer.subject.SubjectBuilder
 import com.mta.tehreer.util.DescriptionBuilder
 
 import org.junit.Ignore
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 
-abstract class BidiParagraphTestSuite(defaultMode: DefaultMode) : DisposableTestSuite<BidiParagraph>(BidiParagraphBuilder(), defaultMode) {
+@RunWith(MockitoJUnitRunner::class)
+class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()) {
     private companion object {
         private val DEFAULT_TEXT: String = "abcdابجد"
         private val DEFAULT_LEVELS: ByteArray = byteArrayOf(0, 0, 0, 0, 1, 1, 1, 1)
     }
 
-    class BidiParagraphBuilder : UnsafeSubjectBuilder<BidiParagraph>(BidiParagraph::class.java) {
+    class BidiParagraphBuilder : SubjectBuilder<BidiParagraph> {
         var text: String = DEFAULT_TEXT
         var startIndex: Int = 0
         var endIndex: Int = text.length
         var baseLevel: Byte = 0
 
         override fun buildSubject(): BidiParagraph {
-            val bidiAlgorithm = BidiAlgorithm.finalizable(BidiAlgorithm(text))
+            val bidiAlgorithm = BidiAlgorithm(text)
             return bidiAlgorithm.createParagraph(startIndex, endIndex, baseLevel)
         }
     }

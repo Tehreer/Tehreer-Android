@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import com.mta.tehreer.internal.Raw.getInt8Value
 import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
 import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
-import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 
 internal class Int8BufferByteList(
     private val owner: Any?,
@@ -36,14 +35,13 @@ internal class Int8BufferByteList(
 
     override fun get(index: Int): Byte {
         checkElementIndex(index, size)
-        return getInt8Value(pointer + index * Raw.INT8_SIZE)
+        return getInt8Value(owner, pointer + index * Raw.INT8_SIZE)
     }
 
     override fun copyTo(array: ByteArray, atIndex: Int) {
-        checkNotNull(array)
         checkArrayBounds(array, atIndex, size)
 
-        copyInt8Buffer(pointer, array, atIndex, size)
+        copyInt8Buffer(owner, pointer, array, atIndex, size)
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): ByteList {

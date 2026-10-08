@@ -19,7 +19,6 @@ package com.mta.tehreer.internal
 object TestJNI {
     private var loaded = false
 
-    @JvmStatic
     @Synchronized
     fun loadLibrary() {
         if (!loaded) {

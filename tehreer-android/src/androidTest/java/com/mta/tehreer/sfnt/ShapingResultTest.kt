@@ -26,21 +26,24 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-import com.mta.tehreer.DisposableTestSuite
+import com.mta.tehreer.SubjectTestSuite
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.PointList
 import com.mta.tehreer.graphics.Typeface
-import com.mta.tehreer.subject.UnsafeSubjectBuilder
+import com.mta.tehreer.subject.SubjectBuilder
 import com.mta.tehreer.util.DescriptionBuilder
 import com.mta.tehreer.util.TypefaceStore
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 
 import java.util.Arrays
 import java.util.Collections
 
-abstract class ShapingResultTestSuite(defaultMode: DefaultMode) : DisposableTestSuite<ShapingResult>(ShapingResultBuilder(), defaultMode) {
+@RunWith(MockitoJUnitRunner::class)
+class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()) {
     private companion object {
         private val DEFAULT_TYPEFACE: Typeface = TypefaceStore.nafeesWeb
         private val DEFAULT_TYPE_SIZE: Float = DEFAULT_TYPEFACE.unitsPerEm / 2.0f
@@ -68,7 +71,7 @@ abstract class ShapingResultTestSuite(defaultMode: DefaultMode) : DisposableTest
         2351.0f, 2038.5f, 1789.5f, 1662.0f, 1162.5f, 597.0f, 0.0f)
     }
 
-    class ShapingResultBuilder : UnsafeSubjectBuilder<ShapingResult>(ShapingResult::class.java) {
+    class ShapingResultBuilder : SubjectBuilder<ShapingResult> {
         var typeface: Typeface = DEFAULT_TYPEFACE
         var typeSize: Float = DEFAULT_TYPE_SIZE
         var scriptTag: String = DEFAULT_SCRIPT_TAG
@@ -81,9 +84,7 @@ abstract class ShapingResultTestSuite(defaultMode: DefaultMode) : DisposableTest
         var endIndex: Int = DEFAULT_TEXT.length
 
         override fun buildSubject(): ShapingResult {
-            val shapingEngine = ShapingEngine.finalizable(
-                ShapingEngine()
-            )
+            val shapingEngine = ShapingEngine()
             shapingEngine.typeface = typeface
             shapingEngine.typeSize = typeSize
             shapingEngine.scriptTag = SfntTag.make(scriptTag)

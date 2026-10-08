@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Muhammad Tayyab Akram
+ * Copyright (C) 2022-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,4 @@ package com.mta.tehreer.subject
 
 interface SubjectBuilder<T> {
     fun buildSubject(): T
-
-    fun buildSubject(consumer: ((T) -> Unit)?) {
-        val subject = buildSubject()
-        consumer?.invoke(subject)
-    }
 }

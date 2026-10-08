@@ -26,18 +26,21 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 
 import com.mta.tehreer.internal.collections.UInt8BufferIntList
-import com.mta.tehreer.DisposableTestSuite
-import com.mta.tehreer.subject.UnsafeSubjectBuilder
+import com.mta.tehreer.SubjectTestSuite
+import com.mta.tehreer.subject.SubjectBuilder
 import com.mta.tehreer.util.DescriptionBuilder
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 
-abstract class BidiAlgorithmTestSuite(defaultMode: DefaultMode) : DisposableTestSuite<BidiAlgorithm>(BidiAlgorithmBuilder(), defaultMode) {
+@RunWith(MockitoJUnitRunner::class)
+class BidiAlgorithmTest : SubjectTestSuite<BidiAlgorithm>(BidiAlgorithmBuilder()) {
     private companion object {
         private val DEFAULT_TEXT: String = "abcdابجد"
     }
 
-    class BidiAlgorithmBuilder : UnsafeSubjectBuilder<BidiAlgorithm>(BidiAlgorithm::class.java) {
+    class BidiAlgorithmBuilder : SubjectBuilder<BidiAlgorithm> {
         var text: String = DEFAULT_TEXT
 
         override fun buildSubject(): BidiAlgorithm {
@@ -196,5 +199,20 @@ abstract class BidiAlgorithmTestSuite(defaultMode: DefaultMode) : DisposableTest
             assertEquals(string, description)
         })
     }
-}
 
+    @Test
+    fun testMaxLevel() {
+        assertEquals(BidiAlgorithm.MAX_LEVEL, 125.toByte())
+    }
+
+
+    @Test
+    fun testConstructorForEmptyText() {
+        // Given
+        text = ""
+
+        // Then
+        assertThrows(IllegalArgumentException::class.java, "Text is empty",
+                     { buildSubject({ subject -> }) })
+    }
+}

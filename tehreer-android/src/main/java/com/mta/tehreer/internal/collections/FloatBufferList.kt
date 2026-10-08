@@ -21,7 +21,6 @@ import com.mta.tehreer.internal.Raw
 import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
 import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
-import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 
 /**
  * A list of floats that lie in native memory. The owner is kept so that it does not get disposed
@@ -38,14 +37,13 @@ internal class FloatBufferList(
 
     override fun get(index: Int): Float {
         checkElementIndex(index, size)
-        return Raw.getFloatValue(pointer + index * Raw.FLOAT_SIZE)
+        return Raw.getFloatValue(owner, pointer + index * Raw.FLOAT_SIZE)
     }
 
     override fun copyTo(array: FloatArray, atIndex: Int) {
-        checkNotNull(array)
         checkArrayBounds(array, atIndex, size)
 
-        Raw.copyFloatBuffer(pointer, array, atIndex, size)
+        Raw.copyFloatBuffer(owner, pointer, array, atIndex, size)
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): FloatList {

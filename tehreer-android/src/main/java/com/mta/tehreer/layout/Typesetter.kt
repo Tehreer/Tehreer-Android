@@ -298,7 +298,7 @@ class Typesetter private constructor(
         return makeLine(
             nCreateTruncatedLine(
                 nativeTypesetter, charStart, charEnd, maxWidth, breakMode.ordinal,
-                truncationPlace.ordinal, token.nativeLine
+                truncationPlace.ordinal, token.nativeLine, token
             )
         )
     }
@@ -321,6 +321,27 @@ class Typesetter private constructor(
 
         return ComposedFrame(nativeFrame, originX, originY, spanned, typefaces, holders)
     }
+
+    private external fun nSuggestForwardBreak(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
+    ): Int
+    private external fun nSuggestBackwardBreak(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
+    ): Int
+
+    private external fun nCreateSimpleLine(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int
+    ): Long
+    private external fun nCreateTruncationToken(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, place: Int, token: String?
+    ): Long
+    private external fun nCreateTruncatedLine(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float,
+        breakMode: Int, place: Int, nativeToken: Long, token: Any
+    ): Long
+    private external fun nCreateJustifiedLine(
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, factor: Float, extent: Float
+    ): Long
 
     private companion object {
         init {
@@ -345,25 +366,5 @@ class Typesetter private constructor(
 
         @JvmStatic external fun nDispose(nativeTypesetter: Long)
 
-        @JvmStatic external fun nSuggestForwardBreak(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
-        ): Int
-        @JvmStatic external fun nSuggestBackwardBreak(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
-        ): Int
-
-        @JvmStatic external fun nCreateSimpleLine(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int
-        ): Long
-        @JvmStatic external fun nCreateTruncationToken(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int, place: Int, token: String?
-        ): Long
-        @JvmStatic external fun nCreateTruncatedLine(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float,
-            breakMode: Int, place: Int, nativeToken: Long
-        ): Long
-        @JvmStatic external fun nCreateJustifiedLine(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int, factor: Float, extent: Float
-        ): Long
     }
 }

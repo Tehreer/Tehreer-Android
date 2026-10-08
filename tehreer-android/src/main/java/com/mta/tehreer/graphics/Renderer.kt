@@ -64,7 +64,7 @@ class Renderer {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     fun syncNative() {
-        nSetTypeface(nativeRenderer, typeface?.coreHandle ?: 0)
+        nSetTypeface(nativeRenderer, typeface?.nativeTypeface ?: 0)
         nSetTypeSize(nativeRenderer, typeSize)
         nSetScaleX(nativeRenderer, scaleX)
         nSetScaleY(nativeRenderer, scaleY)
@@ -113,7 +113,7 @@ class Renderer {
     var typeface: Typeface? = null
         set(value) {
             field = value
-            nSetTypeface(nativeRenderer, value?.coreHandle ?: 0)
+            nSetTypeface(nativeRenderer, value?.nativeTypeface ?: 0)
         }
 
     /**
@@ -362,6 +362,31 @@ class Renderer {
         }
     }
 
+    private external fun nSetTypeface(nativeRenderer: Long, nativeTypeface: Long)
+    private external fun nSetTypeSize(nativeRenderer: Long, typeSize: Float)
+    private external fun nSetScaleX(nativeRenderer: Long, scaleX: Float)
+    private external fun nSetScaleY(nativeRenderer: Long, scaleY: Float)
+    private external fun nSetSkewX(nativeRenderer: Long, skewX: Float)
+    private external fun nSetWritingDirection(nativeRenderer: Long, writingDirection: Int)
+    private external fun nSetForegroundColor(nativeRenderer: Long, color: Int)
+    private external fun nSetStrokeWidth(nativeRenderer: Long, strokeWidth: Float)
+    private external fun nSetStrokeCap(nativeRenderer: Long, strokeCap: Int)
+    private external fun nSetStrokeJoin(nativeRenderer: Long, strokeJoin: Int)
+    private external fun nSetStrokeMiter(nativeRenderer: Long, strokeMiter: Float)
+    private external fun nIsRenderable(nativeRenderer: Long): Boolean
+    private external fun nGetGlyphPath(nativeRenderer: Long, glyphId: Int): Path
+    private external fun nGetRunPath(
+        nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
+    ): Path
+    private external fun nGetGlyphBoundingBox(nativeRenderer: Long, glyphId: Int): RectF?
+    private external fun nGetRunBoundingBox(
+        nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
+    ): RectF?
+    private external fun nDrawGlyphs(
+        nativeRenderer: Long, kind: Int,
+        glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int,
+        canvas: Canvas, paint: Paint
+    )
     private companion object {
         val TAG: String = Renderer::class.java.simpleName
 
@@ -372,32 +397,5 @@ class Renderer {
         @JvmStatic external fun nCreate(): Long
         @JvmStatic external fun nDispose(nativeRenderer: Long)
 
-        @JvmStatic external fun nSetTypeface(nativeRenderer: Long, nativeTypeface: Long)
-        @JvmStatic external fun nSetTypeSize(nativeRenderer: Long, typeSize: Float)
-        @JvmStatic external fun nSetScaleX(nativeRenderer: Long, scaleX: Float)
-        @JvmStatic external fun nSetScaleY(nativeRenderer: Long, scaleY: Float)
-        @JvmStatic external fun nSetSkewX(nativeRenderer: Long, skewX: Float)
-        @JvmStatic external fun nSetWritingDirection(nativeRenderer: Long, writingDirection: Int)
-        @JvmStatic external fun nSetForegroundColor(nativeRenderer: Long, color: Int)
-        @JvmStatic external fun nSetStrokeWidth(nativeRenderer: Long, strokeWidth: Float)
-        @JvmStatic external fun nSetStrokeCap(nativeRenderer: Long, strokeCap: Int)
-        @JvmStatic external fun nSetStrokeJoin(nativeRenderer: Long, strokeJoin: Int)
-        @JvmStatic external fun nSetStrokeMiter(nativeRenderer: Long, strokeMiter: Float)
-
-        @JvmStatic external fun nIsRenderable(nativeRenderer: Long): Boolean
-
-        @JvmStatic external fun nGetGlyphPath(nativeRenderer: Long, glyphId: Int): Path
-        @JvmStatic external fun nGetRunPath(
-            nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
-        ): Path
-        @JvmStatic external fun nGetGlyphBoundingBox(nativeRenderer: Long, glyphId: Int): RectF?
-        @JvmStatic external fun nGetRunBoundingBox(
-            nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
-        ): RectF?
-        @JvmStatic external fun nDrawGlyphs(
-            nativeRenderer: Long, kind: Int,
-            glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int,
-            canvas: Canvas, paint: Paint
-        )
     }
 }

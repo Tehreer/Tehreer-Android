@@ -31,8 +31,7 @@ class HeadTable private constructor(private val table: SfntTable) {
      * @throws RuntimeException if `typeface` does not contain `head' table.
      */
     constructor(typeface: Typeface) : this(
-        SfntTables.readTable(typeface, "head", TABLE_LENGTH)
-            ?: throw RuntimeException("The typeface does not contain `head' table")
+        checkNotNull(SfntTables.readTable(typeface, "head", TABLE_LENGTH)) { "The typeface does not contain `head' table" }
     )
 
     fun version(): Int = table.readInt32(VERSION)
@@ -80,7 +79,6 @@ class HeadTable private constructor(private val table: SfntTable) {
          * @return A new `HeadTable` object, or `null` if `head' table does not exist in the specified
          *         typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): HeadTable? {
             return SfntTables.readTable(typeface, "head", TABLE_LENGTH)?.let { HeadTable(it) }
         }

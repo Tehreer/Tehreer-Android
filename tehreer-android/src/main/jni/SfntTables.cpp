@@ -568,7 +568,7 @@ static jstring getNameCharset(JNIEnv *env, jclass clazz, jint platformId, jint e
     return charset;
 }
 
-static jstring getGlyphName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint glyphId)
+static jstring getGlyphName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint glyphId, jobject typeface)
 {
     char buffer[96];
 
@@ -584,7 +584,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "getNameScript", "(II)Ljava/lang/String;", (void *)getNameScript },
     { "getNameVariant", "(II)Ljava/lang/String;", (void *)getNameVariant },
     { "getNameCharset", "(II)Ljava/lang/String;", (void *)getNameCharset },
-    { "getGlyphName", "(JI)Ljava/lang/String;", (void *)getGlyphName },
+    { "getGlyphName", "(JILjava/lang/Object;)Ljava/lang/String;", (void *)getGlyphName },
 };
 
 jint register_com_mta_tehreer_sfnt_tables_SfntTables(JNIEnv *env)

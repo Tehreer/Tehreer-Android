@@ -28,7 +28,7 @@ static jint sizeOfIntPtr(JNIEnv *env, jclass clazz)
     return sizeof(uintptr_t);
 }
 
-static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer)
+static jbyte getInt8Value(JNIEnv *env, jobject obj, jobject owner, jlong pointer)
 {
     int8_t *buffer = reinterpret_cast<int8_t *>(pointer);
     jbyte value = static_cast<jbyte>(*buffer);
@@ -36,12 +36,12 @@ static jbyte getInt8Value(JNIEnv *env, jobject obj, jlong pointer)
     return value;
 }
 
-static jshort getInt16Value(JNIEnv *env, jclass clazz, jlong pointer)
+static jshort getInt16Value(JNIEnv *env, jclass clazz, jobject owner, jlong pointer)
 {
     return static_cast<jshort>(*reinterpret_cast<int16_t *>(pointer));
 }
 
-static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer)
+static jint getInt32Value(JNIEnv *env, jobject obj, jobject owner, jlong pointer)
 {
     int32_t *buffer = reinterpret_cast<int32_t *>(pointer);
     jint value = static_cast<jint>(*buffer);
@@ -49,23 +49,23 @@ static jint getInt32Value(JNIEnv *env, jobject obj, jlong pointer)
     return value;
 }
 
-static jlong getIntPtrValue(JNIEnv *env, jclass clazz, jlong pointer)
+static jlong getIntPtrValue(JNIEnv *env, jclass clazz, jobject owner, jlong pointer)
 {
     return static_cast<jlong>(*reinterpret_cast<uintptr_t *>(pointer));
 }
 
-static jfloat getFloatValue(JNIEnv *env, jclass clazz, jlong pointer)
+static jfloat getFloatValue(JNIEnv *env, jclass clazz, jobject owner, jlong pointer)
 {
     return static_cast<jfloat>(*reinterpret_cast<float *>(pointer));
 }
 
-static void copyInt8Buffer(JNIEnv *env, jobject obj, jlong pointer, jbyteArray destination, jint start, jint length)
+static void copyInt8Buffer(JNIEnv *env, jobject obj, jobject owner, jlong pointer, jbyteArray destination, jint start, jint length)
 {
     int8_t *buffer = reinterpret_cast<int8_t *>(pointer);
     env->SetByteArrayRegion(destination, start, length, buffer);
 }
 
-static void copyUInt8Buffer(JNIEnv *env, jobject obj, jlong pointer, jintArray destination, jint start, jint length)
+static void copyUInt8Buffer(JNIEnv *env, jobject obj, jobject owner, jlong pointer, jintArray destination, jint start, jint length)
 {
     uint8_t *buffer = reinterpret_cast<uint8_t *>(pointer);
     void *raw = env->GetPrimitiveArrayCritical(destination, nullptr);
@@ -92,39 +92,39 @@ static void copyToInts(JNIEnv *env, jlong pointer, jintArray destination, jint s
     env->ReleasePrimitiveArrayCritical(destination, raw, 0);
 }
 
-static void copyUInt16Buffer(JNIEnv *env, jclass clazz, jlong pointer, jintArray destination, jint start, jint length)
+static void copyUInt16Buffer(JNIEnv *env, jclass clazz, jobject owner, jlong pointer, jintArray destination, jint start, jint length)
 {
     copyToInts<uint16_t>(env, pointer, destination, start, length);
 }
 
-static void copyInt32Buffer(JNIEnv *env, jclass clazz, jlong pointer, jintArray destination, jint start, jint length)
+static void copyInt32Buffer(JNIEnv *env, jclass clazz, jobject owner, jlong pointer, jintArray destination, jint start, jint length)
 {
     copyToInts<int32_t>(env, pointer, destination, start, length);
 }
 
-static void copyUIntPtrBuffer(JNIEnv *env, jclass clazz, jlong pointer, jintArray destination, jint start, jint length)
+static void copyUIntPtrBuffer(JNIEnv *env, jclass clazz, jobject owner, jlong pointer, jintArray destination, jint start, jint length)
 {
     copyToInts<uintptr_t>(env, pointer, destination, start, length);
 }
 
-static void copyFloatBuffer(JNIEnv *env, jclass clazz, jlong pointer, jfloatArray destination, jint start, jint length)
+static void copyFloatBuffer(JNIEnv *env, jclass clazz, jobject owner, jlong pointer, jfloatArray destination, jint start, jint length)
 {
     env->SetFloatArrayRegion(destination, start, length, reinterpret_cast<const jfloat *>(pointer));
 }
 
 static JNINativeMethod JNI_METHODS[] = {
     { "sizeOfIntPtr", "()I", (void *)sizeOfIntPtr },
-    { "getInt16Value", "(J)S", (void *)getInt16Value },
-    { "getIntPtrValue", "(J)J", (void *)getIntPtrValue },
-    { "getFloatValue", "(J)F", (void *)getFloatValue },
-    { "copyUInt16Buffer", "(J[III)V", (void *)copyUInt16Buffer },
-    { "copyInt32Buffer", "(J[III)V", (void *)copyInt32Buffer },
-    { "copyUIntPtrBuffer", "(J[III)V", (void *)copyUIntPtrBuffer },
-    { "copyFloatBuffer", "(J[FII)V", (void *)copyFloatBuffer },
-    { "getInt8Value", "(J)B", (void *)getInt8Value },
-    { "getInt32Value", "(J)I", (void *)getInt32Value },
-    { "copyInt8Buffer", "(J[BII)V", (void *)copyInt8Buffer },
-    { "copyUInt8Buffer", "(J[III)V", (void *)copyUInt8Buffer },
+    { "getInt16Value", "(Ljava/lang/Object;J)S", (void *)getInt16Value },
+    { "getIntPtrValue", "(Ljava/lang/Object;J)J", (void *)getIntPtrValue },
+    { "getFloatValue", "(Ljava/lang/Object;J)F", (void *)getFloatValue },
+    { "copyUInt16Buffer", "(Ljava/lang/Object;J[III)V", (void *)copyUInt16Buffer },
+    { "copyInt32Buffer", "(Ljava/lang/Object;J[III)V", (void *)copyInt32Buffer },
+    { "copyUIntPtrBuffer", "(Ljava/lang/Object;J[III)V", (void *)copyUIntPtrBuffer },
+    { "copyFloatBuffer", "(Ljava/lang/Object;J[FII)V", (void *)copyFloatBuffer },
+    { "getInt8Value", "(Ljava/lang/Object;J)B", (void *)getInt8Value },
+    { "getInt32Value", "(Ljava/lang/Object;J)I", (void *)getInt32Value },
+    { "copyInt8Buffer", "(Ljava/lang/Object;J[BII)V", (void *)copyInt8Buffer },
+    { "copyUInt8Buffer", "(Ljava/lang/Object;J[III)V", (void *)copyUInt8Buffer },
 };
 
 jint register_com_mta_tehreer_internal_Raw(JNIEnv *env)

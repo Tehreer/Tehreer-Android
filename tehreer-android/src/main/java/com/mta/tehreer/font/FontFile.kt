@@ -111,6 +111,10 @@ class FontFile private constructor(private val nativeFontFile: Long) {
         allTypefaces
     }
 
+    private external fun nGetFaceCount(nativeFontFile: Long): Int
+
+    private external fun nCreateTypeface(nativeFontFile: Long, faceIndex: Int): Long
+
     private companion object {
         init {
             JniBridge.loadLibrary()
@@ -121,7 +125,5 @@ class FontFile private constructor(private val nativeFontFile: Long) {
         @JvmStatic external fun nCreateFromStream(stream: InputStream): Long
         @JvmStatic external fun nRelease(nativeFontFile: Long)
 
-        @JvmStatic external fun nGetFaceCount(nativeFontFile: Long): Int
-        @JvmStatic external fun nCreateTypeface(nativeFontFile: Long, faceIndex: Int): Long
     }
 }

@@ -16,8 +16,6 @@
 
 package com.mta.tehreer.unicode
 
-import com.mta.tehreer.Disposable
-import com.mta.tehreer.internal.Constants
 import com.mta.tehreer.internal.Description
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
@@ -28,29 +26,26 @@ import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
  * iterate over reordered level runs. The caller is responsible to reorder the characters manually,
  * if required.
  */
-open class BidiLine : Disposable {
-    private class Finalizable(parent: BidiLine) : BidiLine(parent) {
-        override fun dispose() {
-            throw UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT)
-        }
-
+class BidiLine {
+    private class Finalizable(
+        private val nativeBuffer: Long,
+        private val nativeLine: Long
+    ) {
         @Suppress("unused")
         protected fun finalize() {
-            super.dispose()
+            nDispose(nativeLine)
+            BidiBuffer.release(nativeBuffer)
         }
     }
 
-    @JvmField internal var nativeBuffer: Long
-    @JvmField internal var nativeLine: Long
+    internal val nativeBuffer: Long
+    internal val nativeLine: Long
+    private val finalizable: Finalizable
 
     internal constructor(nativeBuffer: Long, nativeLine: Long) {
         this.nativeBuffer = BidiBuffer.retain(nativeBuffer)
         this.nativeLine = nativeLine
-    }
-
-    private constructor(other: BidiLine) {
-        this.nativeBuffer = other.nativeBuffer
-        this.nativeLine = other.nativeLine
+        this.finalizable = Finalizable(this.nativeBuffer, nativeLine)
     }
 
     /**
@@ -98,11 +93,6 @@ open class BidiLine : Disposable {
     val mirroringPairs: Iterable<BidiPair>
         get() = MirrorIterable(this)
 
-    override fun dispose() {
-        nDispose(nativeLine)
-        BidiBuffer.release(nativeBuffer)
-    }
-
     override fun toString(): String {
         return "BidiLine{charStart=$charStart" +
             ", charEnd=$charEnd" +
@@ -142,11 +132,6 @@ open class BidiLine : Disposable {
 
             return current
         }
-
-        @Suppress("unused")
-        protected fun finalize() {
-            locator.dispose()
-        }
     }
 
     internal class MirrorIterable(val owner: BidiLine) : Iterable<BidiPair> {
@@ -155,51 +140,16 @@ open class BidiLine : Disposable {
         }
     }
 
+    private external fun nGetCharStart(nativeLine: Long): Int
+    private external fun nGetCharEnd(nativeLine: Long): Int
+    private external fun nGetRunCount(nativeLine: Long): Int
+    private external fun nGetVisualRun(nativeLine: Long, runIndex: Int): BidiRun
     companion object {
         init {
             JniBridge.loadLibrary()
         }
 
-        /**
-         * Wraps a bidi line object into a finalizable instance which is guaranteed to be disposed
-         * automatically by the GC when no longer in use. After calling this method, `dispose()`
-         * should not be called on either original object or returned object. Calling `dispose()`
-         * on returned object will throw an `UnsupportedOperationException`.
-         *
-         * **Note:** The behavior is undefined if the passed-in object is already disposed or
-         * wrapped into another finalizable instance.
-         *
-         * @param bidiLine The bidi line object to wrap into a finalizable instance.
-         *
-         * @return The finalizable instance of the passed-in bidi line object.
-         */
-        @JvmStatic
-        fun finalizable(bidiLine: BidiLine): BidiLine {
-            return when (bidiLine.javaClass) {
-                BidiLine::class.java -> Finalizable(bidiLine)
-                Finalizable::class.java -> bidiLine
-                else -> throw IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED)
-            }
-        }
-
-        /**
-         * Checks whether a bidi line object is finalizable or not.
-         *
-         * @param bidiLine The bidi line object to check.
-         *
-         * @return `true` if the passed-in bidi line object is finalizable, `false` otherwise.
-         */
-        @JvmStatic
-        fun isFinalizable(bidiLine: BidiLine): Boolean {
-            return bidiLine.javaClass == Finalizable::class.java
-        }
-
         @JvmStatic private external fun nDispose(nativeLine: Long)
 
-        @JvmStatic private external fun nGetCharStart(nativeLine: Long): Int
-        @JvmStatic private external fun nGetCharEnd(nativeLine: Long): Int
-
-        @JvmStatic private external fun nGetRunCount(nativeLine: Long): Int
-        @JvmStatic private external fun nGetVisualRun(nativeLine: Long, runIndex: Int): BidiRun
     }
 }

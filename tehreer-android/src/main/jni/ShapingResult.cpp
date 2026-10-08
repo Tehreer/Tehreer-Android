@@ -65,31 +65,31 @@ static void dispose(JNIEnv *env, jclass clazz, jlong handle)
     delete toResult(handle);
 }
 
-static jboolean isBackward(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean isBackward(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
     return (core && TRShapingResultIsBackward(core)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jboolean isRTL(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean isRTL(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
     return (core && TRShapingResultIsRTL(core)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jint getCharStart(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
     return toResult(handle)->charStart();
 }
 
-static jint getCharEnd(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
     return toResult(handle)->charEnd();
 }
 
-static jint getGlyphCount(JNIEnv *env, jclass clazz, jlong handle)
+static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
@@ -97,28 +97,28 @@ static jint getGlyphCount(JNIEnv *env, jclass clazz, jlong handle)
 }
 
 /* The memory belongs to the result of Core, and lives until it is replaced or disposed. */
-static jlong getGlyphIdsPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
     return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphIDsPtr(core) : nullptr);
 }
 
-static jlong getGlyphOffsetsPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphOffsetsPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
     return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphOffsetsPtr(core) : nullptr);
 }
 
-static jlong getGlyphAdvancesPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
     return reinterpret_cast<jlong>(core ? TRShapingResultGetGlyphAdvancesPtr(core) : nullptr);
 }
 
-static jlong getClusterMapPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     TRShapingResultRef core = toResult(handle)->core();
 
@@ -126,7 +126,7 @@ static jlong getClusterMapPtr(JNIEnv *env, jclass clazz, jlong handle)
 }
 
 /* Returns the caret edges of the shaped characters, one more than their count. */
-static jfloatArray getCaretEdges(JNIEnv *env, jclass clazz, jlong handle, jbooleanArray caretStops)
+static jfloatArray getCaretEdges(JNIEnv *env, jobject obj, jlong handle, jbooleanArray caretStops)
 {
     ShapingResult *result = toResult(handle);
     jint length = result->charEnd() - result->charStart();

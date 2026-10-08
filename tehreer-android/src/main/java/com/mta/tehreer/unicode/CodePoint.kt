@@ -32,7 +32,6 @@ object CodePoint {
      * @param codePoint The code point whose bidirectional class is returned.
      * @return The bidirectional class of the specified code point.
      */
-    @JvmStatic
     @BidiClass.Value
     fun getBidiClass(codePoint: Int): Int {
         return Unicode.getCodePointBidiClass(codePoint)
@@ -44,7 +43,6 @@ object CodePoint {
      * @param codePoint The code point whose general category is returned.
      * @return The general category of the specified code point.
      */
-    @JvmStatic
     @GeneralCategory.Value
     fun getGeneralCategory(codePoint: Int): Int {
         return Unicode.getCodePointGeneralCategory(codePoint)
@@ -56,7 +54,6 @@ object CodePoint {
      * @param codePoint The code point whose script is returned.
      * @return The script of the specified code point.
      */
-    @JvmStatic
     @Script.Value
     fun getScript(codePoint: Int): Int {
         return Unicode.getCodePointScript(codePoint)
@@ -69,7 +66,6 @@ object CodePoint {
      * @param codePoint The code point whose mirror is returned.
      * @return The mirror of the specified code point if available, zero otherwise.
      */
-    @JvmStatic
     fun getMirror(codePoint: Int): Int {
         return Unicode.getCodePointMirror(codePoint)
     }

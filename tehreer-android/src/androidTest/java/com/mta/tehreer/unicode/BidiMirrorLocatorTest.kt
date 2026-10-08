@@ -21,7 +21,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -34,21 +33,10 @@ class BidiMirrorLocatorTest {
     @Before
     fun setUp() {
         val text = DEFAULT_TEXT
-        val bidiAlgorithm = BidiAlgorithm.finalizable(
-            BidiAlgorithm(text)
-        )
-        val bidiParagraph = BidiParagraph.finalizable(
-            bidiAlgorithm.createParagraph(0, text.length, BaseDirection.DEFAULT_LEFT_TO_RIGHT)
-        )
-        bidiLine = BidiLine.finalizable(
-            bidiParagraph.createLine(0, text.length)
-        )
+        val bidiAlgorithm = BidiAlgorithm(text)
+        val bidiParagraph = bidiAlgorithm.createParagraph(0, text.length, BaseDirection.DEFAULT_LEFT_TO_RIGHT)
+        bidiLine = bidiParagraph.createLine(0, text.length)
         subject = BidiMirrorLocator()
-    }
-
-    @After
-    fun tearDown() {
-        subject.dispose()
     }
 
     @Test

@@ -35,7 +35,7 @@ internal object SfntTables {
 
     @JvmStatic external fun getNameCharset(platformId: Int, encodingId: Int): String?
 
-    @JvmStatic external fun getGlyphName(typefaceHandle: Long, glyphId: Int): String
+    @JvmStatic external fun getGlyphName(typefaceHandle: Long, glyphId: Int, typeface: Any): String
 
     /**
      * Reads the data of a table of the typeface. The fields that an older version of the table

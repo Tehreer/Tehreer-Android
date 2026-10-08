@@ -77,7 +77,6 @@ class TypefaceInfo() {
     }
 
     companion object {
-        @JvmStatic
         fun assertTypefaceEquals(typeface: Typeface, info: TypefaceInfo) {
             assertEquals(typeface.isVariable, info.isVariable)
             assertEquals(typeface.variationAxes, info.variationAxes)

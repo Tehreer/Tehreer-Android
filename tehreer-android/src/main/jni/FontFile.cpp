@@ -111,12 +111,12 @@ static void release(JNIEnv *env, jclass clazz, jlong fontFileHandle)
     TRFontFileRelease(toFontFile(fontFileHandle));
 }
 
-static jint getFaceCount(JNIEnv *env, jclass clazz, jlong fontFileHandle)
+static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
 {
     return static_cast<jint>(TRFontFileGetFaceCount(toFontFile(fontFileHandle)));
 }
 
-static jlong createTypeface(JNIEnv *env, jclass clazz, jlong fontFileHandle, jint faceIndex)
+static jlong createTypeface(JNIEnv *env, jobject obj, jlong fontFileHandle, jint faceIndex)
 {
     return reinterpret_cast<jlong>(TRTypefaceCreate(toFontFile(fontFileHandle),
                                                     static_cast<TRUInteger>(faceIndex)));

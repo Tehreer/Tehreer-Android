@@ -24,51 +24,51 @@
 
 using namespace Tehreer;
 
-static jint getCharStart(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetCodeUnitRange(toRun(handle)).index);
 }
 
-static jint getCharEnd(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
     TRRange range = TRGlyphRunGetCodeUnitRange(toRun(handle));
 
     return static_cast<jint>(range.index + range.length);
 }
 
-static jint getStartExtraLength(JNIEnv *env, jclass clazz, jlong handle)
+static jint getStartExtraLength(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetStartExtraLength(toRun(handle)));
 }
 
-static jint getEndExtraLength(JNIEnv *env, jclass clazz, jlong handle)
+static jint getEndExtraLength(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetEndExtraLength(toRun(handle)));
 }
 
-static jint getBidiLevel(JNIEnv *env, jclass clazz, jlong handle)
+static jint getBidiLevel(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetBidiLevel(toRun(handle)));
 }
 
-static jint getWritingDirection(JNIEnv *env, jclass clazz, jlong handle)
+static jint getWritingDirection(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetWritingDirection(toRun(handle)));
 }
 
-static jboolean isBackward(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean isBackward(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunIsBackward(toRun(handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jboolean hasForegroundColor(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean hasForegroundColor(JNIEnv *env, jobject obj, jlong handle)
 {
     TRColor color;
 
     return TRGlyphRunGetForegroundColor(toRun(handle), &color) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jint getForegroundColor(JNIEnv *env, jclass clazz, jlong handle)
+static jint getForegroundColor(JNIEnv *env, jobject obj, jlong handle)
 {
     TRColor color = 0;
 
@@ -77,123 +77,123 @@ static jint getForegroundColor(JNIEnv *env, jclass clazz, jlong handle)
     return static_cast<jint>(color);
 }
 
-static jfloat getTypeSize(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getTypeSize(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetTypeSize(toRun(handle));
 }
 
-static jfloat getScaleX(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getScaleX(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetScaleX(toRun(handle));
 }
 
-static jfloat getAscent(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getAscent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetAscent(toRun(handle));
 }
 
-static jfloat getDescent(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getDescent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetDescent(toRun(handle));
 }
 
-static jfloat getLeading(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getLeading(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetLeading(toRun(handle));
 }
 
-static jfloat getOriginX(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getOriginX(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetOrigin(toRun(handle)).x;
 }
 
-static jfloat getOriginY(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getOriginY(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetOrigin(toRun(handle)).y;
 }
 
-static jfloat getWidth(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getWidth(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetWidth(toRun(handle));
 }
 
-static jfloat getHeight(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getHeight(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetHeight(toRun(handle));
 }
 
-static jlong getTypeface(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getTypeface(JNIEnv *env, jobject obj, jlong handle)
 {
     return reinterpret_cast<jlong>(TRGlyphRunGetTypeface(toRun(handle)));
 }
 
-static jboolean hasReplacement(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean hasReplacement(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetReplacement(toRun(handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jint getGlyphCount(JNIEnv *env, jclass clazz, jlong handle)
+static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetGlyphCount(toRun(handle)));
 }
 
-static jint getClusterMapCount(JNIEnv *env, jclass clazz, jlong handle)
+static jint getClusterMapCount(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRGlyphRunGetClusterMapCount(toRun(handle)));
 }
 
 /* The memory belongs to the run, and lives as long as the run does. */
-static jlong getGlyphIdsPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphIdsPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     return reinterpret_cast<jlong>(TRGlyphRunGetGlyphIDsPtr(toRun(handle)));
 }
 
-static jlong getGlyphOffsetsPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphOffsetsPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     return reinterpret_cast<jlong>(TRGlyphRunGetGlyphOffsetsPtr(toRun(handle)));
 }
 
-static jlong getGlyphAdvancesPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getGlyphAdvancesPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     return reinterpret_cast<jlong>(TRGlyphRunGetGlyphAdvancesPtr(toRun(handle)));
 }
 
-static jlong getClusterMapPtr(JNIEnv *env, jclass clazz, jlong handle)
+static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong handle)
 {
     return reinterpret_cast<jlong>(TRGlyphRunGetClusterMapPtr(toRun(handle)));
 }
 
-static jint getClusterStart(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jint getClusterStart(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return static_cast<jint>(TRGlyphRunGetClusterStart(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jint getClusterEnd(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jint getClusterEnd(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return static_cast<jint>(TRGlyphRunGetClusterEnd(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jint getLeadingGlyphIndex(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jint getLeadingGlyphIndex(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return static_cast<jint>(TRGlyphRunGetLeadingGlyphIndex(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jint getTrailingGlyphIndex(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jint getTrailingGlyphIndex(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return static_cast<jint>(TRGlyphRunGetTrailingGlyphIndex(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jfloat getDistance(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return TRGlyphRunGetDistance(toRun(handle), static_cast<TRUInteger>(index));
 }
 
-static jint getIndexOfCodeUnit(JNIEnv *env, jclass clazz, jlong handle, jfloat distance)
+static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
     return static_cast<jint>(TRGlyphRunGetIndexOfCodeUnit(toRun(handle), distance));
 }
 
-static jobject getBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jint glyphStart,
+static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphStart,
     jint glyphEnd, jlong rendererHandle)
 {
     TRRect box = TRGlyphRunGetBoundingBox(toRun(handle), makeRange(glyphStart, glyphEnd),

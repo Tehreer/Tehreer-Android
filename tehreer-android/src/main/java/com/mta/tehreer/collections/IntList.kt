@@ -123,7 +123,6 @@ abstract class IntList : Primitive {
          * @param values The elements of the integer list.
          * @return A new integer list.
              */
-        @JvmStatic
         fun of(vararg values: Int): IntList {
             return JIntArrayList(values, 0, values.size)
         }

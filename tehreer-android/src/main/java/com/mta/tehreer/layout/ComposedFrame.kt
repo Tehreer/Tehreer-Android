@@ -311,22 +311,22 @@ class ComposedFrame internal constructor(
             "}"
     }
 
+    private external fun nGetCharStart(nativeFrame: Long): Int
+    private external fun nGetCharEnd(nativeFrame: Long): Int
+    private external fun nGetWidth(nativeFrame: Long): Float
+    private external fun nGetHeight(nativeFrame: Long): Float
+    private external fun nGetLineCount(nativeFrame: Long): Int
+    private external fun nGetLine(nativeFrame: Long, index: Int): Long
+    private external fun nGetLineIndexForCodeUnit(nativeFrame: Long, charIndex: Int): Int
+    private external fun nGetLineIndexAtPosition(nativeFrame: Long, x: Float, y: Float): Int
+    private external fun nEnumerateSelection(
+        nativeFrame: Long, charStart: Int, charEnd: Int, collector: FloatCollector
+    )
     private companion object {
         init {
             JniBridge.loadLibrary()
         }
 
         @JvmStatic external fun nDispose(nativeFrame: Long)
-        @JvmStatic external fun nGetCharStart(nativeFrame: Long): Int
-        @JvmStatic external fun nGetCharEnd(nativeFrame: Long): Int
-        @JvmStatic external fun nGetWidth(nativeFrame: Long): Float
-        @JvmStatic external fun nGetHeight(nativeFrame: Long): Float
-        @JvmStatic external fun nGetLineCount(nativeFrame: Long): Int
-        @JvmStatic external fun nGetLine(nativeFrame: Long, index: Int): Long
-        @JvmStatic external fun nGetLineIndexForCodeUnit(nativeFrame: Long, charIndex: Int): Int
-        @JvmStatic external fun nGetLineIndexAtPosition(nativeFrame: Long, x: Float, y: Float): Int
-        @JvmStatic external fun nEnumerateSelection(
-            nativeFrame: Long, charStart: Int, charEnd: Int, collector: FloatCollector
-        )
     }
 }

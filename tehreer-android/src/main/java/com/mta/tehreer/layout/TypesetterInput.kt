@@ -22,7 +22,6 @@ import android.text.style.MetricAffectingSpan
 import android.text.style.ReplacementSpan
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.JniBridge
-import com.mta.tehreer.internal.util.Preconditions.checkArgument
 import java.util.IdentityHashMap
 import java.util.TreeMap
 
@@ -47,9 +46,7 @@ internal class TypesetterInput(
 
     init {
         val textHandle = nCreateText(text)
-        if (textHandle == 0L) {
-            throw RuntimeException("Could not create the typesetter")
-        }
+        check(textHandle != 0L) { "Could not create the typesetter" }
 
         try {
             setRunAttributes(textHandle, RunStyle.initial(defaultSpans))
@@ -61,9 +58,7 @@ internal class TypesetterInput(
         }
 
         nativeTypesetter = nCreateTypesetter(textHandle)
-        if (nativeTypesetter == 0L) {
-            throw RuntimeException("Could not create the typesetter")
-        }
+        check(nativeTypesetter != 0L) { "Could not create the typesetter" }
     }
 
     private fun setRunAttributes(textHandle: Long, initial: RunStyle) {
@@ -78,10 +73,10 @@ internal class TypesetterInput(
                 val style = initial.with(spanned.getSpans(start, end, MetricAffectingSpan::class.java))
 
                 val typeface = style.typeface
-                checkArgument(typeface != null, "No typeface is specified for range [$start, $end)")
+                require(typeface != null) { "No typeface is specified for range [$start, $end)" }
 
-                typefaces[typeface!!.coreHandle] = typeface
-                nSetTypeface(textHandle, start, end, typeface.coreHandle)
+                typefaces[typeface!!.nativeTypeface] = typeface
+                nSetTypeface(textHandle, start, end, typeface.nativeTypeface)
                 nSetTypeSize(textHandle, start, end, style.typeSize)
                 nSetScaleX(textHandle, start, end, style.scaleX)
                 nSetBaselineOffset(textHandle, start, end, style.baselineShift)

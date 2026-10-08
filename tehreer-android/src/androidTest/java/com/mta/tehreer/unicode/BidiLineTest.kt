@@ -22,13 +22,16 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 
-import com.mta.tehreer.DisposableTestSuite
-import com.mta.tehreer.subject.UnsafeSubjectBuilder
+import com.mta.tehreer.SubjectTestSuite
+import com.mta.tehreer.subject.SubjectBuilder
 import com.mta.tehreer.util.DescriptionBuilder
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 
-abstract class BidiLineTestSuite(defaultMode: DefaultMode) : DisposableTestSuite<BidiLine>(BidiLineBuilder(), defaultMode) {
+@RunWith(MockitoJUnitRunner::class)
+class BidiLineTest : SubjectTestSuite<BidiLine>(BidiLineBuilder()) {
     private companion object {
         private val DEFAULT_TEXT: String = "abcdابجد"
         private val DEFAULT_VISUAL_RUNS: Array<BidiRun> = arrayOf(
@@ -37,16 +40,15 @@ abstract class BidiLineTestSuite(defaultMode: DefaultMode) : DisposableTestSuite
         )
     }
 
-    class BidiLineBuilder : UnsafeSubjectBuilder<BidiLine>(BidiLine::class.java) {
+    class BidiLineBuilder : SubjectBuilder<BidiLine> {
         var text: String = DEFAULT_TEXT
         var startIndex: Int = 0
         var endIndex: Int = text.length
         var baseLevel: Byte = 0
 
         override fun buildSubject(): BidiLine {
-            val bidiAlgorithm = BidiAlgorithm.finalizable(BidiAlgorithm(text))
-            val bidiParagraph = BidiParagraph.finalizable(
-                    bidiAlgorithm.createParagraph(0, text.length, baseLevel))
+            val bidiAlgorithm = BidiAlgorithm(text)
+            val bidiParagraph = bidiAlgorithm.createParagraph(0, text.length, baseLevel)
 
             return bidiParagraph.createLine(startIndex, endIndex)
         }

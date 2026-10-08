@@ -167,67 +167,67 @@ static void dispose(JNIEnv *env, jclass clazz, jlong handle)
     TRRendererRelease(toRenderer(handle));
 }
 
-static void setTypeface(JNIEnv *env, jclass clazz, jlong handle, jlong typefaceHandle)
+static void setTypeface(JNIEnv *env, jobject obj, jlong handle, jlong typefaceHandle)
 {
     TRRendererSetTypeface(toRenderer(handle), toTypeface(typefaceHandle));
 }
 
-static void setTypeSize(JNIEnv *env, jclass clazz, jlong handle, jfloat typeSize)
+static void setTypeSize(JNIEnv *env, jobject obj, jlong handle, jfloat typeSize)
 {
     TRRendererSetTypeSize(toRenderer(handle), typeSize);
 }
 
-static void setScaleX(JNIEnv *env, jclass clazz, jlong handle, jfloat scaleX)
+static void setScaleX(JNIEnv *env, jobject obj, jlong handle, jfloat scaleX)
 {
     TRRendererSetScaleX(toRenderer(handle), scaleX);
 }
 
-static void setScaleY(JNIEnv *env, jclass clazz, jlong handle, jfloat scaleY)
+static void setScaleY(JNIEnv *env, jobject obj, jlong handle, jfloat scaleY)
 {
     TRRendererSetScaleY(toRenderer(handle), scaleY);
 }
 
-static void setSkewX(JNIEnv *env, jclass clazz, jlong handle, jfloat skewX)
+static void setSkewX(JNIEnv *env, jobject obj, jlong handle, jfloat skewX)
 {
     TRRendererSetSkewX(toRenderer(handle), skewX);
 }
 
-static void setWritingDirection(JNIEnv *env, jclass clazz, jlong handle, jint writingDirection)
+static void setWritingDirection(JNIEnv *env, jobject obj, jlong handle, jint writingDirection)
 {
     TRRendererSetWritingDirection(toRenderer(handle), static_cast<TRWritingDirection>(writingDirection));
 }
 
-static void setForegroundColor(JNIEnv *env, jclass clazz, jlong handle, jint color)
+static void setForegroundColor(JNIEnv *env, jobject obj, jlong handle, jint color)
 {
     TRRendererSetForegroundColor(toRenderer(handle), static_cast<TRColor>(color));
 }
 
-static void setStrokeWidth(JNIEnv *env, jclass clazz, jlong handle, jfloat strokeWidth)
+static void setStrokeWidth(JNIEnv *env, jobject obj, jlong handle, jfloat strokeWidth)
 {
     TRRendererSetStrokeWidth(toRenderer(handle), strokeWidth);
 }
 
-static void setStrokeCap(JNIEnv *env, jclass clazz, jlong handle, jint strokeCap)
+static void setStrokeCap(JNIEnv *env, jobject obj, jlong handle, jint strokeCap)
 {
     TRRendererSetStrokeCap(toRenderer(handle), static_cast<TRStrokeCap>(strokeCap));
 }
 
-static void setStrokeJoin(JNIEnv *env, jclass clazz, jlong handle, jint strokeJoin)
+static void setStrokeJoin(JNIEnv *env, jobject obj, jlong handle, jint strokeJoin)
 {
     TRRendererSetStrokeJoin(toRenderer(handle), static_cast<TRStrokeJoin>(strokeJoin));
 }
 
-static void setStrokeMiter(JNIEnv *env, jclass clazz, jlong handle, jfloat strokeMiter)
+static void setStrokeMiter(JNIEnv *env, jobject obj, jlong handle, jfloat strokeMiter)
 {
     TRRendererSetStrokeMiter(toRenderer(handle), strokeMiter);
 }
 
-static jboolean isRenderable(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean isRenderable(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRRendererIsRenderable(toRenderer(handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jobject getGlyphPath(JNIEnv *env, jclass clazz, jlong handle, jint glyphId)
+static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
 {
     PathBuilder builder(env);
 
@@ -241,7 +241,7 @@ static jobject getGlyphPath(JNIEnv *env, jclass clazz, jlong handle, jint glyphI
     return builder.path;
 }
 
-static jobject getRunPath(JNIEnv *env, jclass clazz, jlong handle, jintArray glyphIds,
+static jobject getRunPath(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
     jfloatArray offsets, jfloatArray advances, jint count)
 {
     PathBuilder builder(env);
@@ -267,12 +267,12 @@ static jobject makeBox(JNIEnv *env, const TRRect &rect)
     return nullptr;
 }
 
-static jobject getGlyphBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jint glyphId)
+static jobject getGlyphBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
 {
     return makeBox(env, TRRendererGetGlyphBoundingBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
 }
 
-static jobject getRunBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jintArray glyphIds,
+static jobject getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
     jfloatArray offsets, jfloatArray advances, jint count)
 {
     RunData run(env, glyphIds, offsets, advances, count);
@@ -301,7 +301,7 @@ static void drawPlacement(void *userData, TRUInteger index, TRGlyphImageRef imag
     }
 }
 
-static void drawGlyphs(JNIEnv *env, jclass clazz, jlong handle, jint kind, jintArray glyphIds,
+static void drawGlyphs(JNIEnv *env, jobject obj, jlong handle, jint kind, jintArray glyphIds,
     jfloatArray offsets, jfloatArray advances, jint count, jobject canvas, jobject paint)
 {
     if (count <= 0) {

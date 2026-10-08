@@ -296,26 +296,26 @@ static void disposeTypesetter(JNIEnv *env, jclass clazz, jlong handle)
     TRTypesetterRelease(toTypesetter(handle));
 }
 
-static jint suggestForwardBreak(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static jint suggestForwardBreak(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jfloat extent, jint breakMode)
 {
     return static_cast<jint>(TRTypesetterSuggestForwardBreak(toTypesetter(handle),
         makeRange(start, end), extent, static_cast<TRBreakMode>(breakMode)));
 }
 
-static jint suggestBackwardBreak(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static jint suggestBackwardBreak(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jfloat extent, jint breakMode)
 {
     return static_cast<jint>(TRTypesetterSuggestBackwardBreak(toTypesetter(handle),
         makeRange(start, end), extent, static_cast<TRBreakMode>(breakMode)));
 }
 
-static jlong createSimpleLine(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end)
+static jlong createSimpleLine(JNIEnv *env, jobject obj, jlong handle, jint start, jint end)
 {
     return reinterpret_cast<jlong>(TRTypesetterCreateSimpleLine(toTypesetter(handle), makeRange(start, end)));
 }
 
-static jlong createTruncationToken(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static jlong createTruncationToken(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jint place, jstring token)
 {
     const jchar *chars = nullptr;
@@ -337,15 +337,15 @@ static jlong createTruncationToken(JNIEnv *env, jclass clazz, jlong handle, jint
     return reinterpret_cast<jlong>(line);
 }
 
-static jlong createTruncatedLine(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
-    jfloat extent, jint breakMode, jint place, jlong tokenHandle)
+static jlong createTruncatedLine(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
+    jfloat extent, jint breakMode, jint place, jlong tokenHandle, jobject token)
 {
     return reinterpret_cast<jlong>(TRTypesetterCreateTruncatedLine(toTypesetter(handle),
         makeRange(start, end), extent, static_cast<TRBreakMode>(breakMode),
         static_cast<TRTruncationPlace>(place), toLine(tokenHandle)));
 }
 
-static jlong createJustifiedLine(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static jlong createJustifiedLine(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jfloat factor, jfloat extent)
 {
     return reinterpret_cast<jlong>(TRTypesetterCreateJustifiedLine(toTypesetter(handle),
@@ -358,7 +358,7 @@ static JNINativeMethod TYPESETTER_METHODS[] = {
     { "nSuggestBackwardBreak", "(JIIFI)I", (void *)suggestBackwardBreak },
     { "nCreateSimpleLine", "(JII)J", (void *)createSimpleLine },
     { "nCreateTruncationToken", "(JIIILjava/lang/String;)J", (void *)createTruncationToken },
-    { "nCreateTruncatedLine", "(JIIFIIJ)J", (void *)createTruncatedLine },
+    { "nCreateTruncatedLine", "(JIIFIIJLjava/lang/Object;)J", (void *)createTruncatedLine },
     { "nCreateJustifiedLine", "(JIIFF)J", (void *)createJustifiedLine },
 };
 

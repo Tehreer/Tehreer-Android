@@ -134,7 +134,6 @@ class VariationAxis private constructor(
          * @param maxValue The maximum coordinate value.
          * @return A new variation axis object.
          */
-        @JvmStatic
         fun of(
             tag: Int, name: String, @Flags flags: Int,
             defaultValue: Float, minValue: Float, maxValue: Float

@@ -90,39 +90,39 @@ static void dispose(JNIEnv *env, jclass clazz, jlong typefaceHandle)
 
 // MARK: Names and Design
 
-static jstring getFamilyName(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jstring getFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return toJavaString(env, TRTypefaceGetFamilyName(toTypeface(typefaceHandle)));
 }
 
-static jstring getStyleName(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jstring getStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return toJavaString(env, TRTypefaceGetSubfamilyName(toTypeface(typefaceHandle)));
 }
 
-static jstring getFullName(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jstring getFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return toJavaString(env, TRTypefaceGetFullName(toTypeface(typefaceHandle)));
 }
 
-static jint getWeight(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getWeight(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetWeight(toTypeface(typefaceHandle)));
 }
 
-static jint getWidth(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getWidth(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetWidth(toTypeface(typefaceHandle)));
 }
 
-static jint getSlope(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetSlope(toTypeface(typefaceHandle)));
 }
 
 // MARK: Variations
 
-static jint getVariationAxisCount(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getVariationAxisCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetVariationAxisCount(toTypeface(typefaceHandle)));
 }
@@ -132,37 +132,37 @@ static const TRVariationAxis &variationAxisAt(jlong typefaceHandle, jint index)
     return TRTypefaceGetVariationAxesPtr(toTypeface(typefaceHandle))[index];
 }
 
-static jint getVariationAxisTag(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jint getVariationAxisTag(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return static_cast<jint>(variationAxisAt(typefaceHandle, index).tag);
 }
 
-static jint getVariationAxisFlags(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jint getVariationAxisFlags(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return static_cast<jint>(variationAxisAt(typefaceHandle, index).flags);
 }
 
-static jstring getVariationAxisName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jstring getVariationAxisName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return toJavaString(env, variationAxisAt(typefaceHandle, index).name);
 }
 
-static jfloat getVariationAxisMinValue(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jfloat getVariationAxisMinValue(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return variationAxisAt(typefaceHandle, index).minValue;
 }
 
-static jfloat getVariationAxisDefaultValue(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jfloat getVariationAxisDefaultValue(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return variationAxisAt(typefaceHandle, index).defaultValue;
 }
 
-static jfloat getVariationAxisMaxValue(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jfloat getVariationAxisMaxValue(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return variationAxisAt(typefaceHandle, index).maxValue;
 }
 
-static jint getNamedStyleCount(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getNamedStyleCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetNamedStyleCount(toTypeface(typefaceHandle)));
 }
@@ -172,13 +172,13 @@ static const TRNamedStyle &namedStyleAt(jlong typefaceHandle, jint index)
     return TRTypefaceGetNamedStylesPtr(toTypeface(typefaceHandle))[index];
 }
 
-static jstring getNamedStyleName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jstring getNamedStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return toJavaString(env, namedStyleAt(typefaceHandle, index).subfamilyName);
 }
 
 /* A style without a post script name gives null. */
-static jstring getNamedStylePostScriptName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jstring getNamedStylePostScriptName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     const TRStringView *name = namedStyleAt(typefaceHandle, index).postScriptName;
 
@@ -186,12 +186,12 @@ static jstring getNamedStylePostScriptName(JNIEnv *env, jclass clazz, jlong type
 }
 
 /* The coordinates are as many as the variation axes, and belong to the typeface. */
-static jlong getNamedStyleCoordinatesPtr(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jlong getNamedStyleCoordinatesPtr(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return reinterpret_cast<jlong>(namedStyleAt(typefaceHandle, index).coordinatesPtr);
 }
 
-static jlong getVariationInstance(JNIEnv *env, jclass clazz, jlong typefaceHandle, jfloatArray coordinates)
+static jlong getVariationInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jfloatArray coordinates)
 {
     jint count = env->GetArrayLength(coordinates);
     jfloat *values = env->GetFloatArrayElements(coordinates, nullptr);
@@ -204,26 +204,26 @@ static jlong getVariationInstance(JNIEnv *env, jclass clazz, jlong typefaceHandl
     return reinterpret_cast<jlong>(instance);
 }
 
-static jlong getVariationCoordinatesPtr(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jlong getVariationCoordinatesPtr(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return reinterpret_cast<jlong>(TRTypefaceGetVariationCoordinatesPtr(toTypeface(typefaceHandle)));
 }
 
 // MARK: Palettes
 
-static jint getPaletteEntryCount(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getPaletteEntryCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetPaletteEntryCount(toTypeface(typefaceHandle)));
 }
 
-static jstring getPaletteEntryName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jstring getPaletteEntryName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     const TRPaletteEntry &entry = TRTypefaceGetPaletteEntriesPtr(toTypeface(typefaceHandle))[index];
 
     return toJavaString(env, entry.name);
 }
 
-static jint getPredefinedPaletteCount(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getPredefinedPaletteCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetPredefinedPaletteCount(toTypeface(typefaceHandle)));
 }
@@ -233,23 +233,23 @@ static const TRPredefinedPalette &predefinedPaletteAt(jlong typefaceHandle, jint
     return TRTypefaceGetPredefinedPalettesPtr(toTypeface(typefaceHandle))[index];
 }
 
-static jstring getPredefinedPaletteName(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jstring getPredefinedPaletteName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return toJavaString(env, predefinedPaletteAt(typefaceHandle, index).name);
 }
 
-static jint getPredefinedPaletteFlags(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jint getPredefinedPaletteFlags(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return static_cast<jint>(predefinedPaletteAt(typefaceHandle, index).flags);
 }
 
 /* The colors are as many as the palette entries, and belong to the typeface. */
-static jlong getPredefinedPaletteColorsPtr(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint index)
+static jlong getPredefinedPaletteColorsPtr(JNIEnv *env, jobject obj, jlong typefaceHandle, jint index)
 {
     return reinterpret_cast<jlong>(predefinedPaletteAt(typefaceHandle, index).colorsPtr);
 }
 
-static jlong getColorInstance(JNIEnv *env, jclass clazz, jlong typefaceHandle, jintArray colors)
+static jlong getColorInstance(JNIEnv *env, jobject obj, jlong typefaceHandle, jintArray colors)
 {
     jint count = env->GetArrayLength(colors);
     jint *values = env->GetIntArrayElements(colors, nullptr);
@@ -262,14 +262,14 @@ static jlong getColorInstance(JNIEnv *env, jclass clazz, jlong typefaceHandle, j
     return reinterpret_cast<jlong>(instance);
 }
 
-static jlong getAssociatedColorsPtr(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jlong getAssociatedColorsPtr(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return reinterpret_cast<jlong>(TRTypefaceGetAssociatedColorsPtr(toTypeface(typefaceHandle)));
 }
 
 // MARK: Tables
 
-static jbyteArray getTableData(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint tableTag)
+static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
 {
     TRTypefaceRef typeface = toTypeface(typefaceHandle);
     auto inputTag = static_cast<TRTag>(tableTag);
@@ -291,32 +291,32 @@ static jbyteArray getTableData(JNIEnv *env, jclass clazz, jlong typefaceHandle, 
 
 // MARK: Metrics
 
-static jint getUnitsPerEm(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getUnitsPerEm(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetUnitsPerEM(toTypeface(typefaceHandle)));
 }
 
-static jint getAscent(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getAscent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetAscent(toTypeface(typefaceHandle)));
 }
 
-static jint getDescent(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getDescent(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetDescent(toTypeface(typefaceHandle)));
 }
 
-static jint getLeading(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getLeading(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetLeading(toTypeface(typefaceHandle)));
 }
 
-static jint getGlyphCount(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getGlyphCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetGlyphCount(toTypeface(typefaceHandle)));
 }
 
-static jobject getBoundingBox(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     TRRect box = TRTypefaceGetBoundingBox(toTypeface(typefaceHandle));
 
@@ -326,35 +326,35 @@ static jobject getBoundingBox(JNIEnv *env, jclass clazz, jlong typefaceHandle)
                                           static_cast<jint>(box.origin.y + box.size.height));
 }
 
-static jint getUnderlinePosition(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getUnderlinePosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetUnderlinePosition(toTypeface(typefaceHandle)));
 }
 
-static jint getUnderlineThickness(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getUnderlineThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetUnderlineThickness(toTypeface(typefaceHandle)));
 }
 
-static jint getStrikeoutPosition(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getStrikeoutPosition(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetStrikeoutPosition(toTypeface(typefaceHandle)));
 }
 
-static jint getStrikeoutThickness(JNIEnv *env, jclass clazz, jlong typefaceHandle)
+static jint getStrikeoutThickness(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
     return static_cast<jint>(TRTypefaceGetStrikeoutThickness(toTypeface(typefaceHandle)));
 }
 
 // MARK: Glyphs
 
-static jint getGlyphId(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint codePoint)
+static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint codePoint)
 {
     return static_cast<jint>(TRTypefaceGetGlyphID(toTypeface(typefaceHandle),
                                                   static_cast<TRUInt32>(codePoint)));
 }
 
-static jfloat getGlyphAdvance(JNIEnv *env, jclass clazz, jlong typefaceHandle,
+static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle,
     jint glyphId, jfloat typeSize, jboolean vertical)
 {
     return TRTypefaceGetGlyphAdvance(toTypeface(typefaceHandle), static_cast<TRGlyphID>(glyphId),
@@ -362,7 +362,7 @@ static jfloat getGlyphAdvance(JNIEnv *env, jclass clazz, jlong typefaceHandle,
 }
 
 /* The transform is the one of a matrix of Android, which is given by its six values. */
-static jobject getGlyphPath(JNIEnv *env, jclass clazz, jlong typefaceHandle, jint glyphId,
+static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId,
     jfloat typeSize, jfloat scaleX, jfloat skewX, jfloat translateX, jfloat skewY, jfloat scaleY,
     jfloat translateY)
 {

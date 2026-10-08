@@ -94,42 +94,42 @@ static void disposeFrame(JNIEnv *env, jclass clazz, jlong handle)
     TRComposedFrameRelease(toFrame(handle));
 }
 
-static jint getFrameCharStart(JNIEnv *env, jclass clazz, jlong handle)
+static jint getFrameCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRComposedFrameGetCodeUnitRange(toFrame(handle)).index);
 }
 
-static jint getFrameCharEnd(JNIEnv *env, jclass clazz, jlong handle)
+static jint getFrameCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
     TRRange range = TRComposedFrameGetCodeUnitRange(toFrame(handle));
 
     return static_cast<jint>(range.index + range.length);
 }
 
-static jfloat getFrameWidth(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getFrameWidth(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedFrameGetWidth(toFrame(handle));
 }
 
-static jfloat getFrameHeight(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getFrameHeight(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedFrameGetHeight(toFrame(handle));
 }
 
-static jint getFrameLineCount(JNIEnv *env, jclass clazz, jlong handle)
+static jint getFrameLineCount(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRComposedFrameGetLineCount(toFrame(handle)));
 }
 
 /* Returns a line that the caller owns, as the frame might be disposed before the line. */
-static jlong getFrameLine(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jlong getFrameLine(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     TRComposedLineRef line = TRComposedFrameGetLine(toFrame(handle), static_cast<TRUInteger>(index));
 
     return reinterpret_cast<jlong>(TRComposedLineRetain(line));
 }
 
-static jint getLineIndexForCodeUnit(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jint getLineIndexForCodeUnit(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     TRUInteger lineIndex = TRComposedFrameGetIndexOfLineForCodeUnit(toFrame(handle),
                                                                     static_cast<TRUInteger>(index));
@@ -137,7 +137,7 @@ static jint getLineIndexForCodeUnit(JNIEnv *env, jclass clazz, jlong handle, jin
     return (lineIndex != InvalidIndex ? static_cast<jint>(lineIndex) : -1);
 }
 
-static jint getLineIndexAtPosition(JNIEnv *env, jclass clazz, jlong handle, jfloat x, jfloat y)
+static jint getLineIndexAtPosition(JNIEnv *env, jobject obj, jlong handle, jfloat x, jfloat y)
 {
     TRPoint position;
     position.x = x;
@@ -157,7 +157,7 @@ static void putSelectionRect(void *userData, TRRect rect)
 }
 
 /* Hands the left, top, right and bottom of each rectangle of a selection, one after the other. */
-static void enumerateSelection(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static void enumerateSelection(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jobject collector)
 {
     FloatCollector floats(env, collector);

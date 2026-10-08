@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,14 +103,7 @@ class BidiInfoActivity : AppCompatActivity() {
             Spanned.SPAN_INCLUSIVE_INCLUSIVE
         )
 
-        var algorithm: BidiAlgorithm? = null
-
-        try {
-            algorithm = BidiAlgorithm(bidiText)
-            writeAlgorithmText(builder, algorithm)
-        } finally {
-            algorithm?.dispose()
-        }
+        writeAlgorithmText(builder, BidiAlgorithm(bidiText))
     }
 
     private fun writeAlgorithmText(builder: SpannableStringBuilder, algorithm: BidiAlgorithm) {
@@ -119,21 +112,15 @@ class BidiInfoActivity : AppCompatActivity() {
         val suggestedEnd = bidiText.length
 
         while (paragraphStart != suggestedEnd) {
-            var paragraph: BidiParagraph? = null
+            val paragraph = algorithm.createParagraph(
+                paragraphStart,
+                suggestedEnd,
+                BaseDirection.DEFAULT_LEFT_TO_RIGHT
+            )
+            writeParagraphText(builder, paragraph, paragraphIndex)
 
-            try {
-                paragraph = algorithm.createParagraph(
-                    paragraphStart,
-                    suggestedEnd,
-                    BaseDirection.DEFAULT_LEFT_TO_RIGHT
-                )
-                writeParagraphText(builder, paragraph, paragraphIndex)
-
-                paragraphIndex++
-                paragraphStart = paragraph.charEnd
-            } finally {
-                paragraph?.dispose()
-            }
+            paragraphIndex++
+            paragraphStart = paragraph.charEnd
         }
     }
 
@@ -161,15 +148,9 @@ class BidiInfoActivity : AppCompatActivity() {
             counter++
         }
 
-        var line: BidiLine? = null
-
-        try {
-            line = paragraph.createLine(paragraphStart, paragraphEnd)
-            writeLineText(builder, line)
-            writeMirrorsText(builder, line)
-        } finally {
-            line?.dispose()
-        }
+        val line = paragraph.createLine(paragraphStart, paragraphEnd)
+        writeLineText(builder, line)
+        writeMirrorsText(builder, line)
 
         builder.append("\n")
     }

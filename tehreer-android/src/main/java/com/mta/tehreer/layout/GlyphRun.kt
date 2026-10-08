@@ -528,45 +528,45 @@ class GlyphRun internal constructor(
             "}"
     }
 
+    private external fun nGetCharStart(nativeRun: Long): Int
+    private external fun nGetCharEnd(nativeRun: Long): Int
+    private external fun nGetStartExtraLength(nativeRun: Long): Int
+    private external fun nGetEndExtraLength(nativeRun: Long): Int
+    private external fun nGetBidiLevel(nativeRun: Long): Int
+    private external fun nGetWritingDirection(nativeRun: Long): Int
+    private external fun nIsBackward(nativeRun: Long): Boolean
+    private external fun nHasForegroundColor(nativeRun: Long): Boolean
+    private external fun nGetForegroundColor(nativeRun: Long): Int
+    private external fun nGetTypeSize(nativeRun: Long): Float
+    private external fun nGetScaleX(nativeRun: Long): Float
+    private external fun nGetAscent(nativeRun: Long): Float
+    private external fun nGetDescent(nativeRun: Long): Float
+    private external fun nGetLeading(nativeRun: Long): Float
+    private external fun nGetOriginX(nativeRun: Long): Float
+    private external fun nGetOriginY(nativeRun: Long): Float
+    private external fun nGetWidth(nativeRun: Long): Float
+    private external fun nGetHeight(nativeRun: Long): Float
+    private external fun nGetTypeface(nativeRun: Long): Long
+    private external fun nHasReplacement(nativeRun: Long): Boolean
+    private external fun nGetGlyphCount(nativeRun: Long): Int
+    private external fun nGetClusterMapCount(nativeRun: Long): Int
+    private external fun nGetGlyphIdsPtr(nativeRun: Long): Long
+    private external fun nGetGlyphOffsetsPtr(nativeRun: Long): Long
+    private external fun nGetGlyphAdvancesPtr(nativeRun: Long): Long
+    private external fun nGetClusterMapPtr(nativeRun: Long): Long
+    private external fun nGetClusterStart(nativeRun: Long, charIndex: Int): Int
+    private external fun nGetClusterEnd(nativeRun: Long, charIndex: Int): Int
+    private external fun nGetLeadingGlyphIndex(nativeRun: Long, charIndex: Int): Int
+    private external fun nGetTrailingGlyphIndex(nativeRun: Long, charIndex: Int): Int
+    private external fun nGetDistance(nativeRun: Long, charIndex: Int): Float
+    private external fun nGetIndexOfCodeUnit(nativeRun: Long, distance: Float): Int
+    private external fun nGetBoundingBox(
+        nativeRun: Long, glyphStart: Int, glyphEnd: Int, nativeRenderer: Long
+    ): RectF
     private companion object {
         init {
             JniBridge.loadLibrary()
         }
 
-        @JvmStatic external fun nGetCharStart(nativeRun: Long): Int
-        @JvmStatic external fun nGetCharEnd(nativeRun: Long): Int
-        @JvmStatic external fun nGetStartExtraLength(nativeRun: Long): Int
-        @JvmStatic external fun nGetEndExtraLength(nativeRun: Long): Int
-        @JvmStatic external fun nGetBidiLevel(nativeRun: Long): Int
-        @JvmStatic external fun nGetWritingDirection(nativeRun: Long): Int
-        @JvmStatic external fun nIsBackward(nativeRun: Long): Boolean
-        @JvmStatic external fun nHasForegroundColor(nativeRun: Long): Boolean
-        @JvmStatic external fun nGetForegroundColor(nativeRun: Long): Int
-        @JvmStatic external fun nGetTypeSize(nativeRun: Long): Float
-        @JvmStatic external fun nGetScaleX(nativeRun: Long): Float
-        @JvmStatic external fun nGetAscent(nativeRun: Long): Float
-        @JvmStatic external fun nGetDescent(nativeRun: Long): Float
-        @JvmStatic external fun nGetLeading(nativeRun: Long): Float
-        @JvmStatic external fun nGetOriginX(nativeRun: Long): Float
-        @JvmStatic external fun nGetOriginY(nativeRun: Long): Float
-        @JvmStatic external fun nGetWidth(nativeRun: Long): Float
-        @JvmStatic external fun nGetHeight(nativeRun: Long): Float
-        @JvmStatic external fun nGetTypeface(nativeRun: Long): Long
-        @JvmStatic external fun nHasReplacement(nativeRun: Long): Boolean
-        @JvmStatic external fun nGetGlyphCount(nativeRun: Long): Int
-        @JvmStatic external fun nGetClusterMapCount(nativeRun: Long): Int
-        @JvmStatic external fun nGetGlyphIdsPtr(nativeRun: Long): Long
-        @JvmStatic external fun nGetGlyphOffsetsPtr(nativeRun: Long): Long
-        @JvmStatic external fun nGetGlyphAdvancesPtr(nativeRun: Long): Long
-        @JvmStatic external fun nGetClusterMapPtr(nativeRun: Long): Long
-        @JvmStatic external fun nGetClusterStart(nativeRun: Long, charIndex: Int): Int
-        @JvmStatic external fun nGetClusterEnd(nativeRun: Long, charIndex: Int): Int
-        @JvmStatic external fun nGetLeadingGlyphIndex(nativeRun: Long, charIndex: Int): Int
-        @JvmStatic external fun nGetTrailingGlyphIndex(nativeRun: Long, charIndex: Int): Int
-        @JvmStatic external fun nGetDistance(nativeRun: Long, charIndex: Int): Float
-        @JvmStatic external fun nGetIndexOfCodeUnit(nativeRun: Long, distance: Float): Int
-        @JvmStatic external fun nGetBoundingBox(
-            nativeRun: Long, glyphStart: Int, glyphEnd: Int, nativeRenderer: Long
-        ): RectF
     }
 }

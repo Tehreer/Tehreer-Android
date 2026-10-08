@@ -92,7 +92,6 @@ class ColorPalette private constructor(
          * @param colors The colors array.
          * @return A new palette object.
          */
-        @JvmStatic
         fun of(name: String, @Flags flags: Int, @Size(min = 1) colors: IntArray): ColorPalette {
             require(colors.isNotEmpty()) { "The colors array is empty" }
 

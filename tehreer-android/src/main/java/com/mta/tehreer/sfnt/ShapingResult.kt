@@ -16,11 +16,9 @@
 
 package com.mta.tehreer.sfnt
 
-import com.mta.tehreer.Disposable
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.PointList
-import com.mta.tehreer.internal.Constants
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.collections.FloatBufferList
 import com.mta.tehreer.internal.collections.FloatBufferPointList
@@ -32,26 +30,20 @@ import com.mta.tehreer.internal.collections.UIntPtrBufferIntList
  * `ShapingEngine` object to provide the information related to characters, their glyphs, offsets,
  * and advances.
  */
-open class ShapingResult : Disposable {
-    private class Finalizable(parent: ShapingResult) : ShapingResult(parent) {
-        override fun dispose() {
-            throw UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT)
-        }
-
+class ShapingResult {
+    private class Finalizable(private val nativeResult: Long) {
         @Suppress("unused")
         protected fun finalize() {
-            super.dispose()
+            nDispose(nativeResult)
         }
     }
 
-    @JvmField internal var nativeResult: Long
+    internal val nativeResult: Long
+    private val finalizable: Finalizable
 
     internal constructor() {
         nativeResult = nCreate()
-    }
-
-    private constructor(other: ShapingResult) {
-        nativeResult = other.nativeResult
+        finalizable = Finalizable(nativeResult)
     }
 
     /**
@@ -165,10 +157,6 @@ open class ShapingResult : Disposable {
         return nGetCaretEdges(nativeResult, caretStops)
     }
 
-    override fun dispose() {
-        nDispose(nativeResult)
-    }
-
     override fun toString(): String {
         return "ShapingResult{isBackward=$isBackward" +
             ", charStart=$charStart" +
@@ -181,56 +169,24 @@ open class ShapingResult : Disposable {
             "}"
     }
 
+    private external fun nIsBackward(nativeResult: Long): Boolean
+    private external fun nIsRTL(nativeResult: Long): Boolean
+    private external fun nGetCharStart(nativeResult: Long): Int
+    private external fun nGetCharEnd(nativeResult: Long): Int
+    private external fun nGetGlyphCount(nativeResult: Long): Int
+    private external fun nGetGlyphIdsPtr(nativeResult: Long): Long
+    private external fun nGetGlyphOffsetsPtr(nativeResult: Long): Long
+    private external fun nGetGlyphAdvancesPtr(nativeResult: Long): Long
+    private external fun nGetClusterMapPtr(nativeResult: Long): Long
+    private external fun nGetCaretEdges(
+        nativeResult: Long, caretStops: BooleanArray?
+    ): FloatArray
     companion object {
         init {
             JniBridge.loadLibrary()
         }
 
-        /**
-         * Wraps a shaping result object into a finalizable instance which is guaranteed to be
-         * disposed automatically by the GC when no longer in use. After calling this method,
-         * `dispose()` should not be called on either original object or returned object. Calling
-         * `dispose()` on returned object will throw an `UnsupportedOperationException`.
-         *
-         * **Note:** The behavior is undefined if the passed-in object is already disposed or
-         * wrapped into another finalizable instance.
-         *
-         * @param shapingResult The shaping result object to wrap into a finalizable instance.
-         * @return The finalizable instance of the passed-in shaping result object.
-         */
-        @JvmStatic
-        fun finalizable(shapingResult: ShapingResult): ShapingResult {
-            return when (shapingResult.javaClass) {
-                ShapingResult::class.java -> Finalizable(shapingResult)
-                Finalizable::class.java -> shapingResult
-                else -> throw IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED)
-            }
-        }
-
-        /**
-         * Checks whether a shaping result object is finalizable or not.
-         *
-         * @param shapingResult The shaping result object to check.
-         * @return `true` if the passed-in shaping result object is finalizable, `false` otherwise.
-         */
-        @JvmStatic
-        fun isFinalizable(shapingResult: ShapingResult): Boolean {
-            return shapingResult.javaClass == Finalizable::class.java
-        }
-
         @JvmStatic private external fun nCreate(): Long
         @JvmStatic private external fun nDispose(nativeResult: Long)
-        @JvmStatic private external fun nIsBackward(nativeResult: Long): Boolean
-        @JvmStatic private external fun nIsRTL(nativeResult: Long): Boolean
-        @JvmStatic private external fun nGetCharStart(nativeResult: Long): Int
-        @JvmStatic private external fun nGetCharEnd(nativeResult: Long): Int
-        @JvmStatic private external fun nGetGlyphCount(nativeResult: Long): Int
-        @JvmStatic private external fun nGetGlyphIdsPtr(nativeResult: Long): Long
-        @JvmStatic private external fun nGetGlyphOffsetsPtr(nativeResult: Long): Long
-        @JvmStatic private external fun nGetGlyphAdvancesPtr(nativeResult: Long): Long
-        @JvmStatic private external fun nGetClusterMapPtr(nativeResult: Long): Long
-        @JvmStatic private external fun nGetCaretEdges(
-            nativeResult: Long, caretStops: BooleanArray?
-        ): FloatArray
     }
 }

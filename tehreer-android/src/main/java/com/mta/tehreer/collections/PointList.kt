@@ -140,7 +140,6 @@ abstract class PointList : Primitive {
          * @param values The elements of the point list.
          * @return A new point list.
              */
-        @JvmStatic
         fun of(@Size(multiple = 2) vararg values: Float): PointList {
             return JFloatArrayPointList(values, 0, values.size / 2)
         }

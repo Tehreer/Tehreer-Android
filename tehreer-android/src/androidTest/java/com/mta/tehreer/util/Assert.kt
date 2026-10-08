@@ -21,7 +21,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 
 object Assert {
-    @JvmStatic
     fun <T : Throwable> assertThrows(clazz: Class<T>, runnable: Runnable) {
         try {
             runnable.run()
@@ -31,7 +30,6 @@ object Assert {
         }
     }
 
-    @JvmStatic
     fun <T : Throwable> assertThrows(clazz: Class<T>, message: String, runnable: Runnable) {
         try {
             runnable.run()

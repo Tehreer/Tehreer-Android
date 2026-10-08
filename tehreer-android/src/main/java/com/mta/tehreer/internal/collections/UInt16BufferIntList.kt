@@ -21,7 +21,6 @@ import com.mta.tehreer.internal.Raw
 import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
 import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
-import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 
 /**
  * A list of unsigned 16-bit integers that lie in native memory.
@@ -41,14 +40,13 @@ internal class UInt16BufferIntList(
 
     override fun get(index: Int): Int {
         checkElementIndex(index, size)
-        return Raw.getInt16Value(pointer + index * elementSize).toInt() and 0xFFFF
+        return Raw.getInt16Value(owner, pointer + index * elementSize).toInt() and 0xFFFF
     }
 
     override fun copyTo(array: IntArray, atIndex: Int) {
-        checkNotNull(array)
         checkArrayBounds(array, atIndex, size)
 
-        Raw.copyUInt16Buffer(pointer, array, atIndex, size)
+        Raw.copyUInt16Buffer(owner, pointer, array, atIndex, size)
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): IntList {

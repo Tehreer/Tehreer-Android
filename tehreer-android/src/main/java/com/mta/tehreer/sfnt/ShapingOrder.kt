@@ -33,7 +33,6 @@ enum class ShapingOrder(internal val value: Int) {
     BACKWARD(1);
 
     companion object {
-        @JvmStatic
         internal fun valueOf(value: Int): ShapingOrder? {
             return entries.firstOrNull { it.value == value }
         }

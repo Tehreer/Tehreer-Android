@@ -21,7 +21,6 @@ import com.mta.tehreer.internal.Raw
 import com.mta.tehreer.internal.util.Preconditions.checkArrayBounds
 import com.mta.tehreer.internal.util.Preconditions.checkElementIndex
 import com.mta.tehreer.internal.util.Preconditions.checkIndexRange
-import com.mta.tehreer.internal.util.Preconditions.checkNotNull
 
 private const val FIELD_COUNT = 2
 
@@ -40,19 +39,18 @@ internal class FloatBufferPointList(
 
     override fun getX(index: Int): Float {
         checkElementIndex(index, size)
-        return Raw.getFloatValue(pointer + index * FIELD_COUNT * Raw.FLOAT_SIZE)
+        return Raw.getFloatValue(owner, pointer + index * FIELD_COUNT * Raw.FLOAT_SIZE)
     }
 
     override fun getY(index: Int): Float {
         checkElementIndex(index, size)
-        return Raw.getFloatValue(pointer + (index * FIELD_COUNT + 1) * Raw.FLOAT_SIZE)
+        return Raw.getFloatValue(owner, pointer + (index * FIELD_COUNT + 1) * Raw.FLOAT_SIZE)
     }
 
     override fun copyTo(array: FloatArray, atIndex: Int) {
-        checkNotNull(array)
         checkArrayBounds(array, atIndex, size * FIELD_COUNT)
 
-        Raw.copyFloatBuffer(pointer, array, atIndex, size * FIELD_COUNT)
+        Raw.copyFloatBuffer(owner, pointer, array, atIndex, size * FIELD_COUNT)
     }
 
     override fun subList(fromIndex: Int, toIndex: Int): PointList {

@@ -31,8 +31,7 @@ class HheaTable private constructor(private val table: SfntTable) {
      * @throws RuntimeException if `typeface` does not contain `hhea' table.
      */
     constructor(typeface: Typeface) : this(
-        SfntTables.readTable(typeface, "hhea", TABLE_LENGTH)
-            ?: throw RuntimeException("The typeface does not contain `hhea' table")
+        checkNotNull(SfntTables.readTable(typeface, "hhea", TABLE_LENGTH)) { "The typeface does not contain `hhea' table" }
     )
 
     fun version(): Int = table.readInt32(VERSION)
@@ -72,7 +71,6 @@ class HheaTable private constructor(private val table: SfntTable) {
          * @return A new `HheaTable` object, or `null` if `hhea' table does not exist in the specified
          *         typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): HheaTable? {
             return SfntTables.readTable(typeface, "hhea", TABLE_LENGTH)?.let { HheaTable(it) }
         }

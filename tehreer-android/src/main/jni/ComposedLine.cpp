@@ -30,75 +30,75 @@ static void dispose(JNIEnv *env, jclass clazz, jlong handle)
     TRComposedLineRelease(toLine(handle));
 }
 
-static jint getCharStart(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRComposedLineGetCodeUnitRange(toLine(handle)).index);
 }
 
-static jint getCharEnd(JNIEnv *env, jclass clazz, jlong handle)
+static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
     TRRange range = TRComposedLineGetCodeUnitRange(toLine(handle));
 
     return static_cast<jint>(range.index + range.length);
 }
 
-static jint getParagraphLevel(JNIEnv *env, jclass clazz, jlong handle)
+static jint getParagraphLevel(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRComposedLineGetParagraphLevel(toLine(handle)));
 }
 
-static jboolean isBlock(JNIEnv *env, jclass clazz, jlong handle)
+static jboolean isBlock(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineIsBlock(toLine(handle)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jfloat getAscent(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getAscent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetAscent(toLine(handle));
 }
 
-static jfloat getDescent(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getDescent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetDescent(toLine(handle));
 }
 
-static jfloat getLeading(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getLeading(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetLeading(toLine(handle));
 }
 
-static jfloat getWidth(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getWidth(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetWidth(toLine(handle));
 }
 
-static jfloat getTrailingWhitespaceExtent(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getTrailingWhitespaceExtent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetTrailingWhitespaceExtent(toLine(handle));
 }
 
-static jfloat getOriginX(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getOriginX(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetOrigin(toLine(handle)).x;
 }
 
-static jfloat getOriginY(JNIEnv *env, jclass clazz, jlong handle)
+static jfloat getOriginY(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetOrigin(toLine(handle)).y;
 }
 
-static jint getRunCount(JNIEnv *env, jclass clazz, jlong handle)
+static jint getRunCount(JNIEnv *env, jobject obj, jlong handle)
 {
     return static_cast<jint>(TRComposedLineGetGlyphRunCount(toLine(handle)));
 }
 
 /* The run belongs to the line, and lives as long as the line does. */
-static jlong getRun(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jlong getRun(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return reinterpret_cast<jlong>(TRComposedLineGetGlyphRun(toLine(handle), static_cast<TRUInteger>(index)));
 }
 
-static jfloat getDistance(JNIEnv *env, jclass clazz, jlong handle, jint index)
+static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     return TRComposedLineGetCodeUnitDistance(toLine(handle), static_cast<TRUInteger>(index));
 }
@@ -112,7 +112,7 @@ static void putEdge(void *userData, TRFloat left, TRFloat right)
 }
 
 /* Hands the left and the right of each part that the range takes, one after the other. */
-static void enumerateEdges(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+static void enumerateEdges(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jobject collector)
 {
     FloatCollector floats(env, collector);
@@ -120,18 +120,18 @@ static void enumerateEdges(JNIEnv *env, jclass clazz, jlong handle, jint start, 
     TRComposedLineEnumerateEdges(toLine(handle), makeRange(start, end), putEdge, &floats);
 }
 
-static jint getIndexOfCodeUnit(JNIEnv *env, jclass clazz, jlong handle, jfloat distance)
+static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
     return static_cast<jint>(TRComposedLineGetCodeUnitIndex(toLine(handle), distance));
 }
 
-static jfloat getPenOffset(JNIEnv *env, jclass clazz, jlong handle, jfloat flushFactor,
+static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushFactor,
     jfloat flushExtent)
 {
     return TRComposedLineGetPenOffset(toLine(handle), flushFactor, flushExtent);
 }
 
-static jobject getBoundingBox(JNIEnv *env, jclass clazz, jlong handle, jlong rendererHandle)
+static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
     TRRect box = TRComposedLineGetBoundingBox(toLine(handle), toRenderer(rendererHandle));
 

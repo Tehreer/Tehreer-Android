@@ -35,7 +35,6 @@ object SfntTag {
      * @throws IllegalArgumentException if `tagStr` is not four characters long, or any character is
      *         not a printing character represented by ASCII values 32-126.
      */
-    @JvmStatic
     fun make(@Size(4) tagStr: String): Int {
         require(tagStr.length == 4) { "The length of tag string is not equal to four" }
 
@@ -52,7 +51,6 @@ object SfntTag {
      * @param tag The tag.
      * @return The string representation of specified tag.
      */
-    @JvmStatic
     fun toString(tag: Int): String {
         return charArrayOf(
             (tag shr 24).toChar(),

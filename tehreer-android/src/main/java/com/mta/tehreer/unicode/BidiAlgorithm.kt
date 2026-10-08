@@ -16,9 +16,7 @@
 
 package com.mta.tehreer.unicode
 
-import com.mta.tehreer.Disposable
 import com.mta.tehreer.collections.IntList
-import com.mta.tehreer.internal.Constants
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.collections.UInt8BufferIntList
 
@@ -31,21 +29,22 @@ import com.mta.tehreer.internal.collections.UInt8BufferIntList
  * paragraph level or deriving it from rules P2 and P3. Once a paragraph object is created,
  * embedding levels of characters can be queried from it.
  */
-open class BidiAlgorithm : Disposable {
-    private class Finalizable(parent: BidiAlgorithm) : BidiAlgorithm(parent) {
-        override fun dispose() {
-            throw UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT)
-        }
-
+class BidiAlgorithm {
+    private class Finalizable(
+        private val nativeBuffer: Long,
+        private val nativeAlgorithm: Long
+    ) {
         @Suppress("unused")
         protected fun finalize() {
-            super.dispose()
+            nDispose(nativeAlgorithm)
+            BidiBuffer.release(nativeBuffer)
         }
     }
 
-    @JvmField internal var nativeBuffer: Long
-    @JvmField internal var nativeAlgorithm: Long
+    internal val nativeBuffer: Long
+    internal val nativeAlgorithm: Long
     private val text: String
+    private val finalizable: Finalizable
 
     /**
      * Constructs a bidi algorithm object for the given text.
@@ -60,12 +59,7 @@ open class BidiAlgorithm : Disposable {
         this.nativeBuffer = BidiBuffer.create(text)
         this.nativeAlgorithm = nCreate(nativeBuffer)
         this.text = text
-    }
-
-    private constructor(other: BidiAlgorithm) {
-        this.nativeBuffer = other.nativeBuffer
-        this.nativeAlgorithm = other.nativeAlgorithm
-        this.text = other.text
+        this.finalizable = Finalizable(nativeBuffer, nativeAlgorithm)
     }
 
     private fun checkSubRange(charStart: Int, charEnd: Int) {
@@ -164,14 +158,18 @@ open class BidiAlgorithm : Disposable {
         )
     }
 
-    override fun dispose() {
-        nDispose(nativeAlgorithm)
-        BidiBuffer.release(nativeBuffer)
-    }
-
     override fun toString(): String {
         return "BidiAlgorithm{text=$text, charBidiClasses=$charBidiClasses}"
     }
+
+    private external fun nGetCharBidiClassesPtr(nativeAlgorithm: Long): Long
+    private external fun nGetParagraphBoundary(
+        nativeAlgorithm: Long, charStart: Int, charEnd: Int
+    ): Int
+
+    private external fun nCreateParagraph(
+        nativeAlgorithm: Long, charStart: Int, charEnd: Int, baseLevel: Int
+    ): Long
 
     companion object {
         init {
@@ -183,49 +181,8 @@ open class BidiAlgorithm : Disposable {
          */
         const val MAX_LEVEL: Byte = 125
 
-        /**
-         * Wraps a bidi algorithm object into a finalizable instance which is guaranteed to be
-         * disposed automatically by the GC when no longer in use. After calling this method,
-         * `dispose()` should not be called on either original object or returned object. Calling
-         * `dispose()` on returned object will throw an `UnsupportedOperationException`.
-         *
-         * **Note:** The behavior is undefined if the passed-in object is already disposed or
-         * wrapped into another finalizable instance.
-         *
-         * @param bidiAlgorithm The bidi algorithm object to wrap into a finalizable instance.
-         *
-         * @return The finalizable instance of the passed-in bidi algorithm object.
-         */
-        @JvmStatic
-        fun finalizable(bidiAlgorithm: BidiAlgorithm): BidiAlgorithm {
-            return when (bidiAlgorithm.javaClass) {
-                BidiAlgorithm::class.java -> Finalizable(bidiAlgorithm)
-                Finalizable::class.java -> bidiAlgorithm
-                else -> throw IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED)
-            }
-        }
-
-        /**
-         * Checks whether a bidi algorithm object is finalizable or not.
-         *
-         * @param bidiAlgorithm The bidi algorithm object to check.
-         *
-         * @return `true` if the passed-in bidi algorithm object is finalizable, `false` otherwise.
-         */
-        @JvmStatic
-        fun isFinalizable(bidiAlgorithm: BidiAlgorithm): Boolean {
-            return bidiAlgorithm.javaClass == Finalizable::class.java
-        }
-
         @JvmStatic private external fun nCreate(nativeBuffer: Long): Long
         @JvmStatic private external fun nDispose(nativeAlgorithm: Long)
 
-        @JvmStatic private external fun nGetCharBidiClassesPtr(nativeAlgorithm: Long): Long
-        @JvmStatic private external fun nGetParagraphBoundary(
-            nativeAlgorithm: Long, charStart: Int, charEnd: Int
-        ): Int
-        @JvmStatic private external fun nCreateParagraph(
-            nativeAlgorithm: Long, charStart: Int, charEnd: Int, baseLevel: Int
-        ): Long
     }
 }

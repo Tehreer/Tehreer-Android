@@ -31,7 +31,6 @@ enum class WritingDirection(internal val value: Int) {
     RIGHT_TO_LEFT(1);
 
     companion object {
-        @JvmStatic
         internal fun valueOf(value: Int): WritingDirection? {
             return entries.firstOrNull { it.value == value }
         }

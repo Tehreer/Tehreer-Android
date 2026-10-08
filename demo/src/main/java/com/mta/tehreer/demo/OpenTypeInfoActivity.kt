@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -254,14 +254,14 @@ class OpenTypeInfoActivity : AppCompatActivity() {
         renderer.scaleX = sizeScale
         renderer.scaleY = sizeScale
 
-        val shapingEngine = ShapingEngine.finalizable(ShapingEngine())
+        val shapingEngine = ShapingEngine()
         shapingEngine.typeface = typeface
         shapingEngine.typeSize = typeSize.toFloat()
         shapingEngine.scriptTag = scriptTag
         shapingEngine.languageTag = languageTag
         shapingEngine.writingDirection = writingDirection
 
-        val shapingResult = ShapingResult.finalizable(shapingEngine.shapeText(sourceText, 0, sourceText.length))
+        val shapingResult = shapingEngine.shapeText(sourceText, 0, sourceText.length)
         val clusterMap = shapingResult.clusterMap
         val length = clusterMap.size()
 

@@ -31,8 +31,7 @@ class MaxpTable private constructor(private val table: SfntTable) {
      * @throws RuntimeException if `typeface` does not contain `maxp' table.
      */
     constructor(typeface: Typeface) : this(
-        SfntTables.readTable(typeface, "maxp", TABLE_LENGTH)
-            ?: throw RuntimeException("The typeface does not contain `maxp' table")
+        checkNotNull(SfntTables.readTable(typeface, "maxp", TABLE_LENGTH)) { "The typeface does not contain `maxp' table" }
     )
 
     fun version(): Int = table.readInt32(VERSION)
@@ -76,7 +75,6 @@ class MaxpTable private constructor(private val table: SfntTable) {
          * @return A new `MaxpTable` object, or `null` if `maxp' table does not exist in the specified
          *         typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): MaxpTable? {
             return SfntTables.readTable(typeface, "maxp", TABLE_LENGTH)?.let { MaxpTable(it) }
         }

@@ -23,23 +23,26 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 
-import com.mta.tehreer.DisposableTestSuite
+import com.mta.tehreer.SubjectTestSuite
 import com.mta.tehreer.graphics.Typeface
-import com.mta.tehreer.subject.UnsafeSubjectBuilder
+import com.mta.tehreer.subject.SubjectBuilder
 import com.mta.tehreer.util.DescriptionBuilder
 import com.mta.tehreer.util.TypefaceStore
 
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 
 import java.util.Collections
 import java.util.LinkedHashSet
 
-abstract class ShapingEngineTestSuite(defaultMode: DefaultMode) : DisposableTestSuite<ShapingEngine>(ShapingEngineBuilder(), defaultMode) {
+@RunWith(MockitoJUnitRunner::class)
+class ShapingEngineTest : SubjectTestSuite<ShapingEngine>(ShapingEngineBuilder()) {
     private companion object {
         private val DEFAULT_TEXT: String = "abcd"
     }
 
-    class ShapingEngineBuilder : UnsafeSubjectBuilder<ShapingEngine>(ShapingEngine::class.java) {
+    class ShapingEngineBuilder : SubjectBuilder<ShapingEngine> {
         var typeface: Typeface? = null
 
         override fun buildSubject(): ShapingEngine {
@@ -269,5 +272,28 @@ abstract class ShapingEngineTestSuite(defaultMode: DefaultMode) : DisposableTest
             assertEquals(string, description)
         })
     }
-}
 
+    @Test
+    fun testGetScriptDirectionForArabic() {
+        // Given
+        val scriptTag = SfntTag.make("arab")
+
+        // When
+        val writingDirection = ShapingEngine.getScriptDirection(scriptTag)
+
+        // Then
+        assertEquals(writingDirection, WritingDirection.RIGHT_TO_LEFT)
+    }
+
+    @Test
+    fun testGetScriptDirectionForLatin() {
+        // Given
+        val scriptTag = SfntTag.make("latn")
+
+        // When
+        val writingDirection = ShapingEngine.getScriptDirection(scriptTag)
+
+        // Then
+        assertEquals(writingDirection, WritingDirection.LEFT_TO_RIGHT)
+    }
+}

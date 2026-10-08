@@ -16,9 +16,7 @@
 
 package com.mta.tehreer.unicode
 
-import com.mta.tehreer.Disposable
 import com.mta.tehreer.collections.ByteList
-import com.mta.tehreer.internal.Constants
 import com.mta.tehreer.internal.Description
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.collections.Int8BufferByteList
@@ -28,29 +26,26 @@ import com.mta.tehreer.internal.collections.Int8BufferByteList
  * Unicode Bidirectional Algorithm. It contains the resolved embedding levels of all the characters
  * of a paragraph and provides the facility to query them or iterate over their runs.
  */
-open class BidiParagraph : Disposable {
-    private class Finalizable(parent: BidiParagraph) : BidiParagraph(parent) {
-        override fun dispose() {
-            throw UnsupportedOperationException(Constants.EXCEPTION_FINALIZABLE_OBJECT)
-        }
-
+class BidiParagraph {
+    private class Finalizable(
+        private val nativeBuffer: Long,
+        private val nativeParagraph: Long
+    ) {
         @Suppress("unused")
         protected fun finalize() {
-            super.dispose()
+            nDispose(nativeParagraph)
+            BidiBuffer.release(nativeBuffer)
         }
     }
 
-    @JvmField internal var nativeBuffer: Long
-    @JvmField internal var nativeParagraph: Long
+    internal val nativeBuffer: Long
+    internal val nativeParagraph: Long
+    private val finalizable: Finalizable
 
     internal constructor(nativeBuffer: Long, nativeParagraph: Long) {
         this.nativeBuffer = BidiBuffer.retain(nativeBuffer)
         this.nativeParagraph = nativeParagraph
-    }
-
-    private constructor(other: BidiParagraph) {
-        this.nativeBuffer = other.nativeBuffer
-        this.nativeParagraph = other.nativeParagraph
+        this.finalizable = Finalizable(this.nativeBuffer, nativeParagraph)
     }
 
     /**
@@ -133,11 +128,6 @@ open class BidiParagraph : Disposable {
         return BidiLine(nativeBuffer, nCreateLine(nativeParagraph, charStart, charEnd))
     }
 
-    override fun dispose() {
-        nDispose(nativeParagraph)
-        BidiBuffer.release(nativeBuffer)
-    }
-
     override fun toString(): String {
         return "BidiParagraph{charStart=$charStart" +
             ", charEnd=$charEnd" +
@@ -162,57 +152,23 @@ open class BidiParagraph : Disposable {
         }
     }
 
+    private external fun nGetCharStart(nativeParagraph: Long): Int
+    private external fun nGetCharEnd(nativeParagraph: Long): Int
+    private external fun nGetCharCount(nativeParagraph: Long): Int
+    private external fun nGetBaseLevel(nativeParagraph: Long): Byte
+    private external fun nGetLevelsPtr(nativeParagraph: Long): Long
+    private external fun nGetOnwardRun(nativeParagraph: Long, charIndex: Int): BidiRun?
+
+    private external fun nCreateLine(
+        nativeParagraph: Long, charStart: Int, charEnd: Int
+    ): Long
+
     companion object {
         init {
             JniBridge.loadLibrary()
         }
 
-        /**
-         * Wraps a bidi paragraph object into a finalizable instance which is guaranteed to be
-         * disposed automatically by the GC when no longer in use. After calling this method,
-         * `dispose()` should not be called on either original object or returned object. Calling
-         * `dispose()` on returned object will throw an `UnsupportedOperationException`.
-         *
-         * **Note:** The behavior is undefined if the passed-in object is already disposed or
-         * wrapped into another finalizable instance.
-         *
-         * @param bidiParagraph The bidi paragraph object to wrap into a finalizable instance.
-         *
-         * @return The finalizable instance of the passed-in bidi paragraph object.
-         */
-        @JvmStatic
-        fun finalizable(bidiParagraph: BidiParagraph): BidiParagraph {
-            return when (bidiParagraph.javaClass) {
-                BidiParagraph::class.java -> Finalizable(bidiParagraph)
-                Finalizable::class.java -> bidiParagraph
-                else -> throw IllegalArgumentException(Constants.EXCEPTION_SUBCLASS_NOT_SUPPORTED)
-            }
-        }
-
-        /**
-         * Checks whether a paragraph object is finalizable or not.
-         *
-         * @param bidiParagraph The paragraph object to check.
-         *
-         * @return `true` if the passed-in bidi paragraph object is finalizable, `false` otherwise.
-         */
-        @JvmStatic
-        fun isFinalizable(bidiParagraph: BidiParagraph): Boolean {
-            return bidiParagraph.javaClass == Finalizable::class.java
-        }
-
         @JvmStatic private external fun nDispose(nativeParagraph: Long)
 
-        @JvmStatic private external fun nGetCharStart(nativeParagraph: Long): Int
-        @JvmStatic private external fun nGetCharEnd(nativeParagraph: Long): Int
-        @JvmStatic private external fun nGetCharCount(nativeParagraph: Long): Int
-
-        @JvmStatic private external fun nGetBaseLevel(nativeParagraph: Long): Byte
-        @JvmStatic private external fun nGetLevelsPtr(nativeParagraph: Long): Long
-        @JvmStatic private external fun nGetOnwardRun(nativeParagraph: Long, charIndex: Int): BidiRun?
-
-        @JvmStatic private external fun nCreateLine(
-            nativeParagraph: Long, charStart: Int, charEnd: Int
-        ): Long
     }
 }

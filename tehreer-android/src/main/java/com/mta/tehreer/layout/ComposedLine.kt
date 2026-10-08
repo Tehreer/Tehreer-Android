@@ -252,33 +252,33 @@ class ComposedLine internal constructor(
             "}"
     }
 
+    private external fun nGetCharStart(nativeLine: Long): Int
+    private external fun nGetCharEnd(nativeLine: Long): Int
+    private external fun nGetParagraphLevel(nativeLine: Long): Int
+    private external fun nIsBlock(nativeLine: Long): Boolean
+    private external fun nGetAscent(nativeLine: Long): Float
+    private external fun nGetDescent(nativeLine: Long): Float
+    private external fun nGetLeading(nativeLine: Long): Float
+    private external fun nGetWidth(nativeLine: Long): Float
+    private external fun nGetTrailingWhitespaceExtent(nativeLine: Long): Float
+    private external fun nGetOriginX(nativeLine: Long): Float
+    private external fun nGetOriginY(nativeLine: Long): Float
+    private external fun nGetRunCount(nativeLine: Long): Int
+    private external fun nGetRun(nativeLine: Long, index: Int): Long
+    private external fun nGetDistance(nativeLine: Long, charIndex: Int): Float
+    private external fun nEnumerateEdges(
+        nativeLine: Long, charStart: Int, charEnd: Int, collector: FloatCollector
+    )
+    private external fun nGetIndexOfCodeUnit(nativeLine: Long, distance: Float): Int
+    private external fun nGetPenOffset(
+        nativeLine: Long, flushFactor: Float, flushExtent: Float
+    ): Float
+    private external fun nGetBoundingBox(nativeLine: Long, nativeRenderer: Long): RectF
     private companion object {
         init {
             JniBridge.loadLibrary()
         }
 
         @JvmStatic external fun nDispose(nativeLine: Long)
-        @JvmStatic external fun nGetCharStart(nativeLine: Long): Int
-        @JvmStatic external fun nGetCharEnd(nativeLine: Long): Int
-        @JvmStatic external fun nGetParagraphLevel(nativeLine: Long): Int
-        @JvmStatic external fun nIsBlock(nativeLine: Long): Boolean
-        @JvmStatic external fun nGetAscent(nativeLine: Long): Float
-        @JvmStatic external fun nGetDescent(nativeLine: Long): Float
-        @JvmStatic external fun nGetLeading(nativeLine: Long): Float
-        @JvmStatic external fun nGetWidth(nativeLine: Long): Float
-        @JvmStatic external fun nGetTrailingWhitespaceExtent(nativeLine: Long): Float
-        @JvmStatic external fun nGetOriginX(nativeLine: Long): Float
-        @JvmStatic external fun nGetOriginY(nativeLine: Long): Float
-        @JvmStatic external fun nGetRunCount(nativeLine: Long): Int
-        @JvmStatic external fun nGetRun(nativeLine: Long, index: Int): Long
-        @JvmStatic external fun nGetDistance(nativeLine: Long, charIndex: Int): Float
-        @JvmStatic external fun nEnumerateEdges(
-            nativeLine: Long, charStart: Int, charEnd: Int, collector: FloatCollector
-        )
-        @JvmStatic external fun nGetIndexOfCodeUnit(nativeLine: Long, distance: Float): Int
-        @JvmStatic external fun nGetPenOffset(
-            nativeLine: Long, flushFactor: Float, flushExtent: Float
-        ): Float
-        @JvmStatic external fun nGetBoundingBox(nativeLine: Long, nativeRenderer: Long): RectF
     }
 }

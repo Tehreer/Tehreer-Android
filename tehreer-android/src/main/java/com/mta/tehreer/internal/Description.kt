@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Muhammad Tayyab Akram
+ * Copyright (C) 2023-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,17 +51,14 @@ internal class Description private constructor() {
     companion object {
         private const val NULL = "null"
 
-        @JvmStatic
         fun forObject(`object`: Any?): String {
             return `object`?.toString() ?: NULL
         }
 
-        @JvmStatic
         fun forByteArray(array: ByteArray): String {
             return forByteList(JByteArrayList(array, 0, array.size))
         }
 
-        @JvmStatic
         fun forByteList(list: ByteList?): String {
             if (list == null) {
                 return NULL
@@ -77,7 +74,6 @@ internal class Description private constructor() {
             return description.toString()
         }
 
-        @JvmStatic
         fun forIntList(list: IntList?): String {
             if (list == null) {
                 return NULL
@@ -93,7 +89,6 @@ internal class Description private constructor() {
             return description.toString()
         }
 
-        @JvmStatic
         fun forFloatList(list: FloatList?): String {
             if (list == null) {
                 return NULL
@@ -109,7 +104,6 @@ internal class Description private constructor() {
             return description.toString()
         }
 
-        @JvmStatic
         fun forPointList(list: PointList?): String {
             if (list == null) {
                 return NULL
@@ -126,7 +120,6 @@ internal class Description private constructor() {
             return description.toString()
         }
 
-        @JvmStatic
         fun <T> forIterator(iterator: Iterator<T>?): String {
             if (iterator == null) {
                 return NULL
@@ -142,7 +135,6 @@ internal class Description private constructor() {
             return description.toString()
         }
 
-        @JvmStatic
         fun <T> forIterable(iterable: Iterable<T>): String {
             return forIterator(iterable.iterator())
         }

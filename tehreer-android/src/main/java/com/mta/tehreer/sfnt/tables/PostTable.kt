@@ -35,8 +35,7 @@ class PostTable private constructor(
      */
     constructor(typeface: Typeface) : this(
         typeface,
-        SfntTables.readTable(typeface, "post", TABLE_LENGTH)
-            ?: throw RuntimeException("The typeface does not contain `post' table")
+        checkNotNull(SfntTables.readTable(typeface, "post", TABLE_LENGTH)) { "The typeface does not contain `post' table" }
     )
 
     fun version(): Int = table.readInt32(VERSION)
@@ -56,7 +55,7 @@ class PostTable private constructor(
             throw IndexOutOfBoundsException("Index: $index")
         }
 
-        return SfntTables.getGlyphName(typeface.coreHandle, index)
+        return SfntTables.getGlyphName(typeface.nativeTypeface, index, typeface)
     }
 
     companion object {
@@ -78,7 +77,6 @@ class PostTable private constructor(
          * @return A new `PostTable` object, or `null` if `post' table does not exist in the specified
          *         typeface.
          */
-        @JvmStatic
         fun from(typeface: Typeface): PostTable? {
             return SfntTables.readTable(typeface, "post", TABLE_LENGTH)?.let { PostTable(typeface, it) }
         }

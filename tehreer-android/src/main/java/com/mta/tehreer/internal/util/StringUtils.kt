@@ -19,7 +19,6 @@ package com.mta.tehreer.internal.util
 import android.text.GetChars
 
 internal object StringUtils {
-    @JvmStatic
     fun copyString(charSequence: CharSequence): String {
         val length = charSequence.length
         val chars = CharArray(length)

@@ -1024,7 +1024,6 @@ object Script {
      * @return
      *      The OpenType tag of specified script as an integer in big endian byte order.
      */
-    @JvmStatic
     fun getOpenTypeTag(@Value script: Int): Int {
         return Unicode.getScriptOpenTypeTag(script)
     }
