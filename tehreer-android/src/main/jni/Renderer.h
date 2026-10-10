@@ -22,6 +22,8 @@
 #include <Tehreer/TRDrawCallbacks.h>
 #include <Tehreer/TRRenderer.h>
 
+#include "JavaBridge.h"
+
 namespace Tehreer {
 
 /**
@@ -43,8 +45,13 @@ public:
     jobject drawer;
     jmethodID drawReplacement;
 
+    /* Sets the color of the paint, unless it already has it. */
+    void setColor(const JavaBridge &bridge, TRColor color);
+
 private:
     TRRendererRef m_renderer;
+    bool m_hasColor;
+    TRColor m_color;
 };
 
 }

@@ -348,18 +348,28 @@ static void drawGlyphImage(void *userData, TRGlyphImageRef image, TRPoint origin
 
     if (bitmap) {
         JavaBridge bridge(env);
-        jint saveCount = bridge.Canvas_save(drawing->canvas);
+        jint saveCount = 0;
 
+        /* The calls into Java are costly, so only the ones that are needed are made. */
         if (clip) {
+            saveCount = bridge.Canvas_save(drawing->canvas);
             bridge.Canvas_clipRect(drawing->canvas, clip->origin.x, clip->origin.y,
                                    clip->origin.x + clip->size.width,
                                    clip->origin.y + clip->size.height);
         }
 
-        bridge.Paint_setColor(drawing->paint, static_cast<jint>(color));
-        bridge.Canvas_drawScaledBitmap(drawing->canvas, bitmap, origin.x, origin.y, scaleX, scaleY,
-                                       drawing->paint);
-        bridge.Canvas_restoreToCount(drawing->canvas, saveCount);
+        drawing->setColor(bridge, color);
+
+        if (scaleX != 1.0f || scaleY != 1.0f) {
+            bridge.Canvas_drawScaledBitmap(drawing->canvas, bitmap, origin.x, origin.y, scaleX,
+                                           scaleY, drawing->paint);
+        } else {
+            bridge.Canvas_drawBitmap(drawing->canvas, bitmap, origin.x, origin.y, drawing->paint);
+        }
+
+        if (clip) {
+            bridge.Canvas_restoreToCount(drawing->canvas, saveCount);
+        }
 
         env->DeleteLocalRef(bitmap);
     }
@@ -370,7 +380,7 @@ static void fillRect(void *userData, TRRect rect, TRColor color)
     auto drawing = static_cast<Drawing *>(userData);
     JavaBridge bridge(drawing->env);
 
-    bridge.Paint_setColor(drawing->paint, static_cast<jint>(color));
+    drawing->setColor(bridge, color);
     bridge.Canvas_drawRect(drawing->canvas, rect.origin.x, rect.origin.y,
                            rect.origin.x + rect.size.width, rect.origin.y + rect.size.height,
                            drawing->paint);
@@ -400,6 +410,8 @@ Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject pa
     , drawer(drawer)
     , drawReplacement(nullptr)
     , m_renderer(renderer)
+    , m_hasColor(false)
+    , m_color(0)
 {
     TRDrawCallbacks callbacks = {};
     callbacks.drawGlyphImage = ::drawGlyphImage;
@@ -414,6 +426,15 @@ Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject pa
     }
 
     TRRendererSetDrawCallbacks(m_renderer, &callbacks, this);
+}
+
+void Drawing::setColor(const JavaBridge &bridge, TRColor color)
+{
+    if (!m_hasColor || m_color != color) {
+        bridge.Paint_setColor(paint, static_cast<jint>(color));
+        m_hasColor = true;
+        m_color = color;
+    }
 }
 
 Drawing::~Drawing()
