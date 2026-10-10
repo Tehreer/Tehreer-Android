@@ -19,6 +19,36 @@
 
 #include <jni.h>
 
+#include <Tehreer/TRDrawCallbacks.h>
+#include <Tehreer/TRRenderer.h>
+
+namespace Tehreer {
+
+/**
+ * Lets the draw functions of Core paint onto a canvas while it lives. It sets the draw callbacks of
+ * the renderer, and clears them at the end. The drawer is an optional object of Java that draws the
+ * replacements, which Core only positions.
+ */
+class Drawing {
+public:
+    Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject paint, jobject drawer);
+    ~Drawing();
+
+    Drawing(const Drawing &) = delete;
+    Drawing &operator=(const Drawing &) = delete;
+
+    JNIEnv *env;
+    jobject canvas;
+    jobject paint;
+    jobject drawer;
+    jmethodID drawReplacement;
+
+private:
+    TRRendererRef m_renderer;
+};
+
+}
+
 jint register_com_mta_tehreer_graphics_Renderer(JNIEnv *env);
 
 #endif

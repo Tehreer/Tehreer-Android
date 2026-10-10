@@ -19,7 +19,6 @@
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_layout_TypesetterInput(JNIEnv *env);
 jint register_com_mta_tehreer_layout_Typesetter(JNIEnv *env);
 
 #endif

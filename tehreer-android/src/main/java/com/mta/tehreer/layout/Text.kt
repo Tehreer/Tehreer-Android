@@ -17,26 +17,33 @@
 package com.mta.tehreer.layout
 
 import android.text.Spanned
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.LocaleSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.UnderlineSpan
 import android.text.style.MetricAffectingSpan
 import android.text.style.ReplacementSpan
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.JniBridge
+import com.mta.tehreer.layout.style.DecorationColorSpan
+import com.mta.tehreer.layout.style.OpenTypeFeaturesSpan
+import com.mta.tehreer.sfnt.ShapingEngine
 import java.util.IdentityHashMap
 import java.util.TreeMap
 
 /**
- * Gives a text to Core, to make a typesetter of it. The spans of the text are resolved into the
+ * Makes the text of Core for a typesetter. The spans of the text are resolved into the
  * attributes that Core knows, which are set on the ranges that the spans cover. Core merges the
  * ranges that end up with the same attributes, so that they are shaped together.
  */
-internal class TypesetterInput(
+internal class Text(
     text: String,
     private val spanned: Spanned,
     defaultSpans: List<Any>
 ) {
-    /** The handle of the typesetter of Core, which the caller has to dispose. */
-    val nativeTypesetter: Long
+    /** The handle of the text of Core, which the creation of a typesetter takes over. */
+    val nativeText: Long
 
     /** The typefaces of the text, by the handles that their runs have. */
     val typefaces = HashMap<Long, Typeface>()
@@ -46,19 +53,20 @@ internal class TypesetterInput(
 
     init {
         val textHandle = nCreateText(text)
-        check(textHandle != 0L) { "Could not create the typesetter" }
+        check(textHandle != 0L) { "Could not create the text" }
 
         try {
             setRunAttributes(textHandle, RunStyle.initial(defaultSpans))
             setColorAttributes(textHandle)
+            setDecorationAttributes(textHandle)
+            setShapingAttributes(textHandle)
             setParagraphAttributes(textHandle)
         } catch (throwable: Throwable) {
             nDisposeText(textHandle)
             throw throwable
         }
 
-        nativeTypesetter = nCreateTypesetter(textHandle)
-        check(nativeTypesetter != 0L) { "Could not create the typesetter" }
+        nativeText = textHandle
     }
 
     private fun setRunAttributes(textHandle: Long, initial: RunStyle) {
@@ -123,6 +131,45 @@ internal class TypesetterInput(
         }
     }
 
+    private fun setDecorationAttributes(textHandle: Long) {
+        for (span in spanned.getSpans(0, spanned.length, BackgroundColorSpan::class.java)) {
+            forEachRange(span) { start, end -> nSetBackgroundColor(textHandle, start, end, span.backgroundColor) }
+        }
+        for (span in spanned.getSpans(0, spanned.length, UnderlineSpan::class.java)) {
+            forEachRange(span) { start, end -> nSetUnderline(textHandle, start, end, true) }
+        }
+        for (span in spanned.getSpans(0, spanned.length, StrikethroughSpan::class.java)) {
+            forEachRange(span) { start, end -> nSetStrikethrough(textHandle, start, end, true) }
+        }
+        for (span in spanned.getSpans(0, spanned.length, DecorationColorSpan::class.java)) {
+            forEachRange(span) { start, end -> nSetDecorationColor(textHandle, start, end, span.color) }
+        }
+    }
+
+    private fun setShapingAttributes(textHandle: Long) {
+        for (span in spanned.getSpans(0, spanned.length, LocaleSpan::class.java)) {
+            val locale = span.locale ?: continue
+            val languageTag = ShapingEngine.getLanguageTag(locale.toLanguageTag())
+
+            forEachRange(span) { start, end -> nSetLanguage(textHandle, start, end, languageTag) }
+        }
+        for (span in spanned.getSpans(0, spanned.length, OpenTypeFeaturesSpan::class.java)) {
+            val tags = span.features.map { it.tag() }.toIntArray()
+            val values = span.features.map { it.value() }.toIntArray()
+
+            forEachRange(span) { start, end -> nSetFontFeatures(textHandle, start, end, tags, values) }
+        }
+    }
+
+    private inline fun forEachRange(span: Any, action: (start: Int, end: Int) -> Unit) {
+        val start = spanned.getSpanStart(span)
+        val end = spanned.getSpanEnd(span)
+
+        if (start < end) {
+            action(start, end)
+        }
+    }
+
     private fun setParagraphAttributes(textHandle: Long) {
         for (paragraph in ParagraphInput.of(spanned)) {
             val start = paragraph.start
@@ -150,6 +197,14 @@ internal class TypesetterInput(
         @JvmStatic external fun nSetScaleX(textHandle: Long, start: Int, end: Int, value: Float)
         @JvmStatic external fun nSetBaselineOffset(textHandle: Long, start: Int, end: Int, value: Float)
         @JvmStatic external fun nSetForegroundColor(textHandle: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetBackgroundColor(textHandle: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetUnderline(textHandle: Long, start: Int, end: Int, value: Boolean)
+        @JvmStatic external fun nSetStrikethrough(textHandle: Long, start: Int, end: Int, value: Boolean)
+        @JvmStatic external fun nSetDecorationColor(textHandle: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetLanguage(textHandle: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetFontFeatures(
+            textHandle: Long, start: Int, end: Int, tags: IntArray, values: IntArray
+        )
         @JvmStatic external fun nCreateReplacement(holder: Any, isBlock: Boolean): Long
         @JvmStatic external fun nSetReplacement(textHandle: Long, start: Int, end: Int, replacement: Long)
         @JvmStatic external fun nReleaseReplacement(replacement: Long)
@@ -157,6 +212,5 @@ internal class TypesetterInput(
         @JvmStatic external fun nSetFirstLineHeadIndent(textHandle: Long, start: Int, end: Int, value: Float)
         @JvmStatic external fun nSetHeadIndent(textHandle: Long, start: Int, end: Int, value: Float)
         @JvmStatic external fun nSetFirstIndentLineCount(textHandle: Long, start: Int, end: Int, value: Int)
-        @JvmStatic external fun nCreateTypesetter(textHandle: Long): Long
     }
 }

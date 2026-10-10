@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__FRAME_RESOLVER_H
-#define _TEHREER__FRAME_RESOLVER_H
+package com.mta.tehreer.layout.style
 
-#include <jni.h>
+import androidx.annotation.ColorInt
 
-jint register_com_mta_tehreer_layout_FrameResolver(JNIEnv *env);
-
-#endif
+/**
+ * Sets the color of the underline and the strikethrough of the text it is applied to. The color of
+ * the text is used for them if this span is not applied.
+ */
+class DecorationColorSpan(@ColorInt val color: Int)

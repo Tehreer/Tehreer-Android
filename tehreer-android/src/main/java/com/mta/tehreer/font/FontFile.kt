@@ -93,27 +93,12 @@ class FontFile private constructor(private val nativeFontFile: Long) {
      * @return Named typefaces of this font file.
      */
     val typefaces: List<Typeface> by lazy {
-        val allTypefaces = ArrayList<Typeface>()
-
-        for (i in 0 until nGetFaceCount(nativeFontFile)) {
-            val firstTypeface = Typeface(nCreateTypeface(nativeFontFile, i))
-            val namedStyles = firstTypeface.namedStyles
-
-            if (namedStyles.isNullOrEmpty()) {
-                allTypefaces.add(firstTypeface)
-            } else {
-                for (namedStyle in namedStyles) {
-                    allTypefaces.add(firstTypeface.getVariationInstance(namedStyle.coordinates())!!)
-                }
-            }
-        }
-
-        allTypefaces
+        List(nGetTypefaceCount(nativeFontFile)) { Typeface(nCreateTypeface(nativeFontFile, it)) }
     }
 
-    private external fun nGetFaceCount(nativeFontFile: Long): Int
+    private external fun nGetTypefaceCount(nativeFontFile: Long): Int
 
-    private external fun nCreateTypeface(nativeFontFile: Long, faceIndex: Int): Long
+    private external fun nCreateTypeface(nativeFontFile: Long, index: Int): Long
 
     private companion object {
         init {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Muhammad Tayyab Akram
+ * Copyright (C) 2017-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__FRAME_RESOLVER_H
-#define _TEHREER__FRAME_RESOLVER_H
+package com.mta.tehreer.graphics
 
-#include <jni.h>
-
-jint register_com_mta_tehreer_layout_FrameResolver(JNIEnv *env);
-
-#endif
+/**
+ * A size at which a typeface has the images of its glyphs.
+ *
+ * @property pixelWidth The number of pixels in the em square, horizontally.
+ * @property pixelHeight The number of pixels in the em square, vertically.
+ */
+data class BitmapStrike(val pixelWidth: Float, val pixelHeight: Float)

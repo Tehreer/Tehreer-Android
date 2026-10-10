@@ -17,6 +17,7 @@
 package com.mta.tehreer.layout
 
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.RectF
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.collections.IntList
@@ -215,14 +216,6 @@ class GlyphRun internal constructor(
         }
     }
 
-    private fun checkGlyphRange(glyphStart: Int, glyphEnd: Int) {
-        val glyphCount = glyphCount
-
-        require(glyphStart >= 0) { "Glyph Start: $glyphStart" }
-        require(glyphEnd <= glyphCount) { "Glyph End: $glyphEnd, Glyph Count: $glyphCount" }
-        require(glyphStart <= glyphEnd) { "Bad Range: [$glyphStart, $glyphEnd)" }
-    }
-
     /**
      * Returns the index to the first character of specified cluster in source string. In most
      * cases, it would be the same index as the specified one. But if the character occurs within a
@@ -257,38 +250,6 @@ class GlyphRun internal constructor(
         checkCharIndex(charIndex)
 
         return nGetClusterEnd(nativeRun, charIndex)
-    }
-
-    /**
-     * Returns the index of leading glyph related to the specified cluster. It will come after the
-     * trailing glyph, if the characters of this run logically flow backward.
-     *
-     * @param charIndex The index of a character in source string.
-     * @return The index of leading glyph related to the specified cluster.
-     *
-     * @throws IllegalArgumentException if `charIndex` is less than run start or greater than or
-     *         equal to run end.
-     */
-    fun getLeadingGlyphIndex(charIndex: Int): Int {
-        checkCharIndex(charIndex)
-
-        return nGetLeadingGlyphIndex(nativeRun, charIndex)
-    }
-
-    /**
-     * Returns the index of trailing glyph related to the specified cluster. It will come before the
-     * leading glyph, if the characters of this run logically flow backward.
-     *
-     * @param charIndex The index of a character in source string.
-     * @return The index of trailing glyph related to the specified cluster.
-     *
-     * @throws IllegalArgumentException if `charIndex` is less than run start or greater than or
-     *         equal to run end.
-     */
-    fun getTrailingGlyphIndex(charIndex: Int): Int {
-        checkCharIndex(charIndex)
-
-        return nGetTrailingGlyphIndex(nativeRun, charIndex)
     }
 
     /**
@@ -331,182 +292,34 @@ class GlyphRun internal constructor(
         return nGetIndexOfCodeUnit(nativeRun, distance)
     }
 
-    internal fun computeBoundingBox(renderer: Renderer): RectF {
-        return computeBoundingBox(renderer, 0, glyphCount)
-    }
-
     /**
-     * Calculates the bounding box for the given glyph range in this run. The bounding box is a
-     * rectangle that encloses the paths of this run's glyphs in the given range, as tightly as
-     * possible.
+     * Calculates the bounding box of this run. The bounding box is a rectangle that encloses the
+     * paths of this run's glyphs, as tightly as possible.
      *
      * @param renderer The renderer to use for calculating the bounding box. This is required
      *                 because the renderer could have settings in it that would cause changes in
      *                 the bounding box.
-     * @param glyphStart The index to the first glyph being measured.
-     * @param glyphEnd The index after the last glyph being measured.
-     * @return A rectangle that tightly encloses the paths of this run's glyphs in the given range.
-     *
-     * @throws IllegalArgumentException if `glyphStart` is negative, or `glyphEnd` is greater than
-     *         total number of glyphs in the run, or `glyphStart` is greater than `glyphEnd`.
+     * @return A rectangle that tightly encloses the paths of this run's glyphs.
      */
-    fun computeBoundingBox(renderer: Renderer, glyphStart: Int, glyphEnd: Int): RectF {
-        checkGlyphRange(glyphStart, glyphEnd)
-
-        val box = nGetBoundingBox(nativeRun, glyphStart, glyphEnd, renderer.nativeHandle)
-        renderer.syncNative()
-
-        return box
-    }
-
-    // region Drawing
-
-    private class ClusterRange(
-        val actualStart: Int,
-        val actualEnd: Int,
-        var glyphStart: Int,
-        var glyphEnd: Int
-    )
-
-    private val isRTL: Boolean
-        get() = (nGetBidiLevel(nativeRun) and 1) == 1
-
-    private fun getLeadingEdge(fromIndex: Int, toIndex: Int): Float {
-        return nGetDistance(nativeRun, if (!isBackward) fromIndex else toIndex)
-    }
-
-    private fun getClusterRange(charIndex: Int, exclusion: ClusterRange?): ClusterRange? {
-        val leadingIndex = nGetLeadingGlyphIndex(nativeRun, charIndex)
-        val trailingIndex = nGetTrailingGlyphIndex(nativeRun, charIndex)
-
-        val cluster = ClusterRange(
-            nGetClusterStart(nativeRun, charIndex),
-            nGetClusterEnd(nativeRun, charIndex),
-            minOf(leadingIndex, trailingIndex),
-            maxOf(leadingIndex, trailingIndex) + 1
-        )
-
-        if (exclusion != null) {
-            val minStart = minOf(exclusion.glyphStart, cluster.glyphEnd)
-            val maxEnd = maxOf(cluster.glyphStart, exclusion.glyphEnd)
-
-            cluster.glyphStart = if (!isBackward) maxEnd else cluster.glyphStart
-            cluster.glyphEnd = if (isBackward) minStart else cluster.glyphEnd
-        }
-
-        return if (cluster.glyphStart < cluster.glyphEnd) cluster else null
-    }
-
-    private fun drawGlyphs(renderer: Renderer, canvas: Canvas, glyphStart: Int, glyphEnd: Int) {
-        renderer.drawGlyphs(
-            canvas,
-            glyphIds.subList(glyphStart, glyphEnd),
-            glyphOffsets.subList(glyphStart, glyphEnd),
-            glyphAdvances.subList(glyphStart, glyphEnd)
-        )
-    }
-
-    private fun drawEdgeCluster(renderer: Renderer, canvas: Canvas, cluster: ClusterRange) {
-        val charStart = charStart
-        val charEnd = charEnd
-        val startClipped = cluster.actualStart < charStart
-        val endClipped = cluster.actualEnd > charEnd
-
-        val clipLeft: Float
-        val clipRight: Float
-
-        if (!isRTL) {
-            clipLeft = if (startClipped) nGetDistance(nativeRun, charStart) else -Float.MAX_VALUE
-            clipRight = if (endClipped) nGetDistance(nativeRun, charEnd) else Float.MAX_VALUE
-        } else {
-            clipRight = if (startClipped) nGetDistance(nativeRun, charStart) else Float.MAX_VALUE
-            clipLeft = if (endClipped) nGetDistance(nativeRun, charEnd) else -Float.MAX_VALUE
-        }
-
-        canvas.save()
-        canvas.clipRect(clipLeft, -Float.MAX_VALUE, clipRight, Float.MAX_VALUE)
-        canvas.translate(getLeadingEdge(cluster.actualStart, cluster.actualEnd), 0.0f)
-
-        drawGlyphs(renderer, canvas, cluster.glyphStart, cluster.glyphEnd)
-
-        canvas.restore()
+    internal fun computeBoundingBox(renderer: Renderer): RectF {
+        return nGetBoundingBox(nativeRun, renderer.nativeHandle)
     }
 
     /**
-     * Draws this run completely onto the given `canvas` using the given `renderer`.
+     * Draws this run onto the given `canvas` using the given `renderer`, through Core. The
+     * background, the glyphs and the decorations of the run are drawn, in that order.
      *
      * @param renderer The renderer to use for drawing this run.
      * @param canvas The canvas onto which to draw this run.
+     * @param x The x- position at which the run starts on its baseline.
+     * @param y The y- position of the baseline of the run.
      */
-    fun draw(renderer: Renderer, canvas: Canvas) {
-        val replacement = replacement
-        if (replacement != null) {
-            replacement.draw(canvas, ascent, descent)
-            return
-        }
-
-        renderer.typeface = typeface
-        renderer.typeSize = typeSize
-        renderer.scaleX = scaleX
-        renderer.writingDirection = writingDirection
-
-        val defaultFillColor = renderer.fillColor
-        if (nHasForegroundColor(nativeRun)) {
-            renderer.fillColor = nGetForegroundColor(nativeRun)
-        }
-
-        val isBackward = isBackward
-        val firstIndex = charStart
-        val lastIndex = charEnd - 1
-
-        var firstCluster: ClusterRange? = null
-        var lastCluster: ClusterRange? = null
-
-        if (startExtraLength > 0) {
-            firstCluster = getClusterRange(firstIndex, null)
-        }
-        if (endExtraLength > 0) {
-            lastCluster = getClusterRange(lastIndex, firstCluster)
-        }
-
-        var glyphStart = 0
-        var glyphEnd = glyphCount
-
-        var chunkStart = firstIndex
-        var chunkEnd = lastIndex + 1
-
-        if (firstCluster != null) {
-            drawEdgeCluster(renderer, canvas, firstCluster)
-
-            // Exclude first cluster characters.
-            chunkStart = firstCluster.actualEnd
-            // Exclude first cluster glyphs.
-            glyphStart = if (!isBackward) firstCluster.glyphEnd else glyphStart
-            glyphEnd = if (isBackward) firstCluster.glyphStart else glyphEnd
-        }
-        if (lastCluster != null) {
-            // Exclude last cluster characters.
-            chunkEnd = lastCluster.actualStart
-            // Exclude last cluster glyphs.
-            glyphEnd = if (!isBackward) lastCluster.glyphStart else glyphEnd
-            glyphStart = if (isBackward) lastCluster.glyphEnd else glyphStart
-        }
-
-        canvas.save()
-        canvas.translate(getLeadingEdge(chunkStart, chunkEnd), 0.0f)
-
-        drawGlyphs(renderer, canvas, glyphStart, glyphEnd)
-
-        canvas.restore()
-
-        if (lastCluster != null) {
-            drawEdgeCluster(renderer, canvas, lastCluster)
-        }
-
-        renderer.fillColor = defaultFillColor
+    fun draw(renderer: Renderer, canvas: Canvas, x: Float, y: Float) {
+        nDraw(
+            nativeRun, renderer.nativeHandle, canvas, renderer.preparePaint(canvas),
+            ReplacementDrawer(holders), x, y
+        )
     }
-
-    // endregion
 
     override fun toString(): String {
         return "GlyphRun{charStart=$charStart" +
@@ -556,13 +369,13 @@ class GlyphRun internal constructor(
     private external fun nGetClusterMapPtr(nativeRun: Long): Long
     private external fun nGetClusterStart(nativeRun: Long, charIndex: Int): Int
     private external fun nGetClusterEnd(nativeRun: Long, charIndex: Int): Int
-    private external fun nGetLeadingGlyphIndex(nativeRun: Long, charIndex: Int): Int
-    private external fun nGetTrailingGlyphIndex(nativeRun: Long, charIndex: Int): Int
+    private external fun nDraw(
+        nativeRun: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
+        x: Float, y: Float
+    )
     private external fun nGetDistance(nativeRun: Long, charIndex: Int): Float
     private external fun nGetIndexOfCodeUnit(nativeRun: Long, distance: Float): Int
-    private external fun nGetBoundingBox(
-        nativeRun: Long, glyphStart: Int, glyphEnd: Int, nativeRenderer: Long
-    ): RectF
+    private external fun nGetBoundingBox(nativeRun: Long, nativeRenderer: Long): RectF
     private companion object {
         init {
             JniBridge.loadLibrary()

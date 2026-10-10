@@ -22,6 +22,7 @@ import android.graphics.Paint.FontMetricsInt
 import android.text.style.ReplacementSpan
 import androidx.annotation.Keep
 import com.mta.tehreer.layout.style.ViewSpan
+import java.util.NavigableMap
 
 /**
  * Holds a replacement span for Core, which asks it for the room of the span whenever a line is
@@ -76,5 +77,21 @@ internal class ReplacementHolder(
             0, (descent + 0.5f).toInt(),
             Paint()
         )
+    }
+}
+
+/**
+ * Draws the replacements for Core, which positions them while it draws a run, a line or a frame. A
+ * replacement is looked up by the start of its run.
+ */
+@Keep
+internal class ReplacementDrawer(private val holders: NavigableMap<Int, ReplacementHolder>) {
+    /** Draws the replacement whose run starts at the given position on its baseline. */
+    @Keep
+    fun drawReplacement(canvas: Canvas, charStart: Int, x: Float, y: Float, ascent: Float, descent: Float) {
+        holders.floorEntry(charStart)?.value?.let {
+            canvas.translate(x, y)
+            it.draw(canvas, ascent, descent)
+        }
     }
 }

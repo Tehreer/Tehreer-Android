@@ -27,6 +27,25 @@
 
 namespace Tehreer {
 
+/** Reads the settings of the OpenType features from the arrays of their tags and their values. */
+inline std::vector<TROpenTypeFeature> readOpenTypeFeatures(JNIEnv *env, jintArray tags, jintArray values)
+{
+    jsize count = env->GetArrayLength(tags);
+    std::vector<jint> tagItems(count);
+    std::vector<jint> valueItems(count);
+    std::vector<TROpenTypeFeature> features(count);
+
+    env->GetIntArrayRegion(tags, 0, count, tagItems.data());
+    env->GetIntArrayRegion(values, 0, count, valueItems.data());
+
+    for (jsize i = 0; i < count; i++) {
+        features[i].tag = static_cast<TRTag>(tagItems[i]);
+        features[i].value = static_cast<TRUInt32>(valueItems[i]);
+    }
+
+    return features;
+}
+
 /**
  * Shapes text with the shaping engine of Core. The engine of Core has no getters, so the settings
  * are kept here too.
@@ -49,9 +68,7 @@ public:
     uint32_t languageTag() const { return m_languageTag; }
     void setLanguageTag(uint32_t languageTag);
 
-    /* The features are given one by one, and take effect together when they are applied. */
-    void addOpenTypeFeature(uint32_t tag, uint16_t value);
-    void applyOpenTypeFeatures();
+    void setOpenTypeFeatures(const std::vector<TROpenTypeFeature> &features);
 
     TRShapingOrder shapingOrder() const { return m_shapingOrder; }
     void setShapingOrder(TRShapingOrder shapingOrder);
@@ -68,7 +85,6 @@ private:
     uint32_t m_languageTag;
     TRShapingOrder m_shapingOrder;
     TRWritingDirection m_writingDirection;
-    std::vector<TROpenTypeFeature> m_pendingFeatures;
 };
 
 }

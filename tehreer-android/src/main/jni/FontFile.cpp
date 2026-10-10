@@ -111,15 +111,18 @@ static void release(JNIEnv *env, jclass clazz, jlong fontFileHandle)
     TRFontFileRelease(toFontFile(fontFileHandle));
 }
 
-static jint getFaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
+static jint getTypefaceCount(JNIEnv *env, jobject obj, jlong fontFileHandle)
 {
-    return static_cast<jint>(TRFontFileGetFaceCount(toFontFile(fontFileHandle)));
+    return static_cast<jint>(TRFontFileGetTypefaceCount(toFontFile(fontFileHandle)));
 }
 
-static jlong createTypeface(JNIEnv *env, jobject obj, jlong fontFileHandle, jint faceIndex)
+static jlong createTypeface(JNIEnv *env, jobject obj, jlong fontFileHandle, jint index)
 {
-    return reinterpret_cast<jlong>(TRTypefaceCreate(toFontFile(fontFileHandle),
-                                                    static_cast<TRUInteger>(faceIndex)));
+    TRTypefaceRef typeface = TRFontFileGetTypeface(toFontFile(fontFileHandle),
+                                                   static_cast<TRUInteger>(index));
+
+    /* The typeface of a font file is not retained for the caller, and the wrapper owns its handle. */
+    return reinterpret_cast<jlong>(typeface ? TRTypefaceRetain(typeface) : nullptr);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
@@ -127,7 +130,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nCreateFromPath", "(Ljava/lang/String;)J", (void *)createFromPath },
     { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nRelease", "(J)V", (void *)release },
-    { "nGetFaceCount", "(J)I", (void *)getFaceCount },
+    { "nGetTypefaceCount", "(J)I", (void *)getTypefaceCount },
     { "nCreateTypeface", "(JI)J", (void *)createTypeface },
 };
 

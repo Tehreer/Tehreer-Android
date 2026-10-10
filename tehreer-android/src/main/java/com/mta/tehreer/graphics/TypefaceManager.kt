@@ -13,158 +13,203 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.mta.tehreer.graphics
 
+import com.mta.tehreer.internal.JniBridge
+
 /**
- * The `TypefaceManager` class provides management activities related to typefaces.
+ * The `TypefaceManager` class provides management activities related to typefaces. The registry
+ * itself lives in Tehreer Core, which identifies typefaces by integer tags, groups them into
+ * families and matches them to a style as described by CSS Fonts Level 4.
  */
 object TypefaceManager {
-    private val tags = HashMap<Any, Typeface>()
-    private val typefaces = ArrayList<Typeface>()
-    private var sorted = false
+    // Core hands out native typefaces, and this maps them back to the objects that were registered.
+    private val registered = HashMap<Long, Typeface>()
 
-    private val comparator = Comparator<Typeface> { first, second ->
-        val result = first.familyName.compareTo(second.familyName, ignoreCase = true)
-
-        if (result == 0) first.styleName.compareTo(second.styleName, ignoreCase = true) else result
+    init {
+        JniBridge.loadLibrary()
     }
 
     /**
      * Registers a typeface in `TypefaceManager`.
      *
      * @param typeface The typeface that will be registered.
-     * @param tag An optional tag to identify the typeface.
+     * @param tag An optional positive tag to identify the typeface, or zero for none.
+     * @param familyId An optional positive ID of the family that the typeface belongs to, or zero
+     *        to group it with the typefaces that have no family ID and the same family name.
      *
      * @throws IllegalArgumentException if `typeface` is already registered, or `tag` is already
      *         taken.
      */
-    fun registerTypeface(typeface: Typeface, tag: Any?) {
+    @JvmOverloads
+    fun registerTypeface(typeface: Typeface, tag: Int = 0, familyId: Int = 0) {
+        require(tag >= 0) { "The tag is negative" }
+        require(familyId >= 0) { "The family ID is negative" }
+
         synchronized(this) {
-            require(!typefaces.contains(typeface)) { "This typeface is already registered" }
-
-            if (tag != null) {
-                require(!tags.containsKey(tag)) { "This tag is already taken" }
-
-                tags[tag] = typeface
-                typeface.tag = tag
+            require(nRegisterTypeface(typeface.nativeTypeface, tag, familyId)) {
+                "This typeface is already registered, or the tag is already taken"
             }
 
-            sorted = false
-            typefaces.add(typeface)
+            registered[typeface.nativeTypeface] = typeface
         }
     }
 
     /**
-     * Unregisters a typeface in `TypefaceManager`.
+     * Unregisters a typeface from `TypefaceManager`.
      *
-     * @param typeface The typeface to unregister.
+     * @param typeface The typeface that will be unregistered.
      *
      * @throws IllegalArgumentException if `typeface` is not registered.
      */
     fun unregisterTypeface(typeface: Typeface) {
         synchronized(this) {
-            require(typefaces.remove(typeface)) { "This typeface is not registered" }
+            require(nUnregisterTypeface(typeface.nativeTypeface)) { "This typeface is not registered" }
 
-            typeface.tag?.let { tags.remove(it) }
-            typeface.tag = null
+            registered.remove(typeface.nativeTypeface)
         }
     }
 
     /**
-     * Returns the typeface registered against the specified tag.
+     * Returns the typeface that is registered with the given tag.
      *
-     * @param tag The tag object that identifies the typeface.
-     * @return The registered typeface, or `null` if no typeface is registered against the specified
-     *         tag.
+     * @param tag The tag of the typeface.
+     * @return The typeface registered with the given tag, or `null` if there is none.
      */
-    fun getTypeface(tag: Any): Typeface? {
+    fun getTypeface(tag: Int): Typeface? {
         synchronized(this) {
-            return tags[tag]
+            return registered[nGetTypeface(tag)]
         }
     }
 
     /**
      * Returns the tag of a registered typeface.
      *
-     * @param typeface The typeface whose tag is returned.
-     * @return The tag of the typeface, or `null` if no tag was specified while registration.
+     * @param typeface The typeface whose tag is desired.
+     * @return The tag of the typeface, or zero if it has none.
      *
      * @throws IllegalArgumentException if `typeface` is not registered.
      */
-    fun getTypefaceTag(typeface: Typeface): Any? {
+    fun getTypefaceTag(typeface: Typeface): Int {
         synchronized(this) {
-            require(typefaces.contains(typeface)) { "This typeface is not registered" }
+            require(registered.containsKey(typeface.nativeTypeface)) { "This typeface is not registered" }
 
-            return typeface.tag
+            return nGetTypefaceTag(typeface.nativeTypeface)
         }
     }
 
     /**
-     * Looks for a type family having specified family name.
+     * Returns the family whose name matches the given one, ignoring the case.
      *
      * @param familyName The name of the family.
-     * @return A type family having specified family name.
+     * @return The family with the given name, or `null` if no typeface has it.
      */
     fun getTypeFamily(familyName: String): TypeFamily? {
-        val entries = synchronized(this) {
-            sortTypefaces()
-
-            typefaces.filter { it.familyName.equals(familyName, ignoreCase = true) }
-        }
-
-        return if (entries.isNotEmpty()) TypeFamily(familyName, entries) else null
+        return getAvailableFamilies().firstOrNull { it.familyName.equals(familyName, ignoreCase = true) }
     }
 
     /**
-     * Looks for a registered typeface having specified full name.
+     * Returns the typeface of a family that is closest to the given style.
+     *
+     * @param familyName The name of the family, which is matched ignoring the case.
+     * @param typeWidth The typographic width of desired typeface.
+     * @param typeWeight The typographic weight of desired typeface.
+     * @param typeSlope The typographic slope of desired typeface.
+     * @return The best matching typeface, or `null` if no typeface has the family name.
+     */
+    fun getTypefaceByStyle(
+        familyName: String, typeWidth: TypeWidth, typeWeight: TypeWeight, typeSlope: TypeSlope
+    ): Typeface? {
+        synchronized(this) {
+            val byName = nGetMatchingTypefaceByFamilyName(
+                familyName, typeWidth.value, typeWeight.value, typeSlope.ordinal
+            )
+
+            if (registered.containsKey(byName)) {
+                return registered[byName]
+            }
+
+            // The typefaces that have a family ID are not matched by the name of their family.
+            val family = getAvailableFamilies().firstOrNull {
+                it.familyId != 0 && it.familyName.equals(familyName, ignoreCase = true)
+            }
+
+            return family?.let { getTypefaceByFamilyId(it.familyId, typeWidth, typeWeight, typeSlope) }
+        }
+    }
+
+    /**
+     * Returns the registered typeface that has the given full name, ignoring the case.
      *
      * @param fullName The full name of the typeface.
-     * @return The typeface having specified full name, or `null` if no such typeface is registered.
+     * @return The typeface with the given full name, or `null` if there is none.
      */
     fun getTypefaceByName(fullName: String): Typeface? {
-        synchronized(this) {
-            return typefaces.firstOrNull { it.fullName.equals(fullName, ignoreCase = true) }
-        }
+        return getAvailableTypefaces().firstOrNull { it.fullName.equals(fullName, ignoreCase = true) }
     }
 
     /**
-     * Returns a list of available type families sorted by their names in ascending order.
+     * Returns the families of the registered typefaces, ordered by name.
      *
-     * @return A list of available type families.
+     * @return The list of the available families.
      */
     fun getAvailableFamilies(): List<TypeFamily> {
-        val familyMap = java.util.TreeMap<String, MutableList<Typeface>>(String.CASE_INSENSITIVE_ORDER)
-
         synchronized(this) {
-            sortTypefaces()
+            val families = nGetFamilies()
+            val ids = families[0] as IntArray
+            @Suppress("UNCHECKED_CAST")
+            val names = families[1] as Array<String>
+            val typefaces = getAvailableTypefaces()
 
-            for (typeface in typefaces) {
-                familyMap.getOrPut(typeface.familyName) { ArrayList() }.add(typeface)
-            }
+            return ids.indices.map { index ->
+                val id = ids[index]
+                val name = names[index]
+                val members = typefaces.filter {
+                    if (id != 0) {
+                        nGetTypefaceFamilyId(it.nativeTypeface) == id
+                    } else {
+                        nGetTypefaceFamilyId(it.nativeTypeface) == 0 &&
+                            it.familyName.equals(name, ignoreCase = true)
+                    }
+                }
+
+                TypeFamily(name, id, members)
+            }.filter { it.typefaces.isNotEmpty() }
         }
-
-        return familyMap.map { TypeFamily(it.key, it.value) }
     }
 
     /**
-     * Returns a list of available typefaces sorted by their family and style names in ascending
-     * order.
+     * Returns the registered typefaces, ordered by family name and then by style name.
      *
-     * @return A list of available typefaces.
+     * @return The list of the available typefaces.
      */
     fun getAvailableTypefaces(): List<Typeface> {
         synchronized(this) {
-            sortTypefaces()
-
-            return ArrayList(typefaces)
+            return nGetTypefaces().toList().mapNotNull { registered[it] }
         }
     }
 
-    private fun sortTypefaces() {
-        if (!sorted) {
-            typefaces.sortWith(comparator)
-            sorted = true
+    internal fun getTypefaceByFamilyId(
+        familyId: Int, typeWidth: TypeWidth, typeWeight: TypeWeight, typeSlope: TypeSlope
+    ): Typeface? {
+        synchronized(this) {
+            return registered[nGetMatchingTypefaceByFamilyId(
+                familyId, typeWidth.value, typeWeight.value, typeSlope.ordinal
+            )]
         }
     }
+
+    private external fun nRegisterTypeface(nativeTypeface: Long, tag: Int, familyId: Int): Boolean
+    private external fun nUnregisterTypeface(nativeTypeface: Long): Boolean
+    private external fun nGetTypeface(tag: Int): Long
+    private external fun nGetTypefaceTag(nativeTypeface: Long): Int
+    private external fun nGetTypefaceFamilyId(nativeTypeface: Long): Int
+    private external fun nGetMatchingTypefaceByFamilyId(
+        familyId: Int, width: Int, weight: Int, slope: Int
+    ): Long
+    private external fun nGetMatchingTypefaceByFamilyName(
+        familyName: String, width: Int, weight: Int, slope: Int
+    ): Long
+    private external fun nGetTypefaces(): LongArray
+    private external fun nGetFamilies(): Array<Any>
 }

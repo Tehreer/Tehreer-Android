@@ -184,6 +184,7 @@ set(FILE_LIST
     BidiParagraph.cpp
     ComposedLine.cpp
     FontFile.cpp
+    ComposedFrame.cpp
     FrameResolver.cpp
     GlyphRun.cpp
     JavaBridge.cpp
@@ -196,7 +197,9 @@ set(FILE_LIST
     StreamUtils.cpp
     Tehreer.cpp
     Typeface.cpp
+    TypefaceManager.cpp
     Typesetter.cpp
+    Text.cpp
     Unicode.cpp
 )
 

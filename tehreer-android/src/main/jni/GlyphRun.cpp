@@ -21,19 +21,18 @@
 #include "GlyphRun.h"
 #include "JavaBridge.h"
 #include "LayoutHandles.h"
+#include "Renderer.h"
 
 using namespace Tehreer;
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRGlyphRunGetCodeUnitRange(toRun(handle)).index);
+    return static_cast<jint>(TRGlyphRunGetCodeUnitStart(toRun(handle)));
 }
 
 static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
-    TRRange range = TRGlyphRunGetCodeUnitRange(toRun(handle));
-
-    return static_cast<jint>(range.index + range.length);
+    return static_cast<jint>(TRGlyphRunGetCodeUnitEnd(toRun(handle)));
 }
 
 static jint getStartExtraLength(JNIEnv *env, jobject obj, jlong handle)
@@ -173,35 +172,38 @@ static jint getClusterEnd(JNIEnv *env, jobject obj, jlong handle, jint index)
     return static_cast<jint>(TRGlyphRunGetClusterEnd(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jint getLeadingGlyphIndex(JNIEnv *env, jobject obj, jlong handle, jint index)
-{
-    return static_cast<jint>(TRGlyphRunGetLeadingGlyphIndex(toRun(handle), static_cast<TRUInteger>(index)));
-}
-
-static jint getTrailingGlyphIndex(JNIEnv *env, jobject obj, jlong handle, jint index)
-{
-    return static_cast<jint>(TRGlyphRunGetTrailingGlyphIndex(toRun(handle), static_cast<TRUInteger>(index)));
-}
-
 static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
-    return TRGlyphRunGetDistance(toRun(handle), static_cast<TRUInteger>(index));
+    TRFloat distance = 0.0f;
+
+    TRGlyphRunGetCodeUnitDistance(toRun(handle), static_cast<TRUInteger>(index), &distance);
+
+    return distance;
 }
 
 static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
-    return static_cast<jint>(TRGlyphRunGetIndexOfCodeUnit(toRun(handle), distance));
+    return static_cast<jint>(TRGlyphRunGetCodeUnitIndex(toRun(handle), distance));
 }
 
-static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphStart,
-    jint glyphEnd, jlong rendererHandle)
+static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
-    TRRect box = TRGlyphRunGetBoundingBox(toRun(handle), makeRange(glyphStart, glyphEnd),
-                                          toRenderer(rendererHandle));
+    TRRect box = TRGlyphRunGetInkBox(toRun(handle), toRenderer(rendererHandle));
 
     return JavaBridge(env).RectF_construct(box.origin.x, box.origin.y,
                                            box.origin.x + box.size.width,
                                            box.origin.y + box.size.height);
+}
+
+static void draw(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle, jobject canvas,
+    jobject paint, jobject drawer, jfloat x, jfloat y)
+{
+    TRPoint origin;
+    origin.x = x;
+    origin.y = y;
+
+    Drawing drawing(env, toRenderer(rendererHandle), canvas, paint, drawer);
+    TRGlyphRunDraw(toRun(handle), toRenderer(rendererHandle), origin);
 }
 
 static JNINativeMethod JNI_METHODS[] = {
@@ -233,11 +235,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
     { "nGetClusterStart", "(JI)I", (void *)getClusterStart },
     { "nGetClusterEnd", "(JI)I", (void *)getClusterEnd },
-    { "nGetLeadingGlyphIndex", "(JI)I", (void *)getLeadingGlyphIndex },
-    { "nGetTrailingGlyphIndex", "(JI)I", (void *)getTrailingGlyphIndex },
     { "nGetDistance", "(JI)F", (void *)getDistance },
     { "nGetIndexOfCodeUnit", "(JF)I", (void *)getIndexOfCodeUnit },
-    { "nGetBoundingBox", "(JIIJ)Landroid/graphics/RectF;", (void *)getBoundingBox },
+    { "nDraw", "(JJLandroid/graphics/Canvas;Landroid/graphics/Paint;Ljava/lang/Object;FF)V", (void *)draw },
+    { "nGetBoundingBox", "(JJ)Landroid/graphics/RectF;", (void *)getBoundingBox },
 };
 
 jint register_com_mta_tehreer_layout_GlyphRun(JNIEnv *env)

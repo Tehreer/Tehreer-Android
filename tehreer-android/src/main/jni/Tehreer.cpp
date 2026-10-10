@@ -34,10 +34,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
 
     result = register_com_mta_tehreer_font_FontFile(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Typeface(env) == JNI_OK
+          && register_com_mta_tehreer_graphics_TypefaceManager(env) == JNI_OK
           && register_com_mta_tehreer_internal_Raw(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_tables_SfntTables(env) == JNI_OK
           && register_com_mta_tehreer_graphics_Renderer(env) == JNI_OK
-          && register_com_mta_tehreer_layout_TypesetterInput(env) == JNI_OK
+          && register_com_mta_tehreer_layout_Text(env) == JNI_OK
           && register_com_mta_tehreer_layout_Typesetter(env) == JNI_OK
           && register_com_mta_tehreer_layout_ComposedLine(env) == JNI_OK
           && register_com_mta_tehreer_layout_GlyphRun(env) == JNI_OK

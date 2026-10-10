@@ -41,6 +41,12 @@ public:
     jobject BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const;
 
     void Canvas_drawBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jobject paint) const;
+    jint Canvas_save(jobject canvas) const;
+    void Canvas_restoreToCount(jobject canvas, jint saveCount) const;
+    void Canvas_clipRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom) const;
+    void Canvas_drawRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom, jobject paint) const;
+    void Paint_setColor(jobject paint, jint color) const;
+    void Canvas_drawScaledBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jfloat scaleX, jfloat scaleY, jobject paint) const;
 
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
     void Bitmap_setPixels(jobject bitmap, const void *pixels, size_t length) const;

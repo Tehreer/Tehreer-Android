@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__FRAME_RESOLVER_H
-#define _TEHREER__FRAME_RESOLVER_H
+#ifndef _TEHREER__TEXT_H
+#define _TEHREER__TEXT_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_layout_FrameResolver(JNIEnv *env);
+jint register_com_mta_tehreer_layout_Text(JNIEnv *env);
 
 #endif

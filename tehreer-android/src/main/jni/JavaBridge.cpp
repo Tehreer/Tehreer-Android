@@ -48,7 +48,14 @@ static jmethodID PATH__QUAD_TO;
 static jclass    RECT;
 static jmethodID RECT__CONSTRUCTOR;
 
+static jmethodID CANVAS__CLIP_RECT;
 static jmethodID CANVAS__DRAW_BITMAP;
+static jmethodID CANVAS__DRAW_RECT;
+static jmethodID PAINT__SET_COLOR;
+static jmethodID CANVAS__RESTORE_TO_COUNT;
+static jmethodID CANVAS__SAVE;
+static jmethodID CANVAS__SCALE;
+static jmethodID CANVAS__TRANSLATE;
 
 static jclass    RECT_F;
 static jmethodID RECT_F__CONSTRUCTOR;
@@ -101,6 +108,15 @@ void JavaBridge::load(JNIEnv* env)
 
     clazz = env->FindClass("android/graphics/Canvas");
     CANVAS__DRAW_BITMAP = env->GetMethodID(clazz, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
+    CANVAS__CLIP_RECT = env->GetMethodID(clazz, "clipRect", "(FFFF)Z");
+    CANVAS__DRAW_RECT = env->GetMethodID(clazz, "drawRect", "(FFFFLandroid/graphics/Paint;)V");
+    CANVAS__RESTORE_TO_COUNT = env->GetMethodID(clazz, "restoreToCount", "(I)V");
+    CANVAS__SAVE = env->GetMethodID(clazz, "save", "()I");
+    CANVAS__SCALE = env->GetMethodID(clazz, "scale", "(FF)V");
+    CANVAS__TRANSLATE = env->GetMethodID(clazz, "translate", "(FF)V");
+
+    clazz = env->FindClass("android/graphics/Paint");
+    PAINT__SET_COLOR = env->GetMethodID(clazz, "setColor", "(I)V");
 
     clazz = env->FindClass("android/graphics/RectF");
     RECT_F = (jclass)env->NewGlobalRef(clazz);
@@ -212,4 +228,39 @@ jobject JavaBridge::Rect_construct(jint left, jint top, jint right, jint bottom)
 void JavaBridge::Canvas_drawBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jobject paint) const
 {
     m_env->CallVoidMethod(canvas, CANVAS__DRAW_BITMAP, bitmap, left, top, paint);
+}
+
+jint JavaBridge::Canvas_save(jobject canvas) const
+{
+    return m_env->CallIntMethod(canvas, CANVAS__SAVE);
+}
+
+void JavaBridge::Canvas_restoreToCount(jobject canvas, jint saveCount) const
+{
+    m_env->CallVoidMethod(canvas, CANVAS__RESTORE_TO_COUNT, saveCount);
+}
+
+void JavaBridge::Canvas_clipRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom) const
+{
+    m_env->CallBooleanMethod(canvas, CANVAS__CLIP_RECT, left, top, right, bottom);
+}
+
+void JavaBridge::Canvas_drawRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom, jobject paint) const
+{
+    m_env->CallVoidMethod(canvas, CANVAS__DRAW_RECT, left, top, right, bottom, paint);
+}
+
+void JavaBridge::Paint_setColor(jobject paint, jint color) const
+{
+    m_env->CallVoidMethod(paint, PAINT__SET_COLOR, color);
+}
+
+void JavaBridge::Canvas_drawScaledBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jfloat scaleX, jfloat scaleY, jobject paint) const
+{
+    jint saveCount = m_env->CallIntMethod(canvas, CANVAS__SAVE);
+
+    m_env->CallVoidMethod(canvas, CANVAS__TRANSLATE, left, top);
+    m_env->CallVoidMethod(canvas, CANVAS__SCALE, scaleX, scaleY);
+    m_env->CallVoidMethod(canvas, CANVAS__DRAW_BITMAP, bitmap, 0.0f, 0.0f, paint);
+    m_env->CallVoidMethod(canvas, CANVAS__RESTORE_TO_COUNT, saveCount);
 }

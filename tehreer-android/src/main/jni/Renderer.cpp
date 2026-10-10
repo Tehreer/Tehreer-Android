@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <Tehreer/TRGlyphImage.h>
+#include <Tehreer/TRGlyphRun.h>
 #include <Tehreer/TRPath.h>
 #include <Tehreer/TRRenderer.h>
 
@@ -204,7 +205,17 @@ static void setForegroundColor(JNIEnv *env, jobject obj, jlong handle, jint colo
 
 static void setStrokeWidth(JNIEnv *env, jobject obj, jlong handle, jfloat strokeWidth)
 {
-    TRRendererSetStrokeWidth(toRenderer(handle), strokeWidth);
+    TRRendererSetStrokeRadius(toRenderer(handle), strokeWidth * 0.5f);
+}
+
+static void setStrokeColor(JNIEnv *env, jobject obj, jlong handle, jint color)
+{
+    TRRendererSetStrokeColor(toRenderer(handle), static_cast<TRColor>(color));
+}
+
+static void setDrawStyle(JNIEnv *env, jobject obj, jlong handle, jint drawStyle)
+{
+    TRRendererSetDrawStyle(toRenderer(handle), static_cast<TRDrawStyle>(drawStyle));
 }
 
 static void setStrokeCap(JNIEnv *env, jobject obj, jlong handle, jint strokeCap)
@@ -231,7 +242,7 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId
 {
     PathBuilder builder(env);
 
-    TRPathRef corePath = TRRendererGetGlyphPath(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
+    TRPathRef corePath = TRRendererCopyGlyphPath(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
     if (corePath) {
         TRPathCallbacks callbacks = PathBuilder::callbacks();
         TRPathEnumerate(corePath, nullptr, &callbacks, &builder);
@@ -269,7 +280,7 @@ static jobject makeBox(JNIEnv *env, const TRRect &rect)
 
 static jobject getGlyphBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
 {
-    return makeBox(env, TRRendererGetGlyphBoundingBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
+    return makeBox(env, TRRendererGetGlyphInkBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
 }
 
 static jobject getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
@@ -277,7 +288,7 @@ static jobject getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArr
 {
     RunData run(env, glyphIds, offsets, advances, count);
 
-    return makeBox(env, TRRendererGetRunBoundingBox(toRenderer(handle), run.glyphIds.data(),
+    return makeBox(env, TRRendererGetRunInkBox(toRenderer(handle), run.glyphIds.data(),
                                                     run.offsets.data(), run.advances.data(),
                                                     static_cast<TRUInteger>(count)));
 }
@@ -289,14 +300,23 @@ struct DrawTarget {
 };
 
 /* Draws the bitmap of each glyph at its position, in pixels. */
-static void drawPlacement(void *userData, TRUInteger index, TRGlyphImageRef image, TRPoint origin)
+static void drawPlacement(void *userData, TRUInteger glyphIndex, TRGlyphImageRef image,
+    TRPoint origin, TRFloat scaleX, TRFloat scaleY, TRBoolean *stop)
 {
     auto target = static_cast<DrawTarget *>(userData);
     JNIEnv *env = target->env;
     jobject bitmap = getBitmap(env, image);
 
     if (bitmap) {
-        JavaBridge(env).Canvas_drawBitmap(target->canvas, bitmap, origin.x, origin.y, target->paint);
+        /* The images of a bitmap font are drawn at the size of their strike, so they are scaled. */
+        if (scaleX != 1.0f || scaleY != 1.0f) {
+            JavaBridge(env).Canvas_drawScaledBitmap(target->canvas, bitmap, origin.x, origin.y,
+                                                    scaleX, scaleY, target->paint);
+        } else {
+            JavaBridge(env).Canvas_drawBitmap(target->canvas, bitmap, origin.x, origin.y,
+                                              target->paint);
+        }
+
         env->DeleteLocalRef(bitmap);
     }
 }
@@ -316,6 +336,91 @@ static void drawGlyphs(JNIEnv *env, jobject obj, jlong handle, jint kind, jintAr
                                        static_cast<TRUInteger>(count), drawPlacement, &target);
 }
 
+/* ---------- Drawing ---------- */
+
+/* Draws the bitmap of a glyph in the color of the glyph, limited to the clip if it has one. */
+static void drawGlyphImage(void *userData, TRGlyphImageRef image, TRPoint origin, TRFloat scaleX,
+    TRFloat scaleY, TRColor color, const TRRect *clip)
+{
+    auto drawing = static_cast<Drawing *>(userData);
+    JNIEnv *env = drawing->env;
+    jobject bitmap = getBitmap(env, image);
+
+    if (bitmap) {
+        JavaBridge bridge(env);
+        jint saveCount = bridge.Canvas_save(drawing->canvas);
+
+        if (clip) {
+            bridge.Canvas_clipRect(drawing->canvas, clip->origin.x, clip->origin.y,
+                                   clip->origin.x + clip->size.width,
+                                   clip->origin.y + clip->size.height);
+        }
+
+        bridge.Paint_setColor(drawing->paint, static_cast<jint>(color));
+        bridge.Canvas_drawScaledBitmap(drawing->canvas, bitmap, origin.x, origin.y, scaleX, scaleY,
+                                       drawing->paint);
+        bridge.Canvas_restoreToCount(drawing->canvas, saveCount);
+
+        env->DeleteLocalRef(bitmap);
+    }
+}
+
+static void fillRect(void *userData, TRRect rect, TRColor color)
+{
+    auto drawing = static_cast<Drawing *>(userData);
+    JavaBridge bridge(drawing->env);
+
+    bridge.Paint_setColor(drawing->paint, static_cast<jint>(color));
+    bridge.Canvas_drawRect(drawing->canvas, rect.origin.x, rect.origin.y,
+                           rect.origin.x + rect.size.width, rect.origin.y + rect.size.height,
+                           drawing->paint);
+}
+
+/* Hands the replacement to the drawer, translated to the position where its run starts. */
+static void drawReplacement(void *userData, const struct _TRGlyphRun *run, TRPoint origin)
+{
+    auto drawing = static_cast<Drawing *>(userData);
+
+    if (drawing->drawer) {
+        JavaBridge bridge(drawing->env);
+        jint saveCount = bridge.Canvas_save(drawing->canvas);
+
+        drawing->env->CallVoidMethod(drawing->drawer, drawing->drawReplacement, drawing->canvas,
+            static_cast<jint>(TRGlyphRunGetCodeUnitStart(run)), origin.x, origin.y,
+            TRGlyphRunGetAscent(run), TRGlyphRunGetDescent(run));
+
+        bridge.Canvas_restoreToCount(drawing->canvas, saveCount);
+    }
+}
+
+Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject paint, jobject drawer)
+    : env(env)
+    , canvas(canvas)
+    , paint(paint)
+    , drawer(drawer)
+    , drawReplacement(nullptr)
+    , m_renderer(renderer)
+{
+    TRDrawCallbacks callbacks = {};
+    callbacks.drawGlyphImage = ::drawGlyphImage;
+    callbacks.fillRect = ::fillRect;
+    callbacks.drawReplacement = ::drawReplacement;
+
+    if (drawer) {
+        jclass drawerClass = env->GetObjectClass(drawer);
+        drawReplacement = env->GetMethodID(drawerClass, "drawReplacement",
+                                           "(Landroid/graphics/Canvas;IFFFF)V");
+        env->DeleteLocalRef(drawerClass);
+    }
+
+    TRRendererSetDrawCallbacks(m_renderer, &callbacks, this);
+}
+
+Drawing::~Drawing()
+{
+    TRRendererSetDrawCallbacks(m_renderer, nullptr, nullptr);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
     { "nDispose", "(J)V", (void *)dispose },
@@ -327,6 +432,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
     { "nSetForegroundColor", "(JI)V", (void *)setForegroundColor },
     { "nSetStrokeWidth", "(JF)V", (void *)setStrokeWidth },
+    { "nSetStrokeColor", "(JI)V", (void *)setStrokeColor },
+    { "nSetDrawStyle", "(JI)V", (void *)setDrawStyle },
     { "nSetStrokeCap", "(JI)V", (void *)setStrokeCap },
     { "nSetStrokeJoin", "(JI)V", (void *)setStrokeJoin },
     { "nSetStrokeMiter", "(JF)V", (void *)setStrokeMiter },

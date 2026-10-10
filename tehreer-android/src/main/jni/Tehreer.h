@@ -22,6 +22,7 @@
 #include "BidiLine.h"
 #include "BidiMirrorLocator.h"
 #include "BidiParagraph.h"
+#include "ComposedFrame.h"
 #include "ComposedLine.h"
 #include "FontFile.h"
 #include "FrameResolver.h"
@@ -33,9 +34,11 @@
 #include "SfntTables.h"
 #include "Renderer.h"
 #include "Typesetter.h"
+#include "Text.h"
 #include "ShapingEngine.h"
 #include "ShapingResult.h"
 #include "Typeface.h"
+#include "TypefaceManager.h"
 #include "Unicode.h"
 
 #endif

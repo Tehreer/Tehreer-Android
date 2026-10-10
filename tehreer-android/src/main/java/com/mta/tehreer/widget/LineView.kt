@@ -57,10 +57,7 @@ internal class LineView(context: Context?) : View(context) {
     }
 
     private fun drawTextLine(canvas: Canvas, textLine: ComposedLine) {
-        val dx = textLine.originX - frame.left
-        val dy = textLine.originY - frame.top
-
-        textLine.draw(renderer, canvas, dx, dy)
+        textLine.draw(renderer, canvas, -frame.left.toFloat(), -frame.top.toFloat())
     }
 
     override fun onDraw(canvas: Canvas) {

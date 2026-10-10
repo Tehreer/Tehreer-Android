@@ -37,7 +37,11 @@ static jlong createFirstTypeface(TRFontFileRef fontFile)
     TRTypefaceRef typeface = nullptr;
 
     if (fontFile) {
-        typeface = TRTypefaceCreate(fontFile, 0);
+        typeface = TRFontFileGetTypeface(fontFile, 0);
+        if (typeface) {
+            TRTypefaceRetain(typeface);
+        }
+
         TRFontFileRelease(fontFile);
     }
 
@@ -269,12 +273,59 @@ static jlong getAssociatedColorsPtr(JNIEnv *env, jobject obj, jlong typefaceHand
 
 // MARK: Tables
 
-static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
+static jint getTableSize(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag)
+{
+    return static_cast<jint>(TRTypefaceGetTableSize(toTypeface(typefaceHandle),
+                                                    static_cast<TRTag>(tableTag)));
+}
+
+static jboolean isScalable(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    return TRTypefaceIsScalable(toTypeface(typefaceHandle)) ? JNI_TRUE : JNI_FALSE;
+}
+
+/* Hands the pixel width and the pixel height of each bitmap strike, one after the other. */
+static jfloatArray getBitmapStrikes(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    TRTypefaceRef typeface = toTypeface(typefaceHandle);
+    TRUInteger count = TRTypefaceGetBitmapStrikeCount(typeface);
+    const TRBitmapStrike *strikes = TRTypefaceGetBitmapStrikesPtr(typeface);
+
+    jfloatArray array = env->NewFloatArray(static_cast<jsize>(count * 2));
+    for (TRUInteger i = 0; i < count; i++) {
+        jfloat values[2] = { strikes[i].pixelWidth, strikes[i].pixelHeight };
+        env->SetFloatArrayRegion(array, static_cast<jsize>(i * 2), 2, values);
+    }
+
+    return array;
+}
+
+static jstring getGlyphName(JNIEnv *env, jobject obj, jlong typefaceHandle, jint glyphId)
+{
+    char buffer[256];
+    TRUInteger length = TRTypefaceGetGlyphName(toTypeface(typefaceHandle),
+                                               static_cast<TRGlyphID>(glyphId),
+                                               buffer, sizeof(buffer));
+
+    return length > 0 ? env->NewStringUTF(buffer) : nullptr;
+}
+
+static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, jint tableTag,
+    jint offset, jint length)
 {
     TRTypefaceRef typeface = toTypeface(typefaceHandle);
     auto inputTag = static_cast<TRTag>(tableTag);
 
-    TRUInteger tableLength = TRTypefaceGetTableData(typeface, inputTag, nullptr, 0);
+    TRUInteger tableSize = TRTypefaceGetTableSize(typeface, inputTag);
+    TRUInteger tableOffset = static_cast<TRUInteger>(offset);
+    if (offset < 0 || tableOffset >= tableSize) {
+        return nullptr;
+    }
+
+    TRUInteger tableLength = tableSize - tableOffset;
+    if (length >= 0 && static_cast<TRUInteger>(length) < tableLength) {
+        tableLength = static_cast<TRUInteger>(length);
+    }
     if (tableLength == 0) {
         return nullptr;
     }
@@ -282,7 +333,7 @@ static jbyteArray getTableData(JNIEnv *env, jobject obj, jlong typefaceHandle, j
     jbyteArray dataArray = env->NewByteArray(static_cast<jint>(tableLength));
     void *dataBuffer = env->GetPrimitiveArrayCritical(dataArray, nullptr);
 
-    TRTypefaceGetTableData(typeface, inputTag, dataBuffer, tableLength);
+    TRTypefaceGetTableData(typeface, inputTag, tableOffset, dataBuffer, tableLength);
 
     env->ReleasePrimitiveArrayCritical(dataArray, dataBuffer, 0);
 
@@ -416,7 +467,11 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetPredefinedPaletteColorsPtr", "(JI)J", (void *)getPredefinedPaletteColorsPtr },
     { "nGetColorInstance", "(J[I)J", (void *)getColorInstance },
     { "nGetAssociatedColorsPtr", "(J)J", (void *)getAssociatedColorsPtr },
-    { "nGetTableData", "(JI)[B", (void *)getTableData },
+        { "nGetTableSize", "(JI)I", (void *)getTableSize },
+    { "nGetTableData", "(JIII)[B", (void *)getTableData },
+    { "nIsScalable", "(J)Z", (void *)isScalable },
+    { "nGetBitmapStrikes", "(J)[F", (void *)getBitmapStrikes },
+    { "nGetGlyphName", "(JI)Ljava/lang/String;", (void *)getGlyphName },
     { "nGetUnitsPerEm", "(J)I", (void *)getUnitsPerEm },
     { "nGetAscent", "(J)I", (void *)getAscent },
     { "nGetDescent", "(J)I", (void *)getDescent },

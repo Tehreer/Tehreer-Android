@@ -70,19 +70,9 @@ void ShapingEngine::setLanguageTag(uint32_t languageTag)
     TRShapingEngineSetLanguageTag(m_core, languageTag);
 }
 
-void ShapingEngine::addOpenTypeFeature(uint32_t tag, uint16_t value)
+void ShapingEngine::setOpenTypeFeatures(const vector<TROpenTypeFeature> &features)
 {
-    TROpenTypeFeature feature;
-    feature.tag = tag;
-    feature.value = value;
-
-    m_pendingFeatures.push_back(feature);
-}
-
-void ShapingEngine::applyOpenTypeFeatures()
-{
-    TRShapingEngineSetOpenTypeFeatures(m_core, m_pendingFeatures.data(), m_pendingFeatures.size());
-    m_pendingFeatures.clear();
+    TRShapingEngineSetOpenTypeFeatures(m_core, features.data(), features.size());
 }
 
 void ShapingEngine::setShapingOrder(TRShapingOrder shapingOrder)
@@ -99,7 +89,7 @@ void ShapingEngine::setWritingDirection(TRWritingDirection writingDirection)
 
 void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
 {
-    TRShapingResultRef core = TRShapingEngineShape(m_core, charArray + charStart,
+    TRShapingResultRef core = TRShapingEngineCreateShapingResult(m_core, charArray + charStart,
         static_cast<TRUInteger>(charEnd - charStart), TRStringEncodingUTF16);
 
     shapingResult.setup(core, charStart, charEnd);
@@ -176,18 +166,24 @@ static void setLanguageTag(JNIEnv *env, jobject obj, jlong engineHandle, jint la
     shapingEngine->setLanguageTag(inputTag);
 }
 
-static void addOpenTypeFeature(JNIEnv *env, jobject obj, jlong engineHandle, jint tag, jshort value)
+static void setOpenTypeFeatures(JNIEnv *env, jobject obj, jlong engineHandle, jintArray tags,
+    jintArray values)
 {
     auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
 
-    shapingEngine->addOpenTypeFeature(static_cast<uint32_t>(tag), static_cast<uint16_t>(value));
+    shapingEngine->setOpenTypeFeatures(readOpenTypeFeatures(env, tags, values));
 }
 
-static void applyOpenTypeFeatures(JNIEnv *env, jobject obj, jlong engineHandle)
+static jint makeLanguageTag(JNIEnv *env, jclass clazz, jstring name)
 {
-    auto shapingEngine = reinterpret_cast<ShapingEngine *>(engineHandle);
+    const char *chars = name ? env->GetStringUTFChars(name, nullptr) : nullptr;
+    TRTag tag = TRShapingEngineGetLanguageTag(chars);
 
-    shapingEngine->applyOpenTypeFeatures();
+    if (chars) {
+        env->ReleaseStringUTFChars(name, chars);
+    }
+
+    return static_cast<jint>(tag);
 }
 
 static jint getWritingDirection(JNIEnv *env, jobject obj, jlong engineHandle)
@@ -245,8 +241,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nSetScriptTag", "(JI)V", (void *)setScriptTag },
     { "nGetLanguageTag", "(J)I", (void *)getLanguageTag },
     { "nSetLanguageTag", "(JI)V", (void *)setLanguageTag },
-    { "nAddOpenTypeFeature", "(JIS)V", (void *)addOpenTypeFeature },
-    { "nApplyOpenTypeFeatures", "(J)V", (void *)applyOpenTypeFeatures },
+    { "nSetOpenTypeFeatures", "(J[I[I)V", (void *)setOpenTypeFeatures },
+    { "nMakeLanguageTag", "(Ljava/lang/String;)I", (void *)makeLanguageTag },
     { "nGetWritingDirection", "(J)I", (void *)getWritingDirection },
     { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
     { "nGetShapingOrder", "(J)I", (void *)getShapingOrder },

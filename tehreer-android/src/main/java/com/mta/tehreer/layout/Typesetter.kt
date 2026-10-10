@@ -52,9 +52,11 @@ class Typesetter private constructor(
     private val finalizable: Finalizable
 
     init {
-        val input = TypesetterInput(text, spanned, defaultSpans ?: emptyList())
+        val input = Text(text, spanned, defaultSpans ?: emptyList())
 
-        nativeTypesetter = input.nativeTypesetter
+        nativeTypesetter = nCreateTypesetter(input.nativeText)
+        check(nativeTypesetter != 0L) { "Could not create the typesetter" }
+
         typefaces = input.typefaces
         holders = input.holders
         finalizable = Finalizable(nativeTypesetter)
@@ -364,6 +366,7 @@ class Typesetter private constructor(
             return StringUtils.copyString(spanned)
         }
 
+        @JvmStatic external fun nCreateTypesetter(nativeText: Long): Long
         @JvmStatic external fun nDispose(nativeTypesetter: Long)
 
     }

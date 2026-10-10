@@ -22,6 +22,7 @@
 #include "FloatCollector.h"
 #include "JavaBridge.h"
 #include "LayoutHandles.h"
+#include "Renderer.h"
 
 using namespace Tehreer;
 
@@ -32,14 +33,12 @@ static void dispose(JNIEnv *env, jclass clazz, jlong handle)
 
 static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRComposedLineGetCodeUnitRange(toLine(handle)).index);
+    return static_cast<jint>(TRComposedLineGetCodeUnitStart(toLine(handle)));
 }
 
 static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
 {
-    TRRange range = TRComposedLineGetCodeUnitRange(toLine(handle));
-
-    return static_cast<jint>(range.index + range.length);
+    return static_cast<jint>(TRComposedLineGetCodeUnitEnd(toLine(handle)));
 }
 
 static jint getParagraphLevel(JNIEnv *env, jobject obj, jlong handle)
@@ -100,10 +99,14 @@ static jlong getRun(JNIEnv *env, jobject obj, jlong handle, jint index)
 
 static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
-    return TRComposedLineGetCodeUnitDistance(toLine(handle), static_cast<TRUInteger>(index));
+    TRFloat distance = 0.0f;
+
+    TRComposedLineGetCodeUnitDistance(toLine(handle), static_cast<TRUInteger>(index), &distance);
+
+    return distance;
 }
 
-static void putEdge(void *userData, TRFloat left, TRFloat right)
+static void putEdge(void *userData, TRFloat left, TRFloat right, TRBoolean *stop)
 {
     auto collector = static_cast<const FloatCollector *>(userData);
 
@@ -117,7 +120,7 @@ static void enumerateEdges(JNIEnv *env, jobject obj, jlong handle, jint start, j
 {
     FloatCollector floats(env, collector);
 
-    TRComposedLineEnumerateEdges(toLine(handle), makeRange(start, end), putEdge, &floats);
+    TRComposedLineEnumerateEdges(toLine(handle), toIndex(start), toLength(start, end), putEdge, &floats);
 }
 
 static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
@@ -133,15 +136,27 @@ static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushF
 
 static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
-    TRRect box = TRComposedLineGetBoundingBox(toLine(handle), toRenderer(rendererHandle));
+    TRRect box = TRComposedLineGetInkBox(toLine(handle), toRenderer(rendererHandle));
 
     return JavaBridge(env).RectF_construct(box.origin.x, box.origin.y,
                                            box.origin.x + box.size.width,
                                            box.origin.y + box.size.height);
 }
 
+static void draw(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle, jobject canvas,
+    jobject paint, jobject drawer, jfloat x, jfloat y)
+{
+    TRPoint origin;
+    origin.x = x;
+    origin.y = y;
+
+    Drawing drawing(env, toRenderer(rendererHandle), canvas, paint, drawer);
+    TRComposedLineDraw(toLine(handle), toRenderer(rendererHandle), origin);
+}
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
+    { "nDraw", "(JJLandroid/graphics/Canvas;Landroid/graphics/Paint;Ljava/lang/Object;FF)V", (void *)draw },
     { "nGetCharStart", "(J)I", (void *)getCharStart },
     { "nGetCharEnd", "(J)I", (void *)getCharEnd },
     { "nGetParagraphLevel", "(J)I", (void *)getParagraphLevel },

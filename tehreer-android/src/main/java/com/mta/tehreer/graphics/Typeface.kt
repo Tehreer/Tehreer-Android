@@ -106,7 +106,6 @@ class Typeface {
     }
 
     internal val nativeTypeface: Long
-    internal var tag: Any? = null
 
     private val defaults: DefaultProperties
     private val finalizable: Finalizable
@@ -339,7 +338,63 @@ class Typeface {
      *         exists.
      */
     fun getTableData(tableTag: Int): ByteArray? {
-        return nGetTableData(nativeTypeface, tableTag)
+        return nGetTableData(nativeTypeface, tableTag, 0, -1)
+    }
+
+    /**
+     * Returns the size of the table with the specified tag in bytes.
+     *
+     * @param tableTag The tag of the table as an integer.
+     * @return The size of the table, or zero if the font has no such table.
+     */
+    fun getTableSize(tableTag: Int): Int {
+        return nGetTableSize(nativeTypeface, tableTag)
+    }
+
+    /**
+     * Returns a part of the data of the table with the specified tag. Only the part that is asked
+     * for is read from the font, so a part of a big table is cheap.
+     *
+     * @param tableTag The tag of the table as an integer.
+     * @param offset The offset in the table from where to copy, in bytes.
+     * @param length The maximum number of bytes to copy.
+     * @return The data copied from the table, or `null` if the font has no such table or the offset
+     *         is not within it.
+     */
+    fun getTableData(tableTag: Int, offset: Int, length: Int): ByteArray? {
+        require(offset >= 0) { "Offset: $offset" }
+        require(length >= 0) { "Length: $length" }
+
+        return nGetTableData(nativeTypeface, tableTag, offset, length)
+    }
+
+    /**
+     * Returns `true` if the glyphs of this typeface have outlines. The glyphs of a typeface that is
+     * not scalable, such as a color emoji font with bitmaps only, have images at the sizes of its
+     * bitmap strikes.
+     */
+    val isScalable: Boolean
+        get() = nIsScalable(nativeTypeface)
+
+    /**
+     * Returns the sizes at which this typeface has the images of its glyphs, which is empty for a
+     * typeface that has none.
+     */
+    val bitmapStrikes: List<BitmapStrike> by lazy {
+        val sizes = nGetBitmapStrikes(nativeTypeface)
+
+        List(sizes.size / 2) { BitmapStrike(sizes[it * 2], sizes[it * 2 + 1]) }
+    }
+
+    /**
+     * Returns the name that the font gives to a glyph in its post table, or its charset if it is a
+     * CFF font.
+     *
+     * @param glyphId The ID of the glyph.
+     * @return The name of the glyph, or `null` if the font has none for it.
+     */
+    fun getGlyphName(glyphId: Int): String? {
+        return nGetGlyphName(nativeTypeface, glyphId)
     }
 
     /**
@@ -511,7 +566,13 @@ class Typeface {
     private external fun nGetPredefinedPaletteColorsPtr(nativeTypeface: Long, index: Int): Long
     private external fun nGetColorInstance(nativeTypeface: Long, colors: IntArray): Long
     private external fun nGetAssociatedColorsPtr(nativeTypeface: Long): Long
-    private external fun nGetTableData(nativeTypeface: Long, tableTag: Int): ByteArray?
+    private external fun nGetTableSize(nativeTypeface: Long, tableTag: Int): Int
+    private external fun nGetTableData(
+        nativeTypeface: Long, tableTag: Int, offset: Int, length: Int
+    ): ByteArray?
+    private external fun nIsScalable(nativeTypeface: Long): Boolean
+    private external fun nGetBitmapStrikes(nativeTypeface: Long): FloatArray
+    private external fun nGetGlyphName(nativeTypeface: Long, glyphId: Int): String?
     private external fun nGetUnitsPerEm(nativeTypeface: Long): Int
     private external fun nGetAscent(nativeTypeface: Long): Int
     private external fun nGetDescent(nativeTypeface: Long): Int

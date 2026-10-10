@@ -54,6 +54,8 @@ class ComposedFrame internal constructor(
 
     private val finalizable = Finalizable(nativeFrame)
 
+    private val replacementDrawer = ReplacementDrawer(holders)
+
     private val paint by lazy(LazyThreadSafetyMode.NONE) { Paint() }
     private var lineSpans: Array<Array<ParagraphStyle>>? = null
     private var firstLines: BooleanArray? = null
@@ -294,10 +296,14 @@ class ComposedFrame internal constructor(
                 }
             }
 
-            composedLine.draw(renderer, canvas, composedLine.originX, composedLine.originY)
         }
 
         canvas.translate(-x, -y)
+
+        nDraw(
+            nativeFrame, renderer.nativeHandle, canvas, renderer.preparePaint(canvas),
+            replacementDrawer, x, y
+        )
     }
 
     override fun toString(): String {
@@ -311,6 +317,10 @@ class ComposedFrame internal constructor(
             "}"
     }
 
+    private external fun nDraw(
+        nativeFrame: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
+        x: Float, y: Float
+    )
     private external fun nGetCharStart(nativeFrame: Long): Int
     private external fun nGetCharEnd(nativeFrame: Long): Int
     private external fun nGetWidth(nativeFrame: Long): Float

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__FRAME_RESOLVER_H
-#define _TEHREER__FRAME_RESOLVER_H
+package com.mta.tehreer.layout.style
 
-#include <jni.h>
+import com.mta.tehreer.sfnt.OpenTypeFeature
 
-jint register_com_mta_tehreer_layout_FrameResolver(JNIEnv *env);
-
-#endif
+/**
+ * Applies the settings of OpenType features to the text it is applied to, on top of the defaults of
+ * the font and of the script. The text is shaped with them.
+ */
+class OpenTypeFeaturesSpan(val features: Set<OpenTypeFeature>)

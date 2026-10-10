@@ -17,6 +17,7 @@
 package com.mta.tehreer.layout
 
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.RectF
 import androidx.annotation.Size
 import com.mta.tehreer.graphics.Renderer
@@ -42,6 +43,8 @@ class ComposedLine internal constructor(
     }
 
     private val finalizable = Finalizable(nativeLine)
+
+    private val replacementDrawer = ReplacementDrawer(holders)
 
     /**
      * Returns an unmodifiable list that contains all the runs of this line.
@@ -201,10 +204,7 @@ class ComposedLine internal constructor(
      * @return A rectangle that tightly encloses the paths of this line's glyphs.
      */
     fun computeBoundingBox(renderer: Renderer): RectF {
-        val box = nGetBoundingBox(nativeLine, renderer.nativeHandle)
-        renderer.syncNative()
-
-        return box
+        return nGetBoundingBox(nativeLine, renderer.nativeHandle)
     }
 
     /**
@@ -223,18 +223,16 @@ class ComposedLine internal constructor(
      *
      * @param renderer The renderer to use for drawing this line.
      * @param canvas The canvas onto which to draw this line.
-     * @param x The x- position at which to draw this line.
-     * @param y The y- position at which to draw this line.
+     * @param x The x- position of the origin of the container of this line. The origin of the line
+     *          is added to it.
+     * @param y The y- position of the origin of the container of this line. The origin of the line
+     *          is added to it.
      */
     fun draw(renderer: Renderer, canvas: Canvas, x: Float, y: Float) {
-        for (glyphRun in runs) {
-            val translateX = x + glyphRun.originX
-            val translateY = y + glyphRun.originY
-
-            canvas.translate(translateX, translateY)
-            glyphRun.draw(renderer, canvas)
-            canvas.translate(-translateX, -translateY)
-        }
+        nDraw(
+            nativeLine, renderer.nativeHandle, canvas, renderer.preparePaint(canvas),
+            replacementDrawer, x, y
+        )
     }
 
     override fun toString(): String {
@@ -252,6 +250,10 @@ class ComposedLine internal constructor(
             "}"
     }
 
+    private external fun nDraw(
+        nativeLine: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
+        x: Float, y: Float
+    )
     private external fun nGetCharStart(nativeLine: Long): Int
     private external fun nGetCharEnd(nativeLine: Long): Int
     private external fun nGetParagraphLevel(nativeLine: Long): Int

@@ -53,13 +53,14 @@ static inline TRRendererRef toRenderer(jlong handle)
     return reinterpret_cast<TRRendererRef>(handle);
 }
 
-static inline TRRange makeRange(jint start, jint end)
+static inline TRUInteger toIndex(jint start)
 {
-    TRRange range;
-    range.index = static_cast<TRUInteger>(start);
-    range.length = static_cast<TRUInteger>(end - start);
+    return static_cast<TRUInteger>(start);
+}
 
-    return range;
+static inline TRUInteger toLength(jint start, jint end)
+{
+    return static_cast<TRUInteger>(end - start);
 }
 
 #endif

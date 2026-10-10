@@ -62,21 +62,26 @@ class Renderer {
      *
      * @hidden
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun syncNative() {
-        nSetTypeface(nativeRenderer, typeface?.nativeTypeface ?: 0)
-        nSetTypeSize(nativeRenderer, typeSize)
-        nSetScaleX(nativeRenderer, scaleX)
-        nSetScaleY(nativeRenderer, scaleY)
-        nSetSkewX(nativeRenderer, slantAngle)
-        nSetWritingDirection(nativeRenderer, writingDirection.value)
-    }
-
     private fun syncShadowLayer() {
         if (!isShadowLayerSynced) {
             isShadowLayerSynced = true
             paint.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor)
         }
+    }
+
+    /**
+     * Returns the paint that Core draws with onto the given canvas, after bringing its shadow
+     * layer up to date.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    fun preparePaint(canvas: Canvas): Paint {
+        syncShadowLayer()
+
+        if (shadowRadius > 0.0f && canvas.isHardwareAccelerated) {
+            Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered")
+        }
+
+        return paint
     }
 
     /**
@@ -96,6 +101,14 @@ class Renderer {
      * default value is [RenderingStyle.FILL].
      */
     var renderingStyle = RenderingStyle.FILL
+        set(value) {
+            field = value
+            nSetDrawStyle(nativeRenderer, when (value) {
+                RenderingStyle.FILL -> 0
+                RenderingStyle.STROKE -> 1
+                RenderingStyle.FILL_STROKE -> 2
+            })
+        }
 
     /**
      * The direction in which the pen will advance after drawing a glyph. The default value is
@@ -171,6 +184,10 @@ class Renderer {
     @get:ColorInt
     @setparam:ColorInt
     var strokeColor: Int = Color.BLACK
+        set(value) {
+            field = value
+            nSetStrokeColor(nativeRenderer, value)
+        }
 
     /**
      * This renderer's width in pixels for stroking glyphs.
@@ -261,6 +278,9 @@ class Renderer {
 
     // The settings of Core have to follow the ones that differ from its own defaults.
     init {
+        fillColor = Color.BLACK
+        strokeColor = Color.BLACK
+        renderingStyle = RenderingStyle.FILL
         strokeWidth = 1.0f
         strokeCap = StrokeCap.BUTT
         strokeJoin = StrokeJoin.ROUND
@@ -345,11 +365,7 @@ class Renderer {
      */
     fun drawGlyphs(canvas: Canvas, glyphIds: IntList, offsets: PointList, advances: FloatList) {
         if (nIsRenderable(nativeRenderer)) {
-            syncShadowLayer()
-
-            if (shadowRadius > 0.0f && canvas.isHardwareAccelerated) {
-                Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered")
-            }
+            preparePaint(canvas)
 
             if (renderingStyle == RenderingStyle.FILL || renderingStyle == RenderingStyle.FILL_STROKE) {
                 paint.color = fillColor
@@ -370,6 +386,8 @@ class Renderer {
     private external fun nSetWritingDirection(nativeRenderer: Long, writingDirection: Int)
     private external fun nSetForegroundColor(nativeRenderer: Long, color: Int)
     private external fun nSetStrokeWidth(nativeRenderer: Long, strokeWidth: Float)
+    private external fun nSetStrokeColor(nativeRenderer: Long, strokeColor: Int)
+    private external fun nSetDrawStyle(nativeRenderer: Long, drawStyle: Int)
     private external fun nSetStrokeCap(nativeRenderer: Long, strokeCap: Int)
     private external fun nSetStrokeJoin(nativeRenderer: Long, strokeJoin: Int)
     private external fun nSetStrokeMiter(nativeRenderer: Long, strokeMiter: Float)

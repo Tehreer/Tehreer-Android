@@ -40,25 +40,27 @@ struct PathBuilder {
     static TRPathCallbacks callbacks()
     {
         TRPathCallbacks callbacks = {};
-        callbacks.moveTo = [](void *user, TRFloat x, TRFloat y) {
+        callbacks.moveTo = [](void *user, TRFloat x, TRFloat y, TRBoolean *stop) {
             auto builder = static_cast<PathBuilder *>(user);
             builder->bridge.Path_moveTo(builder->path, x, y);
         };
-        callbacks.lineTo = [](void *user, TRFloat x, TRFloat y) {
+        callbacks.lineTo = [](void *user, TRFloat x, TRFloat y, TRBoolean *stop) {
             auto builder = static_cast<PathBuilder *>(user);
             builder->bridge.Path_lineTo(builder->path, x, y);
         };
-        callbacks.quadTo = [](void *user, TRFloat controlX, TRFloat controlY, TRFloat x, TRFloat y) {
+        callbacks.quadTo = [](void *user, TRFloat controlX, TRFloat controlY, TRFloat x, TRFloat y,
+                              TRBoolean *stop) {
             auto builder = static_cast<PathBuilder *>(user);
             builder->bridge.Path_quadTo(builder->path, controlX, controlY, x, y);
         };
         callbacks.cubicTo = [](void *user, TRFloat control1X, TRFloat control1Y,
-                               TRFloat control2X, TRFloat control2Y, TRFloat x, TRFloat y) {
+                               TRFloat control2X, TRFloat control2Y, TRFloat x, TRFloat y,
+                               TRBoolean *stop) {
             auto builder = static_cast<PathBuilder *>(user);
             builder->bridge.Path_cubicTo(builder->path, control1X, control1Y,
                                          control2X, control2Y, x, y);
         };
-        callbacks.close = [](void *user) {
+        callbacks.close = [](void *user, TRBoolean *stop) {
             auto builder = static_cast<PathBuilder *>(user);
             builder->bridge.Path_close(builder->path);
         };

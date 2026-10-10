@@ -97,11 +97,11 @@ class ShapingEngine {
         set(value) {
             currentFeatures = LinkedHashSet(value)
 
-            for (feature in value) {
-                nAddOpenTypeFeature(nativeEngine, feature.tag(), feature.value().toShort())
-            }
-
-            nApplyOpenTypeFeatures(nativeEngine)
+            nSetOpenTypeFeatures(
+                nativeEngine,
+                value.map { it.tag() }.toIntArray(),
+                value.map { it.value() }.toIntArray()
+            )
         }
 
     /**
@@ -175,8 +175,7 @@ class ShapingEngine {
     private external fun nSetScriptTag(nativeEngine: Long, scriptTag: Int)
     private external fun nGetLanguageTag(nativeEngine: Long): Int
     private external fun nSetLanguageTag(nativeEngine: Long, languageTag: Int)
-    private external fun nAddOpenTypeFeature(nativeEngine: Long, tag: Int, value: Short)
-    private external fun nApplyOpenTypeFeatures(nativeEngine: Long)
+    private external fun nSetOpenTypeFeatures(nativeEngine: Long, tags: IntArray, values: IntArray)
     private external fun nGetWritingDirection(nativeEngine: Long): Int
     private external fun nSetWritingDirection(nativeEngine: Long, writingDirection: Int)
     private external fun nGetShapingOrder(nativeEngine: Long): Int
@@ -198,6 +197,18 @@ class ShapingEngine {
         fun getScriptDirection(scriptTag: Int): WritingDirection {
             return WritingDirection.valueOf(nGetScriptDefaultDirection(scriptTag))!!
         }
+
+        /**
+         * Returns the OpenType tag of a language that is given by its name.
+         *
+         * @param languageName The name of the language in the form of BCP 47, e.g. `"ur-PK"`.
+         * @return The OpenType tag of the language, or the default one if the name has no tag.
+         */
+        fun getLanguageTag(languageName: String): Int {
+            return nMakeLanguageTag(languageName)
+        }
+
+        @JvmStatic private external fun nMakeLanguageTag(languageName: String?): Int
 
         @JvmStatic private external fun nGetScriptDefaultDirection(scriptTag: Int): Int
 

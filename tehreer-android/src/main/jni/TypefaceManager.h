@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Muhammad Tayyab Akram
+ * Copyright (C) 2016-2026 Muhammad Tayyab Akram
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__FRAME_RESOLVER_H
-#define _TEHREER__FRAME_RESOLVER_H
+
+#ifndef _TEHREER__TYPEFACE_MANAGER_H
+#define _TEHREER__TYPEFACE_MANAGER_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_layout_FrameResolver(JNIEnv *env);
+jint register_com_mta_tehreer_graphics_TypefaceManager(JNIEnv *env);
 
 #endif

@@ -130,8 +130,7 @@ internal class RunStyle private constructor(
     }
 
     private fun resolveTypeface(familyName: String, typeWidth: TypeWidth) {
-        val typeFamily = TypefaceManager.getTypeFamily(familyName)
-        typeface = typeFamily?.getTypefaceByStyle(typeWidth, typeWeight, typeSlope)
+        typeface = TypefaceManager.getTypefaceByStyle(familyName, typeWidth, typeWeight, typeSlope)
     }
 
     private fun updateTypeface() {
