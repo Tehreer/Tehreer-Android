@@ -52,6 +52,8 @@ static jmethodID CANVAS__CLIP_RECT;
 static jmethodID CANVAS__DRAW_BITMAP;
 static jmethodID CANVAS__DRAW_RECT;
 static jmethodID PAINT__SET_COLOR;
+static jmethodID PAINT__SET_SHADOW_LAYER;
+static jmethodID PAINT__CLEAR_SHADOW_LAYER;
 static jmethodID CANVAS__RESTORE_TO_COUNT;
 static jmethodID CANVAS__SAVE;
 static jmethodID CANVAS__SCALE;
@@ -59,6 +61,7 @@ static jmethodID CANVAS__TRANSLATE;
 
 static jclass    RECT_F;
 static jmethodID RECT_F__CONSTRUCTOR;
+static jmethodID RECT_F__SET;
 
 
 
@@ -117,10 +120,13 @@ void JavaBridge::load(JNIEnv* env)
 
     clazz = env->FindClass("android/graphics/Paint");
     PAINT__SET_COLOR = env->GetMethodID(clazz, "setColor", "(I)V");
+    PAINT__SET_SHADOW_LAYER = env->GetMethodID(clazz, "setShadowLayer", "(FFFI)V");
+    PAINT__CLEAR_SHADOW_LAYER = env->GetMethodID(clazz, "clearShadowLayer", "()V");
 
     clazz = env->FindClass("android/graphics/RectF");
     RECT_F = (jclass)env->NewGlobalRef(clazz);
     RECT_F__CONSTRUCTOR = env->GetMethodID(clazz, "<init>", "(FFFF)V");
+    RECT_F__SET = env->GetMethodID(clazz, "set", "(FFFF)V");
 
 
 }
@@ -220,6 +226,11 @@ jobject JavaBridge::RectF_construct(jfloat left, jfloat top, jfloat right, jfloa
     return m_env->NewObject(RECT_F, RECT_F__CONSTRUCTOR, left, top, right, bottom);
 }
 
+void JavaBridge::RectF_set(jobject rect, jfloat left, jfloat top, jfloat right, jfloat bottom) const
+{
+    m_env->CallVoidMethod(rect, RECT_F__SET, left, top, right, bottom);
+}
+
 jobject JavaBridge::Rect_construct(jint left, jint top, jint right, jint bottom) const
 {
     return m_env->NewObject(RECT, RECT__CONSTRUCTOR, left, top, right, bottom);
@@ -253,6 +264,16 @@ void JavaBridge::Canvas_drawRect(jobject canvas, jfloat left, jfloat top, jfloat
 void JavaBridge::Paint_setColor(jobject paint, jint color) const
 {
     m_env->CallVoidMethod(paint, PAINT__SET_COLOR, color);
+}
+
+void JavaBridge::Paint_setShadowLayer(jobject paint, jfloat radius, jfloat dx, jfloat dy, jint color) const
+{
+    m_env->CallVoidMethod(paint, PAINT__SET_SHADOW_LAYER, radius, dx, dy, color);
+}
+
+void JavaBridge::Paint_clearShadowLayer(jobject paint) const
+{
+    m_env->CallVoidMethod(paint, PAINT__CLEAR_SHADOW_LAYER);
 }
 
 void JavaBridge::Canvas_drawScaledBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jfloat scaleX, jfloat scaleY, jobject paint) const

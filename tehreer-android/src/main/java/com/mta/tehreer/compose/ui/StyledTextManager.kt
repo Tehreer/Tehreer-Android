@@ -17,7 +17,6 @@
 package com.mta.tehreer.compose.ui
 
 import android.graphics.Point
-import android.graphics.RectF
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -76,9 +75,8 @@ internal class StyledTextManager {
             return Point(0, 0)
         }
 
-        resolver.frameBounds = RectF(
-            0f, 0f, containerWidth.toFloat(), containerHeight.toFloat()
-        )
+        resolver.frameWidth = containerWidth.toFloat()
+        resolver.frameHeight = containerHeight.toFloat()
 
         val spanned = typesetter.spanned
         if (spanned.isEmpty()) {
@@ -116,9 +114,8 @@ internal class StyledTextManager {
             return
         }
 
-        resolver.frameBounds = RectF(
-            0f, 0f, containerWidth, containerHeight
-        )
+        resolver.frameWidth = containerWidth
+        resolver.frameHeight = containerHeight
 
         val spanned = typesetter.spanned
         textFrame = resolver.createFrame(0, spanned.length)

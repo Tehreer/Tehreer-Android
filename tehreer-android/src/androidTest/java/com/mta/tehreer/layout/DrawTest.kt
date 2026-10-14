@@ -18,7 +18,6 @@ package com.mta.tehreer.layout
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.RectF
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.BackgroundColorSpan
@@ -46,7 +45,8 @@ class DrawTest {
     private fun frameOf(spanned: Spanned): ComposedFrame {
         val resolver = FrameResolver()
         resolver.typesetter = Typesetter(spanned)
-        resolver.frameBounds = RectF(0.0f, 0.0f, 300.0f, 100.0f)
+        resolver.frameWidth = 300.0f
+        resolver.frameHeight = 100.0f
 
         return resolver.createFrame(0, spanned.length)
     }
@@ -70,6 +70,45 @@ class DrawTest {
         }
 
         return total
+    }
+
+    /* The shadow is blended with the background, so it is found by its blue tint. */
+    private fun countBluish(bitmap: Bitmap): Int {
+        var total = 0
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                val pixel = bitmap.getPixel(x, y)
+                if (Color.blue(pixel) > Color.red(pixel) + 30) {
+                    total++
+                }
+            }
+        }
+
+        return total
+    }
+
+    @Test
+    fun testShadowIsDrawnByCore() {
+        val shadowed = Renderer()
+        shadowed.fillColor = Color.RED
+        shadowed.shadowRadius = 0.5f
+        shadowed.shadowDx = 4.0f
+        shadowed.shadowDy = 4.0f
+        shadowed.shadowColor = Color.BLUE
+
+        val plain = Renderer()
+        plain.fillColor = Color.RED
+
+        val frame = frameOf(styled("Hello"))
+        val withShadow = draw(frame, shadowed)
+        val without = draw(frame, plain)
+
+        assertEquals(0, countBluish(without))
+        assertTrue(countBluish(withShadow) > 0)
+        assertTrue(Math.abs(count(without, Color.RED) - count(withShadow, Color.RED)) < 40)
+
+        // The shadow is scoped to the draw call, so a later draw has none.
+        assertEquals(0, countBluish(draw(frame, plain)))
     }
 
     @Test

@@ -44,6 +44,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved) {
           && register_com_mta_tehreer_layout_GlyphRun(env) == JNI_OK
           && register_com_mta_tehreer_layout_FrameResolver(env) == JNI_OK
           && register_com_mta_tehreer_layout_ComposedFrame(env) == JNI_OK
+          && register_com_mta_tehreer_layout_LineLocator(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingEngine(env) == JNI_OK
           && register_com_mta_tehreer_sfnt_ShapingResult(env) == JNI_OK
           && register_com_mta_tehreer_unicode_BidiAlgorithm(env) == JNI_OK

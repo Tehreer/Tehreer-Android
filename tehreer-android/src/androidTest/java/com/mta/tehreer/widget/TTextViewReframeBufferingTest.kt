@@ -32,12 +32,12 @@ import kotlin.math.roundToInt
 
 /**
  * The state-machine contract of double-buffered re-framing (see `TextContainer.updateComposedFrame`/
- * `updateLineBoxes`): a re-frame of text already on screen must never show a frame with zero lines,
+ * `updateLineLocator`): a re-frame of text already on screen must never show a frame with zero lines,
  * must leave the displayed frame/lines/views exactly as they are until the new frame AND its line
  * boxes are both ready, and must swap everything at once - while brand-new text keeps clearing
  * immediately, as before.
  *
- * A long document is used throughout so that `FrameResolvingTask`/`LineBoxesTask` take a real,
+ * A long document is used throughout so that `FrameResolvingTask`/`LineLocatorTask` take a real,
  * observable amount of wall-clock time on a background thread; a watcher thread polls the view from
  * the test thread (each poll itself hopping to the main thread, as [onMain] always does) while the
  * reframe is in flight, to sample what is on screen during the window the fix is about.

@@ -80,7 +80,7 @@ class LinkableLabel : TLabel {
             val spanEnd = spanned.getSpanEnd(activeLinkSpan)
 
             activeLinkPath = composedFrame.generateSelectionPath(spanStart, spanEnd)
-            activeLinkPath?.offset(composedFrame.originX, composedFrame.originY)
+            activeLinkPath?.offset(paddingLeft.toFloat(), paddingTop.toFloat())
         } else {
             activeLinkPath = null
         }

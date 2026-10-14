@@ -136,7 +136,7 @@ class TTextViewFrameTimeTest {
         val line = frame.lines[frame.getLineIndexForChar(charIndex)]
         val (_, originY) = host.containerOrigin()
 
-        originY + frame.originY + line.originY - line.ascent
+        originY + line.originY - line.ascent
     }
 
     /** A text with a view in the middle of a long one. */

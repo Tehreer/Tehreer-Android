@@ -21,7 +21,7 @@ import android.text.SpannedString
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.mta.tehreer.graphics.Renderer
-import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.DrawStyle
 import com.mta.tehreer.graphics.StrokeCap
 import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
@@ -48,14 +48,15 @@ internal data class TextProperties(
     var textAlignment: TextAlignment = TextAlignment.LEADING,
     var textColor: Color = Color.Black,
     var truncationMode: BreakMode = BreakMode.LINE,
-    var truncationPlace: TruncationPlace? = null,
+    var truncationPlace: TruncationPlace = TruncationPlace.END,
+    var isTruncationEnabled: Boolean = false,
     var isJustificationEnabled: Boolean = false,
     var justificationLevel: Float = 1.0f,
     var maxLines: Int? = null,
     var extraLineSpacing: Float = 0f,
     var lineHeightMultiplier: Float = 1.0f,
     var separatorColor: Color? = null,
-    var renderingStyle: RenderingStyle = RenderingStyle.FILL,
+    var drawStyle: DrawStyle = DrawStyle.FILL,
     var strokeColor: Color = Color.Black,
     var strokeWidth: Float = 1f,
     var strokeCap: StrokeCap = StrokeCap.BUTT,
@@ -95,6 +96,7 @@ internal data class TextProperties(
         resolver.textAlignment = textAlignment
         resolver.truncationMode = truncationMode
         resolver.truncationPlace = truncationPlace
+        resolver.isTruncationEnabled = isTruncationEnabled
         resolver.isJustificationEnabled = isJustificationEnabled
         resolver.justificationLevel = justificationLevel
         resolver.maxLines = maxLines ?: 0
@@ -103,7 +105,7 @@ internal data class TextProperties(
     }
 
     fun updateRenderer(renderer: Renderer) {
-        renderer.renderingStyle = renderingStyle
+        renderer.drawStyle = drawStyle
         renderer.fillColor = textColor.toArgb()
         renderer.strokeColor = strokeColor.toArgb()
         renderer.strokeWidth = strokeWidth

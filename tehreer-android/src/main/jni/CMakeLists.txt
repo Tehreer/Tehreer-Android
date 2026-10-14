@@ -185,6 +185,7 @@ set(FILE_LIST
     ComposedLine.cpp
     FontFile.cpp
     ComposedFrame.cpp
+    LineLocator.cpp
     FrameResolver.cpp
     GlyphRun.cpp
     JavaBridge.cpp

@@ -39,8 +39,6 @@ import java.util.NavigableMap
  */
 class ComposedFrame internal constructor(
     private val nativeFrame: Long,
-    originX: Float,
-    originY: Float,
     private val source: Spanned,
     typefaces: Map<Long, Typeface>,
     holders: NavigableMap<Int, ReplacementHolder>
@@ -59,16 +57,6 @@ class ComposedFrame internal constructor(
     private val paint by lazy(LazyThreadSafetyMode.NONE) { Paint() }
     private var lineSpans: Array<Array<ParagraphStyle>>? = null
     private var firstLines: BooleanArray? = null
-
-    /**
-     * Returns the x- origin of this frame.
-     */
-    val originX = originX
-
-    /**
-     * Returns the y- origin of this frame.
-     */
-    val originY = originY
 
     /**
      * Returns an unmodifiable list that contains all the lines of this frame.
@@ -249,6 +237,20 @@ class ComposedFrame internal constructor(
     }
 
     /**
+     * Creates a locator that finds the lines of this frame visible in a rectangle. The ink boxes of
+     * the lines are measured with the given renderer, which is the one that draws the frame.
+     *
+     * @param renderer The renderer that decides how the glyphs are measured.
+     * @return A new line locator.
+     *
+     * @throws IllegalStateException if the locator could not be created, for example when the
+     *         lines are placed billions of units apart.
+     */
+    fun createLineLocator(renderer: Renderer): LineLocator {
+        return LineLocator(nativeFrame, renderer.nativeHandle)
+    }
+
+    /**
      * Draws this frame onto the given `canvas` using the given `renderer`.
      *
      * @param renderer The renderer to use for drawing this frame.
@@ -309,8 +311,6 @@ class ComposedFrame internal constructor(
     override fun toString(): String {
         return "ComposedFrame{charStart=$charStart" +
             ", charEnd=$charEnd" +
-            ", originX=$originX" +
-            ", originY=$originY" +
             ", width=$width" +
             ", height=$height" +
             ", lines=${Description.forIterable(lines)}" +

@@ -30,13 +30,14 @@ import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.annotation.VisibleForTesting
 import com.mta.tehreer.graphics.Renderer
-import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.DrawStyle
 import com.mta.tehreer.graphics.StrokeCap
 import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.util.SmartRunnable
 import com.mta.tehreer.layout.ComposedFrame
 import com.mta.tehreer.layout.ComposedLine
+import com.mta.tehreer.layout.LineLocator
 import com.mta.tehreer.layout.TextAlignment
 import com.mta.tehreer.layout.Typesetter
 import com.mta.tehreer.layout.style.ViewSpan
@@ -57,7 +58,10 @@ internal class TextContainer : ViewGroup {
     internal lateinit var properties: TextProperties
 
     private var displayedFrame: ComposedFrame? = null
-    private var displayedLineBoxes = LineBoxes()
+    private var displayedLineLocator: LineLocator? = null
+    private val visibleBounds = RectF()
+    private val lineBox = RectF()
+    private var visibleLines = IntArray(64)
 
     private var pendingFrame: ComposedFrame? = null
     private var isSwapPending = false
@@ -243,8 +247,8 @@ internal class TextContainer : ViewGroup {
             }
         )
         subTasks.add(
-            LineBoxesTask(context) { lineBoxes ->
-                updateLineBoxes(context.layoutID, lineBoxes)
+            LineLocatorTask(context) { lineLocator ->
+                updateLineLocator(context.layoutID, lineLocator)
             }
         )
 
@@ -262,7 +266,7 @@ internal class TextContainer : ViewGroup {
     }
 
     /**
-     * The frame resolves well before its line boxes, and is only displayed once they are ready,
+     * The frame resolves well before its line locator, and is only displayed once it is ready,
      * so a line view never appears before its own text.
      */
     private fun updateComposedFrame(layoutID: Any?, composedFrame: ComposedFrame?) {
@@ -291,12 +295,12 @@ internal class TextContainer : ViewGroup {
         }
     }
 
-    private fun updateLineBoxes(layoutID: Any?, lineBoxes: LineBoxes) {
+    private fun updateLineLocator(layoutID: Any?, lineLocator: LineLocator?) {
         if (layoutID !== properties.layoutID) {
             return
         }
 
-        displayedLineBoxes = lineBoxes
+        displayedLineLocator = lineLocator
 
         if (!isSwapPending) {
             layoutLines()
@@ -362,15 +366,16 @@ internal class TextContainer : ViewGroup {
         updateVisibleRect()
 
         val lines = frame.lines
-        val lineBoxes = displayedLineBoxes
-        val boxes = lineBoxes.boxes
+        val lineLocator = displayedLineLocator ?: return
+
+        visibleBounds.set(visibleRect)
 
         var attachedIndex = attachedLineViews.size - 1
 
         while (attachedIndex >= 0) {
             val lineView = attachedLineViews[attachedIndex]
 
-            if (!Rect.intersects(boxes[lineView.lineIndex], visibleRect)) {
+            if (!RectF.intersects(lineLocator.getLineBox(lineView.lineIndex, lineBox), visibleBounds)) {
                 lineViewsByIndex[lineView.lineIndex] = null
 
                 val lastIndex = attachedLineViews.size - 1
@@ -383,15 +388,23 @@ internal class TextContainer : ViewGroup {
             attachedIndex -= 1
         }
 
-        lineBoxes.forEachLineIndex(visibleRect) { lineIndex ->
+        var lineCount = lineLocator.findLines(visibleBounds, visibleLines)
+        if (lineCount > visibleLines.size) {
+            visibleLines = IntArray(lineCount * 2)
+            lineCount = lineLocator.findLines(visibleBounds, visibleLines)
+        }
+
+        for (position in 0 until lineCount) {
+            val lineIndex = visibleLines[position]
+
             if (lineViewsByIndex[lineIndex] == null) {
                 val lineView = dequeueReusableLineView()
                 lineView.lineIndex = lineIndex
                 lineView.line = lines[lineIndex]
                 configure(lineView)
 
-                val box = boxes[lineIndex]
-                lineView.layout(box.left, box.top, box.right, box.bottom)
+                val box = lineLocator.getLineBox(lineIndex, lineBox)
+                lineView.layout(box.left.toInt(), box.top.toInt(), box.right.toInt(), box.bottom.toInt())
 
                 if (lineView.parent == null) {
                     addView(lineView, 0)
@@ -440,6 +453,9 @@ internal class TextContainer : ViewGroup {
 
     private fun updateRenderer(renderer: Renderer) = properties.updateRenderer(renderer)
 
+    /** The box of a line has integral edges, so nothing is lost. */
+    private fun RectF.toRect() = Rect(left.toInt(), top.toInt(), right.toInt(), bottom.toInt())
+
     private fun updateLineViews() {
         for (lineView in attachedLineViews) {
             configure(lineView)
@@ -448,27 +464,23 @@ internal class TextContainer : ViewGroup {
     }
 
     private fun lineTop(frame: ComposedFrame, line: ComposedLine) =
-        frame.originY + line.originY - line.ascent
+        line.originY - line.ascent
 
     private fun lineBottom(frame: ComposedFrame, line: ComposedLine) =
-        frame.originY + line.originY + line.descent + line.leading
+        line.originY + line.descent + line.leading
 
     /** The first line that reaches below [top], or the last one if it is further up. */
     private fun firstVisibleLineIndex(frame: ComposedFrame, top: Float = visibleRect.top.toFloat()): Int {
         val lines = frame.lines
-        val lineBoxes = displayedLineBoxes
 
-        val lineIndex = lineBoxes.firstLineIndex(floor(top).toInt()) {
-            lineBottom(frame, lines[it]) > top
-        }
-
-        if (lineIndex >= 0) {
-            return lineIndex
-        }
-
-        for (unboxedIndex in lineBoxes.size until lines.size) {
-            if (lineBottom(frame, lines[unboxedIndex]) > top) {
-                return unboxedIndex
+        // The lines before the first box that reaches below the top end above it too. The box of a
+        // line can reach lower than the line, so the lines are checked from there.
+        val firstIndex = displayedLineLocator?.getFirstLineIndexBelow(floor(top)) ?: 0
+        if (firstIndex >= 0) {
+            for (lineIndex in firstIndex until lines.size) {
+                if (lineBottom(frame, lines[lineIndex]) > top) {
+                    return lineIndex
+                }
             }
         }
 
@@ -604,25 +616,16 @@ internal class TextContainer : ViewGroup {
     }
 
     @VisibleForTesting
-    internal fun lineBoxesForTesting(): List<Rect> = displayedLineBoxes.boxes
+    internal fun lineBoxesForTesting(): List<Rect> {
+        val lineLocator = displayedLineLocator ?: return emptyList()
+
+        return List(lineLocator.lineCount) { lineLocator.getLineBox(it).toRect() }
+    }
 
     @VisibleForTesting
     internal fun visibleRectForTesting(): Rect {
         updateVisibleRect()
         return Rect(visibleRect)
-    }
-
-    /**
-     * Replaces the line boxes that [layoutLines] culls against, and invalidates the layout ID so
-     * that a real [LineBoxesTask] chunk still in flight cannot land afterward and clobber them.
-     */
-    @VisibleForTesting
-    internal fun overrideLineBoxesForTesting(boxes: List<Rect>) {
-        properties.layoutID = Any()
-        displayedLineBoxes = LineBoxes().also { lineBoxes -> boxes.forEach { lineBoxes.add(it) } }
-
-        recycleLineViews()
-        layoutLines()
     }
 
     /**
@@ -636,8 +639,8 @@ internal class TextContainer : ViewGroup {
             return -1
         }
 
-        val frameX = x - originInScrollView[0] - frame.originX
-        val frameY = y - originInScrollView[1] - frame.originY
+        val frameX = x - originInScrollView[0]
+        val frameY = y - originInScrollView[1]
 
         // The first line that does not end above the position, so that a point above the first
         // line, or in a gap between two lines, is not taken for one below the last line.
@@ -658,8 +661,8 @@ internal class TextContainer : ViewGroup {
             return -1
         }
 
-        val frameX = x - originInScrollView[0] - frame.originX
-        val frameY = y - originInScrollView[1] - frame.originY
+        val frameX = x - originInScrollView[0]
+        val frameY = y - originInScrollView[1]
 
         val line = frame.lines.firstOrNull {
             val lineTop = it.originY - it.ascent
@@ -681,7 +684,7 @@ internal class TextContainer : ViewGroup {
             }
 
             val rects = computeSelectionRects(frame, charIndex, charIndex + 1)
-            if (rects.any { it.contains(frameX + frame.originX, frameY + frame.originY) }) {
+            if (rects.any { it.contains(frameX, frameY) }) {
                 return charIndex
             }
         }
@@ -846,10 +849,10 @@ internal class TextContainer : ViewGroup {
             updateLineViews()
         }
 
-    var renderingStyle: RenderingStyle
-        get() = properties.renderingStyle
-        set(renderingStyle) {
-            properties.renderingStyle = renderingStyle
+    var drawStyle: DrawStyle
+        get() = properties.drawStyle
+        set(drawStyle) {
+            properties.drawStyle = drawStyle
             updateLineViews()
         }
 

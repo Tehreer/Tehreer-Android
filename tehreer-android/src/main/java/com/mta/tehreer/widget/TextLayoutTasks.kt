@@ -17,27 +17,23 @@
 package com.mta.tehreer.widget
 
 import android.graphics.Color
-import android.graphics.Rect
-import android.graphics.RectF
 import android.os.Handler
 import android.text.Spanned
 import com.mta.tehreer.graphics.Renderer
-import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.DrawStyle
 import com.mta.tehreer.graphics.StrokeCap
 import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.util.SmartRunnable
 import com.mta.tehreer.layout.ComposedFrame
 import com.mta.tehreer.layout.FrameResolver
+import com.mta.tehreer.layout.LineLocator
 import com.mta.tehreer.layout.TextAlignment
 import com.mta.tehreer.layout.Typesetter
 import com.mta.tehreer.layout.style.TypeSizeSpan
 import com.mta.tehreer.layout.style.TypefaceSpan
 import java.util.Queue
-import kotlin.math.ceil
-import kotlin.math.floor
 
-private const val LINE_BOXES_UPDATE_INTERVAL = 64
 
 internal data class TextProperties(
     var handler: Handler,
@@ -54,7 +50,7 @@ internal data class TextProperties(
     var isJustificationEnabled: Boolean = false,
     var justificationLevel: Float = 1.0f,
     var separatorColor: Int = Color.TRANSPARENT,
-    var renderingStyle: RenderingStyle = RenderingStyle.FILL,
+    var drawStyle: DrawStyle = DrawStyle.FILL,
     var strokeColor: Int = Color.BLACK,
     var strokeWidth: Float = 0.0f,
     var strokeCap: StrokeCap = StrokeCap.BUTT,
@@ -67,7 +63,7 @@ internal data class TextProperties(
         renderer.typeface = typeface
         renderer.typeSize = textSize
         renderer.fillColor = textColor
-        renderer.renderingStyle = renderingStyle
+        renderer.drawStyle = drawStyle
         renderer.strokeColor = strokeColor
         renderer.strokeWidth = strokeWidth
         renderer.strokeCap = strokeCap
@@ -167,8 +163,8 @@ internal class FrameResolvingTask(
             val resolver = FrameResolver()
             resolver.apply {
                 typesetter = input
-                frameBounds =
-                    RectF(0.0f, 0.0f, properties.layoutWidth.toFloat(), Float.POSITIVE_INFINITY)
+                frameWidth = properties.layoutWidth.toFloat()
+                frameHeight = Float.POSITIVE_INFINITY
                 fitsHorizontally = false
                 fitsVertically = true
                 textAlignment = properties.textAlignment
@@ -185,53 +181,27 @@ internal class FrameResolvingTask(
     }
 }
 
-internal class LineBoxesTask(
+internal class LineLocatorTask(
     private val properties: TextProperties,
-    private val listener: OnTaskUpdateListener<LineBoxes>
+    private val listener: OnTaskUpdateListener<LineLocator?>
 ) : SmartRunnable() {
-    private val lineBoxes = LineBoxes()
-
-    private fun notifyUpdateIfNeeded() {
+    private fun notifyUpdateIfNeeded(lineLocator: LineLocator?) {
         if (!isCancelled) {
-            val snapshot = lineBoxes.copy()
-
-            properties.handler.post { listener(snapshot) }
+            properties.handler.post { listener(lineLocator) }
         }
     }
 
     override fun run() {
-        val lines = properties.resolvedFrame?.lines
-        if (lines != null) {
+        var lineLocator: LineLocator? = null
+
+        val frame = properties.resolvedFrame
+        if (frame != null) {
             val renderer = Renderer()
             properties.updateRenderer(renderer)
 
-            for ((lineIndex, line) in lines.withIndex()) {
-                val lineTop = line.originY - line.ascent
-                val boundingBox = RectF(0.0f, lineTop, properties.layoutWidth.toFloat(), lineTop + line.height)
-
-                val inkBox = line.computeBoundingBox(renderer)
-                inkBox.offset(line.originX, line.originY)
-                boundingBox.union(inkBox)
-
-                lineBoxes.add(
-                    Rect(
-                        floor(boundingBox.left).toInt(),
-                        floor(boundingBox.top).toInt(),
-                        ceil(boundingBox.right).toInt(),
-                        ceil(boundingBox.bottom).toInt()
-                    )
-                )
-
-                if (isCancelled) {
-                    break
-                }
-
-                if ((lineIndex + 1) % LINE_BOXES_UPDATE_INTERVAL == 0) {
-                    notifyUpdateIfNeeded()
-                }
-            }
+            lineLocator = frame.createLineLocator(renderer)
         }
 
-        notifyUpdateIfNeeded()
+        notifyUpdateIfNeeded(lineLocator)
     }
 }

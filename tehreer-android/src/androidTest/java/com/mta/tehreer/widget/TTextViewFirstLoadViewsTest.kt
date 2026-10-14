@@ -30,15 +30,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The scope last round's double-buffered re-framing missed (see `TextContainer.updateComposedFrame`/
- * `updateLineBoxes`): FIRST LOAD of brand-new text, not just a re-frame of text already on screen.
+ * `updateLineLocator`): FIRST LOAD of brand-new text, not just a re-frame of text already on screen.
  * Before this round's fix, `updateComposedFrame`'s `isTextNew` branch resolved `viewSlots` and
  * called `layoutLines()` (which shows the views via `layoutViews()`) immediately, well before
- * `displayedLineBoxes` had anything in it - so a `ViewSpan`'s view could appear on screen before
+ * `displayedLineLocator` had anything in it - so a `ViewSpan`'s view could appear on screen before
  * any text line did. The fix unifies first-load and re-frame through the same pending/swap
- * mechanism, so `updateLineBoxes` is the only place that ever resolves `viewSlots`/shows views, for
+ * mechanism, so `updateLineLocator` is the only place that ever resolves `viewSlots`/shows views, for
  * either kind of pending swap.
  *
- * A long document is used so `TypesettingTask`/`FrameResolvingTask`/`LineBoxesTask` take a real,
+ * A long document is used so `TypesettingTask`/`FrameResolvingTask`/`LineLocatorTask` take a real,
  * observable amount of wall-clock time on a background thread, giving a watcher thread (polling the
  * view from the test thread, each poll itself hopping to the main thread) a real window to catch a
  * bad intermediate state in, mirroring `TTextViewReframeBufferingTest`'s approach for re-frames.

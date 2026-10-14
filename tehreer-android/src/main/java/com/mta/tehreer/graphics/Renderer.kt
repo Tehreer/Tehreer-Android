@@ -46,7 +46,6 @@ class Renderer {
     private val finalizable = Finalizable(nativeRenderer)
 
     private val paint = Paint()
-    private var isShadowLayerSynced = true
 
     /**
      * Returns the handle of the renderer of Core. It is only for the layout package.
@@ -58,25 +57,11 @@ class Renderer {
         get() = nativeRenderer
 
     /**
-     * Sets the properties of the renderer of Core again, as measuring a run with it changes them.
-     *
-     * @hidden
-     */
-    private fun syncShadowLayer() {
-        if (!isShadowLayerSynced) {
-            isShadowLayerSynced = true
-            paint.setShadowLayer(shadowRadius, shadowDx, shadowDy, shadowColor)
-        }
-    }
-
-    /**
-     * Returns the paint that Core draws with onto the given canvas, after bringing its shadow
-     * layer up to date.
+     * Returns the paint that Core draws with onto the given canvas. Core applies the shadow on it
+     * while it draws.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     fun preparePaint(canvas: Canvas): Paint {
-        syncShadowLayer()
-
         if (shadowRadius > 0.0f && canvas.isHardwareAccelerated) {
             Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered")
         }
@@ -85,46 +70,11 @@ class Renderer {
     }
 
     /**
-     * This renderer's fill color for glyphs, expressed as ARGB integer. The default value is
-     * `Color.BLACK`.
-     */
-    @get:ColorInt
-    @setparam:ColorInt
-    var fillColor: Int = Color.BLACK
-        set(value) {
-            field = value
-            nSetForegroundColor(nativeRenderer, value)
-        }
-
-    /**
-     * This renderer's style, used for controlling how glyphs should appear while drawing. The
-     * default value is [RenderingStyle.FILL].
-     */
-    var renderingStyle = RenderingStyle.FILL
-        set(value) {
-            field = value
-            nSetDrawStyle(nativeRenderer, when (value) {
-                RenderingStyle.FILL -> 0
-                RenderingStyle.STROKE -> 1
-                RenderingStyle.FILL_STROKE -> 2
-            })
-        }
-
-    /**
-     * The direction in which the pen will advance after drawing a glyph. The default value is
-     * [WritingDirection.LEFT_TO_RIGHT].
-     */
-    var writingDirection = WritingDirection.LEFT_TO_RIGHT
-        set(value) {
-            field = value
-            nSetWritingDirection(nativeRenderer, value.value)
-        }
-
-    /**
      * This renderer's typeface, used for drawing glyphs.
      */
     var typeface: Typeface? = null
         set(value) {
+            // Core does not retain the object of Kotlin, so it is kept here.
             field = value
             nSetTypeface(nativeRenderer, value?.nativeTypeface ?: 0)
         }
@@ -134,21 +84,12 @@ class Renderer {
      *
      * @throws IllegalArgumentException if the new value is negative.
      */
-    var typeSize = 16.0f
+    var typeSize: Float
+        get() = nGetTypeSize(nativeRenderer)
         set(value) {
             require(value >= 0.0f) { "The value of type size is negative" }
 
-            field = value
             nSetTypeSize(nativeRenderer, value)
-        }
-
-    /**
-     * This renderer's slant angle for glyphs. The default value is 0.
-     */
-    var slantAngle = 0.0f
-        set(value) {
-            field = value
-            nSetSkewX(nativeRenderer, value)
         }
 
     /**
@@ -156,11 +97,11 @@ class Renderer {
      * than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
      * narrower.
      */
-    var scaleX = 1.0f
+    var scaleX: Float
+        get() = nGetScaleX(nativeRenderer)
         set(value) {
             require(value >= 0.0f) { "Scale value is negative" }
 
-            field = value
             nSetScaleX(nativeRenderer, value)
         }
 
@@ -169,12 +110,91 @@ class Renderer {
      * than 1.0 will stretch the glyphs wider. Values less than 1.0 will stretch the glyphs
      * narrower.
      */
-    var scaleY = 1.0f
+    var scaleY: Float
+        get() = nGetScaleY(nativeRenderer)
         set(value) {
             require(value >= 0.0f) { "Scale value is negative" }
 
-            field = value
             nSetScaleY(nativeRenderer, value)
+        }
+
+    /**
+     * This renderer's slant angle for glyphs. The default value is 0.
+     */
+    var slantAngle: Float
+        get() = nGetSkewX(nativeRenderer)
+        set(value) {
+            nSetSkewX(nativeRenderer, value)
+        }
+
+    /**
+     * The direction in which the pen will advance after drawing a glyph. The default value is
+     * [WritingDirection.LEFT_TO_RIGHT].
+     */
+    var writingDirection: WritingDirection
+        get() = if (nGetWritingDirection(nativeRenderer) == 1) {
+            WritingDirection.RIGHT_TO_LEFT
+        } else {
+            WritingDirection.LEFT_TO_RIGHT
+        }
+        set(value) {
+            nSetWritingDirection(nativeRenderer, value.value)
+        }
+
+    /**
+     * This renderer's fill color for glyphs, expressed as ARGB integer. The default value is
+     * `Color.BLACK`.
+     */
+    @get:ColorInt
+    @setparam:ColorInt
+    var fillColor: Int
+        get() = nGetForegroundColor(nativeRenderer)
+        set(value) {
+            nSetForegroundColor(nativeRenderer, value)
+        }
+
+    /**
+     * This renderer's width in pixels for stroking glyphs. The default value is 1.0.
+     */
+    var strokeWidth: Float
+        get() = nGetStrokeRadius(nativeRenderer) * 2.0f
+        set(value) {
+            require(value >= 0.0f) { "Stroke width is negative" }
+
+            nSetStrokeRadius(nativeRenderer, value * 0.5f)
+        }
+
+    /**
+     * This renderer's cap, controlling how the start and end of stroked lines and paths are
+     * treated. The default value is [StrokeCap.BUTT].
+     */
+    var strokeCap: StrokeCap
+        get() = StrokeCap.entries.first { it.value == nGetStrokeCap(nativeRenderer) }
+        set(value) {
+            nSetStrokeCap(nativeRenderer, value.value)
+        }
+
+    /**
+     * This renderer's stroke join type. The default value is [StrokeJoin.ROUND].
+     */
+    var strokeJoin: StrokeJoin
+        get() = StrokeJoin.entries.first { it.value == nGetStrokeJoin(nativeRenderer) }
+        set(value) {
+            nSetStrokeJoin(nativeRenderer, value.value)
+        }
+
+    /**
+     * This renderer's stroke miter value in pixels. The default value is 1.0. This is used to control the behavior of miter
+     * joins when the joins angle is sharp.
+     *
+     * @throws IllegalArgumentException if the new value is less than one.
+     */
+    var strokeMiter: Float
+        get() = nGetStrokeMiter(nativeRenderer)
+        set(value) {
+            require(value >= 1.0f) { "Stroke miter is less than one" }
+
+            nSetStrokeMiter(nativeRenderer, value)
         }
 
     /**
@@ -183,54 +203,10 @@ class Renderer {
      */
     @get:ColorInt
     @setparam:ColorInt
-    var strokeColor: Int = Color.BLACK
+    var strokeColor: Int
+        get() = nGetStrokeColor(nativeRenderer)
         set(value) {
-            field = value
             nSetStrokeColor(nativeRenderer, value)
-        }
-
-    /**
-     * This renderer's width in pixels for stroking glyphs.
-     */
-    var strokeWidth = 0.0f
-        set(value) {
-            require(value >= 0.0f) { "Stroke width is negative" }
-
-            field = value
-            nSetStrokeWidth(nativeRenderer, value)
-        }
-
-    /**
-     * This renderer's cap, controlling how the start and end of stroked lines and paths are
-     * treated. The default value is [StrokeCap.BUTT].
-     */
-    var strokeCap = StrokeCap.BUTT
-        set(value) {
-            field = value
-            nSetStrokeCap(nativeRenderer, value.value)
-        }
-
-    /**
-     * This renderer's stroke join type. The default value is [StrokeJoin.ROUND].
-     */
-    var strokeJoin = StrokeJoin.ROUND
-        set(value) {
-            field = value
-            nSetStrokeJoin(nativeRenderer, value.value)
-        }
-
-    /**
-     * This renderer's stroke miter value in pixels. This is used to control the behavior of miter
-     * joins when the joins angle is sharp.
-     *
-     * @throws IllegalArgumentException if the new value is less than one.
-     */
-    var strokeMiter = 0.0f
-        set(value) {
-            require(value >= 1.0f) { "Stroke miter is less than one" }
-
-            field = value
-            nSetStrokeMiter(nativeRenderer, value)
         }
 
     /**
@@ -239,30 +215,30 @@ class Renderer {
      *
      * @throws IllegalArgumentException if the new value is negative.
      */
-    var shadowRadius = 0.0f
+    var shadowRadius: Float
+        get() = nGetShadowRadius(nativeRenderer)
         set(value) {
             require(value >= 0.0f) { "Shadow radius is negative" }
 
-            field = value
-            isShadowLayerSynced = false
+            nSetShadowRadius(nativeRenderer, value)
         }
 
     /**
      * This renderer's horizontal shadow offset in pixels.
      */
-    var shadowDx = 0.0f
+    var shadowDx: Float
+        get() = nGetShadowDx(nativeRenderer)
         set(value) {
-            field = value
-            isShadowLayerSynced = false
+            nSetShadowDx(nativeRenderer, value)
         }
 
     /**
      * This renderer's vertical shadow offset in pixels.
      */
-    var shadowDy = 0.0f
+    var shadowDy: Float
+        get() = nGetShadowDy(nativeRenderer)
         set(value) {
-            field = value
-            isShadowLayerSynced = false
+            nSetShadowDy(nativeRenderer, value)
         }
 
     /**
@@ -270,22 +246,29 @@ class Renderer {
      */
     @get:ColorInt
     @setparam:ColorInt
-    var shadowColor: Int = Color.TRANSPARENT
+    var shadowColor: Int
+        get() = nGetShadowColor(nativeRenderer)
         set(value) {
-            field = value
-            isShadowLayerSynced = false
+            nSetShadowColor(nativeRenderer, value)
         }
 
-    // The settings of Core have to follow the ones that differ from its own defaults.
-    init {
-        fillColor = Color.BLACK
-        strokeColor = Color.BLACK
-        renderingStyle = RenderingStyle.FILL
-        strokeWidth = 1.0f
-        strokeCap = StrokeCap.BUTT
-        strokeJoin = StrokeJoin.ROUND
-        strokeMiter = 1.0f
-    }
+    /**
+     * This renderer's style, used for controlling how glyphs should appear while drawing. The
+     * default value is [DrawStyle.FILL].
+     */
+    var drawStyle: DrawStyle
+        get() = when (nGetDrawStyle(nativeRenderer)) {
+            1 -> DrawStyle.STROKE
+            2 -> DrawStyle.FILL_STROKE
+            else -> DrawStyle.FILL
+        }
+        set(value) {
+            nSetDrawStyle(nativeRenderer, when (value) {
+                DrawStyle.FILL -> 0
+                DrawStyle.STROKE -> 1
+                DrawStyle.FILL_STROKE -> 2
+            })
+        }
 
     /**
      * Generates the path of the specified glyph.
@@ -295,20 +278,6 @@ class Renderer {
      */
     fun generatePath(glyphId: Int): Path {
         return nGetGlyphPath(nativeRenderer, glyphId)
-    }
-
-    /**
-     * Generates a cumulative path of specified glyphs.
-     *
-     * @param glyphIds The list containing the glyph IDs.
-     * @param offsets The list containing the glyph offsets.
-     * @param advances The list containing the glyph advances.
-     * @return The cumulative path of specified glyphs.
-     */
-    fun generatePath(glyphIds: IntList, offsets: PointList, advances: FloatList): Path {
-        return nGetRunPath(
-            nativeRenderer, glyphIds.toArray(), offsets.toArray(), advances.toArray(), glyphIds.size()
-        )
     }
 
     /**
@@ -367,35 +336,79 @@ class Renderer {
         if (nIsRenderable(nativeRenderer)) {
             preparePaint(canvas)
 
-            if (renderingStyle == RenderingStyle.FILL || renderingStyle == RenderingStyle.FILL_STROKE) {
+            // Core applies the shadow only while it draws runs, lines and frames.
+            val radius = shadowRadius
+            val dx = shadowDx
+            val dy = shadowDy
+            val hasShadow = radius > 0.0f && radius.isFinite() && dx.isFinite() && dy.isFinite()
+            if (hasShadow) {
+                paint.setShadowLayer(radius, dx, dy, shadowColor)
+            }
+
+            if (drawStyle == DrawStyle.FILL || drawStyle == DrawStyle.FILL_STROKE) {
                 paint.color = fillColor
                 drawGlyphs(canvas, glyphIds, offsets, advances, false)
             }
-            if (renderingStyle == RenderingStyle.STROKE || renderingStyle == RenderingStyle.FILL_STROKE) {
+            if (drawStyle == DrawStyle.STROKE || drawStyle == DrawStyle.FILL_STROKE) {
                 paint.color = strokeColor
                 drawGlyphs(canvas, glyphIds, offsets, advances, true)
+            }
+
+            if (hasShadow) {
+                paint.clearShadowLayer()
             }
         }
     }
 
+    /**
+     * Generates a cumulative path of specified glyphs.
+     *
+     * @param glyphIds The list containing the glyph IDs.
+     * @param offsets The list containing the glyph offsets.
+     * @param advances The list containing the glyph advances.
+     * @return The cumulative path of specified glyphs.
+     */
+    fun generatePath(glyphIds: IntList, offsets: PointList, advances: FloatList): Path {
+        return nGetRunPath(
+            nativeRenderer, glyphIds.toArray(), offsets.toArray(), advances.toArray(), glyphIds.size()
+        )
+    }
+
     private external fun nSetTypeface(nativeRenderer: Long, nativeTypeface: Long)
+    private external fun nGetTypeSize(nativeRenderer: Long): Float
     private external fun nSetTypeSize(nativeRenderer: Long, typeSize: Float)
+    private external fun nGetScaleX(nativeRenderer: Long): Float
     private external fun nSetScaleX(nativeRenderer: Long, scaleX: Float)
+    private external fun nGetScaleY(nativeRenderer: Long): Float
     private external fun nSetScaleY(nativeRenderer: Long, scaleY: Float)
+    private external fun nGetSkewX(nativeRenderer: Long): Float
     private external fun nSetSkewX(nativeRenderer: Long, skewX: Float)
+    private external fun nGetWritingDirection(nativeRenderer: Long): Int
     private external fun nSetWritingDirection(nativeRenderer: Long, writingDirection: Int)
+    private external fun nGetForegroundColor(nativeRenderer: Long): Int
     private external fun nSetForegroundColor(nativeRenderer: Long, color: Int)
-    private external fun nSetStrokeWidth(nativeRenderer: Long, strokeWidth: Float)
-    private external fun nSetStrokeColor(nativeRenderer: Long, strokeColor: Int)
-    private external fun nSetDrawStyle(nativeRenderer: Long, drawStyle: Int)
+    private external fun nGetStrokeRadius(nativeRenderer: Long): Float
+    private external fun nSetStrokeRadius(nativeRenderer: Long, strokeRadius: Float)
+    private external fun nGetStrokeCap(nativeRenderer: Long): Int
     private external fun nSetStrokeCap(nativeRenderer: Long, strokeCap: Int)
+    private external fun nGetStrokeJoin(nativeRenderer: Long): Int
     private external fun nSetStrokeJoin(nativeRenderer: Long, strokeJoin: Int)
+    private external fun nGetStrokeMiter(nativeRenderer: Long): Float
     private external fun nSetStrokeMiter(nativeRenderer: Long, strokeMiter: Float)
+    private external fun nGetStrokeColor(nativeRenderer: Long): Int
+    private external fun nSetStrokeColor(nativeRenderer: Long, strokeColor: Int)
+    private external fun nGetShadowRadius(nativeRenderer: Long): Float
+    private external fun nSetShadowRadius(nativeRenderer: Long, shadowRadius: Float)
+    private external fun nGetShadowDx(nativeRenderer: Long): Float
+    private external fun nSetShadowDx(nativeRenderer: Long, shadowDx: Float)
+    private external fun nGetShadowDy(nativeRenderer: Long): Float
+    private external fun nSetShadowDy(nativeRenderer: Long, shadowDy: Float)
+    private external fun nGetShadowColor(nativeRenderer: Long): Int
+    private external fun nSetShadowColor(nativeRenderer: Long, shadowColor: Int)
+    private external fun nGetDrawStyle(nativeRenderer: Long): Int
+    private external fun nSetDrawStyle(nativeRenderer: Long, drawStyle: Int)
     private external fun nIsRenderable(nativeRenderer: Long): Boolean
     private external fun nGetGlyphPath(nativeRenderer: Long, glyphId: Int): Path
-    private external fun nGetRunPath(
-        nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
-    ): Path
     private external fun nGetGlyphBoundingBox(nativeRenderer: Long, glyphId: Int): RectF?
     private external fun nGetRunBoundingBox(
         nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
@@ -405,6 +418,10 @@ class Renderer {
         glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int,
         canvas: Canvas, paint: Paint
     )
+    private external fun nGetRunPath(
+        nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
+    ): Path
+
     private companion object {
         val TAG: String = Renderer::class.java.simpleName
 

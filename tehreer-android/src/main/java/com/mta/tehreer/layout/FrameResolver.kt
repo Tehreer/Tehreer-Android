@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.layout
 
-import android.graphics.RectF
 import androidx.annotation.FloatRange
 import com.mta.tehreer.internal.JniBridge
 
@@ -24,21 +23,41 @@ import com.mta.tehreer.internal.JniBridge
  * This class resolves text frames by using a typesetter object.
  */
 class FrameResolver {
+    private class Finalizable(private val nativeResolver: Long) {
+        @Suppress("unused")
+        protected fun finalize() {
+            nDispose(nativeResolver)
+        }
+    }
+
+    private val nativeResolver = nCreate()
+    private val finalizable = Finalizable(nativeResolver)
+
     /**
      * The typesetter to use for resolving frames.
      */
     var typesetter: Typesetter? = null
-
-    private val _frameBounds = RectF(0f, 0f, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+        set(value) {
+            field = value
+            nSetTypesetter(nativeResolver, value?.nativeTypesetter ?: 0)
+        }
 
     /**
-     * The rectangle specifying the frame bounds. The default value is an infinite rectangle at zero
-     * origin.
+     * The width of the frame. The default value is unbounded, which is `Float.MAX_VALUE`.
      */
-    var frameBounds: RectF
-        get() = RectF(_frameBounds)
+    var frameWidth: Float
+        get() = nGetFrameWidth(nativeResolver)
         set(value) {
-            _frameBounds.set(value)
+            nSetFrameSize(nativeResolver, value, nGetFrameHeight(nativeResolver))
+        }
+
+    /**
+     * The height of the frame. The default value is unbounded, which is `Float.MAX_VALUE`.
+     */
+    var frameHeight: Float
+        get() = nGetFrameHeight(nativeResolver)
+        set(value) {
+            nSetFrameSize(nativeResolver, nGetFrameWidth(nativeResolver), value)
         }
 
     /**
@@ -46,43 +65,119 @@ class FrameResolver {
      * frame will have a minimum width that tightly encloses all the lines of specified text. The
      * default value is `false`.
      */
-    var fitsHorizontally = false
+    var fitsHorizontally: Boolean
+        get() = nGetFitsHorizontally(nativeResolver)
+        set(value) {
+            nSetFitsHorizontally(nativeResolver, value)
+        }
 
     /**
      * Whether or not to tightly fit the lines vertically in a frame. If enabled, the resulting
      * frame will have a minimum height that tightly encloses all the lines of specified text. The
      * default value is `false`.
      */
-    var fitsVertically = false
+    var fitsVertically: Boolean
+        get() = nGetFitsVertically(nativeResolver)
+        set(value) {
+            nSetFitsVertically(nativeResolver, value)
+        }
 
     /**
      * The text alignment to apply on each line of a frame. The default value is
      * [TextAlignment.LEADING].
      */
-    var textAlignment = TextAlignment.LEADING
+    var textAlignment: TextAlignment
+        get() = when (nGetTextAlignment(nativeResolver)) {
+            1 -> TextAlignment.CENTER
+            2 -> TextAlignment.RIGHT
+            3 -> TextAlignment.LEADING
+            4 -> TextAlignment.TRAILING
+            else -> TextAlignment.LEFT
+        }
+        set(value) {
+            nSetTextAlignment(nativeResolver, when (value) {
+                TextAlignment.LEFT -> 0
+                TextAlignment.CENTER -> 1
+                TextAlignment.RIGHT -> 2
+                TextAlignment.LEADING -> 3
+                TextAlignment.TRAILING -> 4
+            })
+        }
 
     /**
      * The vertical alignment to apply on the contents of a frame. The default value is
      * [VerticalAlignment.TOP].
      */
-    var verticalAlignment = VerticalAlignment.TOP
+    var verticalAlignment: VerticalAlignment
+        get() = when (nGetVerticalAlignment(nativeResolver)) {
+            1 -> VerticalAlignment.MIDDLE
+            2 -> VerticalAlignment.BOTTOM
+            else -> VerticalAlignment.TOP
+        }
+        set(value) {
+            nSetVerticalAlignment(nativeResolver, when (value) {
+                VerticalAlignment.TOP -> 0
+                VerticalAlignment.MIDDLE -> 1
+                VerticalAlignment.BOTTOM -> 2
+            })
+        }
 
     /**
      * The truncation mode to apply on the last line of a frame in case of overflow. The default
      * value is [BreakMode.LINE].
      */
-    var truncationMode = BreakMode.LINE
+    var truncationMode: BreakMode
+        get() = when (nGetTruncationMode(nativeResolver)) {
+            1 -> BreakMode.CHARACTER
+            else -> BreakMode.LINE
+        }
+        set(value) {
+            nSetTruncationMode(nativeResolver, when (value) {
+                BreakMode.LINE -> 0
+                BreakMode.CHARACTER -> 1
+            })
+        }
 
     /**
-     * The truncation place for the last line of a frame. The truncation is disabled if the value is
-     * `null`.
+     * The truncation place for the last line of a frame. It takes effect only when the truncation
+     * is enabled. The default value is [TruncationPlace.END].
+     *
+     * @see isTruncationEnabled
      */
-    var truncationPlace: TruncationPlace? = null
+    var truncationPlace: TruncationPlace
+        get() = when (nGetTruncationPlace(nativeResolver)) {
+            0 -> TruncationPlace.START
+            1 -> TruncationPlace.MIDDLE
+            else -> TruncationPlace.END
+        }
+        set(value) {
+            nSetTruncationPlace(nativeResolver, when (value) {
+                TruncationPlace.START -> 0
+                TruncationPlace.MIDDLE -> 1
+                TruncationPlace.END -> 2
+            })
+        }
+
+    /**
+     * Whether or not to truncate the last line of a frame in case of overflow. The default value
+     * is `false`.
+     *
+     * @see truncationPlace
+     */
+    var isTruncationEnabled: Boolean
+        get() = nIsTruncationEnabled(nativeResolver)
+        set(value) {
+            nSetTruncationEnabled(nativeResolver, value)
+        }
 
     /**
      * Whether or not to justify the lines in a frame. The default value is `false`.
      */
-    var isJustificationEnabled = false
+    var isJustificationEnabled: Boolean
+        get() = nIsJustificationEnabled(nativeResolver)
+        set(value) {
+            nSetJustificationEnabled(nativeResolver, value)
+        }
 
     /**
      * The justification level which can range from 0.0 to 1.0. A lower value increases the
@@ -90,49 +185,56 @@ class FrameResolver {
      */
     @get:FloatRange(from = 0.0, to = 1.0)
     @set:FloatRange(from = 0.0, to = 1.0)
-    var justificationLevel = 1.0f
+    var justificationLevel: Float
+        get() = nGetJustificationLevel(nativeResolver)
+        set(value) {
+            nSetJustificationLevel(nativeResolver, value)
+        }
 
     /**
-     * The maximum number of lines that a frame should consist of.
+     * The maximum number of lines that a frame should consist of. The default value is zero, which
+     * means that the number of lines is not limited.
      */
-    var maxLines = 0
+    var maxLines: Int
+        get() = nGetMaxLines(nativeResolver)
+        set(value) {
+            nSetMaxLines(nativeResolver, value)
+        }
 
     /**
-     * The extra spacing in pixels to add after each line of a frame. It is resolved before line
+     * The extra spacing in pixels to add after each line of a frame. It is resolved after line
      * height multiplier. The default value is zero.
      *
      * The extra spacing is added in the leading of each line soon after it is composed.
      *
      * @see lineHeightMultiplier
      */
-    var extraLineSpacing = 0.0f
+    var extraLineSpacing: Float
+        get() = nGetExtraLineSpacing(nativeResolver)
+        set(value) {
+            nSetExtraLineSpacing(nativeResolver, value)
+        }
 
     /**
-     * The height multiplier to apply on each line of a frame. It is resolved after extra line
-     * spacing. The default value is zero, which means that it is not applied.
+     * The height multiplier to apply on each line of a frame. It is resolved before extra line
+     * spacing, and it is ignored if it is not positive. The default value is `1.0f`.
      *
      * The additional spacing is adjusted in such a way that text remains in the middle of the line.
      *
      * @see extraLineSpacing
      */
-    var lineHeightMultiplier = 0.0f
-
-    private fun nativeTextAlignment(): Int {
-        return when (textAlignment) {
-            TextAlignment.CENTER -> 1
-            TextAlignment.RIGHT -> 2
-            TextAlignment.LEADING -> 3
-            TextAlignment.TRAILING -> 4
-            else -> 0
+    var lineHeightMultiplier: Float
+        get() = nGetLineHeightMultiplier(nativeResolver)
+        set(value) {
+            nSetLineHeightMultiplier(nativeResolver, value)
         }
-    }
 
     /**
      * Creates a frame representing specified string range in source text.
      *
      * The resolver keeps on filling the frame until it either runs out of text or it finds that
-     * text no longer fits in frame bounds. The resulting frame consists of at least one line even
-     * if frame bounds are smaller.
+     * text no longer fits in frame size. The resulting frame consists of at least one line even
+     * if frame size is smaller.
      *
      * @param charStart The index to first character of the frame in source text.
      * @param charEnd The index after the last character of the line in source text.
@@ -149,32 +251,47 @@ class FrameResolver {
         require(charEnd <= textLength) { "Char End: $charEnd, Text Length: $textLength" }
         require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
 
-        val nativeFrame = nCreateFrame(
-            typesetter.nativeTypesetter, charStart, charEnd,
-            _frameBounds.width(), _frameBounds.height(),
-            fitsHorizontally, fitsVertically,
-            nativeTextAlignment(), verticalAlignment.ordinal,
-            truncationMode.ordinal, truncationPlace?.ordinal ?: -1,
-            isJustificationEnabled, justificationLevel, maxLines,
-            extraLineSpacing, lineHeightMultiplier
-        )
+        val nativeFrame = nCreateFrame(nativeResolver, charStart, charEnd)
 
-        return typesetter.makeFrame(nativeFrame, _frameBounds.left, _frameBounds.top)
+        return typesetter.makeFrame(nativeFrame)
     }
+
+    private external fun nSetTypesetter(nativeResolver: Long, nativeTypesetter: Long)
+    private external fun nGetFrameWidth(nativeResolver: Long): Float
+    private external fun nGetFrameHeight(nativeResolver: Long): Float
+    private external fun nSetFrameSize(nativeResolver: Long, width: Float, height: Float)
+    private external fun nGetFitsHorizontally(nativeResolver: Long): Boolean
+    private external fun nSetFitsHorizontally(nativeResolver: Long, fits: Boolean)
+    private external fun nGetFitsVertically(nativeResolver: Long): Boolean
+    private external fun nSetFitsVertically(nativeResolver: Long, fits: Boolean)
+    private external fun nGetTextAlignment(nativeResolver: Long): Int
+    private external fun nSetTextAlignment(nativeResolver: Long, textAlignment: Int)
+    private external fun nGetVerticalAlignment(nativeResolver: Long): Int
+    private external fun nSetVerticalAlignment(nativeResolver: Long, verticalAlignment: Int)
+    private external fun nGetTruncationMode(nativeResolver: Long): Int
+    private external fun nSetTruncationMode(nativeResolver: Long, truncationMode: Int)
+    private external fun nGetTruncationPlace(nativeResolver: Long): Int
+    private external fun nSetTruncationPlace(nativeResolver: Long, truncationPlace: Int)
+    private external fun nIsTruncationEnabled(nativeResolver: Long): Boolean
+    private external fun nSetTruncationEnabled(nativeResolver: Long, isEnabled: Boolean)
+    private external fun nIsJustificationEnabled(nativeResolver: Long): Boolean
+    private external fun nSetJustificationEnabled(nativeResolver: Long, isEnabled: Boolean)
+    private external fun nGetJustificationLevel(nativeResolver: Long): Float
+    private external fun nSetJustificationLevel(nativeResolver: Long, justificationLevel: Float)
+    private external fun nGetMaxLines(nativeResolver: Long): Int
+    private external fun nSetMaxLines(nativeResolver: Long, maxLines: Int)
+    private external fun nGetExtraLineSpacing(nativeResolver: Long): Float
+    private external fun nSetExtraLineSpacing(nativeResolver: Long, extraLineSpacing: Float)
+    private external fun nGetLineHeightMultiplier(nativeResolver: Long): Float
+    private external fun nSetLineHeightMultiplier(nativeResolver: Long, multiplier: Float)
+    private external fun nCreateFrame(nativeResolver: Long, charStart: Int, charEnd: Int): Long
 
     private companion object {
         init {
             JniBridge.loadLibrary()
         }
 
-        @JvmStatic external fun nCreateFrame(
-            nativeTypesetter: Long, charStart: Int, charEnd: Int,
-            width: Float, height: Float,
-            fitsHorizontally: Boolean, fitsVertically: Boolean,
-            textAlignment: Int, verticalAlignment: Int,
-            truncationMode: Int, truncationPlace: Int,
-            isJustificationEnabled: Boolean, justificationLevel: Float, maxLines: Int,
-            extraLineSpacing: Float, lineHeightMultiplier: Float
-        ): Long
+        @JvmStatic external fun nCreate(): Long
+        @JvmStatic external fun nDispose(nativeResolver: Long)
     }
 }

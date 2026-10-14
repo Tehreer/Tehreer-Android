@@ -43,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:gravity="right"
-            app:renderingStyle="fill_stroke"
+            app:drawStyle="fill_stroke"
             app:strokeColor="#FF7F00"
             app:strokeWidth=".5sp"
             app:textColor="@color/colorPrimary"

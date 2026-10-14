@@ -19,7 +19,7 @@ package com.mta.tehreer.graphics
 /**
  * Specifies if the glyph being drawn is filled, stroked, or both.
  */
-enum class RenderingStyle {
+enum class DrawStyle {
     /**
      * Glyphs drawn with this style will be filled, ignoring all stroke-related settings in the
      * renderer.

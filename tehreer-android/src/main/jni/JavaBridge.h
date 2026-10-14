@@ -46,6 +46,8 @@ public:
     void Canvas_clipRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom) const;
     void Canvas_drawRect(jobject canvas, jfloat left, jfloat top, jfloat right, jfloat bottom, jobject paint) const;
     void Paint_setColor(jobject paint, jint color) const;
+    void Paint_setShadowLayer(jobject paint, jfloat radius, jfloat dx, jfloat dy, jint color) const;
+    void Paint_clearShadowLayer(jobject paint) const;
     void Canvas_drawScaledBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jfloat scaleX, jfloat scaleY, jobject paint) const;
 
     jobject Bitmap_create(jint width, jint height, BitmapConfig config) const;
@@ -62,6 +64,7 @@ public:
     void Path_quadTo(jobject path, jfloat x1, jfloat y1, jfloat x2, jfloat y2) const;
 
     jobject RectF_construct(jfloat left, jfloat top, jfloat right, jfloat bottom) const;
+    void RectF_set(jobject rect, jfloat left, jfloat top, jfloat right, jfloat bottom) const;
     jobject Rect_construct(jint left, jint top, jint right, jint bottom) const;
 
 

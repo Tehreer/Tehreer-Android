@@ -53,7 +53,7 @@ class RendererTest {
     @Test
     fun testInitialValues() {
         assertEquals(subject.fillColor, Color.BLACK)
-        assertEquals(subject.renderingStyle, RenderingStyle.FILL)
+        assertEquals(subject.drawStyle, DrawStyle.FILL)
         assertEquals(subject.writingDirection, WritingDirection.LEFT_TO_RIGHT)
         assertNull(subject.typeface)
         assertEquals(subject.typeSize, 16.0f, 0.0f)
@@ -84,15 +84,15 @@ class RendererTest {
     }
 
     @Test
-    fun testRenderingStyleProperty() {
+    fun testDrawStyleProperty() {
         // Given
-        val renderingStyle = RenderingStyle.FILL_STROKE
+        val drawStyle = DrawStyle.FILL_STROKE
 
         // When
-        subject.renderingStyle = renderingStyle
+        subject.drawStyle = drawStyle
 
         // Then
-        assertEquals(subject.renderingStyle, renderingStyle)
+        assertEquals(subject.drawStyle, drawStyle)
     }
 
     @Test
@@ -380,9 +380,9 @@ class RendererTest {
         subject.strokeWidth = 3.0f
 
         // When
-        subject.renderingStyle = RenderingStyle.FILL
+        subject.drawStyle = DrawStyle.FILL
         val fill = drawGlyph(glyphId, 50.0f)
-        subject.renderingStyle = RenderingStyle.STROKE
+        subject.drawStyle = DrawStyle.STROKE
         val stroke = drawGlyph(glyphId, 50.0f)
 
         // Then

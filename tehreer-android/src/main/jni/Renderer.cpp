@@ -158,14 +158,10 @@ struct RunData {
 
 }
 
+
 static jlong create(JNIEnv *env, jclass clazz)
 {
     return reinterpret_cast<jlong>(TRRendererCreate());
-}
-
-static void dispose(JNIEnv *env, jclass clazz, jlong handle)
-{
-    TRRendererRelease(toRenderer(handle));
 }
 
 static void setTypeface(JNIEnv *env, jobject obj, jlong handle, jlong typefaceHandle)
@@ -173,24 +169,49 @@ static void setTypeface(JNIEnv *env, jobject obj, jlong handle, jlong typefaceHa
     TRRendererSetTypeface(toRenderer(handle), toTypeface(typefaceHandle));
 }
 
+static jfloat getTypeSize(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetTypeSize(toRenderer(handle)));
+}
+
 static void setTypeSize(JNIEnv *env, jobject obj, jlong handle, jfloat typeSize)
 {
-    TRRendererSetTypeSize(toRenderer(handle), typeSize);
+    TRRendererSetTypeSize(toRenderer(handle), static_cast<TRFloat>(typeSize));
+}
+
+static jfloat getScaleX(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetScaleX(toRenderer(handle)));
 }
 
 static void setScaleX(JNIEnv *env, jobject obj, jlong handle, jfloat scaleX)
 {
-    TRRendererSetScaleX(toRenderer(handle), scaleX);
+    TRRendererSetScaleX(toRenderer(handle), static_cast<TRFloat>(scaleX));
+}
+
+static jfloat getScaleY(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetScaleY(toRenderer(handle)));
 }
 
 static void setScaleY(JNIEnv *env, jobject obj, jlong handle, jfloat scaleY)
 {
-    TRRendererSetScaleY(toRenderer(handle), scaleY);
+    TRRendererSetScaleY(toRenderer(handle), static_cast<TRFloat>(scaleY));
+}
+
+static jfloat getSkewX(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetSkewX(toRenderer(handle)));
 }
 
 static void setSkewX(JNIEnv *env, jobject obj, jlong handle, jfloat skewX)
 {
-    TRRendererSetSkewX(toRenderer(handle), skewX);
+    TRRendererSetSkewX(toRenderer(handle), static_cast<TRFloat>(skewX));
+}
+
+static jint getWritingDirection(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetWritingDirection(toRenderer(handle)));
 }
 
 static void setWritingDirection(JNIEnv *env, jobject obj, jlong handle, jint writingDirection)
@@ -198,24 +219,29 @@ static void setWritingDirection(JNIEnv *env, jobject obj, jlong handle, jint wri
     TRRendererSetWritingDirection(toRenderer(handle), static_cast<TRWritingDirection>(writingDirection));
 }
 
-static void setForegroundColor(JNIEnv *env, jobject obj, jlong handle, jint color)
+static jint getForegroundColor(JNIEnv *env, jobject obj, jlong handle)
 {
-    TRRendererSetForegroundColor(toRenderer(handle), static_cast<TRColor>(color));
+    return static_cast<jint>(TRRendererGetForegroundColor(toRenderer(handle)));
 }
 
-static void setStrokeWidth(JNIEnv *env, jobject obj, jlong handle, jfloat strokeWidth)
+static void setForegroundColor(JNIEnv *env, jobject obj, jlong handle, jint foregroundColor)
 {
-    TRRendererSetStrokeRadius(toRenderer(handle), strokeWidth * 0.5f);
+    TRRendererSetForegroundColor(toRenderer(handle), static_cast<TRColor>(foregroundColor));
 }
 
-static void setStrokeColor(JNIEnv *env, jobject obj, jlong handle, jint color)
+static jfloat getStrokeRadius(JNIEnv *env, jobject obj, jlong handle)
 {
-    TRRendererSetStrokeColor(toRenderer(handle), static_cast<TRColor>(color));
+    return static_cast<jfloat>(TRRendererGetStrokeRadius(toRenderer(handle)));
 }
 
-static void setDrawStyle(JNIEnv *env, jobject obj, jlong handle, jint drawStyle)
+static void setStrokeRadius(JNIEnv *env, jobject obj, jlong handle, jfloat strokeRadius)
 {
-    TRRendererSetDrawStyle(toRenderer(handle), static_cast<TRDrawStyle>(drawStyle));
+    TRRendererSetStrokeRadius(toRenderer(handle), static_cast<TRFloat>(strokeRadius));
+}
+
+static jint getStrokeCap(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetStrokeCap(toRenderer(handle)));
 }
 
 static void setStrokeCap(JNIEnv *env, jobject obj, jlong handle, jint strokeCap)
@@ -223,14 +249,84 @@ static void setStrokeCap(JNIEnv *env, jobject obj, jlong handle, jint strokeCap)
     TRRendererSetStrokeCap(toRenderer(handle), static_cast<TRStrokeCap>(strokeCap));
 }
 
+static jint getStrokeJoin(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetStrokeJoin(toRenderer(handle)));
+}
+
 static void setStrokeJoin(JNIEnv *env, jobject obj, jlong handle, jint strokeJoin)
 {
     TRRendererSetStrokeJoin(toRenderer(handle), static_cast<TRStrokeJoin>(strokeJoin));
 }
 
+static jfloat getStrokeMiter(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetStrokeMiter(toRenderer(handle)));
+}
+
 static void setStrokeMiter(JNIEnv *env, jobject obj, jlong handle, jfloat strokeMiter)
 {
-    TRRendererSetStrokeMiter(toRenderer(handle), strokeMiter);
+    TRRendererSetStrokeMiter(toRenderer(handle), static_cast<TRFloat>(strokeMiter));
+}
+
+static jint getStrokeColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetStrokeColor(toRenderer(handle)));
+}
+
+static void setStrokeColor(JNIEnv *env, jobject obj, jlong handle, jint strokeColor)
+{
+    TRRendererSetStrokeColor(toRenderer(handle), static_cast<TRColor>(strokeColor));
+}
+
+static jfloat getShadowRadius(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetShadowRadius(toRenderer(handle)));
+}
+
+static void setShadowRadius(JNIEnv *env, jobject obj, jlong handle, jfloat shadowRadius)
+{
+    TRRendererSetShadowRadius(toRenderer(handle), static_cast<TRFloat>(shadowRadius));
+}
+
+static jfloat getShadowDx(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetShadowDx(toRenderer(handle)));
+}
+
+static void setShadowDx(JNIEnv *env, jobject obj, jlong handle, jfloat shadowDx)
+{
+    TRRendererSetShadowDx(toRenderer(handle), static_cast<TRFloat>(shadowDx));
+}
+
+static jfloat getShadowDy(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetShadowDy(toRenderer(handle)));
+}
+
+static void setShadowDy(JNIEnv *env, jobject obj, jlong handle, jfloat shadowDy)
+{
+    TRRendererSetShadowDy(toRenderer(handle), static_cast<TRFloat>(shadowDy));
+}
+
+static jint getShadowColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetShadowColor(toRenderer(handle)));
+}
+
+static void setShadowColor(JNIEnv *env, jobject obj, jlong handle, jint shadowColor)
+{
+    TRRendererSetShadowColor(toRenderer(handle), static_cast<TRColor>(shadowColor));
+}
+
+static jint getDrawStyle(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jint>(TRRendererGetDrawStyle(toRenderer(handle)));
+}
+
+static void setDrawStyle(JNIEnv *env, jobject obj, jlong handle, jint drawStyle)
+{
+    TRRendererSetDrawStyle(toRenderer(handle), static_cast<TRDrawStyle>(drawStyle));
 }
 
 static jboolean isRenderable(JNIEnv *env, jobject obj, jlong handle)
@@ -248,20 +344,6 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId
         TRPathEnumerate(corePath, nullptr, &callbacks, &builder);
         TRPathRelease(corePath);
     }
-
-    return builder.path;
-}
-
-static jobject getRunPath(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
-    jfloatArray offsets, jfloatArray advances, jint count)
-{
-    PathBuilder builder(env);
-    RunData run(env, glyphIds, offsets, advances, count);
-
-    TRPathCallbacks callbacks = PathBuilder::callbacks();
-    TRRendererEnumerateGlyphPaths(toRenderer(handle), run.glyphIds.data(), run.offsets.data(),
-                                  run.advances.data(), static_cast<TRUInteger>(count),
-                                  &callbacks, &builder);
 
     return builder.path;
 }
@@ -336,6 +418,25 @@ static void drawGlyphs(JNIEnv *env, jobject obj, jlong handle, jint kind, jintAr
                                        static_cast<TRUInteger>(count), drawPlacement, &target);
 }
 
+static jobject getRunPath(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
+    jfloatArray offsets, jfloatArray advances, jint count)
+{
+    PathBuilder builder(env);
+    RunData run(env, glyphIds, offsets, advances, count);
+
+    TRPathCallbacks callbacks = PathBuilder::callbacks();
+    TRRendererEnumerateGlyphPaths(toRenderer(handle), run.glyphIds.data(), run.offsets.data(),
+                                  run.advances.data(), static_cast<TRUInteger>(count),
+                                  &callbacks, &builder);
+
+    return builder.path;
+}
+
+static void dispose(JNIEnv *env, jclass clazz, jlong handle)
+{
+    TRRendererRelease(toRenderer(handle));
+}
+
 /* ---------- Drawing ---------- */
 
 /* Draws the bitmap of a glyph in the color of the glyph, limited to the clip if it has one. */
@@ -403,6 +504,22 @@ static void drawReplacement(void *userData, const struct _TRGlyphRun *run, TRPoi
     }
 }
 
+/* Applies the shadow to the paint, which draws the glyphs until the shadow ends. */
+static void beginShadow(void *userData, TRFloat radius, TRFloat dx, TRFloat dy, TRColor color)
+{
+    auto drawing = static_cast<Drawing *>(userData);
+
+    JavaBridge(drawing->env).Paint_setShadowLayer(drawing->paint, radius, dx, dy,
+                                                  static_cast<jint>(color));
+}
+
+static void endShadow(void *userData)
+{
+    auto drawing = static_cast<Drawing *>(userData);
+
+    JavaBridge(drawing->env).Paint_clearShadowLayer(drawing->paint);
+}
+
 Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject paint, jobject drawer)
     : env(env)
     , canvas(canvas)
@@ -417,6 +534,8 @@ Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject pa
     callbacks.drawGlyphImage = ::drawGlyphImage;
     callbacks.fillRect = ::fillRect;
     callbacks.drawReplacement = ::drawReplacement;
+    callbacks.beginShadow = ::beginShadow;
+    callbacks.endShadow = ::endShadow;
 
     if (drawer) {
         jclass drawerClass = env->GetObjectClass(drawer);
@@ -442,28 +561,49 @@ Drawing::~Drawing()
     TRRendererSetDrawCallbacks(m_renderer, nullptr, nullptr);
 }
 
+
 static JNINativeMethod JNI_METHODS[] = {
     { "nCreate", "()J", (void *)create },
-    { "nDispose", "(J)V", (void *)dispose },
     { "nSetTypeface", "(JJ)V", (void *)setTypeface },
+    { "nGetTypeSize", "(J)F", (void *)getTypeSize },
     { "nSetTypeSize", "(JF)V", (void *)setTypeSize },
+    { "nGetScaleX", "(J)F", (void *)getScaleX },
     { "nSetScaleX", "(JF)V", (void *)setScaleX },
+    { "nGetScaleY", "(J)F", (void *)getScaleY },
     { "nSetScaleY", "(JF)V", (void *)setScaleY },
+    { "nGetSkewX", "(J)F", (void *)getSkewX },
     { "nSetSkewX", "(JF)V", (void *)setSkewX },
+    { "nGetWritingDirection", "(J)I", (void *)getWritingDirection },
     { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
+    { "nGetForegroundColor", "(J)I", (void *)getForegroundColor },
     { "nSetForegroundColor", "(JI)V", (void *)setForegroundColor },
-    { "nSetStrokeWidth", "(JF)V", (void *)setStrokeWidth },
-    { "nSetStrokeColor", "(JI)V", (void *)setStrokeColor },
-    { "nSetDrawStyle", "(JI)V", (void *)setDrawStyle },
+    { "nGetStrokeRadius", "(J)F", (void *)getStrokeRadius },
+    { "nSetStrokeRadius", "(JF)V", (void *)setStrokeRadius },
+    { "nGetStrokeCap", "(J)I", (void *)getStrokeCap },
     { "nSetStrokeCap", "(JI)V", (void *)setStrokeCap },
+    { "nGetStrokeJoin", "(J)I", (void *)getStrokeJoin },
     { "nSetStrokeJoin", "(JI)V", (void *)setStrokeJoin },
+    { "nGetStrokeMiter", "(J)F", (void *)getStrokeMiter },
     { "nSetStrokeMiter", "(JF)V", (void *)setStrokeMiter },
+    { "nGetStrokeColor", "(J)I", (void *)getStrokeColor },
+    { "nSetStrokeColor", "(JI)V", (void *)setStrokeColor },
+    { "nGetShadowRadius", "(J)F", (void *)getShadowRadius },
+    { "nSetShadowRadius", "(JF)V", (void *)setShadowRadius },
+    { "nGetShadowDx", "(J)F", (void *)getShadowDx },
+    { "nSetShadowDx", "(JF)V", (void *)setShadowDx },
+    { "nGetShadowDy", "(J)F", (void *)getShadowDy },
+    { "nSetShadowDy", "(JF)V", (void *)setShadowDy },
+    { "nGetShadowColor", "(J)I", (void *)getShadowColor },
+    { "nSetShadowColor", "(JI)V", (void *)setShadowColor },
+    { "nGetDrawStyle", "(J)I", (void *)getDrawStyle },
+    { "nSetDrawStyle", "(JI)V", (void *)setDrawStyle },
     { "nIsRenderable", "(J)Z", (void *)isRenderable },
     { "nGetGlyphPath", "(JI)Landroid/graphics/Path;", (void *)getGlyphPath },
-    { "nGetRunPath", "(J[I[F[FI)Landroid/graphics/Path;", (void *)getRunPath },
     { "nGetGlyphBoundingBox", "(JI)Landroid/graphics/RectF;", (void *)getGlyphBoundingBox },
     { "nGetRunBoundingBox", "(J[I[F[FI)Landroid/graphics/RectF;", (void *)getRunBoundingBox },
     { "nDrawGlyphs", "(JI[I[F[FILandroid/graphics/Canvas;Landroid/graphics/Paint;)V", (void *)drawGlyphs },
+    { "nGetRunPath", "(J[I[F[FI)Landroid/graphics/Path;", (void *)getRunPath },
+    { "nDispose", "(J)V", (void *)dispose },
 };
 
 jint register_com_mta_tehreer_graphics_Renderer(JNIEnv *env)

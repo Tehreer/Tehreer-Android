@@ -64,7 +64,7 @@ internal fun computeSpanRects(frame: ComposedFrame, source: Spanned, span: Any):
 
     for (index in firstIndex..lastIndex) {
         val line = frame.lines[index]
-        val baseline = frame.originY + line.originY
+        val baseline = line.originY
 
         for (run in line.runs) {
             if (run.charStart < charEnd && run.charEnd > charStart) {
@@ -73,7 +73,7 @@ internal fun computeSpanRects(frame: ComposedFrame, source: Spanned, span: Any):
                     continue
                 }
 
-                val left = frame.originX + line.originX + run.originX
+                val left = line.originX + run.originX
                 val top = baseline + run.originY - run.ascent
                 val bottom = baseline + run.originY + run.descent
 
@@ -110,7 +110,7 @@ internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeE
 
     for (index in firstIndex..lastIndex) {
         val line = lines[index]
-        val baseline = frame.originY + line.originY
+        val baseline = line.originY
         val top = baseline - line.ascent
         val bottom = baseline + line.descent + line.leading
         val lineLeft = line.originX
@@ -147,7 +147,7 @@ internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeE
         }
 
         if (left < right) {
-            rects.add(RectF(frame.originX + left, top, frame.originX + right, bottom))
+            rects.add(RectF(left, top, right, bottom))
         }
     }
 
@@ -159,7 +159,7 @@ internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeE
  * is on the [line], without the margins of a block, and as wide as the frame.
  */
 internal fun computeViewRect(frame: ComposedFrame, line: ComposedLine, run: GlyphRun, span: ViewSpan): RectF {
-    val baseline = frame.originY + line.originY + run.originY
+    val baseline = line.originY + run.originY
     val top = baseline - run.ascent
     val bottom = baseline + run.descent
 
@@ -167,11 +167,11 @@ internal fun computeViewRect(frame: ComposedFrame, line: ComposedLine, run: Glyp
         val margins = span.margins
 
         return RectF(
-            frame.originX, top + margins.top.coerceAtLeast(0),
-            frame.originX + frame.width, bottom - margins.bottom.coerceAtLeast(0)
+            0.0f, top + margins.top.coerceAtLeast(0),
+            frame.width, bottom - margins.bottom.coerceAtLeast(0)
         )
     }
 
-    val left = frame.originX + line.originX + run.originX
+    val left = line.originX + run.originX
     return RectF(left, top, left + run.width, bottom)
 }

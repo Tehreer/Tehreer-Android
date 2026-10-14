@@ -32,7 +32,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.annotation.Px
 import com.mta.tehreer.R
-import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.DrawStyle
 import com.mta.tehreer.graphics.StrokeCap
 import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
@@ -175,10 +175,10 @@ open class TTextView : ScrollView {
             typeface = TypefaceManager.getTypeface(values.getResourceId(R.styleable.TTextView_typeface, 0))
         }
 
-        renderingStyle = when (values.getInt(R.styleable.TTextView_renderingStyle, 0)) {
-            1 -> RenderingStyle.FILL_STROKE
-            2 -> RenderingStyle.STROKE
-            else -> RenderingStyle.FILL
+        drawStyle = when (values.getInt(R.styleable.TTextView_drawStyle, 0)) {
+            1 -> DrawStyle.FILL_STROKE
+            2 -> DrawStyle.STROKE
+            else -> DrawStyle.FILL
         }
         strokeColor = values.getColor(R.styleable.TTextView_strokeColor, Color.BLACK)
         strokeWidth = values.getDimension(R.styleable.TTextView_strokeWidth, 0.0f)
@@ -569,12 +569,12 @@ open class TTextView : ScrollView {
 
     /**
      * The rendering style, used for controlling how text should appear while drawing. The default
-     * value is [RenderingStyle.FILL].
+     * value is [DrawStyle.FILL].
      */
-    var renderingStyle: RenderingStyle
-        get() = textContainer.renderingStyle
+    var drawStyle: DrawStyle
+        get() = textContainer.drawStyle
         set(value) {
-            textContainer.renderingStyle = value
+            textContainer.drawStyle = value
         }
 
     /**

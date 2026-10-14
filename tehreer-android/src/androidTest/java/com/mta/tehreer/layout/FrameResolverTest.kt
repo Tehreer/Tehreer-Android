@@ -61,7 +61,8 @@ class FrameResolverTest {
 
     private fun resolver(width: Float, height: Float): FrameResolver {
         val resolver = FrameResolver()
-        resolver.frameBounds = RectF(5.0f, 9.0f, 5.0f + width, 9.0f + height)
+        resolver.frameWidth = width
+        resolver.frameHeight = height
 
         return resolver
     }
@@ -73,8 +74,6 @@ class FrameResolverTest {
 
         assertEquals(0, frame.charStart)
         assertEquals(TEXT.length, frame.charEnd)
-        assertEquals(5.0f, frame.originX, DELTA)
-        assertEquals(9.0f, frame.originY, DELTA)
         assertEquals(200.0f, frame.width, DELTA)
         assertTrue(lines.size > 3)
 
@@ -136,6 +135,7 @@ class FrameResolverTest {
 
         // A truncated frame still covers all of the text that it was asked for.
         resolver.truncationPlace = TruncationPlace.END
+        resolver.isTruncationEnabled = true
         frame = frameOf(styled(TEXT), resolver)
         assertEquals(2, frame.lines.size)
         assertEquals(0, frame.charStart)
@@ -205,6 +205,65 @@ class FrameResolverTest {
         assertEquals(10, frame.lines.get(0).charStart)
         assertFalse(frame.lines.isEmpty())
     }
+
+    @Test
+    fun testPropertiesAreReadFromCore() {
+        val resolver = FrameResolver()
+
+        assertFalse(resolver.fitsHorizontally)
+        assertFalse(resolver.fitsVertically)
+        assertEquals(TextAlignment.LEADING, resolver.textAlignment)
+        assertEquals(VerticalAlignment.TOP, resolver.verticalAlignment)
+        assertEquals(BreakMode.LINE, resolver.truncationMode)
+        assertEquals(TruncationPlace.END, resolver.truncationPlace)
+        assertFalse(resolver.isTruncationEnabled)
+        assertFalse(resolver.isJustificationEnabled)
+        assertEquals(1.0f, resolver.justificationLevel, 0.0f)
+        assertEquals(0, resolver.maxLines)
+        assertEquals(0.0f, resolver.extraLineSpacing, 0.0f)
+        assertEquals(1.0f, resolver.lineHeightMultiplier, 0.0f)
+
+        resolver.frameWidth = 100.0f
+        resolver.frameHeight = 50.0f
+        resolver.fitsHorizontally = true
+        resolver.fitsVertically = true
+        resolver.textAlignment = TextAlignment.CENTER
+        resolver.verticalAlignment = VerticalAlignment.BOTTOM
+        resolver.truncationMode = BreakMode.CHARACTER
+        resolver.truncationPlace = TruncationPlace.MIDDLE
+        resolver.isTruncationEnabled = true
+        resolver.isJustificationEnabled = true
+        resolver.justificationLevel = 0.5f
+        resolver.maxLines = 3
+        resolver.extraLineSpacing = 2.0f
+        resolver.lineHeightMultiplier = 1.5f
+
+        assertEquals(100.0f, resolver.frameWidth, 0.0f)
+        assertEquals(50.0f, resolver.frameHeight, 0.0f)
+        assertTrue(resolver.fitsHorizontally)
+        assertTrue(resolver.fitsVertically)
+        assertEquals(TextAlignment.CENTER, resolver.textAlignment)
+        assertEquals(VerticalAlignment.BOTTOM, resolver.verticalAlignment)
+        assertEquals(BreakMode.CHARACTER, resolver.truncationMode)
+        assertEquals(TruncationPlace.MIDDLE, resolver.truncationPlace)
+        assertTrue(resolver.isTruncationEnabled)
+        assertTrue(resolver.isJustificationEnabled)
+        assertEquals(0.5f, resolver.justificationLevel, 0.0f)
+        assertEquals(3, resolver.maxLines)
+        assertEquals(2.0f, resolver.extraLineSpacing, 0.0f)
+        assertEquals(1.5f, resolver.lineHeightMultiplier, 0.0f)
+
+        for (alignment in TextAlignment.entries) {
+            resolver.textAlignment = alignment
+            assertEquals(alignment, resolver.textAlignment)
+        }
+
+        for (place in TruncationPlace.entries) {
+            resolver.truncationPlace = place
+            assertEquals(place, resolver.truncationPlace)
+        }
+
+        resolver.isTruncationEnabled = false
+        assertFalse(resolver.isTruncationEnabled)
+    }
 }
-
-

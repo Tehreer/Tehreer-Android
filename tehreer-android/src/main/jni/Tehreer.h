@@ -23,6 +23,7 @@
 #include "BidiMirrorLocator.h"
 #include "BidiParagraph.h"
 #include "ComposedFrame.h"
+#include "LineLocator.h"
 #include "ComposedLine.h"
 #include "FontFile.h"
 #include "FrameResolver.h"

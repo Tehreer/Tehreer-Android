@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.layout
 
-import android.graphics.RectF
 import android.text.SpannableString
 import android.text.Spanned
 import com.mta.tehreer.graphics.Typeface
@@ -269,25 +268,27 @@ class Typesetter private constructor(
     }
 
     /**
-     * Creates a frame full of lines in the rectangle provided by the `frameRect` parameter. The
+     * Creates a frame full of lines in the size provided by the `frameWidth` and `frameHeight` parameters. The
      * typesetter will continue to fill the frame until it either runs out of text or it finds that
      * text no longer fits.
      *
      * @param charStart The index to first character of the frame in source text.
      * @param charEnd The index after the last character of the frame in source text.
-     * @param frameRect The rectangle specifying the frame to fill.
+     * @param frameWidth The width of the frame to fill.
+     * @param frameHeight The height of the frame to fill.
      * @param textAlignment The horizontal text alignment of the lines in frame.
      * @return The new frame object.
      */
     fun createFrame(
-        charStart: Int, charEnd: Int, frameRect: RectF, textAlignment: TextAlignment
+        charStart: Int, charEnd: Int, frameWidth: Float, frameHeight: Float, textAlignment: TextAlignment
     ): ComposedFrame {
         checkSubRange(charStart, charEnd)
-        require(!frameRect.isEmpty) { "Frame rect is empty" }
+        require(frameWidth > 0.0f && frameHeight > 0.0f) { "Frame size is empty" }
 
         val resolver = FrameResolver()
         resolver.typesetter = this
-        resolver.frameBounds = frameRect
+        resolver.frameWidth = frameWidth
+        resolver.frameHeight = frameHeight
         resolver.textAlignment = textAlignment
 
         return resolver.createFrame(charStart, charEnd)
@@ -316,12 +317,12 @@ class Typesetter private constructor(
     /**
      * Wraps a frame of Core, which is made from this typesetter.
      */
-    internal fun makeFrame(nativeFrame: Long, originX: Float, originY: Float): ComposedFrame {
+    internal fun makeFrame(nativeFrame: Long): ComposedFrame {
         if (nativeFrame == 0L) {
             throw RuntimeException("Could not create the frame")
         }
 
-        return ComposedFrame(nativeFrame, originX, originY, spanned, typefaces, holders)
+        return ComposedFrame(nativeFrame, spanned, typefaces, holders)
     }
 
     private external fun nSuggestForwardBreak(

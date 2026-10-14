@@ -29,9 +29,6 @@
 
 using namespace Tehreer;
 
-/* The index that Core gives when there is no such line, which the public headers do not define. */
-static const TRUInteger InvalidIndex = static_cast<TRUInteger>(-1);
-
 static void disposeFrame(JNIEnv *env, jclass clazz, jlong handle)
 {
     TRComposedFrameRelease(toFrame(handle));
@@ -75,7 +72,7 @@ static jint getLineIndexForCodeUnit(JNIEnv *env, jobject obj, jlong handle, jint
     TRUInteger lineIndex = TRComposedFrameGetIndexOfLineForCodeUnit(toFrame(handle),
                                                                     static_cast<TRUInteger>(index));
 
-    return (lineIndex != InvalidIndex ? static_cast<jint>(lineIndex) : -1);
+    return (lineIndex != TRInvalidIndex ? static_cast<jint>(lineIndex) : -1);
 }
 
 static jint getLineIndexAtPosition(JNIEnv *env, jobject obj, jlong handle, jfloat x, jfloat y)

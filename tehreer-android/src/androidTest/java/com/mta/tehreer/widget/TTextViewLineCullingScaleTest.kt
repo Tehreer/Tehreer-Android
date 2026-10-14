@@ -21,14 +21,14 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * `TextContainer.layoutLines()`'s culling through the pages of `LineBoxes`, on a document long
+ * `TextContainer.layoutLines()`'s culling through the `LineLocator` of Core, on a document long
  * enough for the difference from a linear scan to matter: the visible set at several scroll
  * offsets must be the one a full scan would produce, and a scroll deep into the document must not
  * be meaningfully slower than one at the top.
  *
- * `LineBoxesTask` delivers the boxes in chunks of 64 lines, and [TextViewHost.show] only waits for
- * the first one. Every test here waits for the last chunk too, so that no task keeps posting to
- * the main thread after the test method returns.
+ * `LineLocatorTask` delivers the locator after the frame, and [TextViewHost.show] only waits for
+ * the frame. Every test here waits for the locator too, so that no task keeps posting to the main
+ * thread after the test method returns.
  */
 class TTextViewLineCullingScaleTest {
     private lateinit var host: TextViewHost

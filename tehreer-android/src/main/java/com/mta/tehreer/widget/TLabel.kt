@@ -30,7 +30,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import com.mta.tehreer.R
 import com.mta.tehreer.graphics.Renderer
-import com.mta.tehreer.graphics.RenderingStyle
+import com.mta.tehreer.graphics.DrawStyle
 import com.mta.tehreer.graphics.StrokeCap
 import com.mta.tehreer.graphics.StrokeJoin
 import com.mta.tehreer.graphics.Typeface
@@ -60,7 +60,8 @@ open class TLabel : View {
     private var textWidth = 0
     private var textHeight = 0
 
-    private val layoutRect = RectF()
+    private var frameLeft = 0.0f
+    private var frameTop = 0.0f
 
     constructor(context: Context) : super(context) {
         setup(context, null, 0)
@@ -96,10 +97,10 @@ open class TLabel : View {
         shadowDx = values.getDimension(R.styleable.TLabel_shadowDx, 0.0f)
         shadowDy = values.getDimension(R.styleable.TLabel_shadowDy, 0.0f)
         shadowColor = values.getColor(R.styleable.TLabel_shadowColor, Color.TRANSPARENT)
-        renderingStyle = when (values.getInt(R.styleable.TLabel_renderingStyle, 0)) {
-            1 -> RenderingStyle.FILL_STROKE
-            2 -> RenderingStyle.STROKE
-            else -> RenderingStyle.FILL
+        drawStyle = when (values.getInt(R.styleable.TLabel_drawStyle, 0)) {
+            1 -> DrawStyle.FILL_STROKE
+            2 -> DrawStyle.STROKE
+            else -> DrawStyle.FILL
         }
         strokeColor = values.getColor(R.styleable.TLabel_strokeColor, Color.BLACK)
         strokeWidth = values.getDimension(R.styleable.TLabel_strokeWidth, 0.0f)
@@ -118,12 +119,13 @@ open class TLabel : View {
             1 -> BreakMode.CHARACTER
             else -> BreakMode.LINE
         }
-        truncationPlace = when (values.getInt(R.styleable.TLabel_truncationPlace, 0)) {
-            1 -> TruncationPlace.END
+        val truncationPlaceValue = values.getInt(R.styleable.TLabel_truncationPlace, 0)
+        truncationPlace = when (truncationPlaceValue) {
             2 -> TruncationPlace.MIDDLE
             3 -> TruncationPlace.START
-            else -> null
+            else -> TruncationPlace.END
         }
+        isTruncationEnabled = (truncationPlaceValue != 0)
         textColor = values.getColor(R.styleable.TLabel_textColor, Color.BLACK)
         textSize = values.getDimension(R.styleable.TLabel_textSize, 16f)
         if (values.hasValue(R.styleable.TLabel_typeface)) {
@@ -172,7 +174,7 @@ open class TLabel : View {
 
         canvas.save()
 
-        composedFrame?.let { it.draw(renderer, canvas, it.originX, it.originY) }
+        composedFrame?.let { it.draw(renderer, canvas, frameLeft, frameTop) }
 
         canvas.restore()
 
@@ -188,10 +190,12 @@ open class TLabel : View {
         currentTypesetter?.let { typesetter ->
             val t1 = System.nanoTime()
 
-            layoutRect.set(paddingLeft, paddingTop, paddingLeft + layoutWidth, paddingTop + layoutHeight)
+            frameLeft = paddingLeft
+            frameTop = paddingTop
 
             resolver.typesetter = typesetter
-            resolver.frameBounds = layoutRect
+            resolver.frameWidth = layoutWidth
+            resolver.frameHeight = layoutHeight
 
             val frame = resolver.createFrame(0, typesetter.spanned.length)
             composedFrame = frame
@@ -252,8 +256,8 @@ open class TLabel : View {
      */
     fun hitTestPosition(x: Float, y: Float): Int {
         val frame = composedFrame!!
-        val adjustedX = x - frame.originX
-        val adjustedY = y - frame.originY
+        val adjustedX = x - frameLeft
+        val adjustedY = y - frameTop
 
         val lineIndex = frame.getLineIndexForPosition(adjustedX, adjustedY)
         val composedLine = frame.lines[lineIndex]
@@ -412,13 +416,29 @@ open class TLabel : View {
         }
 
     /**
-     * The truncation place for the last line of the text. The truncation is disabled if the value
-     * is `null`.
+     * The truncation place for the last line of the text. It takes effect only when the truncation
+     * is enabled. The default value is [TruncationPlace.END].
+     *
+     * @see isTruncationEnabled
      */
-    var truncationPlace: TruncationPlace?
+    var truncationPlace: TruncationPlace
         get() = resolver.truncationPlace
         set(value) {
             resolver.truncationPlace = value
+            requestLayout()
+            invalidate()
+        }
+
+    /**
+     * Whether or not to truncate the last line of the text in case of overflow. The default value
+     * is `false`.
+     *
+     * @see truncationPlace
+     */
+    var isTruncationEnabled: Boolean
+        get() = resolver.isTruncationEnabled
+        set(value) {
+            resolver.isTruncationEnabled = value
             requestLayout()
             invalidate()
         }
@@ -467,12 +487,12 @@ open class TLabel : View {
 
     /**
      * The rendering style, used for controlling how text should appear while drawing. The default
-     * value is [RenderingStyle.FILL].
+     * value is [DrawStyle.FILL].
      */
-    var renderingStyle: RenderingStyle
-        get() = renderer.renderingStyle
+    var drawStyle: DrawStyle
+        get() = renderer.drawStyle
         set(value) {
-            renderer.renderingStyle = value
+            renderer.drawStyle = value
         }
 
     /**
