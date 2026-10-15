@@ -370,7 +370,7 @@ static jobject getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArr
 {
     RunData run(env, glyphIds, offsets, advances, count);
 
-    return makeBox(env, TRRendererGetRunInkBox(toRenderer(handle), run.glyphIds.data(),
+    return makeBox(env, TRRendererComputeRunInkBox(toRenderer(handle), run.glyphIds.data(),
                                                     run.offsets.data(), run.advances.data(),
                                                     static_cast<TRUInteger>(count)));
 }
@@ -497,7 +497,7 @@ static void drawReplacement(void *userData, const struct _TRGlyphRun *run, TRPoi
         jint saveCount = bridge.Canvas_save(drawing->canvas);
 
         drawing->env->CallVoidMethod(drawing->drawer, drawing->drawReplacement, drawing->canvas,
-            static_cast<jint>(TRGlyphRunGetCodeUnitStart(run)), origin.x, origin.y,
+            static_cast<jint>(TRGlyphRunGetStartIndex(run)), origin.x, origin.y,
             TRGlyphRunGetAscent(run), TRGlyphRunGetDescent(run));
 
         bridge.Canvas_restoreToCount(drawing->canvas, saveCount);

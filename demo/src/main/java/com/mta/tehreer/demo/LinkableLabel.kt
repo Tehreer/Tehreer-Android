@@ -57,7 +57,7 @@ class LinkableLabel : TLabel {
         val spanned = spanned ?: return null
         val composedFrame = composedFrame ?: return null
 
-        if (charIndex < composedFrame.charStart || charIndex >= composedFrame.charEnd) {
+        if (charIndex < composedFrame.startIndex || charIndex >= composedFrame.endIndex) {
             return null
         }
 

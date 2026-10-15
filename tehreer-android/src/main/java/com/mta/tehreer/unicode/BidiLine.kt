@@ -53,16 +53,16 @@ class BidiLine {
      *
      * @return The index to the first character of this line in source text.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeLine)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeLine)
 
     /**
      * Returns the index after the last character of this line in source text.
      *
      * @return The index after the last character of this line in source text.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeLine)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeLine)
 
     internal val runCount: Int
         get() = nGetRunCount(nativeLine)
@@ -94,8 +94,8 @@ class BidiLine {
         get() = MirrorIterable(this)
 
     override fun toString(): String {
-        return "BidiLine{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "BidiLine{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", visualRuns=${Description.forIterable(visualRuns)}" +
             ", mirroringPairs=${Description.forIterable(mirroringPairs)}" +
             "}"
@@ -140,8 +140,8 @@ class BidiLine {
         }
     }
 
-    private external fun nGetCharStart(nativeLine: Long): Int
-    private external fun nGetCharEnd(nativeLine: Long): Int
+    private external fun nGetStartIndex(nativeLine: Long): Int
+    private external fun nGetEndIndex(nativeLine: Long): Int
     private external fun nGetRunCount(nativeLine: Long): Int
     private external fun nGetVisualRun(nativeLine: Long, runIndex: Int): BidiRun
     companion object {

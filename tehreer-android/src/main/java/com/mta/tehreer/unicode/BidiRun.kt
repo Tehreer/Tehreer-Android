@@ -26,12 +26,12 @@ class BidiRun @Keep constructor(
     /**
      * The index to the first character of this run in source text.
      */
-    @JvmField var charStart: Int,
+    @JvmField var startIndex: Int,
 
     /**
      * The index after the last character of this run in source text.
      */
-    @JvmField var charEnd: Int,
+    @JvmField var endIndex: Int,
 
     /**
      * The embedding level of this run.
@@ -61,22 +61,22 @@ class BidiRun @Keep constructor(
 
         other as BidiRun
 
-        return charStart == other.charStart
-            && charEnd == other.charEnd
+        return startIndex == other.startIndex
+            && endIndex == other.endIndex
             && embeddingLevel == other.embeddingLevel
     }
 
     override fun hashCode(): Int {
-        var result = charStart
-        result = 31 * result + charEnd
+        var result = startIndex
+        result = 31 * result + endIndex
         result = 31 * result + embeddingLevel
 
         return result
     }
 
     override fun toString(): String {
-        return "BidiRun{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "BidiRun{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", embeddingLevel=$embeddingLevel" +
             "}"
     }

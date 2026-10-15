@@ -72,18 +72,18 @@ class FrameResolverTest {
         val frame = frameOf(styled(TEXT), resolver(200.0f, 1000.0f))
         val lines: List<ComposedLine> = frame.lines
 
-        assertEquals(0, frame.charStart)
-        assertEquals(TEXT.length, frame.charEnd)
+        assertEquals(0, frame.startIndex)
+        assertEquals(TEXT.length, frame.endIndex)
         assertEquals(200.0f, frame.width, DELTA)
         assertTrue(lines.size > 3)
 
         var charIndex = 0
         var top: Float = 0.0f
         for (line in lines) {
-            assertEquals(charIndex, line.charStart)
+            assertEquals(charIndex, line.startIndex)
             assertEquals(top, line.originY - line.ascent, DELTA)
 
-            charIndex = line.charEnd
+            charIndex = line.endIndex
             top += line.height
         }
 
@@ -101,7 +101,7 @@ class FrameResolverTest {
 
         // The first line of each paragraph is indented more than the others.
         for (line in lines) {
-            val isParagraphStart = (line.charStart == 0 || TEXT[line.charStart - 1] == '\n')
+            val isParagraphStart = (line.startIndex == 0 || TEXT[line.startIndex - 1] == '\n')
             assertEquals(if (isParagraphStart) 30.0f else 12.0f, line.originX, DELTA)
         }
     }
@@ -131,15 +131,15 @@ class FrameResolverTest {
 
         var frame = frameOf(styled(TEXT), resolver)
         assertEquals(2, frame.lines.size)
-        assertTrue(frame.charEnd < TEXT.length)
+        assertTrue(frame.endIndex < TEXT.length)
 
         // A truncated frame still covers all of the text that it was asked for.
         resolver.truncationPlace = TruncationPlace.END
         resolver.isTruncationEnabled = true
         frame = frameOf(styled(TEXT), resolver)
         assertEquals(2, frame.lines.size)
-        assertEquals(0, frame.charStart)
-        assertEquals(TEXT.length, frame.charEnd)
+        assertEquals(0, frame.startIndex)
+        assertEquals(TEXT.length, frame.endIndex)
     }
 
     @Test
@@ -163,8 +163,8 @@ class FrameResolverTest {
         for (i in 0 until lines.size) {
             val line = lines.get(i)
 
-            assertEquals(i, frame.getLineIndexForChar(line.charStart))
-            assertEquals(i, frame.getLineIndexForChar(line.charEnd - 1))
+            assertEquals(i, frame.getLineIndexForChar(line.startIndex))
+            assertEquals(i, frame.getLineIndexForChar(line.endIndex - 1))
             assertEquals(i, frame.getLineIndexForPosition(0.0f, line.originY))
         }
 
@@ -181,7 +181,7 @@ class FrameResolverTest {
         val first = lines.get(0)
         val third = lines.get(2)
 
-        val path = frame.generateSelectionPath(first.charStart + 2, third.charEnd - 2)
+        val path = frame.generateSelectionPath(first.startIndex + 2, third.endIndex - 2)
         val bounds = RectF()
         path.computeBounds(bounds, true)
 
@@ -200,9 +200,9 @@ class FrameResolverTest {
         resolver.typesetter = Typesetter(spanned)
 
         val frame = resolver.createFrame(10, 60)
-        assertEquals(10, frame.charStart)
-        assertEquals(60, frame.charEnd)
-        assertEquals(10, frame.lines.get(0).charStart)
+        assertEquals(10, frame.startIndex)
+        assertEquals(60, frame.endIndex)
+        assertEquals(10, frame.lines.get(0).startIndex)
         assertFalse(frame.lines.isEmpty())
     }
 

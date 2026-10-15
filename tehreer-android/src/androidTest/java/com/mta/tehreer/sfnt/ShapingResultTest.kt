@@ -196,7 +196,7 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
             // Then
             verify(spied).getCaretEdges(null)
             assertNotNull(caretEdges)
-            assertEquals(caretEdges.size, subject.charEnd - subject.charStart + 1)
+            assertEquals(caretEdges.size, subject.endIndex - subject.startIndex + 1)
         })
     }
 
@@ -215,7 +215,7 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
     fun testGetCaretEdgesWithCaretStops() {
         buildSubject({ subject ->
             // Given
-            val caretStops = BooleanArray((subject.charEnd - subject.charStart))
+            val caretStops = BooleanArray((subject.endIndex - subject.startIndex))
             Arrays.fill(caretStops, true)
 
             // When
@@ -223,7 +223,7 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
             val withoutStops = subject.getCaretEdges(null)
 
             // Then: a stop before every code unit is the same as having no stops at all.
-            assertEquals((subject.charEnd - subject.charStart) + 1, withStops.size)
+            assertEquals((subject.endIndex - subject.startIndex) + 1, withStops.size)
             assertArrayEquals(withoutStops, withStops, 0.0f)
         })
     }
@@ -234,8 +234,8 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
             val description = DescriptionBuilder
                     .of(ShapingResult::class.java)
                     .put("isBackward", subject.isBackward)
-                    .put("charStart", subject.charStart)
-                    .put("charEnd", subject.charEnd)
+                    .put("startIndex", subject.startIndex)
+                    .put("endIndex", subject.endIndex)
                     .put("glyphCount", subject.glyphCount)
                     .put("glyphIds", subject.glyphIds)
                     .put("glyphOffsets", subject.glyphOffsets)
@@ -255,8 +255,8 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
     fun testResultsForFullText() {
         buildSubject({ subject ->
             assertFalse(subject.isBackward)
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.glyphCount, text.length)
             assertEquals(subject.glyphIds, DEFAULT_GLYPH_IDS)
             assertEquals(subject.glyphOffsets, DEFAULT_GLYPH_OFFSETS)
@@ -275,8 +275,8 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
         buildSubject({ subject ->
             // Then
             assertFalse(subject.isBackward)
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.glyphCount, endIndex - startIndex)
             assertEquals(subject.glyphIds, DEFAULT_GLYPH_IDS.subList(startIndex, endIndex))
             assertEquals(subject.glyphOffsets, DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex))
@@ -294,8 +294,8 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
         buildSubject({ subject ->
             // Then
             assertFalse(subject.isBackward)
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.glyphCount, endIndex - startIndex)
             assertEquals(subject.glyphIds, DEFAULT_GLYPH_IDS.subList(startIndex, endIndex))
             assertEquals(subject.glyphOffsets, DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex))
@@ -313,8 +313,8 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
         buildSubject({ subject ->
             // Then
             assertFalse(subject.isBackward)
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.glyphCount, endIndex - startIndex)
             assertEquals(subject.glyphIds, DEFAULT_GLYPH_IDS.subList(startIndex, endIndex))
             assertEquals(subject.glyphOffsets, DEFAULT_GLYPH_OFFSETS.subList(startIndex, endIndex))

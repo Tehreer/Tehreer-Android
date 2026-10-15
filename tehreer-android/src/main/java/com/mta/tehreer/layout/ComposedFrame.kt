@@ -68,14 +68,14 @@ class ComposedFrame internal constructor(
     /**
      * Returns the index to the first character of this frame in source text.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeFrame)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeFrame)
 
     /**
      * Returns the index after the last character of this frame in source text.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeFrame)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeFrame)
 
     /**
      * Returns the width of this frame.
@@ -99,10 +99,10 @@ class ComposedFrame internal constructor(
      *         frame end.
      */
     fun getLineIndexForChar(charIndex: Int): Int {
-        val charStart = charStart
-        val charEnd = charEnd
+        val charStart = startIndex
+        val charEnd = endIndex
 
-        require(charIndex in charStart..charEnd) {
+        require(charIndex in charStart..endIndex) {
             "Char Index: $charIndex, Frame Range: [$charStart..$charEnd)"
         }
 
@@ -134,8 +134,8 @@ class ComposedFrame internal constructor(
      *         greater than frame end, or `charStart` is greater than `charEnd`.
      */
     fun generateSelectionPath(charStart: Int, charEnd: Int): Path {
-        val frameStart = this.charStart
-        val frameEnd = this.charEnd
+        val frameStart = this.startIndex
+        val frameEnd = this.endIndex
 
         require(charStart >= frameStart) { "Char Start: $charStart, Frame Range: [$frameStart, $frameEnd)" }
         require(charEnd <= frameEnd) { "Char End: $charEnd, Frame Range: [$frameStart, $frameEnd)" }
@@ -145,10 +145,10 @@ class ComposedFrame internal constructor(
 
         // The lines of a truncated frame do not cover the text that the token replaces, and Core
         // selects what the lines cover.
-        val selectionStart = lines.firstOrNull { it.charEnd > charStart }
-            ?.let { maxOf(charStart, it.charStart) } ?: charStart
-        val selectionEnd = lines.lastOrNull { it.charStart < charEnd }
-            ?.let { minOf(charEnd, it.charEnd) } ?: charEnd
+        val selectionStart = lines.firstOrNull { it.endIndex > charStart }
+            ?.let { maxOf(charStart, it.startIndex) } ?: charStart
+        val selectionEnd = lines.lastOrNull { it.startIndex < charEnd }
+            ?.let { minOf(charEnd, it.endIndex) } ?: charEnd
 
         if (selectionEnd > selectionStart) {
             val rects = FloatCollector()
@@ -178,8 +178,8 @@ class ComposedFrame internal constructor(
             return
         }
 
-        val frameStart = charStart
-        val frameEnd = charEnd
+        val frameStart = startIndex
+        val frameEnd = endIndex
         val bounds = Paragraphs.boundsOf(source)
         val firstLines = BooleanArray(lines.size)
 
@@ -189,7 +189,7 @@ class ComposedFrame internal constructor(
         var lineInParagraph = 0
 
         lineSpans = Array(lines.size) { i ->
-            val index = Paragraphs.indexOf(bounds, lines[i].charStart)
+            val index = Paragraphs.indexOf(bounds, lines[i].startIndex)
 
             if (index != paragraphIndex) {
                 val start = maxOf(bounds[index * 2], frameStart)
@@ -216,16 +216,16 @@ class ComposedFrame internal constructor(
         for ((i, composedLine) in lines.withIndex()) {
             for (style in lineSpans[i]) {
                 if (style is LineBackgroundSpan) {
-                    val lineStart = composedLine.charStart
-                    val lineEnd = composedLine.charEnd
+                    val lineStart = composedLine.startIndex
+                    val lineEnd = composedLine.endIndex
 
                     if (lineStart >= source.getSpanEnd(style) || lineEnd <= source.getSpanStart(style)) {
                         continue
                     }
 
-                    val lineTop = (composedLine.top + 0.5f).toInt()
+                    val lineTop = (composedLine.originY - composedLine.ascent + 0.5f).toInt()
                     val lineBaseline = (composedLine.originY + 0.5f).toInt()
-                    val lineBottom = (composedLine.top + composedLine.height + 0.5f).toInt()
+                    val lineBottom = (composedLine.originY + composedLine.descent + composedLine.leading + 0.5f).toInt()
 
                     style.drawBackground(
                         canvas, paint, frameLeft, frameRight, lineTop, lineBaseline, lineBottom,
@@ -278,16 +278,16 @@ class ComposedFrame internal constructor(
                     val isLTR = (composedLine.paragraphLevel.toInt() and 1) == 0
                     val isFirst = firstLines[i]
 
-                    val lineTop = (composedLine.top + 0.5f).toInt()
+                    val lineTop = (composedLine.originY - composedLine.ascent + 0.5f).toInt()
                     val lineBaseline = (composedLine.originY + 0.5f).toInt()
-                    val lineBottom = (composedLine.top + composedLine.height + 0.5f).toInt()
+                    val lineBottom = (composedLine.originY + composedLine.descent + composedLine.leading + 0.5f).toInt()
 
                     style.drawLeadingMargin(
                         canvas, paint,
                         if (isLTR) lineLeft else lineRight,
                         if (isLTR) Layout.DIR_LEFT_TO_RIGHT else Layout.DIR_RIGHT_TO_LEFT,
                         lineTop, lineBaseline, lineBottom,
-                        source, composedLine.charStart, composedLine.charEnd, isFirst, null
+                        source, composedLine.startIndex, composedLine.endIndex, isFirst, null
                     )
 
                     if (isLTR) {
@@ -309,8 +309,8 @@ class ComposedFrame internal constructor(
     }
 
     override fun toString(): String {
-        return "ComposedFrame{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "ComposedFrame{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", width=$width" +
             ", height=$height" +
             ", lines=${Description.forIterable(lines)}" +
@@ -321,8 +321,8 @@ class ComposedFrame internal constructor(
         nativeFrame: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
         x: Float, y: Float
     )
-    private external fun nGetCharStart(nativeFrame: Long): Int
-    private external fun nGetCharEnd(nativeFrame: Long): Int
+    private external fun nGetStartIndex(nativeFrame: Long): Int
+    private external fun nGetEndIndex(nativeFrame: Long): Int
     private external fun nGetWidth(nativeFrame: Long): Float
     private external fun nGetHeight(nativeFrame: Long): Float
     private external fun nGetLineCount(nativeFrame: Long): Int

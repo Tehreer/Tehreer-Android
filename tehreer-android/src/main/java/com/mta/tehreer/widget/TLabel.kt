@@ -267,7 +267,7 @@ open class TLabel : View {
         // Check if position exists within the line horizontally.
         if (adjustedX in lineLeft..lineRight) {
             val charIndex = composedLine.computeNearestCharIndex(adjustedX - lineLeft)
-            val lastIndex = composedLine.charEnd - 1
+            val lastIndex = composedLine.endIndex - 1
 
             // Make sure to provide character of this line.
             return minOf(charIndex, lastIndex)

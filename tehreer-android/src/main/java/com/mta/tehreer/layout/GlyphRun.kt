@@ -46,14 +46,14 @@ class GlyphRun internal constructor(
     /**
      * Returns the index to the first character of this run in source text.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeRun)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeRun)
 
     /**
      * Returns the index after the last character of this run in source text.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeRun)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeRun)
 
     /**
      * Returns the extra excluded length at the start of the cluster map.
@@ -121,7 +121,7 @@ class GlyphRun internal constructor(
 
     /** Returns the replacement span of this run, if it is made for one. */
     internal val replacement: ReplacementHolder?
-        get() = if (nHasReplacement(nativeRun)) holders.floorEntry(charStart)?.value else null
+        get() = if (nHasReplacement(nativeRun)) holders.floorEntry(startIndex)?.value else null
 
     /**
      * Returns the number of glyphs in this run.
@@ -199,8 +199,8 @@ class GlyphRun internal constructor(
         get() = nGetHeight(nativeRun)
 
     private fun checkCharIndex(charIndex: Int) {
-        val charStart = charStart
-        val charEnd = charEnd
+        val charStart = startIndex
+        val charEnd = endIndex
 
         require(charIndex in charStart until charEnd) {
             "Char Index: $charIndex, Run Range: [$charStart, $charEnd)"
@@ -208,10 +208,10 @@ class GlyphRun internal constructor(
     }
 
     private fun checkCaretIndex(charIndex: Int) {
-        val charStart = charStart
-        val charEnd = charEnd
+        val charStart = startIndex
+        val charEnd = endIndex
 
-        require(charIndex in charStart..charEnd) {
+        require(charIndex in charStart..endIndex) {
             "Char Index: $charIndex, Run Range: [$charStart, $charEnd]"
         }
     }
@@ -322,8 +322,8 @@ class GlyphRun internal constructor(
     }
 
     override fun toString(): String {
-        return "GlyphRun{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "GlyphRun{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", bidiLevel=$bidiLevel" +
             ", writingDirection=$writingDirection" +
             ", glyphCount=$glyphCount" +
@@ -341,8 +341,8 @@ class GlyphRun internal constructor(
             "}"
     }
 
-    private external fun nGetCharStart(nativeRun: Long): Int
-    private external fun nGetCharEnd(nativeRun: Long): Int
+    private external fun nGetStartIndex(nativeRun: Long): Int
+    private external fun nGetEndIndex(nativeRun: Long): Int
     private external fun nGetStartExtraLength(nativeRun: Long): Int
     private external fun nGetEndExtraLength(nativeRun: Long): Int
     private external fun nGetBidiLevel(nativeRun: Long): Int

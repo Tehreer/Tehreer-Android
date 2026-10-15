@@ -53,16 +53,16 @@ class BidiParagraph {
      *
      * @return The index to the first character of this paragraph in source text.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeParagraph)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeParagraph)
 
     /**
      * Returns the index after the last character of this paragraph in source text.
      *
      * @return The index after the last character of this paragraph in source text.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeParagraph)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeParagraph)
 
     /**
      * Returns the base level of this paragraph.
@@ -99,8 +99,8 @@ class BidiParagraph {
         get() = RunIterator(this)
 
     private fun checkSubRange(charStart: Int, charEnd: Int) {
-        val paragraphStart = this.charStart
-        val paragraphEnd = this.charEnd
+        val paragraphStart = this.startIndex
+        val paragraphEnd = this.endIndex
 
         require(charStart >= paragraphStart) {
             "Char Start: $charStart, Paragraph Range: [$paragraphStart, $paragraphEnd)"
@@ -129,8 +129,8 @@ class BidiParagraph {
     }
 
     override fun toString(): String {
-        return "BidiParagraph{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "BidiParagraph{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", baseLevel=$baseLevel" +
             ", charLevels=${Description.forByteList(charLevels)}" +
             ", logicalRuns=${Description.forIterator(logicalRuns)}" +
@@ -138,7 +138,7 @@ class BidiParagraph {
     }
 
     internal class RunIterator(val owner: BidiParagraph) : Iterator<BidiRun> {
-        var run: BidiRun? = owner.getOnwardRun(owner.charStart)
+        var run: BidiRun? = owner.getOnwardRun(owner.startIndex)
 
         override fun hasNext(): Boolean {
             return run != null
@@ -146,14 +146,14 @@ class BidiParagraph {
 
         override fun next(): BidiRun {
             val current = run ?: throw NoSuchElementException()
-            run = owner.getOnwardRun(current.charEnd)
+            run = owner.getOnwardRun(current.endIndex)
 
             return current
         }
     }
 
-    private external fun nGetCharStart(nativeParagraph: Long): Int
-    private external fun nGetCharEnd(nativeParagraph: Long): Int
+    private external fun nGetStartIndex(nativeParagraph: Long): Int
+    private external fun nGetEndIndex(nativeParagraph: Long): Int
     private external fun nGetCharCount(nativeParagraph: Long): Int
     private external fun nGetBaseLevel(nativeParagraph: Long): Byte
     private external fun nGetLevelsPtr(nativeParagraph: Long): Long

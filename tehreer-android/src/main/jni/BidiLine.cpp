@@ -33,7 +33,7 @@ static void dispose(JNIEnv *env, jobject obj, jlong lineHandle)
     SBLineRelease(bidiLine);
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong lineHandle)
+static jint getStartIndex(JNIEnv *env, jobject obj, jlong lineHandle)
 {
     auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBUInteger lineOffset = SBLineGetOffset(bidiLine);
@@ -41,7 +41,7 @@ static jint getCharStart(JNIEnv *env, jobject obj, jlong lineHandle)
     return static_cast<jint>(lineOffset);
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong lineHandle)
+static jint getEndIndex(JNIEnv *env, jobject obj, jlong lineHandle)
 {
     auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
     SBUInteger lineOffset = SBLineGetOffset(bidiLine);
@@ -72,8 +72,8 @@ static jobject getVisualRun(JNIEnv *env, jobject obj, jlong lineHandle, jint run
 
 static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
-    { "nGetCharStart", "(J)I", (void *)getCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getEndIndex },
     { "nGetRunCount", "(J)I", (void *)getRunCount },
     { "nGetVisualRun", "(JI)Lcom/mta/tehreer/unicode/BidiRun;", (void *)getVisualRun },
 };

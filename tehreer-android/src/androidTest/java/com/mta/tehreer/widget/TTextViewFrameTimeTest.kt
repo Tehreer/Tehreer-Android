@@ -150,7 +150,7 @@ class TTextViewFrameTimeTest {
             append(arabicText(40))
         })
 
-        return Pair(start, onMain { host.view.composedFrame!!.charEnd })
+        return Pair(start, onMain { host.view.composedFrame!!.endIndex })
     }
 
     // Views that measure themselves.
@@ -194,7 +194,7 @@ class TTextViewFrameTimeTest {
 
         val typesetter = onMain { host.view.typesetter }
         val oldFrame = onMain { host.view.composedFrame!! }
-        val oldBlock = oldFrame.lines.first { it.charStart == start }
+        val oldBlock = oldFrame.lines.first { it.startIndex == start }
         assertEquals(300, rectOf(span).height())
         assertEquals(600f, oldBlock.runs[0].width, 0.001f)
 
@@ -250,14 +250,14 @@ class TTextViewFrameTimeTest {
         })
 
         val line = lineOf(start)
-        assertEquals(start, line.charStart)
-        assertEquals(start + 1, line.charEnd)
+        assertEquals(start, line.startIndex)
+        assertEquals(start + 1, line.endIndex)
         assertEquals(60f, line.height, 0.001f)
         assertEquals(600f, line.runs[0].width, 0.001f)
 
         // The text on both sides has lines, which are not the line of the view.
-        assertTrue(lineOf(start - 1).charEnd == start)
-        assertTrue(lineOf(start + 1).charStart == start + 1)
+        assertTrue(lineOf(start - 1).endIndex == start)
+        assertTrue(lineOf(start + 1).startIndex == start + 1)
     }
 
     @Test
@@ -358,7 +358,7 @@ class TTextViewFrameTimeTest {
         onMain { span.views[0].contentHeight = 500 }
         span.requestResize()
         host.awaitUntil("the frame has the new height") {
-            host.view.composedFrame?.lines?.any { it.charStart == start && it.height == 500f } == true
+            host.view.composedFrame?.lines?.any { it.startIndex == start && it.height == 500f } == true
         }
 
         assertEquals(screenTop, screenTopOf(end - 200), 1.0f)
@@ -388,7 +388,7 @@ class TTextViewFrameTimeTest {
         // The line that has the character is where the line was, whether the character begins
         // it or not.
         val newLine = lineOf(firstVisible)
-        assertTrue(newLine.charStart <= firstVisible && firstVisible < newLine.charEnd)
+        assertTrue(newLine.startIndex <= firstVisible && firstVisible < newLine.endIndex)
         assertEquals(before, screenTopOf(firstVisible), 1.0f)
         assertTrue(host.scrollY > 0)
 
@@ -402,7 +402,7 @@ class TTextViewFrameTimeTest {
     fun aChangeOfTheSizeOfTheTextKeepsWhatIsOnScreen() {
         host.show(spannedOf { append(arabicText(70)) })
 
-        val target = lineOf(onMain { host.view.composedFrame!!.charEnd } / 3)
+        val target = lineOf(onMain { host.view.composedFrame!!.endIndex } / 3)
         host.scrollTo(onMain { (target.originY - target.ascent).roundToInt() })
 
         val firstVisible = onMain { host.view.firstVisibleCharIndex }
@@ -412,7 +412,7 @@ class TTextViewFrameTimeTest {
         host.awaitUntil("the text is smaller") { host.view.composedFrame?.lines?.get(0)?.height ?: 100f < target.height }
 
         val newLine = lineOf(firstVisible)
-        assertTrue(newLine.charStart <= firstVisible && firstVisible < newLine.charEnd)
+        assertTrue(newLine.startIndex <= firstVisible && firstVisible < newLine.endIndex)
         assertEquals(before, screenTopOf(firstVisible), 1.0f)
     }
 
@@ -420,7 +420,7 @@ class TTextViewFrameTimeTest {
     fun aChangeOfTheLineSpacingKeepsWhatIsOnScreen() {
         host.show(spannedOf { append(arabicText(70)) })
 
-        val target = lineOf(onMain { host.view.composedFrame!!.charEnd } / 3)
+        val target = lineOf(onMain { host.view.composedFrame!!.endIndex } / 3)
         host.scrollTo(onMain { (target.originY - target.ascent).roundToInt() } - 30)
 
         val firstVisible = onMain { host.view.firstVisibleCharIndex }
@@ -449,12 +449,12 @@ class TTextViewFrameTimeTest {
 
         host.scrollTo(300)
         onMain { host.view.text = arabicText(50) }
-        host.awaitUntil("the text is new") { host.view.composedFrame?.charEnd == arabicText(50).length }
+        host.awaitUntil("the text is new") { host.view.composedFrame?.endIndex == arabicText(50).length }
         assertEquals(0, host.scrollY)
 
         host.scrollTo(300)
         onMain { host.view.typesetter = com.mta.tehreer.layout.Typesetter(arabicText(55), host.view.typeface!!, 32f) }
-        host.awaitUntil("the typesetter is new") { host.view.composedFrame?.charEnd == arabicText(55).length }
+        host.awaitUntil("the typesetter is new") { host.view.composedFrame?.endIndex == arabicText(55).length }
         assertEquals(0, host.scrollY)
     }
 
@@ -463,14 +463,14 @@ class TTextViewFrameTimeTest {
     @Test
     fun scrollToCharPutsItsLineAtTheTop() {
         host.show(spannedOf { append(arabicText(70)) })
-        val end = onMain { host.view.composedFrame!!.charEnd }
+        val end = onMain { host.view.composedFrame!!.endIndex }
 
         for (char in listOf(end / 3, end / 2, 5, end / 3)) {
             onMain { host.view.scrollToCharIndex(char, false) }
 
             val line = lineOf(char)
             assertEquals(0f, screenTopOf(char), 1.0f)
-            assertTrue(line.charStart <= char && char < line.charEnd)
+            assertTrue(line.startIndex <= char && char < line.endIndex)
             assertTrue(onMain { host.view.firstVisibleCharIndex } <= char)
         }
 
@@ -483,7 +483,7 @@ class TTextViewFrameTimeTest {
         onMain { host.view.setPadding(0, 60, 0, 0) }
         host.show(spannedOf { append(arabicText(70)) })
 
-        val char = onMain { host.view.composedFrame!!.charEnd } / 2
+        val char = onMain { host.view.composedFrame!!.endIndex } / 2
         onMain { host.view.scrollToCharIndex(char, false) }
         assertEquals(60f, screenTopOf(char), 1.0f)
 
@@ -499,11 +499,11 @@ class TTextViewFrameTimeTest {
         onMain { host.view.setPadding(0, 60, 0, 0) }
         host.show(spannedOf { append(arabicText(70)) })
 
-        val char = onMain { host.view.composedFrame!!.charEnd } / 2
+        val char = onMain { host.view.composedFrame!!.endIndex } / 2
         onMain { host.view.scrollToCharIndex(char, false) }
 
         val first = onMain { host.view.firstVisibleCharIndex }
-        assertEquals(lineOf(char).charStart, first)
+        assertEquals(lineOf(char).startIndex, first)
 
         val scrollY = host.scrollY
         repeat(3) {
@@ -533,7 +533,7 @@ class TTextViewFrameTimeTest {
     @Test
     fun scrollToCharCanBeAnimated() {
         host.show(spannedOf { append(arabicText(70)) })
-        val char = onMain { host.view.composedFrame!!.charEnd } / 2
+        val char = onMain { host.view.composedFrame!!.endIndex } / 2
 
         onMain { host.view.scrollToCharIndex(char, true) }
 
@@ -568,7 +568,7 @@ class TTextViewFrameTimeTest {
         // No request for a layout: the answers it gave before are what the cache of the view has.
         onMain { view.setContentHeightSilently(330) }
         span.requestResize()
-        host.awaitUntil("the frame has the new height") { host.view.composedFrame?.lines?.any { it.charStart == start && it.height == 330f } == true }
+        host.awaitUntil("the frame has the new height") { host.view.composedFrame?.lines?.any { it.startIndex == start && it.height == 330f } == true }
 
         assertEquals(330, rectOf(span).height())
     }
@@ -589,7 +589,7 @@ class TTextViewFrameTimeTest {
         // Attached, it can tell.
         onMain { view.contentHeight = 250 }
         span.requestResize()
-        host.awaitUntil("the frame has the new height") { host.view.composedFrame?.lines?.any { it.charStart == start && it.height == 250f } == true }
+        host.awaitUntil("the frame has the new height") { host.view.composedFrame?.lines?.any { it.startIndex == start && it.height == 250f } == true }
 
         assertSame(view, span.view)
         assertEquals(250, rectOf(span).height())

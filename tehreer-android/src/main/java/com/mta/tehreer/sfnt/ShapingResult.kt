@@ -58,17 +58,17 @@ class ShapingResult {
     /**
      * Returns the index to the first character in source text for this `ShapingResult` object.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeResult)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeResult)
 
     /**
      * Returns the index after the last character in source text for this `ShapingResult` object.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeResult)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeResult)
 
     private val charCount: Int
-        get() = charEnd - charStart
+        get() = endIndex - startIndex
 
     /**
      * Returns the number of glyphs in this `ShapingResult` object.
@@ -159,8 +159,8 @@ class ShapingResult {
 
     override fun toString(): String {
         return "ShapingResult{isBackward=$isBackward" +
-            ", charStart=$charStart" +
-            ", charEnd=$charEnd" +
+            ", startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", glyphCount=$glyphCount" +
             ", glyphIds=$glyphIds" +
             ", glyphOffsets=$glyphOffsets" +
@@ -171,8 +171,8 @@ class ShapingResult {
 
     private external fun nIsBackward(nativeResult: Long): Boolean
     private external fun nIsRTL(nativeResult: Long): Boolean
-    private external fun nGetCharStart(nativeResult: Long): Int
-    private external fun nGetCharEnd(nativeResult: Long): Int
+    private external fun nGetStartIndex(nativeResult: Long): Int
+    private external fun nGetEndIndex(nativeResult: Long): Int
     private external fun nGetGlyphCount(nativeResult: Long): Int
     private external fun nGetGlyphIdsPtr(nativeResult: Long): Long
     private external fun nGetGlyphOffsetsPtr(nativeResult: Long): Long

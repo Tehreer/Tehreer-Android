@@ -32,7 +32,7 @@ static void dispose(JNIEnv *env, jobject obj, jlong paragraphHandle)
     SBParagraphRelease(bidiParagraph);
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong paragraphHandle)
+static jint getStartIndex(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
     auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
@@ -40,7 +40,7 @@ static jint getCharStart(JNIEnv *env, jobject obj, jlong paragraphHandle)
     return static_cast<jint>(paragraphOffset);
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong paragraphHandle)
+static jint getEndIndex(JNIEnv *env, jobject obj, jlong paragraphHandle)
 {
     auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
     SBUInteger paragraphOffset = SBParagraphGetOffset(bidiParagraph);
@@ -113,8 +113,8 @@ static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint ch
 
 static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
-    { "nGetCharStart", "(J)I", (void *)getCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getEndIndex },
     { "nGetCharCount", "(J)I", (void *)getCharCount },
     { "nGetBaseLevel", "(J)B", (void *)getBaseLevel },
     { "nGetLevelsPtr", "(J)J", (void *)getLevelsPtr },

@@ -36,7 +36,7 @@ class BidiRunTest : HashableTestSuite<BidiRun>(BidiRun::class.java) {
     private var embeddingLevel: Byte = 1
 
     protected override fun buildIdentical(bidiRun: BidiRun): BidiRun {
-        return BidiRun(bidiRun.charStart, bidiRun.charEnd, bidiRun.embeddingLevel)
+        return BidiRun(bidiRun.startIndex, bidiRun.endIndex, bidiRun.embeddingLevel)
     }
 
     @Before
@@ -72,8 +72,8 @@ class BidiRunTest : HashableTestSuite<BidiRun>(BidiRun::class.java) {
     fun testToString() {
         val description = DescriptionBuilder
                 .of(BidiRun::class.java)
-                .put("charStart", startIndex)
-                .put("charEnd", endIndex)
+                .put("startIndex", startIndex)
+                .put("endIndex", endIndex)
                 .put("embeddingLevel", embeddingLevel)
                 .build()
 

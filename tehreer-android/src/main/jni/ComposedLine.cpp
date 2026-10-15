@@ -31,14 +31,14 @@ static void dispose(JNIEnv *env, jclass clazz, jlong handle)
     TRComposedLineRelease(toLine(handle));
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getStartIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRComposedLineGetCodeUnitStart(toLine(handle)));
+    return static_cast<jint>(TRComposedLineGetStartIndex(toLine(handle)));
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getEndIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRComposedLineGetCodeUnitEnd(toLine(handle)));
+    return static_cast<jint>(TRComposedLineGetEndIndex(toLine(handle)));
 }
 
 static jint getParagraphLevel(JNIEnv *env, jobject obj, jlong handle)
@@ -125,7 +125,7 @@ static void enumerateEdges(JNIEnv *env, jobject obj, jlong handle, jint start, j
 
 static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
-    return static_cast<jint>(TRComposedLineGetCodeUnitIndex(toLine(handle), distance));
+    return static_cast<jint>(TRComposedLineGetCodeUnitIndexAtDistance(toLine(handle), distance));
 }
 
 static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushFactor,
@@ -136,7 +136,7 @@ static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushF
 
 static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
-    TRRect box = TRComposedLineGetInkBox(toLine(handle), toRenderer(rendererHandle));
+    TRRect box = TRComposedLineComputeInkBox(toLine(handle), toRenderer(rendererHandle));
 
     return JavaBridge(env).RectF_construct(box.origin.x, box.origin.y,
                                            box.origin.x + box.size.width,
@@ -157,8 +157,8 @@ static void draw(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle, j
 static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
     { "nDraw", "(JJLandroid/graphics/Canvas;Landroid/graphics/Paint;Ljava/lang/Object;FF)V", (void *)draw },
-    { "nGetCharStart", "(J)I", (void *)getCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getEndIndex },
     { "nGetParagraphLevel", "(J)I", (void *)getParagraphLevel },
     { "nIsBlock", "(J)Z", (void *)isBlock },
     { "nGetAscent", "(J)F", (void *)getAscent },

@@ -34,7 +34,7 @@ class ScriptRunTest : HashableTestSuite<ScriptRun>(ScriptRun::class.java) {
     private var script = Script.COMMON
 
     protected override fun buildIdentical(scriptRun: ScriptRun): ScriptRun {
-        return ScriptRun(scriptRun.charStart, scriptRun.charEnd, scriptRun.script)
+        return ScriptRun(scriptRun.startIndex, scriptRun.endIndex, scriptRun.script)
     }
 
     @Before
@@ -46,8 +46,8 @@ class ScriptRunTest : HashableTestSuite<ScriptRun>(ScriptRun::class.java) {
     fun testToString() {
         val description = DescriptionBuilder
                 .of(ScriptRun::class.java)
-                .put("charStart", startIndex)
-                .put("charEnd", endIndex)
+                .put("startIndex", startIndex)
+                .put("endIndex", endIndex)
                 .put("script", script)
                 .build()
 

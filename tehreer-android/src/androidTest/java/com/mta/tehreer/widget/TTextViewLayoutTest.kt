@@ -222,7 +222,7 @@ class TTextViewLayoutTest {
 
         // On the first line.
         val offset = onMain { host.view.getCharIndexUnderPosition(firstX, firstY) }
-        assertTrue(offset >= first.charStart && offset < first.charEnd)
+        assertTrue(offset >= first.startIndex && offset < first.endIndex)
 
         // In the top padding, above the first line.
         assertEquals(-1, onMain { host.view.getCharIndexUnderPosition(firstX, 40f) })
@@ -240,7 +240,7 @@ class TTextViewLayoutTest {
         val last = lines.last()
         val (lastX, lastY) = host.centerOf(last)
         val lastOffset = onMain { host.view.getCharIndexUnderPosition(lastX, lastY) }
-        assertTrue(lastOffset >= last.charStart && lastOffset < last.charEnd)
+        assertTrue(lastOffset >= last.startIndex && lastOffset < last.endIndex)
     }
 
     @Test
@@ -254,14 +254,14 @@ class TTextViewLayoutTest {
 
         // In the top padding, above the first line.
         val above = onMain { host.view.getCharIndexForPosition(firstX, 40f) }
-        assertTrue(above >= first.charStart && above < first.charEnd)
+        assertTrue(above >= first.startIndex && above < first.endIndex)
 
         // In the bottom padding, below the last line.
         val last = lines.last()
         val (lastX, _) = host.centerOf(last)
         host.scrollTo(host.maxScrollY)
         val below = onMain { host.view.getCharIndexForPosition(lastX, host.height - 20f) }
-        assertTrue(below >= last.charStart && below < last.charEnd)
+        assertTrue(below >= last.startIndex && below < last.endIndex)
 
         // Beside the text of a line it is still -1.
         assertEquals(-1, onMain { host.view.getCharIndexForPosition(-10f, firstY) })
@@ -285,8 +285,8 @@ class TTextViewLayoutTest {
                 val index = onMain { host.view.getCharIndexForPosition(x, y) }
                 assertTrue(
                     "Scroll $offset, line ${lines.indexOf(line)}: $index is not in " +
-                            "[${line.charStart}, ${line.charEnd})",
-                    index >= line.charStart && index < line.charEnd
+                            "[${line.startIndex}, ${line.endIndex})",
+                    index >= line.startIndex && index < line.endIndex
                 )
                 checked++
             }
@@ -325,8 +325,8 @@ class TTextViewLayoutTest {
         val atLeft = onMain { host.view.getCharIndexForPosition(originX + line.originX + 2, y) }
 
         // The text starts at the right edge of the line and ends at its left edge.
-        assertTrue("$atRight for the start of ${line.charStart}", atRight in line.charStart..line.charStart + 2)
-        assertTrue("$atLeft for the end of ${line.charEnd}", atLeft in line.charEnd - 3 until line.charEnd)
+        assertTrue("$atRight for the start of ${line.startIndex}", atRight in line.startIndex..line.startIndex + 2)
+        assertTrue("$atLeft for the end of ${line.endIndex}", atLeft in line.endIndex - 3 until line.endIndex)
     }
 
     @Test
@@ -343,8 +343,8 @@ class TTextViewLayoutTest {
         val atLeft = onMain { host.view.getCharIndexForPosition(originX + line.originX + 1, y) }
         val atRight = onMain { host.view.getCharIndexForPosition(originX + line.originX + line.width - 1, y) }
 
-        assertTrue("$atLeft for the start of ${line.charStart}", atLeft in line.charStart..line.charStart + 1)
-        assertTrue("$atRight for the end of ${line.charEnd}", atRight in line.charEnd - 3 until line.charEnd)
+        assertTrue("$atLeft for the start of ${line.startIndex}", atLeft in line.startIndex..line.startIndex + 1)
+        assertTrue("$atRight for the end of ${line.endIndex}", atRight in line.endIndex - 3 until line.endIndex)
     }
 
     @Test

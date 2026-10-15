@@ -388,8 +388,8 @@ class TTextViewSpanTest {
         val first = host.lines[2]
         val second = host.lines[3]
         val wrapping = RecordingLink()
-        val start = (first.charStart + first.charEnd) / 2
-        val end = (second.charStart + second.charEnd) / 2
+        val start = (first.startIndex + first.endIndex) / 2
+        val end = (second.startIndex + second.endIndex) / 2
 
         host.show(spannedOf {
             append(arabicText(20))

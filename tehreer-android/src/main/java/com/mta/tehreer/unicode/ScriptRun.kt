@@ -23,12 +23,12 @@ class ScriptRun(
     /**
      * The index to the first character of this run in source text.
      */
-    @JvmField var charStart: Int,
+    @JvmField var startIndex: Int,
 
     /**
      * The index after the last character of this run in source text.
      */
-    @JvmField var charEnd: Int,
+    @JvmField var endIndex: Int,
 
     /**
      * The resolved script of this run.
@@ -50,18 +50,18 @@ class ScriptRun(
 
         other as ScriptRun
 
-        return charStart == other.charStart && charEnd == other.charEnd && script == other.script
+        return startIndex == other.startIndex && endIndex == other.endIndex && script == other.script
     }
 
     override fun hashCode(): Int {
-        var result = charStart
-        result = 31 * result + charEnd
+        var result = startIndex
+        result = 31 * result + endIndex
         result = 31 * result + script
 
         return result
     }
 
     override fun toString(): String {
-        return "ScriptRun{charStart=$charStart, charEnd=$charEnd, script=$script}"
+        return "ScriptRun{startIndex=$startIndex, endIndex=$endIndex, script=$script}"
     }
 }

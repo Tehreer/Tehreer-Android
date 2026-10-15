@@ -170,7 +170,7 @@ class TTextViewPrefetchTest {
 
         host.awaitUntil("the frame has the new height") {
             span.view?.let { seen.add(it.visibility) }
-            host.view.composedFrame?.lines?.any { it.charStart == start && it.height == height.toFloat() } == true
+            host.view.composedFrame?.lines?.any { it.startIndex == start && it.height == height.toFloat() } == true
         }
 
         span.view?.let { seen.add(it.visibility) }
@@ -234,7 +234,7 @@ class TTextViewPrefetchTest {
         val seen = mutableListOf<Int>()
         host.awaitUntil("the frame has the new height") {
             span.view?.let { seen.add(it.visibility) }
-            host.view.composedFrame?.lines?.any { it.charStart == start && it.height == 400f } == true &&
+            host.view.composedFrame?.lines?.any { it.startIndex == start && it.height == 400f } == true &&
                 span.view?.height == 400
         }
 

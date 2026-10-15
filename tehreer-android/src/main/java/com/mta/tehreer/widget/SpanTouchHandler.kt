@@ -158,7 +158,7 @@ internal class SpanTouchHandler(private val view: TTextView) {
         val frame = view.composedFrame ?: return null
 
         val offset = view.getCharIndexUnderPosition(x, y)
-        if (offset < frame.charStart || offset >= frame.charEnd) {
+        if (offset < frame.startIndex || offset >= frame.endIndex) {
             return null
         }
 

@@ -81,8 +81,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
         // When
         buildSubject({ subject ->
             // Then
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.baseLevel, baseLevel)
         })
     }
@@ -97,8 +97,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
         // When
         buildSubject({ subject ->
             // Then
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.baseLevel, baseLevel)
         })
     }
@@ -114,8 +114,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
         // When
         buildSubject({ subject ->
             // Then
-            assertEquals(subject.charStart, startIndex)
-            assertEquals(subject.charEnd, endIndex)
+            assertEquals(subject.startIndex, startIndex)
+            assertEquals(subject.endIndex, endIndex)
             assertEquals(subject.baseLevel, baseLevel)
         })
     }
@@ -149,8 +149,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
 
             // Then
             assertNotNull(run)
-            assertEquals(run!!.charStart, 0)
-            assertEquals(run!!.charEnd, 4)
+            assertEquals(run!!.startIndex, 0)
+            assertEquals(run!!.endIndex, 4)
             assertEquals(run!!.embeddingLevel, 0.toByte())
         })
     }
@@ -163,8 +163,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
 
             // Then
             assertNotNull(run)
-            assertEquals(run!!.charStart, 5)
-            assertEquals(run!!.charEnd, 8)
+            assertEquals(run!!.startIndex, 5)
+            assertEquals(run!!.endIndex, 8)
             assertEquals(run!!.embeddingLevel, 1.toByte())
         })
     }
@@ -227,8 +227,8 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
         buildSubject({ subject ->
             val description = DescriptionBuilder
                     .of(BidiParagraph::class.java)
-                    .put("charStart", startIndex)
-                    .put("charEnd", endIndex)
+                    .put("startIndex", startIndex)
+                    .put("endIndex", endIndex)
                     .put("baseLevel", baseLevel)
                     .put("charLevels", DEFAULT_LEVELS)
                     .put("logicalRuns", subject.logicalRuns)

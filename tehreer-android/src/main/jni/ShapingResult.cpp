@@ -79,12 +79,12 @@ static jboolean isRTL(JNIEnv *env, jobject obj, jlong handle)
     return (core && TRShapingResultIsRTL(core)) ? JNI_TRUE : JNI_FALSE;
 }
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getStartIndex(JNIEnv *env, jobject obj, jlong handle)
 {
     return toResult(handle)->charStart();
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getEndIndex(JNIEnv *env, jobject obj, jlong handle)
 {
     return toResult(handle)->charEnd();
 }
@@ -156,8 +156,8 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nDispose", "(J)V", (void *)dispose },
     { "nIsBackward", "(J)Z", (void *)isBackward },
     { "nIsRTL", "(J)Z", (void *)isRTL },
-    { "nGetCharStart", "(J)I", (void *)getCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getEndIndex },
     { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
     { "nGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
     { "nGetGlyphOffsetsPtr", "(J)J", (void *)getGlyphOffsetsPtr },

@@ -67,8 +67,8 @@ class ScriptClassifierRunIteratorTest {
 
         // Then
         assertEquals(subject.index, 1)
-        assertEquals(scriptRun.charStart, 0)
-        assertEquals(scriptRun.charEnd, 1)
+        assertEquals(scriptRun.startIndex, 0)
+        assertEquals(scriptRun.endIndex, 1)
         assertEquals(scriptRun.script, Script.LATIN)
     }
 
@@ -84,8 +84,8 @@ class ScriptClassifierRunIteratorTest {
 
         // Then
         assertEquals(subject.index, 2)
-        assertEquals(scriptRun.charStart, 1)
-        assertEquals(scriptRun.charEnd, 2)
+        assertEquals(scriptRun.startIndex, 1)
+        assertEquals(scriptRun.endIndex, 2)
         assertEquals(scriptRun.script, Script.COMMON)
     }
 
@@ -101,8 +101,8 @@ class ScriptClassifierRunIteratorTest {
 
         // Then
         assertEquals(subject.index, 3)
-        assertEquals(scriptRun.charStart, 2)
-        assertEquals(scriptRun.charEnd, 3)
+        assertEquals(scriptRun.startIndex, 2)
+        assertEquals(scriptRun.endIndex, 3)
         assertEquals(scriptRun.script, Script.ARABIC)
     }
 

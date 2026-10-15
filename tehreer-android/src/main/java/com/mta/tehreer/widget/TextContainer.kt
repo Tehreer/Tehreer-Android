@@ -496,7 +496,7 @@ internal class TextContainer : ViewGroup {
         updateVisibleRect()
 
         val line = frame.lines[firstVisibleLineIndex(frame)]
-        return Anchor(line.charStart, visibleRect.top - lineTop(frame, line))
+        return Anchor(line.startIndex, visibleRect.top - lineTop(frame, line))
     }
 
     private fun scrollToAnchor(frame: ComposedFrame, anchor: Anchor, animate: Boolean) {
@@ -507,7 +507,7 @@ internal class TextContainer : ViewGroup {
 
         updateVisibleRect()
 
-        val charIndex = anchor.charIndex.coerceIn(frame.charStart, frame.charEnd - 1)
+        val charIndex = anchor.charIndex.coerceIn(frame.startIndex, frame.endIndex - 1)
         val line = frame.lines[frame.getLineIndexForChar(charIndex)]
 
         val offset = if (anchor.offset.isNaN()) {
@@ -551,7 +551,7 @@ internal class TextContainer : ViewGroup {
 
         val padding = if (scrollView?.clipToPadding == false) scrollView?.paddingTop ?: 0 else 0
 
-        return frame.lines[firstVisibleLineIndex(frame, visibleRect.top + padding + 0.5f)].charStart
+        return frame.lines[firstVisibleLineIndex(frame, visibleRect.top + padding + 0.5f)].startIndex
     }
 
     /**
@@ -679,7 +679,7 @@ internal class TextContainer : ViewGroup {
         // The index is the nearest to the position, which is the one after the char when the
         // position is on the trailing half of it. The char is the one whose box has it.
         for (charIndex in intArrayOf(nearestIndex, nearestIndex - 1)) {
-            if (charIndex < line.charStart) {
+            if (charIndex < line.startIndex) {
                 continue
             }
 
@@ -702,7 +702,7 @@ internal class TextContainer : ViewGroup {
         }
 
         // Make sure to provide character of this line.
-        return line.computeNearestCharIndex(frameX - lineLeft).coerceAtMost(line.charEnd - 1)
+        return line.computeNearestCharIndex(frameX - lineLeft).coerceAtMost(line.endIndex - 1)
     }
 
     /** The rects covered by [span] in the coordinates of the scroll view; see TTextView. */

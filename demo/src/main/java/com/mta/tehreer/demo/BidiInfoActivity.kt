@@ -120,7 +120,7 @@ class BidiInfoActivity : AppCompatActivity() {
             writeParagraphText(builder, paragraph, paragraphIndex)
 
             paragraphIndex++
-            paragraphStart = paragraph.charEnd
+            paragraphStart = paragraph.endIndex
         }
     }
 
@@ -129,8 +129,8 @@ class BidiInfoActivity : AppCompatActivity() {
         paragraph: BidiParagraph,
         index: Int
     ) {
-        val paragraphStart = paragraph.charStart
-        val paragraphEnd = paragraph.charEnd
+        val paragraphStart = paragraph.startIndex
+        val paragraphEnd = paragraph.endIndex
         val paragraphLength = paragraphEnd - paragraphStart
         val paragraphText = (if (paragraph.baseLevel.toInt() and 1 == 1) RLI else LRI).toString() + bidiText.substring(paragraphStart, paragraphEnd) + PDI
 
@@ -156,8 +156,8 @@ class BidiInfoActivity : AppCompatActivity() {
     }
 
     private fun writeRunText(builder: SpannableStringBuilder, run: BidiRun, index: Int) {
-        val runStart = run.charStart
-        val runEnd = run.charEnd
+        val runStart = run.startIndex
+        val runEnd = run.endIndex
         val runLength = runEnd - runStart
         val runText = (if (run.isRightToLeft) RLI else LRI).toString() + bidiText.substring(runStart, runEnd) + PDI
 
@@ -175,7 +175,7 @@ class BidiInfoActivity : AppCompatActivity() {
 
         var counter = 1
         for (bidiRun in line.visualRuns) {
-            visualMap.put(bidiRun.charStart, counter)
+            visualMap.put(bidiRun.startIndex, counter)
             counter++
         }
 

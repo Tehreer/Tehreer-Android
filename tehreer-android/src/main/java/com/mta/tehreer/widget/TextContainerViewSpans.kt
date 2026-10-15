@@ -31,14 +31,14 @@ internal fun TextContainer.resolveViewSlots(frame: ComposedFrame): List<ViewSlot
     val source = frameSpanned ?: return emptyList()
     val slots = mutableListOf<ViewSlot>()
 
-    for (span in source.getSpans(frame.charStart, frame.charEnd, ViewSpan::class.java)) {
+    for (span in source.getSpans(frame.startIndex, frame.endIndex, ViewSpan::class.java)) {
         val start = source.getSpanStart(span)
-        if (start < frame.charStart || start >= frame.charEnd) {
+        if (start < frame.startIndex || start >= frame.endIndex) {
             continue
         }
 
         val line = frame.lines[frame.getLineIndexForChar(start)]
-        val run = line.runs.firstOrNull { start >= it.charStart && start < it.charEnd } ?: continue
+        val run = line.runs.firstOrNull { start >= it.startIndex && start < it.endIndex } ?: continue
         val rect = computeViewRect(frame, line, run, span)
 
         slots.add(

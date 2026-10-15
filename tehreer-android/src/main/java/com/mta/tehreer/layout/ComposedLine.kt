@@ -56,17 +56,17 @@ class ComposedLine internal constructor(
     /**
      * Returns the index to the first character of this line in source text.
      */
-    val charStart: Int
-        get() = nGetCharStart(nativeLine)
+    val startIndex: Int
+        get() = nGetStartIndex(nativeLine)
 
     /**
      * Returns the index after the last character of this line in source text.
      */
-    val charEnd: Int
-        get() = nGetCharEnd(nativeLine)
+    val endIndex: Int
+        get() = nGetEndIndex(nativeLine)
 
     val breakEnd: Int
-        get() = charEnd
+        get() = endIndex
 
     /** Whether this line is the line of a view that has a line of its own. */
     internal val isBlock: Boolean
@@ -120,9 +120,6 @@ class ComposedLine internal constructor(
     val height: Float
         get() = ascent + descent + leading
 
-    internal val top: Float
-        get() = originY - ascent
-
     /**
      * Returns the width of the whitespaces at the end of this line, which are not shown.
      */
@@ -130,10 +127,10 @@ class ComposedLine internal constructor(
         get() = nGetTrailingWhitespaceExtent(nativeLine)
 
     private fun checkCharIndex(charIndex: Int) {
-        val charStart = charStart
-        val charEnd = charEnd
+        val charStart = startIndex
+        val charEnd = endIndex
 
-        require(charIndex in charStart..charEnd) {
+        require(charIndex in charStart..endIndex) {
             "Char Index: $charIndex, Line Range: [$charStart, $charEnd)"
         }
     }
@@ -169,8 +166,8 @@ class ComposedLine internal constructor(
      */
     @Size(multiple = 2)
     fun computeVisualEdges(charStart: Int, charEnd: Int): FloatArray {
-        val lineStart = this.charStart
-        val lineEnd = this.charEnd
+        val lineStart = this.startIndex
+        val lineEnd = this.endIndex
 
         require(charStart >= lineStart) { "Char Start: $charStart, Line Range: [$lineStart, $lineEnd)" }
         require(charEnd <= lineEnd) { "Char End: $charEnd, Line Range: [$lineStart, $lineEnd)" }
@@ -236,8 +233,8 @@ class ComposedLine internal constructor(
     }
 
     override fun toString(): String {
-        return "ComposedLine{charStart=$charStart" +
-            ", charEnd=$charEnd" +
+        return "ComposedLine{startIndex=$startIndex" +
+            ", endIndex=$endIndex" +
             ", originX=$originX" +
             ", originY=$originY" +
             ", ascent=$ascent" +
@@ -254,8 +251,8 @@ class ComposedLine internal constructor(
         nativeLine: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
         x: Float, y: Float
     )
-    private external fun nGetCharStart(nativeLine: Long): Int
-    private external fun nGetCharEnd(nativeLine: Long): Int
+    private external fun nGetStartIndex(nativeLine: Long): Int
+    private external fun nGetEndIndex(nativeLine: Long): Int
     private external fun nGetParagraphLevel(nativeLine: Long): Int
     private external fun nIsBlock(nativeLine: Long): Boolean
     private external fun nGetAscent(nativeLine: Long): Float

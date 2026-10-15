@@ -25,14 +25,14 @@
 
 using namespace Tehreer;
 
-static jint getCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getStartIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRGlyphRunGetCodeUnitStart(toRun(handle)));
+    return static_cast<jint>(TRGlyphRunGetStartIndex(toRun(handle)));
 }
 
-static jint getCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getEndIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRGlyphRunGetCodeUnitEnd(toRun(handle)));
+    return static_cast<jint>(TRGlyphRunGetEndIndex(toRun(handle)));
 }
 
 static jint getStartExtraLength(JNIEnv *env, jobject obj, jlong handle)
@@ -188,7 +188,7 @@ static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat di
 
 static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
-    TRRect box = TRGlyphRunGetInkBox(toRun(handle), toRenderer(rendererHandle));
+    TRRect box = TRGlyphRunComputeInkBox(toRun(handle), toRenderer(rendererHandle));
 
     return JavaBridge(env).RectF_construct(box.origin.x, box.origin.y,
                                            box.origin.x + box.size.width,
@@ -207,8 +207,8 @@ static void draw(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle, j
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nGetCharStart", "(J)I", (void *)getCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getEndIndex },
     { "nGetStartExtraLength", "(J)I", (void *)getStartExtraLength },
     { "nGetEndExtraLength", "(J)I", (void *)getEndExtraLength },
     { "nGetBidiLevel", "(J)I", (void *)getBidiLevel },

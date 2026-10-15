@@ -34,14 +34,14 @@ static void disposeFrame(JNIEnv *env, jclass clazz, jlong handle)
     TRComposedFrameRelease(toFrame(handle));
 }
 
-static jint getFrameCharStart(JNIEnv *env, jobject obj, jlong handle)
+static jint getFrameStartIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRComposedFrameGetCodeUnitStart(toFrame(handle)));
+    return static_cast<jint>(TRComposedFrameGetStartIndex(toFrame(handle)));
 }
 
-static jint getFrameCharEnd(JNIEnv *env, jobject obj, jlong handle)
+static jint getFrameEndIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return static_cast<jint>(TRComposedFrameGetCodeUnitEnd(toFrame(handle)));
+    return static_cast<jint>(TRComposedFrameGetEndIndex(toFrame(handle)));
 }
 
 static jfloat getFrameWidth(JNIEnv *env, jobject obj, jlong handle)
@@ -69,7 +69,7 @@ static jlong getFrameLine(JNIEnv *env, jobject obj, jlong handle, jint index)
 
 static jint getLineIndexForCodeUnit(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
-    TRUInteger lineIndex = TRComposedFrameGetIndexOfLineForCodeUnit(toFrame(handle),
+    TRUInteger lineIndex = TRComposedFrameGetLineIndexForCodeUnit(toFrame(handle),
                                                                     static_cast<TRUInteger>(index));
 
     return (lineIndex != TRInvalidIndex ? static_cast<jint>(lineIndex) : -1);
@@ -81,7 +81,7 @@ static jint getLineIndexAtPosition(JNIEnv *env, jobject obj, jlong handle, jfloa
     position.x = x;
     position.y = y;
 
-    return static_cast<jint>(TRComposedFrameGetIndexOfLineAtPosition(toFrame(handle), position));
+    return static_cast<jint>(TRComposedFrameGetLineIndexAtPosition(toFrame(handle), position));
 }
 
 static void putSelectionRect(void *userData, TRRect rect, TRBoolean *stop)
@@ -118,8 +118,8 @@ static void drawFrame(JNIEnv *env, jobject obj, jlong handle, jlong rendererHand
 static JNINativeMethod FRAME_METHODS[] = {
     { "nDispose", "(J)V", (void *)disposeFrame },
     { "nDraw", "(JJLandroid/graphics/Canvas;Landroid/graphics/Paint;Ljava/lang/Object;FF)V", (void *)drawFrame },
-    { "nGetCharStart", "(J)I", (void *)getFrameCharStart },
-    { "nGetCharEnd", "(J)I", (void *)getFrameCharEnd },
+    { "nGetStartIndex", "(J)I", (void *)getFrameStartIndex },
+    { "nGetEndIndex", "(J)I", (void *)getFrameEndIndex },
     { "nGetWidth", "(J)F", (void *)getFrameWidth },
     { "nGetHeight", "(J)F", (void *)getFrameHeight },
     { "nGetLineCount", "(J)I", (void *)getFrameLineCount },
