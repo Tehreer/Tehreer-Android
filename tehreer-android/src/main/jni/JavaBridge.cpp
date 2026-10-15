@@ -155,9 +155,9 @@ jobject JavaBridge::BidiPair_construct(jint charIndex, jint actualCodePoint, jin
     return m_env->NewObject(BIDI_PAIR, BIDI_PAIR__CONSTRUCTOR, charIndex, actualCodePoint, pairingCodePoint);
 }
 
-jobject JavaBridge::BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const
+jobject JavaBridge::BidiRun_construct(jint startIndex, jint endIndex, jbyte embeddingLevel) const
 {
-    return m_env->NewObject(BIDI_RUN, BIDI_RUN__CONSTRUCTOR, charStart, charEnd, embeddingLevel);
+    return m_env->NewObject(BIDI_RUN, BIDI_RUN__CONSTRUCTOR, startIndex, endIndex, embeddingLevel);
 }
 
 jobject JavaBridge::Bitmap_create(jint width, jint height, BitmapConfig config) const

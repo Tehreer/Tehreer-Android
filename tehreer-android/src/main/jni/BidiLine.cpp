@@ -63,11 +63,11 @@ static jobject getVisualRun(JNIEnv *env, jobject obj, jlong lineHandle, jint run
     auto bidiLine = reinterpret_cast<SBLineRef>(lineHandle);
 
     const SBRun *runPtr = &SBLineGetRunsPtr(bidiLine)[runIndex];
-    auto charStart = static_cast<jint>(runPtr->offset);
-    auto charEnd = static_cast<jint>(runPtr->offset + runPtr->length);
+    auto startIndex = static_cast<jint>(runPtr->offset);
+    auto endIndex = static_cast<jint>(runPtr->offset + runPtr->length);
     auto embeddingLevel = static_cast<jbyte>(runPtr->level);
 
-    return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
+    return JavaBridge(env).BidiRun_construct(startIndex, endIndex, embeddingLevel);
 }
 
 static JNINativeMethod JNI_METHODS[] = {

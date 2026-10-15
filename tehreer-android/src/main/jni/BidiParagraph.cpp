@@ -91,21 +91,21 @@ static jobject getOnwardRun(JNIEnv *env, jobject obj, jlong paragraphHandle, jin
             }
         }
 
-        auto charStart = static_cast<jint>(levelIndex + paragraphOffset);
-        auto charEnd = static_cast<jint>(nextIndex + paragraphOffset);
+        auto startIndex = static_cast<jint>(levelIndex + paragraphOffset);
+        auto endIndex = static_cast<jint>(nextIndex + paragraphOffset);
         auto embeddingLevel = static_cast<jbyte>(currentLevel);
 
-        return JavaBridge(env).BidiRun_construct(charStart, charEnd, embeddingLevel);
+        return JavaBridge(env).BidiRun_construct(startIndex, endIndex, embeddingLevel);
     }
 
     return nullptr;
 }
 
-static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint charStart, jint charEnd)
+static jlong createLine(JNIEnv *env, jobject obj, jlong paragraphHandle, jint fromIndex, jint toIndex)
 {
     auto bidiParagraph = reinterpret_cast<SBParagraphRef>(paragraphHandle);
-    auto lineOffset = static_cast<SBUInteger>(charStart);
-    auto lineLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto lineOffset = static_cast<SBUInteger>(fromIndex);
+    auto lineLength = static_cast<SBUInteger>(toIndex - fromIndex);
 
     SBLineRef bidiLine = SBParagraphCreateLine(bidiParagraph, lineOffset, lineLength);
     return reinterpret_cast<jlong>(bidiLine);

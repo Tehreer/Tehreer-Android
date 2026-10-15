@@ -18,6 +18,8 @@ package com.mta.tehreer.layout
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 
 import android.graphics.Path
@@ -143,6 +145,21 @@ class FrameResolverTest {
     }
 
     @Test
+    fun testMaxLinesRequiresAtLeastOneLine() {
+        val resolver = FrameResolver()
+
+        resolver.maxLines = 1
+        assertEquals(1, resolver.maxLines)
+
+        resolver.maxLines = null
+        assertNull(resolver.maxLines)
+
+        assertThrows(IllegalArgumentException::class.java) { resolver.maxLines = 0 }
+        assertThrows(IllegalArgumentException::class.java) { resolver.maxLines = -1 }
+        assertNull(resolver.maxLines)
+    }
+
+    @Test
     fun testFittingChangesTheSizeOfTheFrame() {
         val resolver = resolver(400.0f, 1000.0f)
         resolver.fitsHorizontally = true
@@ -219,7 +236,7 @@ class FrameResolverTest {
         assertFalse(resolver.isTruncationEnabled)
         assertFalse(resolver.isJustificationEnabled)
         assertEquals(1.0f, resolver.justificationLevel, 0.0f)
-        assertEquals(0, resolver.maxLines)
+        assertNull(resolver.maxLines)
         assertEquals(0.0f, resolver.extraLineSpacing, 0.0f)
         assertEquals(1.0f, resolver.lineHeightMultiplier, 0.0f)
 

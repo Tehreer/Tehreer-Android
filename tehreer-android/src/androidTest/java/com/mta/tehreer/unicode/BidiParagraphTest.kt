@@ -197,12 +197,12 @@ class BidiParagraphTest : SubjectTestSuite<BidiParagraph>(BidiParagraphBuilder()
         buildSubject({ subject ->
             // Invalid Start
             assertThrows(IllegalArgumentException::class.java,
-                         "Char Start: -1, Paragraph Range: [0, 8)",
+                         "From Index: -1, Paragraph Range: [0, 8)",
                          { subject.createLine(-1, 8) })
 
             // Invalid End
             assertThrows(IllegalArgumentException::class.java,
-                         "Char End: 9, Paragraph Range: [0, 8)",
+                         "To Index: 9, Paragraph Range: [0, 8)",
                          { subject.createLine(0, 9) })
 
             // Empty Range

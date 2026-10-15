@@ -57,7 +57,7 @@ class ScriptClassifierTest {
             subject.getScriptRuns(-1, 8)
             fail()
         } catch (exception: IllegalArgumentException) {
-            assertEquals(exception.message, "Char Start: -1")
+            assertEquals(exception.message, "From Index: -1")
         }
 
         // Invalid End
@@ -65,7 +65,7 @@ class ScriptClassifierTest {
             subject.getScriptRuns(0, 9)
             fail()
         } catch (exception: IllegalArgumentException) {
-            assertEquals(exception.message, "Char End: 9, Text Length: 8")
+            assertEquals(exception.message, "To Index: 9, Text Length: 8")
         }
 
         // Empty Range

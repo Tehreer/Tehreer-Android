@@ -48,14 +48,14 @@ internal fun computeSpanRects(frame: ComposedFrame, source: Spanned, span: Any):
         return computeSelectionRects(frame, spanStart, spanEnd)
     }
 
-    val charStart = max(spanStart, frame.startIndex)
-    val charEnd = min(spanEnd, frame.endIndex)
-    if (charStart >= charEnd) {
+    val startIndex = max(spanStart, frame.startIndex)
+    val endIndex = min(spanEnd, frame.endIndex)
+    if (startIndex >= endIndex) {
         return emptyList()
     }
 
-    val firstIndex = frame.getLineIndexForChar(charStart)
-    val lastIndex = frame.getLineIndexForChar(charEnd - 1)
+    val firstIndex = frame.getLineIndexForChar(startIndex)
+    val lastIndex = frame.getLineIndexForChar(endIndex - 1)
     if (firstIndex < 0 || lastIndex < firstIndex) {
         return emptyList()
     }
@@ -67,7 +67,7 @@ internal fun computeSpanRects(frame: ComposedFrame, source: Spanned, span: Any):
         val baseline = line.originY
 
         for (run in line.runs) {
-            if (run.startIndex < charEnd && run.endIndex > charStart) {
+            if (run.startIndex < endIndex && run.endIndex > startIndex) {
                 if (span is ViewSpan) {
                     rects.add(computeViewRect(frame, line, run, span))
                     continue
@@ -92,15 +92,15 @@ internal fun computeSpanRects(frame: ComposedFrame, source: Spanned, span: Any):
  * Returns an empty list if the range is not (even partly) in the frame.
  */
 internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeEnd: Int): List<RectF> {
-    val charStart = max(rangeStart, frame.startIndex)
-    val charEnd = min(rangeEnd, frame.endIndex)
-    if (charStart >= charEnd) {
+    val startIndex = max(rangeStart, frame.startIndex)
+    val endIndex = min(rangeEnd, frame.endIndex)
+    if (startIndex >= endIndex) {
         return emptyList()
     }
 
     val lines = frame.lines
-    val firstIndex = frame.getLineIndexForChar(charStart)
-    val lastIndex = frame.getLineIndexForChar(charEnd - 1)
+    val firstIndex = frame.getLineIndexForChar(startIndex)
+    val lastIndex = frame.getLineIndexForChar(endIndex - 1)
     if (firstIndex < 0 || lastIndex < firstIndex) {
         return emptyList()
     }
@@ -125,8 +125,8 @@ internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeE
             right = max(right, min(to, frameWidth))
         }
 
-        val segmentStart = max(charStart, line.startIndex)
-        val segmentEnd = min(charEnd, line.endIndex)
+        val segmentStart = max(startIndex, line.startIndex)
+        val segmentEnd = min(endIndex, line.endIndex)
 
         if (segmentStart < segmentEnd) {
             val edges = line.getVisualEdges(segmentStart, segmentEnd)

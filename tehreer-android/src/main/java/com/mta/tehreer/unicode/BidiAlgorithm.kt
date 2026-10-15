@@ -62,10 +62,10 @@ class BidiAlgorithm {
         this.finalizable = Finalizable(nativeBuffer, nativeAlgorithm)
     }
 
-    private fun checkSubRange(charStart: Int, charEnd: Int) {
-        require(charStart >= 0) { "Char Start: $charStart" }
-        require(charEnd <= text.length) { "Char End: $charEnd, Text Length: ${text.length}" }
-        require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
+    private fun checkSubRange(fromIndex: Int, toIndex: Int) {
+        require(fromIndex >= 0) { "From Index: $fromIndex" }
+        require(toIndex <= text.length) { "To Index: $toIndex, Text Length: ${text.length}" }
+        require(toIndex > fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
     }
 
     /**
@@ -81,80 +81,80 @@ class BidiAlgorithm {
      * Returns the boundary of the first paragraph within the given range.
      *
      * The boundary of the paragraph occurs after a character whose bidirectional type is Paragraph
-     * Separator (B), or the `charEnd` if no such character exists before it. The exception to this
+     * Separator (B), or the `toIndex` if no such character exists before it. The exception to this
      * rule is when a Carriage Return (CR) is followed by a Line Feed (LF). Both CR and LF are
      * paragraph separators, but in that case, the boundary of the paragraph is considered after LF
      * character.
      *
-     * @param charStart The index to the first character of the paragraph in source text.
-     * @param charEnd The suggested index after the last character of the paragraph in source text.
+     * @param fromIndex The index to the first character of the paragraph in source text.
+     * @param toIndex The suggested index after the last character of the paragraph in source text.
      * @return The boundary of the first paragraph within the given range.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`.
      */
-    fun getParagraphBoundary(charStart: Int, charEnd: Int): Int {
-        checkSubRange(charStart, charEnd)
+    fun getParagraphBoundary(fromIndex: Int, toIndex: Int): Int {
+        checkSubRange(fromIndex, toIndex)
 
-        return nGetParagraphBoundary(nativeAlgorithm, charStart, charEnd)
+        return nGetParagraphBoundary(nativeAlgorithm, fromIndex, toIndex)
     }
 
     /**
      * Creates a paragraph object processed with Unicode Bidirectional Algorithm.
      *
-     * This method processes only first paragraph starting at `charStart` and ending at either
-     * `charEnd` or some character before it, in accordance with Rule P1 of Unicode Bidirectional
+     * This method processes only first paragraph starting at `fromIndex` and ending at either
+     * `toIndex` or some character before it, in accordance with Rule P1 of Unicode Bidirectional
      * Algorithm.
      *
      * The paragraph level is determined by applying Rules P2-P3 and embedding levels are resolved
      * by applying Rules X1-I2.
      *
-     * @param charStart The index to the first character of the paragraph in source text.
-     * @param charEnd The suggested index after the last character of the paragraph in source text.
+     * @param fromIndex The index to the first character of the paragraph in source text.
+     * @param toIndex The suggested index after the last character of the paragraph in source text.
      * @param baseDirection The base direction of the paragraph.
      * @return A paragraph object processed with Unicode Bidirectional Algorithm.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`.
      */
-    fun createParagraph(charStart: Int, charEnd: Int, baseDirection: BaseDirection): BidiParagraph {
-        checkSubRange(charStart, charEnd)
+    fun createParagraph(fromIndex: Int, toIndex: Int, baseDirection: BaseDirection): BidiParagraph {
+        checkSubRange(fromIndex, toIndex)
 
         return BidiParagraph(
             nativeBuffer,
-            nCreateParagraph(nativeAlgorithm, charStart, charEnd, baseDirection.value)
+            nCreateParagraph(nativeAlgorithm, fromIndex, toIndex, baseDirection.value)
         )
     }
 
     /**
      * Creates a paragraph object processed with Unicode Bidirectional Algorithm.
      *
-     * This method processes only first paragraph starting at `charStart` and ending at either
-     * `charEnd` or some character before it, in accordance with Rule P1 of Unicode Bidirectional
+     * This method processes only first paragraph starting at `fromIndex` and ending at either
+     * `toIndex` or some character before it, in accordance with Rule P1 of Unicode Bidirectional
      * Algorithm.
      *
      * The paragraph level is overridden by `baseLevel` parameter and embedding levels are resolved
      * by applying Rules X1-I2.
      *
-     * @param charStart The index to the first character of the paragraph in source text.
-     * @param charEnd The suggested index after the last character of the paragraph in source text.
+     * @param fromIndex The index to the first character of the paragraph in source text.
+     * @param toIndex The suggested index after the last character of the paragraph in source text.
      * @param baseLevel Base level to override.
      * @return A paragraph object processed with Unicode Bidirectional Algorithm.
      *
      * @throws IllegalArgumentException if any of the following is true:
-     *  - `charStart` is negative
-     *  - `charEnd` is greater than the length of source text
-     *  - `charStart` is greater than or equal to `charEnd`
+     *  - `fromIndex` is negative
+     *  - `toIndex` is greater than the length of source text
+     *  - `fromIndex` is greater than or equal to `toIndex`
      *  - `baseLevel` is less than zero
      *  - `baseLevel` is greater than [MAX_LEVEL]
      */
-    fun createParagraph(charStart: Int, charEnd: Int, baseLevel: Byte): BidiParagraph {
-        checkSubRange(charStart, charEnd)
+    fun createParagraph(fromIndex: Int, toIndex: Int, baseLevel: Byte): BidiParagraph {
+        checkSubRange(fromIndex, toIndex)
         require(baseLevel in 0..MAX_LEVEL) { "Base Level: $baseLevel" }
 
         return BidiParagraph(
             nativeBuffer,
-            nCreateParagraph(nativeAlgorithm, charStart, charEnd, baseLevel.toInt())
+            nCreateParagraph(nativeAlgorithm, fromIndex, toIndex, baseLevel.toInt())
         )
     }
 
@@ -164,11 +164,11 @@ class BidiAlgorithm {
 
     private external fun nGetCharBidiClassesPtr(nativeAlgorithm: Long): Long
     private external fun nGetParagraphBoundary(
-        nativeAlgorithm: Long, charStart: Int, charEnd: Int
+        nativeAlgorithm: Long, fromIndex: Int, toIndex: Int
     ): Int
 
     private external fun nCreateParagraph(
-        nativeAlgorithm: Long, charStart: Int, charEnd: Int, baseLevel: Int
+        nativeAlgorithm: Long, fromIndex: Int, toIndex: Int, baseLevel: Int
     ): Long
 
     companion object {

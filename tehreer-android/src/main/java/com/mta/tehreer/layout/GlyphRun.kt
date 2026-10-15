@@ -247,20 +247,20 @@ class GlyphRun internal constructor(
         get() = nGetHeight(nativeRun)
 
     private fun checkCharIndex(charIndex: Int) {
-        val charStart = startIndex
-        val charEnd = endIndex
+        val startIndex = this.startIndex
+        val endIndex = this.endIndex
 
-        require(charIndex in charStart until charEnd) {
-            "Char Index: $charIndex, Run Range: [$charStart, $charEnd)"
+        require(charIndex in startIndex until endIndex) {
+            "Char Index: $charIndex, Run Range: [$startIndex, $endIndex)"
         }
     }
 
     private fun checkCaretIndex(charIndex: Int) {
-        val charStart = startIndex
-        val charEnd = endIndex
+        val startIndex = this.startIndex
+        val endIndex = this.endIndex
 
-        require(charIndex in charStart..endIndex) {
-            "Char Index: $charIndex, Run Range: [$charStart, $charEnd]"
+        require(charIndex in startIndex..endIndex) {
+            "Char Index: $charIndex, Run Range: [$startIndex, $endIndex]"
         }
     }
 

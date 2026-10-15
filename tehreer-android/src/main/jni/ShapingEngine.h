@@ -76,7 +76,7 @@ public:
     TRWritingDirection writingDirection() const { return m_writingDirection; }
     void setWritingDirection(TRWritingDirection writingDirection);
 
-    void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd);
+    void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint fromIndex, jint toIndex);
 
 private:
     TRShapingEngineRef m_core;

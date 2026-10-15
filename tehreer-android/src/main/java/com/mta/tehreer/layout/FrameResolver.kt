@@ -192,13 +192,21 @@ class FrameResolver {
         }
 
     /**
-     * The maximum number of lines that a frame should consist of. The default value is zero, which
-     * means that the number of lines is not limited.
+     * The maximum number of lines that a frame should consist of. The default value is `null`,
+     * which means that the number of lines is not limited.
+     *
+     * @throws IllegalArgumentException if the value is not `null` and is less than one.
      */
-    var maxLines: Int
-        get() = nGetMaxLines(nativeResolver)
+    var maxLines: Int?
+        get() {
+            val count = nGetMaxLines(nativeResolver)
+
+            return if (count == 0) null else count
+        }
         set(value) {
-            nSetMaxLines(nativeResolver, value)
+            require(value == null || value >= 1) { "Max Lines: $value" }
+
+            nSetMaxLines(nativeResolver, value ?: 0)
         }
 
     /**
@@ -236,22 +244,22 @@ class FrameResolver {
      * text no longer fits in frame size. The resulting frame consists of at least one line even
      * if frame size is smaller.
      *
-     * @param charStart The index to first character of the frame in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the frame in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @return A new composed frame.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`.
      */
-    fun createFrame(charStart: Int, charEnd: Int): ComposedFrame {
+    fun createFrame(fromIndex: Int, toIndex: Int): ComposedFrame {
         val typesetter = checkNotNull(typesetter) { "Typesetter is not set" }
         val textLength = typesetter.spanned.length
 
-        require(charStart >= 0) { "Char Start: $charStart" }
-        require(charEnd <= textLength) { "Char End: $charEnd, Text Length: $textLength" }
-        require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
+        require(fromIndex >= 0) { "From Index: $fromIndex" }
+        require(toIndex <= textLength) { "To Index: $toIndex, Text Length: $textLength" }
+        require(toIndex > fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
 
-        val nativeFrame = nCreateFrame(nativeResolver, charStart, charEnd)
+        val nativeFrame = nCreateFrame(nativeResolver, fromIndex, toIndex)
 
         return typesetter.makeFrame(nativeFrame)
     }
@@ -284,7 +292,7 @@ class FrameResolver {
     private external fun nSetExtraLineSpacing(nativeResolver: Long, extraLineSpacing: Float)
     private external fun nGetLineHeightMultiplier(nativeResolver: Long): Float
     private external fun nSetLineHeightMultiplier(nativeResolver: Long, multiplier: Float)
-    private external fun nCreateFrame(nativeResolver: Long, charStart: Int, charEnd: Int): Long
+    private external fun nCreateFrame(nativeResolver: Long, fromIndex: Int, toIndex: Int): Long
 
     private companion object {
         init {

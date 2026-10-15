@@ -134,6 +134,22 @@ class ShapingResultTest : SubjectTestSuite<ShapingResult>(ShapingResultBuilder()
         })
     }
 
+    @Test
+    fun testIsRTLFollowsTheWritingDirectionAndTheShapingOrder() {
+        for (order in ShapingOrder.values()) {
+            // Given
+            shapingOrder = order
+
+            buildSubject({ subject ->
+                val isRtlDirection = (writingDirection == WritingDirection.RIGHT_TO_LEFT)
+
+                // The glyphs flow from right to left for a forward right-to-left run, or for a
+                // backward left-to-right one.
+                assertEquals(isRtlDirection != subject.isBackward, subject.isRTL)
+            })
+        }
+    }
+
 
     @Test
     fun testGetGlyphIds() {

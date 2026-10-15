@@ -33,16 +33,16 @@ public:
     ShapingResult();
     ~ShapingResult();
 
-    void setup(TRShapingResultRef core, jint charStart, jint charEnd);
+    void setup(TRShapingResultRef core, jint startIndex, jint endIndex);
 
     TRShapingResultRef core() const { return m_core; }
-    jint charStart() const { return m_charStart; }
-    jint charEnd() const { return m_charEnd; }
+    jint startIndex() const { return m_startIndex; }
+    jint endIndex() const { return m_endIndex; }
 
 private:
     TRShapingResultRef m_core;
-    jint m_charStart;
-    jint m_charEnd;
+    jint m_startIndex;
+    jint m_endIndex;
 };
 
 }

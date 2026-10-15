@@ -130,11 +130,11 @@ class ComposedLine internal constructor(
         get() = nGetTrailingWhitespaceExtent(nativeLine)
 
     private fun checkCharIndex(charIndex: Int) {
-        val charStart = startIndex
-        val charEnd = endIndex
+        val startIndex = this.startIndex
+        val endIndex = this.endIndex
 
-        require(charIndex in charStart..endIndex) {
-            "Char Index: $charIndex, Line Range: [$charStart, $charEnd)"
+        require(charIndex in startIndex..endIndex) {
+            "Char Index: $charIndex, Line Range: [$startIndex, $endIndex)"
         }
     }
 
@@ -160,24 +160,24 @@ class ComposedLine internal constructor(
      * right. There will be a separate pair for each glyph run occurred in the specified character
      * range. Each edge will be positioned relative to the start of the line assumed at zero.
      *
-     * @param charStart The index to the first logical character in source text.
-     * @param charEnd The index after the last logical character in source text.
+     * @param fromIndex The index to the first logical character in source text.
+     * @param toIndex The index after the last logical character in source text.
      * @return An array of visual edges corresponding to the specified character range.
      *
-     * @throws IllegalArgumentException if `charStart` is less than line start, or `charEnd` is
-     *         greater than line end, or `charStart` is greater than `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is less than line start, or `toIndex` is
+     *         greater than line end, or `fromIndex` is greater than `toIndex`.
      */
     @Size(multiple = 2)
-    fun getVisualEdges(charStart: Int, charEnd: Int): FloatArray {
+    fun getVisualEdges(fromIndex: Int, toIndex: Int): FloatArray {
         val lineStart = this.startIndex
         val lineEnd = this.endIndex
 
-        require(charStart >= lineStart) { "Char Start: $charStart, Line Range: [$lineStart, $lineEnd)" }
-        require(charEnd <= lineEnd) { "Char End: $charEnd, Line Range: [$lineStart, $lineEnd)" }
-        require(charEnd >= charStart) { "Bad Range: [$charStart, $charEnd)" }
+        require(fromIndex >= lineStart) { "From Index: $fromIndex, Line Range: [$lineStart, $lineEnd)" }
+        require(toIndex <= lineEnd) { "To Index: $toIndex, Line Range: [$lineStart, $lineEnd)" }
+        require(toIndex >= fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
 
         val edges = FloatCollector()
-        nEnumerateVisualEdges(nativeLine, charStart, charEnd, edges)
+        nEnumerateVisualEdges(nativeLine, fromIndex, toIndex, edges)
 
         return edges.toArray()
     }
@@ -272,7 +272,7 @@ class ComposedLine internal constructor(
     private external fun nGetRun(nativeLine: Long, index: Int): Long
     private external fun nGetCharDistance(nativeLine: Long, charIndex: Int): Float
     private external fun nEnumerateVisualEdges(
-        nativeLine: Long, charStart: Int, charEnd: Int, collector: FloatCollector
+        nativeLine: Long, fromIndex: Int, toIndex: Int, collector: FloatCollector
     )
     private external fun nGetCharIndexAtDistance(nativeLine: Long, distance: Float): Int
     private external fun nGetPenOffset(

@@ -56,11 +56,11 @@ static jlong getCharBidiClassesPtr(JNIEnv *env, jobject obj, jlong algorithmHand
 }
 
 static jint getParagraphBoundary(JNIEnv *env, jobject obj,
-    jlong algorithmHandle, jint charStart, jint charEnd)
+    jlong algorithmHandle, jint fromIndex, jint toIndex)
 {
     auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
-    auto paragraphOffset = static_cast<SBUInteger>(charStart);
-    auto suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto paragraphOffset = static_cast<SBUInteger>(fromIndex);
+    auto suggestedLength = static_cast<SBUInteger>(toIndex - fromIndex);
 
     SBUInteger actualLength;
     SBAlgorithmGetParagraphBoundary(bidiAlgorithm,
@@ -71,11 +71,11 @@ static jint getParagraphBoundary(JNIEnv *env, jobject obj,
 }
 
 static jlong createParagraph(JNIEnv *env, jobject obj,
-    jlong algorithmHandle, jint charStart, jint charEnd, jint baseLevel)
+    jlong algorithmHandle, jint fromIndex, jint toIndex, jint baseLevel)
 {
     auto bidiAlgorithm = reinterpret_cast<SBAlgorithmRef>(algorithmHandle);
-    auto paragraphOffset = static_cast<SBUInteger>(charStart);
-    auto suggestedLength = static_cast<SBUInteger>(charEnd - charStart);
+    auto paragraphOffset = static_cast<SBUInteger>(fromIndex);
+    auto suggestedLength = static_cast<SBUInteger>(toIndex - fromIndex);
     auto inputLevel = static_cast<SBLevel>(baseLevel);
 
     SBParagraphRef paragraph = SBAlgorithmCreateParagraph(bidiAlgorithm,

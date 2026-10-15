@@ -63,16 +63,16 @@ class ScriptClassifier(
     /**
      * Returns an iterator of resolved script runs within the specified range of source text.
      *
-     * @param charStart The index to the first character in source text.
-     * @param charEnd The index after the last character in source text.
+     * @param fromIndex The index to the first character in source text.
+     * @param toIndex The index after the last character in source text.
      * @return An iterator of script runs within the specified range of source text.
      */
-    fun getScriptRuns(charStart: Int, charEnd: Int): Iterator<ScriptRun> {
-        require(charStart >= 0) { "Char Start: $charStart" }
-        require(charEnd <= text.length) { "Char End: $charEnd, Text Length: ${text.length}" }
-        require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
+    fun getScriptRuns(fromIndex: Int, toIndex: Int): Iterator<ScriptRun> {
+        require(fromIndex >= 0) { "From Index: $fromIndex" }
+        require(toIndex <= text.length) { "To Index: $toIndex, Text Length: ${text.length}" }
+        require(toIndex > fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
 
-        return RunIterator(charScripts, charStart, charEnd)
+        return RunIterator(charScripts, fromIndex, toIndex)
     }
 
     override fun toString(): String {

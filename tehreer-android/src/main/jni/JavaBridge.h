@@ -38,7 +38,7 @@ public:
 
     jobject BidiPair_construct(jint charIndex, jint actualCodePoint, jint pairingCodePoint) const;
 
-    jobject BidiRun_construct(jint charStart, jint charEnd, jbyte embeddingLevel) const;
+    jobject BidiRun_construct(jint startIndex, jint endIndex, jbyte embeddingLevel) const;
 
     void Canvas_drawBitmap(jobject canvas, jobject bitmap, jfloat left, jfloat top, jobject paint) const;
     jint Canvas_save(jobject canvas) const;

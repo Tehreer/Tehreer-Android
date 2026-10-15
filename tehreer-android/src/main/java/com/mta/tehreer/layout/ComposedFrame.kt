@@ -100,11 +100,11 @@ class ComposedFrame internal constructor(
      *         frame end.
      */
     fun getLineIndexForChar(charIndex: Int): Int {
-        val charStart = startIndex
-        val charEnd = endIndex
+        val startIndex = this.startIndex
+        val endIndex = this.endIndex
 
-        require(charIndex in charStart..endIndex) {
-            "Char Index: $charIndex, Frame Range: [$charStart..$charEnd)"
+        require(charIndex in startIndex..endIndex) {
+            "Char Index: $charIndex, Frame Range: [$startIndex..$endIndex)"
         }
 
         return nGetLineIndexForCodeUnit(nativeFrame, charIndex)
@@ -124,29 +124,29 @@ class ComposedFrame internal constructor(
     /**
      * Generates a path that contains a set of rectangles covering the specified selection range.
      *
-     * @param charStart The index to the first character of selection in source text.
-     * @param charEnd The index after the first character of selection in source text.
+     * @param fromIndex The index to the first character of selection in source text.
+     * @param toIndex The index after the first character of selection in source text.
      * @return A path that contains a set of rectangles covering the specified selection range.
      *
-     * @throws IllegalArgumentException if `charStart` is less than frame start, or `charEnd` is
-     *         greater than frame end, or `charStart` is greater than `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is less than frame start, or `toIndex` is
+     *         greater than frame end, or `fromIndex` is greater than `toIndex`.
      */
-    fun generateSelectionPath(charStart: Int, charEnd: Int): Path {
+    fun generateSelectionPath(fromIndex: Int, toIndex: Int): Path {
         val frameStart = this.startIndex
         val frameEnd = this.endIndex
 
-        require(charStart >= frameStart) { "Char Start: $charStart, Frame Range: [$frameStart, $frameEnd)" }
-        require(charEnd <= frameEnd) { "Char End: $charEnd, Frame Range: [$frameStart, $frameEnd)" }
-        require(charEnd >= charStart) { "Bad Range: [$charStart, $charEnd)" }
+        require(fromIndex >= frameStart) { "From Index: $fromIndex, Frame Range: [$frameStart, $frameEnd)" }
+        require(toIndex <= frameEnd) { "To Index: $toIndex, Frame Range: [$frameStart, $frameEnd)" }
+        require(toIndex >= fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
 
         val selectionPath = Path()
 
         // The lines of a truncated frame do not cover the text that the token replaces, and Core
         // selects what the lines cover.
-        val selectionStart = lines.firstOrNull { it.endIndex > charStart }
-            ?.let { maxOf(charStart, it.startIndex) } ?: charStart
-        val selectionEnd = lines.lastOrNull { it.startIndex < charEnd }
-            ?.let { minOf(charEnd, it.endIndex) } ?: charEnd
+        val selectionStart = lines.firstOrNull { it.endIndex > fromIndex }
+            ?.let { maxOf(fromIndex, it.startIndex) } ?: fromIndex
+        val selectionEnd = lines.lastOrNull { it.startIndex < toIndex }
+            ?.let { minOf(toIndex, it.endIndex) } ?: toIndex
 
         if (selectionEnd > selectionStart) {
             val rects = FloatCollector()
@@ -314,7 +314,7 @@ class ComposedFrame internal constructor(
     private external fun nGetLineIndexForCodeUnit(nativeFrame: Long, charIndex: Int): Int
     private external fun nGetLineIndexAtPosition(nativeFrame: Long, x: Float, y: Float): Int
     private external fun nEnumerateSelection(
-        nativeFrame: Long, charStart: Int, charEnd: Int, collector: FloatCollector
+        nativeFrame: Long, fromIndex: Int, toIndex: Int, collector: FloatCollector
     )
     private companion object {
         init {

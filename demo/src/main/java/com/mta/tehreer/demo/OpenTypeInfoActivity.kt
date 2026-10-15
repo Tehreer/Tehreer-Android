@@ -143,13 +143,13 @@ class OpenTypeInfoActivity : AppCompatActivity() {
             }
 
             // Find out character range of this cluster.
-            val charStart = clusterInitials[i]
-            val charEnd = clusterInitials[i + 1]
-            val charCount = charEnd - charStart
+            val startIndex = clusterInitials[i]
+            val endIndex = clusterInitials[i + 1]
+            val charCount = endIndex - startIndex
 
             // Find out glyph range of this cluster.
-            val glyphStart = clusterMap[charStart]
-            val glyphEnd = if (charEnd < clusterMap.size()) clusterMap[charEnd] else glyphIds.size()
+            val glyphStart = clusterMap[startIndex]
+            val glyphEnd = if (endIndex < clusterMap.size()) clusterMap[endIndex] else glyphIds.size()
             val glyphCount = glyphEnd - glyphStart
 
             // Setup layouts for all characters in this cluster.
@@ -166,7 +166,7 @@ class OpenTypeInfoActivity : AppCompatActivity() {
                     layout = clusterHolder.charDetail.getChildAt(j)
                 }
 
-                val index = charStart + j
+                val index = startIndex + j
                 val character = sourceText[index]
 
                 val charHolder = layout.tag as CharHolder

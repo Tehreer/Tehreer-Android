@@ -99,7 +99,7 @@ internal data class TextProperties(
         resolver.isTruncationEnabled = isTruncationEnabled
         resolver.isJustificationEnabled = isJustificationEnabled
         resolver.justificationLevel = justificationLevel
-        resolver.maxLines = maxLines ?: 0
+        resolver.maxLines = maxLines
         resolver.extraLineSpacing = extraLineSpacing
         resolver.lineHeightMultiplier = lineHeightMultiplier
     }

@@ -27,8 +27,8 @@ using namespace Tehreer;
 
 ShapingResult::ShapingResult()
     : m_core(nullptr)
-    , m_charStart(0)
-    , m_charEnd(0)
+    , m_startIndex(0)
+    , m_endIndex(0)
 {
 }
 
@@ -39,15 +39,15 @@ ShapingResult::~ShapingResult()
     }
 }
 
-void ShapingResult::setup(TRShapingResultRef core, jint charStart, jint charEnd)
+void ShapingResult::setup(TRShapingResultRef core, jint startIndex, jint endIndex)
 {
     if (m_core) {
         TRShapingResultRelease(m_core);
     }
 
     m_core = core;
-    m_charStart = charStart;
-    m_charEnd = charEnd;
+    m_startIndex = startIndex;
+    m_endIndex = endIndex;
 }
 
 static ShapingResult *toResult(jlong handle)
@@ -81,12 +81,12 @@ static jboolean isRTL(JNIEnv *env, jobject obj, jlong handle)
 
 static jint getStartIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return toResult(handle)->charStart();
+    return toResult(handle)->startIndex();
 }
 
 static jint getEndIndex(JNIEnv *env, jobject obj, jlong handle)
 {
-    return toResult(handle)->charEnd();
+    return toResult(handle)->endIndex();
 }
 
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
@@ -129,7 +129,7 @@ static jlong getClusterMapPtr(JNIEnv *env, jobject obj, jlong handle)
 static jfloatArray getCaretEdges(JNIEnv *env, jobject obj, jlong handle, jbooleanArray caretStops)
 {
     ShapingResult *result = toResult(handle);
-    jint length = result->charEnd() - result->charStart();
+    jint length = result->endIndex() - result->startIndex();
     vector<TRBoolean> stops;
 
     if (caretStops) {

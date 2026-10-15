@@ -98,34 +98,34 @@ class BidiParagraph {
     val logicalRuns: Iterator<BidiRun>
         get() = RunIterator(this)
 
-    private fun checkSubRange(charStart: Int, charEnd: Int) {
+    private fun checkSubRange(fromIndex: Int, toIndex: Int) {
         val paragraphStart = this.startIndex
         val paragraphEnd = this.endIndex
 
-        require(charStart >= paragraphStart) {
-            "Char Start: $charStart, Paragraph Range: [$paragraphStart, $paragraphEnd)"
+        require(fromIndex >= paragraphStart) {
+            "From Index: $fromIndex, Paragraph Range: [$paragraphStart, $paragraphEnd)"
         }
-        require(charEnd <= paragraphEnd) {
-            "Char End: $charEnd, Paragraph Range: [$paragraphStart, $paragraphEnd)"
+        require(toIndex <= paragraphEnd) {
+            "To Index: $toIndex, Paragraph Range: [$paragraphStart, $paragraphEnd)"
         }
-        require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
+        require(toIndex > fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
     }
 
     /**
      * Creates a line object of specified range by applying Rules L1-L2 of Unicode Bidirectional
      * Algorithm.
      *
-     * @param charStart The index to the first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to the first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @return A line object processed with Rules L1-L2 of Unicode Bidirectional Algorithm.
      *
-     * @throws IllegalArgumentException if `charStart` is less than paragraph start, or `charEnd` is
-     *         greater than paragraph end, or `charStart` is greater than or equal to `charEnd`.
+     * @throws IllegalArgumentException if `fromIndex` is less than paragraph start, or `toIndex` is
+     *         greater than paragraph end, or `fromIndex` is greater than or equal to `toIndex`.
      */
-    fun createLine(charStart: Int, charEnd: Int): BidiLine {
-        checkSubRange(charStart, charEnd)
+    fun createLine(fromIndex: Int, toIndex: Int): BidiLine {
+        checkSubRange(fromIndex, toIndex)
 
-        return BidiLine(nativeBuffer, nCreateLine(nativeParagraph, charStart, charEnd))
+        return BidiLine(nativeBuffer, nCreateLine(nativeParagraph, fromIndex, toIndex))
     }
 
     override fun toString(): String {
@@ -160,7 +160,7 @@ class BidiParagraph {
     private external fun nGetOnwardRun(nativeParagraph: Long, charIndex: Int): BidiRun?
 
     private external fun nCreateLine(
-        nativeParagraph: Long, charStart: Int, charEnd: Int
+        nativeParagraph: Long, fromIndex: Int, toIndex: Int
     ): Long
 
     companion object {

@@ -84,11 +84,11 @@ class BidiAlgorithmTest : SubjectTestSuite<BidiAlgorithm>(BidiAlgorithmBuilder()
 
     private fun testRangeExceptions(consumer: (Int, Int) -> Unit) {
         // Invalid Start
-        assertThrows(IllegalArgumentException::class.java, "Char Start: -1",
+        assertThrows(IllegalArgumentException::class.java, "From Index: -1",
                      { consumer(-1, 8) })
 
         // Invalid End
-        assertThrows(IllegalArgumentException::class.java, "Char End: 9, Text Length: 8",
+        assertThrows(IllegalArgumentException::class.java, "To Index: 9, Text Length: 8",
                      { consumer(0, 9) })
 
         // Empty Range

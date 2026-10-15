@@ -87,12 +87,12 @@ void ShapingEngine::setWritingDirection(TRWritingDirection writingDirection)
     TRShapingEngineSetWritingDirection(m_core, writingDirection);
 }
 
-void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint charStart, jint charEnd)
+void ShapingEngine::shapeText(ShapingResult &shapingResult, const jchar *charArray, jint fromIndex, jint toIndex)
 {
-    TRShapingResultRef core = TRShapingEngineCreateShapingResult(m_core, charArray + charStart,
-        static_cast<TRUInteger>(charEnd - charStart), TRStringEncodingUTF16);
+    TRShapingResultRef core = TRShapingEngineCreateShapingResult(m_core, charArray + fromIndex,
+        static_cast<TRUInteger>(toIndex - fromIndex), TRStringEncodingUTF16);
 
-    shapingResult.setup(core, charStart, charEnd);
+    shapingResult.setup(core, fromIndex, toIndex);
 }
 
 static jint getScriptDefaultDirection(JNIEnv *env, jclass clazz, jint scriptTag)

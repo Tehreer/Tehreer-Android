@@ -99,10 +99,10 @@ class Typesetter private constructor(
      */
     constructor(text: TText) : this(text, text.toSpanned())
 
-    private fun checkSubRange(charStart: Int, charEnd: Int) {
-        require(charStart >= 0) { "Char Start: $charStart" }
-        require(charEnd <= textLength) { "Char End: $charEnd, Text Length: $textLength" }
-        require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
+    private fun checkSubRange(fromIndex: Int, toIndex: Int) {
+        require(fromIndex >= 0) { "From Index: $fromIndex" }
+        require(toIndex <= textLength) { "To Index: $toIndex, Text Length: $textLength" }
+        require(toIndex > fromIndex) { "Bad Range: [$fromIndex, $toIndex)" }
     }
 
     /**
@@ -110,21 +110,21 @@ class Typesetter private constructor(
      * proceeds from first character to last character. If there is still room after measuring all
      * characters, then last index is returned. Otherwise, break index is returned.
      *
-     * @param charStart The index to the first character (inclusive) for break calculations.
-     * @param charEnd The index to the last character (exclusive) for break calculations.
+     * @param fromIndex The index to the first character (inclusive) for break calculations.
+     * @param toIndex The index to the last character (exclusive) for break calculations.
      * @param breakExtent The requested break extent.
      * @param breakMode The requested break mode.
      * @return The index (exclusive) that would cause the break.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`
      */
     fun suggestForwardBreak(
-        charStart: Int, charEnd: Int, breakExtent: Float, breakMode: BreakMode
+        fromIndex: Int, toIndex: Int, breakExtent: Float, breakMode: BreakMode
     ): Int {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
 
-        return nSuggestForwardBreak(nativeTypesetter, charStart, charEnd, breakExtent, breakMode.ordinal)
+        return nSuggestForwardBreak(nativeTypesetter, fromIndex, toIndex, breakExtent, breakMode.ordinal)
     }
 
     /**
@@ -132,77 +132,77 @@ class Typesetter private constructor(
      * proceeds from last character to first character. If there is still room after measuring all
      * characters, then first index is returned. Otherwise, break index is returned.
      *
-     * @param charStart The index to the first character (inclusive) for break calculations.
-     * @param charEnd The index to the last character (exclusive) for break calculations.
+     * @param fromIndex The index to the first character (inclusive) for break calculations.
+     * @param toIndex The index to the last character (exclusive) for break calculations.
      * @param breakExtent The requested break extent.
      * @param breakMode The requested break mode.
      * @return The index (inclusive) that would cause the break.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`
      */
     fun suggestBackwardBreak(
-        charStart: Int, charEnd: Int, breakExtent: Float, breakMode: BreakMode
+        fromIndex: Int, toIndex: Int, breakExtent: Float, breakMode: BreakMode
     ): Int {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
 
-        return nSuggestBackwardBreak(nativeTypesetter, charStart, charEnd, breakExtent, breakMode.ordinal)
+        return nSuggestBackwardBreak(nativeTypesetter, fromIndex, toIndex, breakExtent, breakMode.ordinal)
     }
 
     /**
      * Creates a simple line of specified string range.
      *
-     * @param charStart The index to first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @param layoutWidth The width of the frame that the line is made for, or zero if there is
      *                    none. The replacements that decide their room by the width of the frame,
      *                    such as a view that fills it, get it from here.
      * @return The new line object.
      *
-     * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
-     *         length of source text, or `charStart` is greater than or equal to `charEnd`
+     * @throws IllegalArgumentException if `fromIndex` is negative, or `toIndex` is greater than the
+     *         length of source text, or `fromIndex` is greater than or equal to `toIndex`
      */
     @JvmOverloads
-    fun createSimpleLine(charStart: Int, charEnd: Int, layoutWidth: Float = 0.0f): ComposedLine {
-        checkSubRange(charStart, charEnd)
+    fun createSimpleLine(fromIndex: Int, toIndex: Int, layoutWidth: Float = 0.0f): ComposedLine {
+        checkSubRange(fromIndex, toIndex)
 
-        return makeLine(nCreateSimpleLine(nativeTypesetter, charStart, charEnd, layoutWidth))
+        return makeLine(nCreateSimpleLine(nativeTypesetter, fromIndex, toIndex, layoutWidth))
     }
 
     /**
      * Creates a line of specified string range, truncating it with ellipsis character (U+2026) or
      * three dots if it overflows the max width.
      *
-     * @param charStart The index to first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
      * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
      * @return The new line which is truncated if it overflows the `maxWidth`.
      *
      * @throws IllegalArgumentException if any of the following is true:
-     *  - `charStart` is negative
-     *  - `charEnd` is greater than the length of source text
-     *  - `charStart` is greater than or equal to `charEnd`
+     *  - `fromIndex` is negative
+     *  - `toIndex` is greater than the length of source text
+     *  - `fromIndex` is greater than or equal to `toIndex`
      */
     fun createTruncatedLine(
-        charStart: Int, charEnd: Int, maxWidth: Float,
+        fromIndex: Int, toIndex: Int, maxWidth: Float,
         breakMode: BreakMode, truncationPlace: TruncationPlace
     ): ComposedLine {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
 
         val token = makeLine(
-            nCreateTruncationToken(nativeTypesetter, charStart, charEnd, truncationPlace.ordinal, null)
+            nCreateTruncationToken(nativeTypesetter, fromIndex, toIndex, truncationPlace.ordinal, null)
         )
 
-        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace, token)
+        return createTruncated(fromIndex, toIndex, maxWidth, breakMode, truncationPlace, token)
     }
 
     /**
      * Creates a line of specified string range, truncating it if it overflows the max width.
      *
-     * @param charStart The index to first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
      * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
@@ -210,32 +210,32 @@ class Typesetter private constructor(
      * @return The new line which is truncated if it overflows the `maxWidth`.
      *
      * @throws IllegalArgumentException if any of the following is true:
-     *  - `charStart` is negative
-     *  - `charEnd` is greater than the length of source text
-     *  - `charStart` is greater than or equal to `charEnd`
+     *  - `fromIndex` is negative
+     *  - `toIndex` is greater than the length of source text
+     *  - `fromIndex` is greater than or equal to `toIndex`
      *  - `truncationToken` is empty
      */
     fun createTruncatedLine(
-        charStart: Int, charEnd: Int, maxWidth: Float,
+        fromIndex: Int, toIndex: Int, maxWidth: Float,
         breakMode: BreakMode, truncationPlace: TruncationPlace, truncationToken: String
     ): ComposedLine {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
         require(truncationToken.isNotEmpty()) { "Truncation token is empty" }
 
         val token = makeLine(
             nCreateTruncationToken(
-                nativeTypesetter, charStart, charEnd, truncationPlace.ordinal, truncationToken
+                nativeTypesetter, fromIndex, toIndex, truncationPlace.ordinal, truncationToken
             )
         )
 
-        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace, token)
+        return createTruncated(fromIndex, toIndex, maxWidth, breakMode, truncationPlace, token)
     }
 
     /**
      * Creates a line of specified string range, truncating it if it overflows the max width.
      *
-     * @param charStart The index to first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @param maxWidth The width at which truncation will begin.
      * @param breakMode The truncation mode to be used on the line.
      * @param truncationPlace The place of truncation for the line.
@@ -243,24 +243,24 @@ class Typesetter private constructor(
      * @return The new line which is truncated if it overflows the `maxWidth`.
      *
      * @throws IllegalArgumentException if any of the following is true:
-     *  - `charStart` is negative
-     *  - `charEnd` is greater than the length of source text
-     *  - `charStart` is greater than or equal to `charEnd`
+     *  - `fromIndex` is negative
+     *  - `toIndex` is greater than the length of source text
+     *  - `fromIndex` is greater than or equal to `toIndex`
      */
     fun createTruncatedLine(
-        charStart: Int, charEnd: Int, maxWidth: Float,
+        fromIndex: Int, toIndex: Int, maxWidth: Float,
         breakMode: BreakMode, truncationPlace: TruncationPlace, truncationToken: ComposedLine
     ): ComposedLine {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
 
-        return createTruncated(charStart, charEnd, maxWidth, breakMode, truncationPlace, truncationToken)
+        return createTruncated(fromIndex, toIndex, maxWidth, breakMode, truncationPlace, truncationToken)
     }
 
     /**
      * Creates a justified line of specified string range.
      *
-     * @param charStart The index to first character of the line in source text.
-     * @param charEnd The index after the last character of the line in source text.
+     * @param fromIndex The index to first character of the line in source text.
+     * @param toIndex The index after the last character of the line in source text.
      * @param justificationFactor The factor that specifies the full or partial justification. When
      *                            set to 1.0 or greater, full justification is performed. If this
      *                            parameter is set to less than 1.0, varying degrees of partial
@@ -272,24 +272,24 @@ class Typesetter private constructor(
      * @return The new justified line.
      */
     fun createJustifiedLine(
-        charStart: Int, charEnd: Int, justificationFactor: Float, justificationWidth: Float
+        fromIndex: Int, toIndex: Int, justificationFactor: Float, justificationWidth: Float
     ): ComposedLine {
-        checkSubRange(charStart, charEnd)
+        checkSubRange(fromIndex, toIndex)
 
         return makeLine(
             nCreateJustifiedLine(
-                nativeTypesetter, charStart, charEnd, justificationFactor, justificationWidth
+                nativeTypesetter, fromIndex, toIndex, justificationFactor, justificationWidth
             )
         )
     }
 
     private fun createTruncated(
-        charStart: Int, charEnd: Int, maxWidth: Float, breakMode: BreakMode,
+        fromIndex: Int, toIndex: Int, maxWidth: Float, breakMode: BreakMode,
         truncationPlace: TruncationPlace, token: ComposedLine
     ): ComposedLine {
         return makeLine(
             nCreateTruncatedLine(
-                nativeTypesetter, charStart, charEnd, maxWidth, breakMode.ordinal,
+                nativeTypesetter, fromIndex, toIndex, maxWidth, breakMode.ordinal,
                 truncationPlace.ordinal, token.nativeLine, token
             )
         )
@@ -315,24 +315,24 @@ class Typesetter private constructor(
     }
 
     private external fun nSuggestForwardBreak(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, extent: Float, breakMode: Int
     ): Int
     private external fun nSuggestBackwardBreak(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float, breakMode: Int
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, extent: Float, breakMode: Int
     ): Int
 
     private external fun nCreateSimpleLine(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, layoutWidth: Float
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, layoutWidth: Float
     ): Long
     private external fun nCreateTruncationToken(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, place: Int, token: String?
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, place: Int, token: String?
     ): Long
     private external fun nCreateTruncatedLine(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, extent: Float,
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, extent: Float,
         breakMode: Int, place: Int, nativeToken: Long, token: Any
     ): Long
     private external fun nCreateJustifiedLine(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int, factor: Float, extent: Float
+        nativeTypesetter: Long, fromIndex: Int, toIndex: Int, factor: Float, extent: Float
     ): Long
 
     private companion object {

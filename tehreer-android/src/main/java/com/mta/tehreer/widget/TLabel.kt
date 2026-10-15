@@ -90,7 +90,7 @@ open class TLabel : View {
 
     private fun applyAttributes(values: TypedArray) {
         gravity = values.getInt(R.styleable.TLabel_gravity, Gravity.TOP or Gravity.START)
-        maxLines = values.getInt(R.styleable.TLabel_maxLines, 0)
+        maxLines = values.getInt(R.styleable.TLabel_maxLines, 0).takeIf { it >= 1 }
         extraLineSpacing = values.getDimension(R.styleable.TLabel_extraLineSpacing, 0.0f)
         lineHeightMultiplier = values.getFloat(R.styleable.TLabel_lineHeightMultiplier, 0.0f)
         shadowRadius = values.getDimension(R.styleable.TLabel_shadowRadius, 0.0f)
@@ -445,9 +445,11 @@ open class TLabel : View {
 
     /**
      * The maximum number of lines that should be displayed. Makes the Label at most this many
-     * lines tall.
+     * lines tall. The default value is `null`, which means that the number of lines is not limited.
+     *
+     * @throws IllegalArgumentException if the value is not `null` and is less than one.
      */
-    var maxLines: Int
+    var maxLines: Int?
         get() = resolver.maxLines
         set(value) {
             resolver.maxLines = value

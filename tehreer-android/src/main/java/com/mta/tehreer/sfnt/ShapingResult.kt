@@ -52,7 +52,11 @@ class ShapingResult {
     val isBackward: Boolean
         get() = nIsBackward(nativeResult)
 
-    internal val isRTL: Boolean
+    /**
+     * Returns `true` if the text of this `ShapingResult` object is shaped for a right-to-left
+     * direction.
+     */
+    val isRTL: Boolean
         get() = nIsRTL(nativeResult)
 
     /**
