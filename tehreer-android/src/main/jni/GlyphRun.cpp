@@ -62,7 +62,7 @@ static jboolean isBackward(JNIEnv *env, jobject obj, jlong handle)
 
 static jboolean hasForegroundColor(JNIEnv *env, jobject obj, jlong handle)
 {
-    TRColor color;
+    TRColor color = 0;
 
     return TRGlyphRunGetForegroundColor(toRun(handle), &color) ? JNI_TRUE : JNI_FALSE;
 }
@@ -76,6 +76,48 @@ static jint getForegroundColor(JNIEnv *env, jobject obj, jlong handle)
     return static_cast<jint>(color);
 }
 
+static jboolean hasBackgroundColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    TRColor color = 0;
+
+    return TRGlyphRunGetBackgroundColor(toRun(handle), &color) ? JNI_TRUE : JNI_FALSE;
+}
+
+static jint getBackgroundColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    TRColor color = 0;
+
+    TRGlyphRunGetBackgroundColor(toRun(handle), &color);
+
+    return static_cast<jint>(color);
+}
+
+static jboolean hasDecorationColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    TRColor color = 0;
+
+    return TRGlyphRunGetDecorationColor(toRun(handle), &color) ? JNI_TRUE : JNI_FALSE;
+}
+
+static jint getDecorationColor(JNIEnv *env, jobject obj, jlong handle)
+{
+    TRColor color = 0;
+
+    TRGlyphRunGetDecorationColor(toRun(handle), &color);
+
+    return static_cast<jint>(color);
+}
+
+static jboolean hasUnderline(JNIEnv *env, jobject obj, jlong handle)
+{
+    return TRGlyphRunHasUnderline(toRun(handle)) ? JNI_TRUE : JNI_FALSE;
+}
+
+static jboolean hasStrikethrough(JNIEnv *env, jobject obj, jlong handle)
+{
+    return TRGlyphRunHasStrikethrough(toRun(handle)) ? JNI_TRUE : JNI_FALSE;
+}
+
 static jfloat getTypeSize(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetTypeSize(toRun(handle));
@@ -84,6 +126,11 @@ static jfloat getTypeSize(JNIEnv *env, jobject obj, jlong handle)
 static jfloat getScaleX(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRGlyphRunGetScaleX(toRun(handle));
+}
+
+static jfloat getScaleY(JNIEnv *env, jobject obj, jlong handle)
+{
+    return TRGlyphRunGetScaleY(toRun(handle));
 }
 
 static jfloat getAscent(JNIEnv *env, jobject obj, jlong handle)
@@ -126,9 +173,10 @@ static jlong getTypeface(JNIEnv *env, jobject obj, jlong handle)
     return reinterpret_cast<jlong>(TRGlyphRunGetTypeface(toRun(handle)));
 }
 
-static jboolean hasReplacement(JNIEnv *env, jobject obj, jlong handle)
+/* The replacement belongs to the text of the run, and stands for the holder of its span. */
+static jlong getReplacement(JNIEnv *env, jobject obj, jlong handle)
 {
-    return TRGlyphRunGetReplacement(toRun(handle)) ? JNI_TRUE : JNI_FALSE;
+    return reinterpret_cast<jlong>(TRGlyphRunGetReplacement(toRun(handle)));
 }
 
 static jint getGlyphCount(JNIEnv *env, jobject obj, jlong handle)
@@ -172,7 +220,7 @@ static jint getClusterEnd(JNIEnv *env, jobject obj, jlong handle, jint index)
     return static_cast<jint>(TRGlyphRunGetClusterEnd(toRun(handle), static_cast<TRUInteger>(index)));
 }
 
-static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
+static jfloat getCharDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     TRFloat distance = 0.0f;
 
@@ -181,12 +229,12 @@ static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
     return distance;
 }
 
-static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
+static jint getCharIndexAtDistance(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
-    return static_cast<jint>(TRGlyphRunGetCodeUnitIndex(toRun(handle), distance));
+    return static_cast<jint>(TRGlyphRunGetCodeUnitIndexAtDistance(toRun(handle), distance));
 }
 
-static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
+static jobject computeInkBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
     TRRect box = TRGlyphRunComputeInkBox(toRun(handle), toRenderer(rendererHandle));
 
@@ -216,8 +264,15 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nIsBackward", "(J)Z", (void *)isBackward },
     { "nHasForegroundColor", "(J)Z", (void *)hasForegroundColor },
     { "nGetForegroundColor", "(J)I", (void *)getForegroundColor },
+    { "nHasBackgroundColor", "(J)Z", (void *)hasBackgroundColor },
+    { "nGetBackgroundColor", "(J)I", (void *)getBackgroundColor },
+    { "nHasDecorationColor", "(J)Z", (void *)hasDecorationColor },
+    { "nGetDecorationColor", "(J)I", (void *)getDecorationColor },
+    { "nHasUnderline", "(J)Z", (void *)hasUnderline },
+    { "nHasStrikethrough", "(J)Z", (void *)hasStrikethrough },
     { "nGetTypeSize", "(J)F", (void *)getTypeSize },
     { "nGetScaleX", "(J)F", (void *)getScaleX },
+    { "nGetScaleY", "(J)F", (void *)getScaleY },
     { "nGetAscent", "(J)F", (void *)getAscent },
     { "nGetDescent", "(J)F", (void *)getDescent },
     { "nGetLeading", "(J)F", (void *)getLeading },
@@ -226,7 +281,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetWidth", "(J)F", (void *)getWidth },
     { "nGetHeight", "(J)F", (void *)getHeight },
     { "nGetTypeface", "(J)J", (void *)getTypeface },
-    { "nHasReplacement", "(J)Z", (void *)hasReplacement },
+    { "nGetReplacement", "(J)J", (void *)getReplacement },
     { "nGetGlyphCount", "(J)I", (void *)getGlyphCount },
     { "nGetClusterMapCount", "(J)I", (void *)getClusterMapCount },
     { "nGetGlyphIdsPtr", "(J)J", (void *)getGlyphIdsPtr },
@@ -235,10 +290,10 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetClusterMapPtr", "(J)J", (void *)getClusterMapPtr },
     { "nGetClusterStart", "(JI)I", (void *)getClusterStart },
     { "nGetClusterEnd", "(JI)I", (void *)getClusterEnd },
-    { "nGetDistance", "(JI)F", (void *)getDistance },
-    { "nGetIndexOfCodeUnit", "(JF)I", (void *)getIndexOfCodeUnit },
+    { "nGetCharDistance", "(JI)F", (void *)getCharDistance },
+    { "nGetCharIndexAtDistance", "(JF)I", (void *)getCharIndexAtDistance },
     { "nDraw", "(JJLandroid/graphics/Canvas;Landroid/graphics/Paint;Ljava/lang/Object;FF)V", (void *)draw },
-    { "nGetBoundingBox", "(JJ)Landroid/graphics/RectF;", (void *)getBoundingBox },
+    { "nComputeInkBox", "(JJ)Landroid/graphics/RectF;", (void *)computeInkBox },
 };
 
 jint register_com_mta_tehreer_layout_GlyphRun(JNIEnv *env)

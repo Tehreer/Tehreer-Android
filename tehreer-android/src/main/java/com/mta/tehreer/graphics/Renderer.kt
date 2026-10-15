@@ -23,7 +23,6 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.util.Log
 import androidx.annotation.ColorInt
-import androidx.annotation.RestrictTo
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.PointList
@@ -32,7 +31,7 @@ import com.mta.tehreer.sfnt.WritingDirection
 
 /**
  * The `Renderer` class represents a generic glyph renderer. It can be used to generate glyph
- * paths, measure their bounding boxes and draw them on a `Canvas` object.
+ * paths and images, measure their ink boxes and draw them on a `Canvas` object.
  */
 class Renderer {
     private class Finalizable(private val nativeRenderer: Long) {
@@ -48,26 +47,36 @@ class Renderer {
     private val paint = Paint()
 
     /**
-     * Returns the handle of the renderer of Core. It is only for the layout package.
-     *
-     * @hidden
+     * The handle of the renderer of Core.
      */
-    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    val nativeHandle: Long
+    internal val nativeHandle: Long
         get() = nativeRenderer
 
     /**
      * Returns the paint that Core draws with onto the given canvas. Core applies the shadow on it
      * while it draws.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun preparePaint(canvas: Canvas): Paint {
+    internal fun preparePaint(canvas: Canvas): Paint {
         if (shadowRadius > 0.0f && canvas.isHardwareAccelerated) {
             Log.e(TAG, "Canvas is hardware accelerated, shadow will not be rendered")
         }
 
         return paint
     }
+
+    private var cache: GlyphCache? = null
+
+    /**
+     * The cache that this renderer finds the images and outlines of glyphs in. The default value is
+     * [GlyphCache.default]. A cache can be shared between renderers.
+     */
+    var glyphCache: GlyphCache
+        get() = cache ?: GlyphCache.default
+        set(value) {
+            // Core retains the cache, and the object of Kotlin is kept as well.
+            cache = value
+            nSetGlyphCache(nativeRenderer, value.nativeCache)
+        }
 
     /**
      * This renderer's typeface, used for drawing glyphs.
@@ -119,12 +128,27 @@ class Renderer {
         }
 
     /**
-     * This renderer's slant angle for glyphs. The default value is 0.
+     * This renderer's horizontal skew for glyphs, which is the ratio of the horizontal shift to
+     * the height. The default value is 0.
      */
-    var slantAngle: Float
+    var skewX: Float
         get() = nGetSkewX(nativeRenderer)
         set(value) {
             nSetSkewX(nativeRenderer, value)
+        }
+
+    /**
+     * This renderer's number of pixels in a unit of the user space. The default value is 1.0.
+     * Glyph images are rendered at this scale.
+     *
+     * @throws IllegalArgumentException if the new value is not greater than zero.
+     */
+    var renderScale: Float
+        get() = nGetRenderScale(nativeRenderer)
+        set(value) {
+            require(value > 0.0f) { "Render scale is not positive" }
+
+            nSetRenderScale(nativeRenderer, value)
         }
 
     /**
@@ -142,26 +166,29 @@ class Renderer {
         }
 
     /**
-     * This renderer's fill color for glyphs, expressed as ARGB integer. The default value is
+     * This renderer's foreground color for glyphs, expressed as ARGB integer. The default value is
      * `Color.BLACK`.
      */
     @get:ColorInt
     @setparam:ColorInt
-    var fillColor: Int
+    var foregroundColor: Int
         get() = nGetForegroundColor(nativeRenderer)
         set(value) {
             nSetForegroundColor(nativeRenderer, value)
         }
 
     /**
-     * This renderer's width in pixels for stroking glyphs. The default value is 1.0.
+     * This renderer's radius in pixels for stroking glyphs, which is half of the width of the
+     * stroke. The default value is 0.5.
+     *
+     * @throws IllegalArgumentException if the new value is negative.
      */
-    var strokeWidth: Float
-        get() = nGetStrokeRadius(nativeRenderer) * 2.0f
+    var strokeRadius: Float
+        get() = nGetStrokeRadius(nativeRenderer)
         set(value) {
-            require(value >= 0.0f) { "Stroke width is negative" }
+            require(value >= 0.0f) { "Stroke radius is negative" }
 
-            nSetStrokeRadius(nativeRenderer, value * 0.5f)
+            nSetStrokeRadius(nativeRenderer, value)
         }
 
     /**
@@ -271,40 +298,67 @@ class Renderer {
         }
 
     /**
-     * Generates the path of the specified glyph.
+     * Returns the path of the specified glyph.
      *
-     * @param glyphId The ID of glyph whose path is generated.
+     * @param glyphId The ID of glyph whose path is returned.
      * @return The path of the glyph specified by `glyphId`.
      */
-    fun generatePath(glyphId: Int): Path {
+    fun getGlyphPath(glyphId: Int): Path {
         return nGetGlyphPath(nativeRenderer, glyphId)
     }
 
     /**
-     * Calculates the bounding box of specified glyph.
+     * Returns the image that fills the specified glyph, rendered in the foreground color of this
+     * renderer for the parts that follow it.
      *
-     * @param glyphId The ID of glyph whose bounding box is calculated.
-     * @return A rectangle that tightly encloses the path of the specified glyph.
+     * @param glyphId The ID of glyph whose image is returned.
+     * @return The image of the glyph, or `null` if there is no typeface or the glyph has no image,
+     *         such as a space.
      */
-    fun computeBoundingBox(glyphId: Int): RectF {
-        return nGetGlyphBoundingBox(nativeRenderer, glyphId) ?: RectF()
+    fun getGlyphImage(glyphId: Int): GlyphImage? {
+        val nativeImage = nCreateGlyphImage(nativeRenderer, glyphId)
+
+        return if (nativeImage != 0L) GlyphImage(nativeImage) else null
     }
 
     /**
-     * Calculates the bounding box of specified glyphs.
+     * Returns the image that strokes the specified glyph with the stroke settings of this renderer.
+     *
+     * @param glyphId The ID of glyph whose stroke image is returned.
+     * @return The image of the stroke, or `null` if there is no typeface or the glyph has no
+     *         image, such as a space.
+     */
+    fun getStrokeImage(glyphId: Int): GlyphImage? {
+        val nativeImage = nCreateStrokeImage(nativeRenderer, glyphId)
+
+        return if (nativeImage != 0L) GlyphImage(nativeImage) else null
+    }
+
+    /**
+     * Calculates the ink box of specified glyph.
+     *
+     * @param glyphId The ID of glyph whose ink box is calculated.
+     * @return A rectangle that tightly encloses the path of the specified glyph.
+     */
+    fun computeInkBox(glyphId: Int): RectF {
+        return nComputeGlyphInkBox(nativeRenderer, glyphId) ?: RectF()
+    }
+
+    /**
+     * Calculates the ink box of specified glyphs.
      *
      * @param glyphIds The list containing the glyph IDs.
      * @param offsets The list containing the glyph offsets.
      * @param advances The list containing the glyph advances.
      * @return A rectangle that tightly encloses the paths of specified glyphs.
      */
-    fun computeBoundingBox(glyphIds: IntList, offsets: PointList, advances: FloatList): RectF {
-        val boundingBox = nGetRunBoundingBox(
+    fun computeInkBox(glyphIds: IntList, offsets: PointList, advances: FloatList): RectF {
+        val inkBox = nComputeRunInkBox(
             nativeRenderer, glyphIds.toArray(), offsets.toArray(), advances.toArray(), glyphIds.size()
         )
 
         // A run without any image has no box, which is the empty one that the union starts from.
-        return boundingBox ?: RectF(
+        return inkBox ?: RectF(
             Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
             Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY
         )
@@ -346,7 +400,7 @@ class Renderer {
             }
 
             if (drawStyle == DrawStyle.FILL || drawStyle == DrawStyle.FILL_STROKE) {
-                paint.color = fillColor
+                paint.color = foregroundColor
                 drawGlyphs(canvas, glyphIds, offsets, advances, false)
             }
             if (drawStyle == DrawStyle.STROKE || drawStyle == DrawStyle.FILL_STROKE) {
@@ -383,6 +437,9 @@ class Renderer {
     private external fun nSetScaleY(nativeRenderer: Long, scaleY: Float)
     private external fun nGetSkewX(nativeRenderer: Long): Float
     private external fun nSetSkewX(nativeRenderer: Long, skewX: Float)
+    private external fun nGetRenderScale(nativeRenderer: Long): Float
+    private external fun nSetRenderScale(nativeRenderer: Long, renderScale: Float)
+    private external fun nSetGlyphCache(nativeRenderer: Long, nativeCache: Long)
     private external fun nGetWritingDirection(nativeRenderer: Long): Int
     private external fun nSetWritingDirection(nativeRenderer: Long, writingDirection: Int)
     private external fun nGetForegroundColor(nativeRenderer: Long): Int
@@ -409,8 +466,10 @@ class Renderer {
     private external fun nSetDrawStyle(nativeRenderer: Long, drawStyle: Int)
     private external fun nIsRenderable(nativeRenderer: Long): Boolean
     private external fun nGetGlyphPath(nativeRenderer: Long, glyphId: Int): Path
-    private external fun nGetGlyphBoundingBox(nativeRenderer: Long, glyphId: Int): RectF?
-    private external fun nGetRunBoundingBox(
+    private external fun nCreateGlyphImage(nativeRenderer: Long, glyphId: Int): Long
+    private external fun nCreateStrokeImage(nativeRenderer: Long, glyphId: Int): Long
+    private external fun nComputeGlyphInkBox(nativeRenderer: Long, glyphId: Int): RectF?
+    private external fun nComputeRunInkBox(
         nativeRenderer: Long, glyphIds: IntArray, offsets: FloatArray, advances: FloatArray, count: Int
     ): RectF?
     private external fun nDrawGlyphs(

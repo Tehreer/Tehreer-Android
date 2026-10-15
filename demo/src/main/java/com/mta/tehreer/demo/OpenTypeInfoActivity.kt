@@ -61,7 +61,7 @@ class OpenTypeInfoActivity : AppCompatActivity() {
         val spanWidth: Int
 
         init {
-            val bbox = renderer.computeBoundingBox(glyphId)
+            val bbox = renderer.computeInkBox(glyphId)
 
             this.renderer = renderer
             this.glyphId = IntList.of(glyphId)

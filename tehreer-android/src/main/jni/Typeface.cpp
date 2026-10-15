@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <android/asset_manager.h>
-#include <android/asset_manager_jni.h>
 #include <cstddef>
 #include <cstdint>
 #include <jni.h>
@@ -23,30 +21,12 @@
 
 #include <Tehreer/TRTypeface.h>
 
-#include "FontFile.h"
 #include "JavaBridge.h"
 #include "PathBuilder.h"
 #include "Typeface.h"
 
 using namespace std;
 using namespace Tehreer;
-
-/* Creates the first typeface of a font file, which the typeface keeps alive afterwards. */
-static jlong createFirstTypeface(TRFontFileRef fontFile)
-{
-    TRTypefaceRef typeface = nullptr;
-
-    if (fontFile) {
-        typeface = TRFontFileGetTypeface(fontFile, 0);
-        if (typeface) {
-            TRTypefaceRetain(typeface);
-        }
-
-        TRFontFileRelease(fontFile);
-    }
-
-    return reinterpret_cast<jlong>(typeface);
-}
 
 static jstring toJavaString(JNIEnv *env, const TRStringView *view)
 {
@@ -70,23 +50,6 @@ static jstring toJavaString(JNIEnv *env, const TRStringView *view)
     }
 }
 
-// MARK: Creation
-
-static jlong createWithAsset(JNIEnv *env, jclass clazz, jobject assetManager, jstring path)
-{
-    return createFirstTypeface(createFontFileFromAsset(env, assetManager, path));
-}
-
-static jlong createWithFile(JNIEnv *env, jclass clazz, jstring path)
-{
-    return createFirstTypeface(createFontFileFromPath(env, path));
-}
-
-static jlong createFromStream(JNIEnv *env, jclass clazz, jobject stream)
-{
-    return createFirstTypeface(createFontFileFromStream(env, stream));
-}
-
 static void dispose(JNIEnv *env, jclass clazz, jlong typefaceHandle)
 {
     TRTypefaceRelease(toTypeface(typefaceHandle));
@@ -101,7 +64,7 @@ static jstring getFamilyName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 
 static jstring getStyleName(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
-    return toJavaString(env, TRTypefaceGetSubfamilyName(toTypeface(typefaceHandle)));
+    return toJavaString(env, TRTypefaceGetStyleName(toTypeface(typefaceHandle)));
 }
 
 static jstring getFullName(JNIEnv *env, jobject obj, jlong typefaceHandle)
@@ -125,6 +88,11 @@ static jint getSlope(JNIEnv *env, jobject obj, jlong typefaceHandle)
 }
 
 // MARK: Variations
+
+static jboolean isVariable(JNIEnv *env, jobject obj, jlong typefaceHandle)
+{
+    return TRTypefaceIsVariable(toTypeface(typefaceHandle)) ? JNI_TRUE : JNI_FALSE;
+}
 
 static jint getVariationAxisCount(JNIEnv *env, jobject obj, jlong typefaceHandle)
 {
@@ -405,6 +373,14 @@ static jint getGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint code
                                                   static_cast<TRUInt32>(codePoint)));
 }
 
+static jint getVariantGlyphId(JNIEnv *env, jobject obj, jlong typefaceHandle, jint codePoint,
+    jint selector)
+{
+    return static_cast<jint>(TRTypefaceGetVariantGlyphID(toTypeface(typefaceHandle),
+                                                         static_cast<TRUInt32>(codePoint),
+                                                         static_cast<TRUInt32>(selector)));
+}
+
 static jfloat getGlyphAdvance(JNIEnv *env, jobject obj, jlong typefaceHandle,
     jint glyphId, jfloat typeSize, jboolean vertical)
 {
@@ -436,9 +412,6 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong typefaceHandle, jint
 }
 
 static JNINativeMethod JNI_METHODS[] = {
-    { "nCreateWithAsset", "(Landroid/content/res/AssetManager;Ljava/lang/String;)J", (void *)createWithAsset },
-    { "nCreateWithFile", "(Ljava/lang/String;)J", (void *)createWithFile },
-    { "nCreateFromStream", "(Ljava/io/InputStream;)J", (void *)createFromStream },
     { "nDispose", "(J)V", (void *)dispose },
     { "nGetFamilyName", "(J)Ljava/lang/String;", (void *)getFamilyName },
     { "nGetStyleName", "(J)Ljava/lang/String;", (void *)getStyleName },
@@ -446,6 +419,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetWeight", "(J)I", (void *)getWeight },
     { "nGetWidth", "(J)I", (void *)getWidth },
     { "nGetSlope", "(J)I", (void *)getSlope },
+    { "nIsVariable", "(J)Z", (void *)isVariable },
     { "nGetVariationAxisCount", "(J)I", (void *)getVariationAxisCount },
     { "nGetVariationAxisTag", "(JI)I", (void *)getVariationAxisTag },
     { "nGetVariationAxisFlags", "(JI)I", (void *)getVariationAxisFlags },
@@ -483,6 +457,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetStrikeoutPosition", "(J)I", (void *)getStrikeoutPosition },
     { "nGetStrikeoutThickness", "(J)I", (void *)getStrikeoutThickness },
     { "nGetGlyphId", "(JI)I", (void *)getGlyphId },
+    { "nGetVariantGlyphId", "(JII)I", (void *)getVariantGlyphId },
     { "nGetGlyphAdvance", "(JIFZ)F", (void *)getGlyphAdvance },
     { "nGetGlyphPath", "(JIFFFFFFF)Landroid/graphics/Path;", (void *)getGlyphPath },
 };

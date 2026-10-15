@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__TEXT_H
-#define _TEHREER__TEXT_H
+#ifndef _TEHREER__GLYPH_CACHE_H
+#define _TEHREER__GLYPH_CACHE_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_layout_Text(JNIEnv *env);
+#include <Tehreer/TRGlyphCache.h>
+
+static inline TRGlyphCacheRef toGlyphCache(jlong handle)
+{
+    return reinterpret_cast<TRGlyphCacheRef>(handle);
+}
+
+jint register_com_mta_tehreer_graphics_GlyphCache(JNIEnv *env);
 
 #endif

@@ -702,7 +702,7 @@ internal class TextContainer : ViewGroup {
         }
 
         // Make sure to provide character of this line.
-        return line.computeNearestCharIndex(frameX - lineLeft).coerceAtMost(line.endIndex - 1)
+        return line.getCharIndexAtDistance(frameX - lineLeft).coerceAtMost(line.endIndex - 1)
     }
 
     /** The rects covered by [span] in the coordinates of the scroll view; see TTextView. */
@@ -863,10 +863,10 @@ internal class TextContainer : ViewGroup {
             updateLineViews()
         }
 
-    var strokeWidth: Float
-        get() = properties.strokeWidth
-        set(strokeWidth) {
-            properties.strokeWidth = max(0.0f, strokeWidth)
+    var strokeRadius: Float
+        get() = properties.strokeRadius
+        set(strokeRadius) {
+            properties.strokeRadius = max(0.0f, strokeRadius)
             updateLineViews()
         }
 

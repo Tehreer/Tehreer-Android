@@ -21,20 +21,15 @@
 
 #include "JavaBridge.h"
 #include "LayoutHandles.h"
+#include "TText.h"
 #include "Typesetter.h"
 
 using namespace Tehreer;
 
-/* Closes the text, and makes a typesetter of it. The text is released in any case. */
+/* Makes a typesetter of a text, which Core copies, so the text stays as it is. */
 static jlong createTypesetter(JNIEnv *env, jclass clazz, jlong handle)
 {
-    TRMutableTextRef text = reinterpret_cast<TRMutableTextRef>(handle);
-
-    TRTextEndEditing(text);
-    TRTypesetterRef typesetter = TRTypesetterCreate(text, nullptr, 0);
-    TRTextRelease(text);
-
-    return reinterpret_cast<jlong>(typesetter);
+    return reinterpret_cast<jlong>(TRTypesetterCreate(toText(handle), nullptr, 0));
 }
 
 static void disposeTypesetter(JNIEnv *env, jclass clazz, jlong handle)
@@ -56,10 +51,11 @@ static jint suggestBackwardBreak(JNIEnv *env, jobject obj, jlong handle, jint st
         toIndex(start), toLength(start, end), extent, static_cast<TRBreakMode>(breakMode)));
 }
 
-static jlong createSimpleLine(JNIEnv *env, jobject obj, jlong handle, jint start, jint end)
+static jlong createSimpleLine(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
+    jfloat layoutWidth)
 {
     return reinterpret_cast<jlong>(TRTypesetterCreateSimpleLine(toTypesetter(handle), toIndex(start),
-                                                                            toLength(start, end)));
+                                                                toLength(start, end), layoutWidth));
 }
 
 static jlong createTruncationToken(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
@@ -104,7 +100,7 @@ static JNINativeMethod TYPESETTER_METHODS[] = {
     { "nDispose", "(J)V", (void *)disposeTypesetter },
     { "nSuggestForwardBreak", "(JIIFI)I", (void *)suggestForwardBreak },
     { "nSuggestBackwardBreak", "(JIIFI)I", (void *)suggestBackwardBreak },
-    { "nCreateSimpleLine", "(JII)J", (void *)createSimpleLine },
+    { "nCreateSimpleLine", "(JIIF)J", (void *)createSimpleLine },
     { "nCreateTruncationToken", "(JIIILjava/lang/String;)J", (void *)createTruncationToken },
     { "nCreateTruncatedLine", "(JIIFIIJLjava/lang/Object;)J", (void *)createTruncatedLine },
     { "nCreateJustifiedLine", "(JIIFF)J", (void *)createJustifiedLine },

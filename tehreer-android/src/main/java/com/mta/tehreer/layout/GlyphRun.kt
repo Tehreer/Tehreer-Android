@@ -19,6 +19,7 @@ package com.mta.tehreer.layout
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import androidx.annotation.ColorInt
 import com.mta.tehreer.collections.FloatList
 import com.mta.tehreer.collections.IntList
 import com.mta.tehreer.collections.PointList
@@ -30,7 +31,6 @@ import com.mta.tehreer.internal.collections.FloatBufferPointList
 import com.mta.tehreer.internal.collections.UInt16BufferIntList
 import com.mta.tehreer.internal.collections.UIntPtrBufferIntList
 import com.mta.tehreer.sfnt.WritingDirection
-import java.util.NavigableMap
 
 /**
  * A glyph run represents a consecutive sequence of glyphs sharing the same attributes and
@@ -41,7 +41,7 @@ class GlyphRun internal constructor(
     private val owner: ComposedLine,
     private val nativeRun: Long,
     private val typefaces: Map<Long, Typeface>,
-    private val holders: NavigableMap<Int, ReplacementHolder>
+    private val holders: Map<Long, ReplacementHolder>
 ) {
     /**
      * Returns the index to the first character of this run in source text.
@@ -103,8 +103,17 @@ class GlyphRun internal constructor(
     val typeSize: Float
         get() = nGetTypeSize(nativeRun)
 
-    private val scaleX: Float
+    /**
+     * Returns the horizontal scale factor of this run.
+     */
+    val scaleX: Float
         get() = nGetScaleX(nativeRun)
+
+    /**
+     * Returns the vertical scale factor of this run.
+     */
+    val scaleY: Float
+        get() = nGetScaleY(nativeRun)
 
     /**
      * Returns the writing direction of this run.
@@ -116,12 +125,51 @@ class GlyphRun internal constructor(
             WritingDirection.LEFT_TO_RIGHT
         }
 
-    private val isBackward: Boolean
+    /**
+     * Returns whether this run was shaped backward, which means that its characters go against the
+     * direction in which its glyphs are written.
+     */
+    val isBackward: Boolean
         get() = nIsBackward(nativeRun)
+
+    /**
+     * Returns the foreground color of this run, or `null` if it has none and is drawn with the
+     * color of the renderer.
+     */
+    @get:ColorInt
+    val foregroundColor: Int?
+        get() = if (nHasForegroundColor(nativeRun)) nGetForegroundColor(nativeRun) else null
+
+    /**
+     * Returns the background color of this run, or `null` if it has none.
+     */
+    @get:ColorInt
+    val backgroundColor: Int?
+        get() = if (nHasBackgroundColor(nativeRun)) nGetBackgroundColor(nativeRun) else null
+
+    /**
+     * Returns the color of the decorations of this run, or `null` if it has none and they are
+     * drawn with the foreground color.
+     */
+    @get:ColorInt
+    val decorationColor: Int?
+        get() = if (nHasDecorationColor(nativeRun)) nGetDecorationColor(nativeRun) else null
+
+    /**
+     * Returns whether this run is underlined.
+     */
+    val hasUnderline: Boolean
+        get() = nHasUnderline(nativeRun)
+
+    /**
+     * Returns whether this run is struck through.
+     */
+    val hasStrikethrough: Boolean
+        get() = nHasStrikethrough(nativeRun)
 
     /** Returns the replacement span of this run, if it is made for one. */
     internal val replacement: ReplacementHolder?
-        get() = if (nHasReplacement(nativeRun)) holders.floorEntry(startIndex)?.value else null
+        get() = holders[nGetReplacement(nativeRun)]
 
     /**
      * Returns the number of glyphs in this run.
@@ -228,7 +276,7 @@ class GlyphRun internal constructor(
      * @throws IllegalArgumentException if `charIndex` is less than run start or greater than or
      *         equal to run end.
      */
-    fun getActualClusterStart(charIndex: Int): Int {
+    fun getClusterStart(charIndex: Int): Int {
         checkCharIndex(charIndex)
 
         return nGetClusterStart(nativeRun, charIndex)
@@ -246,7 +294,7 @@ class GlyphRun internal constructor(
      * @throws IllegalArgumentException if `charIndex` is less than run start or greater than or
      *         equal to run end.
      */
-    fun getActualClusterEnd(charIndex: Int): Int {
+    fun getClusterEnd(charIndex: Int): Int {
         checkCharIndex(charIndex)
 
         return nGetClusterEnd(nativeRun, charIndex)
@@ -261,10 +309,10 @@ class GlyphRun internal constructor(
      * @throws IllegalArgumentException if `charIndex` is less than run start or greater than run
      *         end.
      */
-    fun computeCharDistance(charIndex: Int): Float {
+    fun getCharDistance(charIndex: Int): Float {
         checkCaretIndex(charIndex)
 
-        return nGetDistance(nativeRun, charIndex)
+        return nGetCharDistance(nativeRun, charIndex)
     }
 
     /**
@@ -285,24 +333,24 @@ class GlyphRun internal constructor(
      * @return The index of character nearest to the specified distance. It will be an absolute
      *         index in source string.
      *
-     * @see charStart
-     * @see charEnd
+     * @see startIndex
+     * @see endIndex
      */
-    fun computeNearestCharIndex(distance: Float): Int {
-        return nGetIndexOfCodeUnit(nativeRun, distance)
+    fun getCharIndexAtDistance(distance: Float): Int {
+        return nGetCharIndexAtDistance(nativeRun, distance)
     }
 
     /**
-     * Calculates the bounding box of this run. The bounding box is a rectangle that encloses the
+     * Calculates the ink box of this run. The ink box is a rectangle that encloses the
      * paths of this run's glyphs, as tightly as possible.
      *
-     * @param renderer The renderer to use for calculating the bounding box. This is required
+     * @param renderer The renderer to use for calculating the ink box. This is required
      *                 because the renderer could have settings in it that would cause changes in
-     *                 the bounding box.
+     *                 the ink box.
      * @return A rectangle that tightly encloses the paths of this run's glyphs.
      */
-    internal fun computeBoundingBox(renderer: Renderer): RectF {
-        return nGetBoundingBox(nativeRun, renderer.nativeHandle)
+    fun computeInkBox(renderer: Renderer): RectF {
+        return nComputeInkBox(nativeRun, renderer.nativeHandle)
     }
 
     /**
@@ -350,8 +398,15 @@ class GlyphRun internal constructor(
     private external fun nIsBackward(nativeRun: Long): Boolean
     private external fun nHasForegroundColor(nativeRun: Long): Boolean
     private external fun nGetForegroundColor(nativeRun: Long): Int
+    private external fun nHasBackgroundColor(nativeRun: Long): Boolean
+    private external fun nGetBackgroundColor(nativeRun: Long): Int
+    private external fun nHasDecorationColor(nativeRun: Long): Boolean
+    private external fun nGetDecorationColor(nativeRun: Long): Int
+    private external fun nHasUnderline(nativeRun: Long): Boolean
+    private external fun nHasStrikethrough(nativeRun: Long): Boolean
     private external fun nGetTypeSize(nativeRun: Long): Float
     private external fun nGetScaleX(nativeRun: Long): Float
+    private external fun nGetScaleY(nativeRun: Long): Float
     private external fun nGetAscent(nativeRun: Long): Float
     private external fun nGetDescent(nativeRun: Long): Float
     private external fun nGetLeading(nativeRun: Long): Float
@@ -360,7 +415,7 @@ class GlyphRun internal constructor(
     private external fun nGetWidth(nativeRun: Long): Float
     private external fun nGetHeight(nativeRun: Long): Float
     private external fun nGetTypeface(nativeRun: Long): Long
-    private external fun nHasReplacement(nativeRun: Long): Boolean
+    private external fun nGetReplacement(nativeRun: Long): Long
     private external fun nGetGlyphCount(nativeRun: Long): Int
     private external fun nGetClusterMapCount(nativeRun: Long): Int
     private external fun nGetGlyphIdsPtr(nativeRun: Long): Long
@@ -373,9 +428,9 @@ class GlyphRun internal constructor(
         nativeRun: Long, nativeRenderer: Long, canvas: Canvas, paint: Paint, drawer: Any,
         x: Float, y: Float
     )
-    private external fun nGetDistance(nativeRun: Long, charIndex: Int): Float
-    private external fun nGetIndexOfCodeUnit(nativeRun: Long, distance: Float): Int
-    private external fun nGetBoundingBox(nativeRun: Long, nativeRenderer: Long): RectF
+    private external fun nGetCharDistance(nativeRun: Long, charIndex: Int): Float
+    private external fun nGetCharIndexAtDistance(nativeRun: Long, distance: Float): Int
+    private external fun nComputeInkBox(nativeRun: Long, nativeRenderer: Long): RectF
     private companion object {
         init {
             JniBridge.loadLibrary()

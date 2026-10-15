@@ -58,7 +58,7 @@ internal data class TextProperties(
     var separatorColor: Color? = null,
     var drawStyle: DrawStyle = DrawStyle.FILL,
     var strokeColor: Color = Color.Black,
-    var strokeWidth: Float = 1f,
+    var strokeRadius: Float = 0.5f,
     var strokeCap: StrokeCap = StrokeCap.BUTT,
     var strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     var strokeMiter: Float = 1f
@@ -106,9 +106,9 @@ internal data class TextProperties(
 
     fun updateRenderer(renderer: Renderer) {
         renderer.drawStyle = drawStyle
-        renderer.fillColor = textColor.toArgb()
+        renderer.foregroundColor = textColor.toArgb()
         renderer.strokeColor = strokeColor.toArgb()
-        renderer.strokeWidth = strokeWidth
+        renderer.strokeRadius = strokeRadius
         renderer.strokeCap = strokeCap
         renderer.strokeJoin = strokeJoin
         renderer.strokeMiter = strokeMiter

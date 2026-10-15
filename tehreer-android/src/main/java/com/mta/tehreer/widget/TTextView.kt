@@ -181,7 +181,7 @@ open class TTextView : ScrollView {
             else -> DrawStyle.FILL
         }
         strokeColor = values.getColor(R.styleable.TTextView_strokeColor, Color.BLACK)
-        strokeWidth = values.getDimension(R.styleable.TTextView_strokeWidth, 0.0f)
+        strokeRadius = values.getDimension(R.styleable.TTextView_strokeRadius, 0.0f)
         strokeCap = when (values.getInt(R.styleable.TTextView_strokeCap, 0)) {
             1 -> StrokeCap.ROUND
             2 -> StrokeCap.SQUARE
@@ -589,14 +589,14 @@ open class TTextView : ScrollView {
         }
 
     /**
-     * The stroke width in pixels for text.
+     * The stroke radius in pixels for text, which is half of the width of the stroke.
      */
     @get:Px
     @setparam:Px
-    var strokeWidth: Float
-        get() = textContainer.strokeWidth
+    var strokeRadius: Float
+        get() = textContainer.strokeRadius
         set(value) {
-            textContainer.strokeWidth = value
+            textContainer.strokeRadius = value
         }
 
     /**

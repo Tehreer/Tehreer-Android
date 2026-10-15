@@ -59,7 +59,7 @@ fun StyledText(
     lineHeightMultiplier: Float = 1.0f,
     drawStyle: DrawStyle = DrawStyle.FILL,
     strokeColor: Color = Color.Black,
-    strokeWidth: Float = 1.0f,
+    strokeRadius: Float = 0.5f,
     strokeCap: StrokeCap = StrokeCap.BUTT,
     strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     strokeMiter: Float = 1.0f
@@ -81,7 +81,7 @@ fun StyledText(
         lineHeightMultiplier = lineHeightMultiplier,
         drawStyle = drawStyle,
         strokeColor = strokeColor,
-        strokeWidth = strokeWidth,
+        strokeRadius = strokeRadius,
         strokeCap = strokeCap,
         strokeJoin = strokeJoin,
         strokeMiter = strokeMiter
@@ -104,7 +104,7 @@ fun StyledText(
     lineHeightMultiplier: Float = 1.0f,
     drawStyle: DrawStyle = DrawStyle.FILL,
     strokeColor: Color = Color.Black,
-    strokeWidth: Float = 1.0f,
+    strokeRadius: Float = 0.5f,
     strokeCap: StrokeCap = StrokeCap.BUTT,
     strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     strokeMiter: Float = 1.0f
@@ -126,7 +126,7 @@ fun StyledText(
         lineHeightMultiplier = lineHeightMultiplier,
         drawStyle = drawStyle,
         strokeColor = strokeColor,
-        strokeWidth = strokeWidth,
+        strokeRadius = strokeRadius,
         strokeCap = strokeCap,
         strokeJoin = strokeJoin,
         strokeMiter = strokeMiter
@@ -147,7 +147,7 @@ fun StyledText(
     lineHeightMultiplier: Float = 1.0f,
     drawStyle: DrawStyle = DrawStyle.FILL,
     strokeColor: Color = Color.Black,
-    strokeWidth: Float = 1.0f,
+    strokeRadius: Float = 0.5f,
     strokeCap: StrokeCap = StrokeCap.BUTT,
     strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     strokeMiter: Float = 1.0f
@@ -169,7 +169,7 @@ fun StyledText(
         lineHeightMultiplier = lineHeightMultiplier,
         drawStyle = drawStyle,
         strokeColor = strokeColor,
-        strokeWidth = strokeWidth,
+        strokeRadius = strokeRadius,
         strokeCap = strokeCap,
         strokeJoin = strokeJoin,
         strokeMiter = strokeMiter
@@ -195,7 +195,7 @@ private fun StyledText(
     separatorColor: Color? = null,
     drawStyle: DrawStyle = DrawStyle.FILL,
     strokeColor: Color = Color.Black,
-    strokeWidth: Float = 1.0f,
+    strokeRadius: Float = 0.5f,
     strokeCap: StrokeCap = StrokeCap.BUTT,
     strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     strokeMiter: Float = 1.0f
@@ -222,7 +222,7 @@ private fun StyledText(
             separatorColor = separatorColor,
             drawStyle = drawStyle,
             strokeColor = strokeColor,
-            strokeWidth = strokeWidth,
+            strokeRadius = strokeRadius,
             strokeCap = strokeCap,
             strokeJoin = strokeJoin,
             strokeMiter = strokeMiter

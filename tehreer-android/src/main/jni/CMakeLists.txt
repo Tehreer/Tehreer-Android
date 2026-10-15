@@ -187,6 +187,8 @@ set(FILE_LIST
     ComposedFrame.cpp
     LineLocator.cpp
     FrameResolver.cpp
+    GlyphCache.cpp
+    GlyphImage.cpp
     GlyphRun.cpp
     JavaBridge.cpp
     Raw.cpp
@@ -200,7 +202,8 @@ set(FILE_LIST
     Typeface.cpp
     TypefaceManager.cpp
     Typesetter.cpp
-    Text.cpp
+    TText.cpp
+    TMutableText.cpp
     Unicode.cpp
 )
 

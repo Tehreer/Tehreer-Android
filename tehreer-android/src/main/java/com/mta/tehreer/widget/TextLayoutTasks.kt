@@ -52,7 +52,7 @@ internal data class TextProperties(
     var separatorColor: Int = Color.TRANSPARENT,
     var drawStyle: DrawStyle = DrawStyle.FILL,
     var strokeColor: Int = Color.BLACK,
-    var strokeWidth: Float = 0.0f,
+    var strokeRadius: Float = 0.0f,
     var strokeCap: StrokeCap = StrokeCap.BUTT,
     var strokeJoin: StrokeJoin = StrokeJoin.ROUND,
     var strokeMiter: Float = 1.0f,
@@ -62,10 +62,10 @@ internal data class TextProperties(
     fun updateRenderer(renderer: Renderer) {
         renderer.typeface = typeface
         renderer.typeSize = textSize
-        renderer.fillColor = textColor
+        renderer.foregroundColor = textColor
         renderer.drawStyle = drawStyle
         renderer.strokeColor = strokeColor
-        renderer.strokeWidth = strokeWidth
+        renderer.strokeRadius = strokeRadius
         renderer.strokeCap = strokeCap
         renderer.strokeJoin = strokeJoin
         renderer.strokeMiter = strokeMiter
@@ -199,7 +199,7 @@ internal class LineLocatorTask(
             val renderer = Renderer()
             properties.updateRenderer(renderer)
 
-            lineLocator = frame.createLineLocator(renderer)
+            lineLocator = LineLocator(frame, renderer)
         }
 
         notifyUpdateIfNeeded(lineLocator)

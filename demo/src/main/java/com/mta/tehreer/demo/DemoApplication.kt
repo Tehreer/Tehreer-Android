@@ -17,7 +17,7 @@
 package com.mta.tehreer.demo
 
 import android.app.Application
-import com.mta.tehreer.graphics.Typeface
+import com.mta.tehreer.font.FontFile
 import com.mta.tehreer.graphics.TypefaceManager
 import java.io.*
 import java.lang.Exception
@@ -38,7 +38,7 @@ class DemoApplication : Application() {
         // It is better to copy the typeface into sdcard for performance reasons.
         try {
             val file = copyAsset(fileName)
-            val typeface = Typeface(file)
+            val typeface = FontFile(file).typefaces[0]
             TypefaceManager.registerTypeface(typeface, tag)
         } catch (e: Exception) {
             throw RuntimeException("Unable to register typeface \"$fileName\"")

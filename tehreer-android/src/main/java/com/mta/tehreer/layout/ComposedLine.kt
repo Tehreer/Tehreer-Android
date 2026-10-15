@@ -25,7 +25,6 @@ import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.Description
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.util.FloatCollector
-import java.util.NavigableMap
 
 /**
  * Represents a line of text consisting of an array of `GlyphRun` objects in visual order.
@@ -33,7 +32,7 @@ import java.util.NavigableMap
 class ComposedLine internal constructor(
     internal val nativeLine: Long,
     typefaces: Map<Long, Typeface>,
-    holders: NavigableMap<Int, ReplacementHolder>
+    holders: Map<Long, ReplacementHolder>
 ) {
     private class Finalizable(private val nativeLine: Long) {
         @Suppress("unused")
@@ -64,9 +63,6 @@ class ComposedLine internal constructor(
      */
     val endIndex: Int
         get() = nGetEndIndex(nativeLine)
-
-    val breakEnd: Int
-        get() = endIndex
 
     /** Whether this line is the line of a view that has a line of its own. */
     internal val isBlock: Boolean
@@ -118,7 +114,14 @@ class ComposedLine internal constructor(
      * Returns the typographic height of this line.
      */
     val height: Float
-        get() = ascent + descent + leading
+        get() = nGetHeight(nativeLine)
+
+    /**
+     * Whether this line shows a truncation token in place of some of its text. Such a line covers
+     * the text that was cut out too.
+     */
+    val isTruncated: Boolean
+        get() = nIsTruncated(nativeLine)
 
     /**
      * Returns the width of the whitespaces at the end of this line, which are not shown.
@@ -144,10 +147,10 @@ class ComposedLine internal constructor(
      * @throws IllegalArgumentException if `charIndex` is less than line start or greater than line
      *         end.
      */
-    fun computeCharDistance(charIndex: Int): Float {
+    fun getCharDistance(charIndex: Int): Float {
         checkCharIndex(charIndex)
 
-        return nGetDistance(nativeLine, charIndex)
+        return nGetCharDistance(nativeLine, charIndex)
     }
 
     /**
@@ -165,7 +168,7 @@ class ComposedLine internal constructor(
      *         greater than line end, or `charStart` is greater than `charEnd`.
      */
     @Size(multiple = 2)
-    fun computeVisualEdges(charStart: Int, charEnd: Int): FloatArray {
+    fun getVisualEdges(charStart: Int, charEnd: Int): FloatArray {
         val lineStart = this.startIndex
         val lineEnd = this.endIndex
 
@@ -174,7 +177,7 @@ class ComposedLine internal constructor(
         require(charEnd >= charStart) { "Bad Range: [$charStart, $charEnd)" }
 
         val edges = FloatCollector()
-        nEnumerateEdges(nativeLine, charStart, charEnd, edges)
+        nEnumerateVisualEdges(nativeLine, charStart, charEnd, edges)
 
         return edges.toArray()
     }
@@ -187,21 +190,21 @@ class ComposedLine internal constructor(
      * @return The index of character nearest to the specified distance. It will be an absolute
      *         index in source string.
      */
-    fun computeNearestCharIndex(distance: Float): Int {
-        return nGetIndexOfCodeUnit(nativeLine, distance)
+    fun getCharIndexAtDistance(distance: Float): Int {
+        return nGetCharIndexAtDistance(nativeLine, distance)
     }
 
     /**
-     * Calculates the bounding box of this line. The bounding box is a rectangle that encloses the
+     * Calculates the ink box of this line. The ink box is a rectangle that encloses the
      * paths of this line's glyphs, as tightly as possible.
      *
-     * @param renderer The renderer to use for calculating the bounding box. This is required
+     * @param renderer The renderer to use for calculating the ink box. This is required
      *                 because the renderer could have settings in it that would cause changes in
-     *                 the bounding box.
+     *                 the ink box.
      * @return A rectangle that tightly encloses the paths of this line's glyphs.
      */
-    fun computeBoundingBox(renderer: Renderer): RectF {
-        return nGetBoundingBox(nativeLine, renderer.nativeHandle)
+    fun computeInkBox(renderer: Renderer): RectF {
+        return nComputeInkBox(nativeLine, renderer.nativeHandle)
     }
 
     /**
@@ -242,6 +245,7 @@ class ComposedLine internal constructor(
             ", leading=$leading" +
             ", width=$width" +
             ", height=$height" +
+            ", isTruncated=$isTruncated" +
             ", trailingWhitespaceExtent=$trailingWhitespaceExtent" +
             ", runs=${Description.forIterable(runs)}" +
             "}"
@@ -259,20 +263,22 @@ class ComposedLine internal constructor(
     private external fun nGetDescent(nativeLine: Long): Float
     private external fun nGetLeading(nativeLine: Long): Float
     private external fun nGetWidth(nativeLine: Long): Float
+    private external fun nGetHeight(nativeLine: Long): Float
+    private external fun nIsTruncated(nativeLine: Long): Boolean
     private external fun nGetTrailingWhitespaceExtent(nativeLine: Long): Float
     private external fun nGetOriginX(nativeLine: Long): Float
     private external fun nGetOriginY(nativeLine: Long): Float
     private external fun nGetRunCount(nativeLine: Long): Int
     private external fun nGetRun(nativeLine: Long, index: Int): Long
-    private external fun nGetDistance(nativeLine: Long, charIndex: Int): Float
-    private external fun nEnumerateEdges(
+    private external fun nGetCharDistance(nativeLine: Long, charIndex: Int): Float
+    private external fun nEnumerateVisualEdges(
         nativeLine: Long, charStart: Int, charEnd: Int, collector: FloatCollector
     )
-    private external fun nGetIndexOfCodeUnit(nativeLine: Long, distance: Float): Int
+    private external fun nGetCharIndexAtDistance(nativeLine: Long, distance: Float): Int
     private external fun nGetPenOffset(
         nativeLine: Long, flushFactor: Float, flushExtent: Float
     ): Float
-    private external fun nGetBoundingBox(nativeLine: Long, nativeRenderer: Long): RectF
+    private external fun nComputeInkBox(nativeLine: Long, nativeRenderer: Long): RectF
     private companion object {
         init {
             JniBridge.loadLibrary()

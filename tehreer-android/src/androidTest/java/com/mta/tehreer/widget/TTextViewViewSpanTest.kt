@@ -221,7 +221,7 @@ class TTextViewViewSpanTest {
         val rect = rectOf(span)
 
         // Where the character is, worked out from the caret edges of the line.
-        val edges = onMain { line.computeVisualEdges(start, start + 1) }
+        val edges = onMain { line.getVisualEdges(start, start + 1) }
         assertEquals(2, edges.size)
         assertEquals((line.originX + edges[0]).roundToInt(), rect.left)
         assertEquals((line.originX + edges[1]).roundToInt(), rect.right)

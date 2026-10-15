@@ -20,23 +20,20 @@ import android.text.SpannableString
 import android.text.Spanned
 import com.mta.tehreer.graphics.Typeface
 import com.mta.tehreer.internal.JniBridge
-import com.mta.tehreer.internal.util.StringUtils
 import com.mta.tehreer.layout.style.TypeSizeSpan
 import com.mta.tehreer.layout.style.TypefaceSpan
-import java.util.NavigableMap
 
 /**
  * Represents a typesetter which performs text layout. It can be used to create lines, perform line
  * breaking, and do other contextual analysis based on the characters in the string.
  */
 class Typesetter private constructor(
-    private val text: String,
+    private val source: TText,
 
     /**
      * The spanned source text for which this typesetter object was created.
      */
-    val spanned: Spanned,
-    defaultSpans: List<Any>?
+    val spanned: Spanned
 ) {
     private class Finalizable(private val nativeTypesetter: Long) {
         @Suppress("unused")
@@ -46,18 +43,22 @@ class Typesetter private constructor(
     }
 
     internal val nativeTypesetter: Long
+    private val textLength: Int
     private val typefaces: Map<Long, Typeface>
-    private val holders: NavigableMap<Int, ReplacementHolder>
+    private val holders: Map<Long, ReplacementHolder>
     private val finalizable: Finalizable
 
     init {
-        val input = Text(text, spanned, defaultSpans ?: emptyList())
+        require(source.length > 0) { "Text is empty" }
 
-        nativeTypesetter = nCreateTypesetter(input.nativeText)
+        nativeTypesetter = nCreateTypesetter(source.nativeText)
         check(nativeTypesetter != 0L) { "Could not create the typesetter" }
 
-        typefaces = input.typefaces
-        holders = input.holders
+        // The text can be edited later on, while the lines made here keep the typefaces and
+        // replacements that the typesetter was made with.
+        textLength = source.length
+        typefaces = HashMap(source.typefaces)
+        holders = HashMap(source.holders)
         finalizable = Finalizable(nativeTypesetter)
     }
 
@@ -71,7 +72,7 @@ class Typesetter private constructor(
      * @throws IllegalArgumentException if `text` is empty.
      */
     constructor(text: String, typeface: Typeface, typeSize: Float) : this(
-        text, makeSpanned(text, typeface, typeSize), null
+        makeSpanned(text, typeface, typeSize)
     )
 
     /**
@@ -84,12 +85,23 @@ class Typesetter private constructor(
     constructor(spanned: Spanned) : this(spanned, null)
 
     constructor(spanned: Spanned, defaultSpans: List<Any>?) : this(
-        copyText(spanned), spanned, defaultSpans
+        makeText(spanned, defaultSpans ?: emptyList()), spanned
     )
+
+    /**
+     * Constructs the typesetter object using a text of Core. The text is copied, so it can be
+     * edited afterwards without changing the typesetter. The spanned text of the typesetter is
+     * made of the text with [TText.toSpanned].
+     *
+     * @param text The text to typeset, which must not be in the middle of a group of edits.
+     *
+     * @throws IllegalArgumentException if `text` is empty.
+     */
+    constructor(text: TText) : this(text, text.toSpanned())
 
     private fun checkSubRange(charStart: Int, charEnd: Int) {
         require(charStart >= 0) { "Char Start: $charStart" }
-        require(charEnd <= text.length) { "Char End: $charEnd, Text Length: ${text.length}" }
+        require(charEnd <= textLength) { "Char End: $charEnd, Text Length: $textLength" }
         require(charEnd > charStart) { "Bad Range: [$charStart, $charEnd)" }
     }
 
@@ -142,15 +154,19 @@ class Typesetter private constructor(
      *
      * @param charStart The index to first character of the line in source text.
      * @param charEnd The index after the last character of the line in source text.
+     * @param layoutWidth The width of the frame that the line is made for, or zero if there is
+     *                    none. The replacements that decide their room by the width of the frame,
+     *                    such as a view that fills it, get it from here.
      * @return The new line object.
      *
      * @throws IllegalArgumentException if `charStart` is negative, or `charEnd` is greater than the
      *         length of source text, or `charStart` is greater than or equal to `charEnd`
      */
-    fun createSimpleLine(charStart: Int, charEnd: Int): ComposedLine {
+    @JvmOverloads
+    fun createSimpleLine(charStart: Int, charEnd: Int, layoutWidth: Float = 0.0f): ComposedLine {
         checkSubRange(charStart, charEnd)
 
-        return makeLine(nCreateSimpleLine(nativeTypesetter, charStart, charEnd))
+        return makeLine(nCreateSimpleLine(nativeTypesetter, charStart, charEnd, layoutWidth))
     }
 
     /**
@@ -267,33 +283,6 @@ class Typesetter private constructor(
         )
     }
 
-    /**
-     * Creates a frame full of lines in the size provided by the `frameWidth` and `frameHeight` parameters. The
-     * typesetter will continue to fill the frame until it either runs out of text or it finds that
-     * text no longer fits.
-     *
-     * @param charStart The index to first character of the frame in source text.
-     * @param charEnd The index after the last character of the frame in source text.
-     * @param frameWidth The width of the frame to fill.
-     * @param frameHeight The height of the frame to fill.
-     * @param textAlignment The horizontal text alignment of the lines in frame.
-     * @return The new frame object.
-     */
-    fun createFrame(
-        charStart: Int, charEnd: Int, frameWidth: Float, frameHeight: Float, textAlignment: TextAlignment
-    ): ComposedFrame {
-        checkSubRange(charStart, charEnd)
-        require(frameWidth > 0.0f && frameHeight > 0.0f) { "Frame size is empty" }
-
-        val resolver = FrameResolver()
-        resolver.typesetter = this
-        resolver.frameWidth = frameWidth
-        resolver.frameHeight = frameHeight
-        resolver.textAlignment = textAlignment
-
-        return resolver.createFrame(charStart, charEnd)
-    }
-
     private fun createTruncated(
         charStart: Int, charEnd: Int, maxWidth: Float, breakMode: BreakMode,
         truncationPlace: TruncationPlace, token: ComposedLine
@@ -333,7 +322,7 @@ class Typesetter private constructor(
     ): Int
 
     private external fun nCreateSimpleLine(
-        nativeTypesetter: Long, charStart: Int, charEnd: Int
+        nativeTypesetter: Long, charStart: Int, charEnd: Int, layoutWidth: Float
     ): Long
     private external fun nCreateTruncationToken(
         nativeTypesetter: Long, charStart: Int, charEnd: Int, place: Int, token: String?
@@ -361,10 +350,10 @@ class Typesetter private constructor(
             return spanned
         }
 
-        fun copyText(spanned: Spanned): String {
+        fun makeText(spanned: Spanned, defaultSpans: List<Any>): TText {
             require(spanned.isNotEmpty()) { "Text is empty" }
 
-            return StringUtils.copyString(spanned)
+            return TText(spanned, defaultSpans)
         }
 
         @JvmStatic external fun nCreateTypesetter(nativeText: Long): Long

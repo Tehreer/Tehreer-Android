@@ -17,6 +17,7 @@
 package com.mta.tehreer.layout
 
 import android.graphics.RectF
+import com.mta.tehreer.graphics.Renderer
 import com.mta.tehreer.internal.JniBridge
 
 /**
@@ -28,10 +29,18 @@ import com.mta.tehreer.internal.JniBridge
  * and the ink box of its glyphs, which can be taller than the line. The edges of the boxes are
  * rounded outward to integers, and the boxes of the lines can overlap.
  *
- * A locator is immutable and can be used from any thread. Create it with
- * [ComposedFrame.createLineLocator].
+ * A locator is immutable and can be used from any thread.
+ *
+ * @constructor Creates a locator that finds the lines of a frame. The ink boxes of the lines are
+ * measured with the given renderer, which is the one that draws the frame.
+ *
+ * @param frame The frame whose lines are located.
+ * @param renderer The renderer that decides how the glyphs are measured.
+ *
+ * @throws IllegalStateException if the locator could not be created, for example when the lines
+ *         are placed billions of units apart.
  */
-class LineLocator internal constructor(nativeFrame: Long, nativeRenderer: Long) {
+class LineLocator(frame: ComposedFrame, renderer: Renderer) {
     private class Finalizable(private val nativeLocator: Long) {
         @Suppress("unused")
         protected fun finalize() {
@@ -39,7 +48,7 @@ class LineLocator internal constructor(nativeFrame: Long, nativeRenderer: Long) 
         }
     }
 
-    private val nativeLocator = nCreate(nativeFrame, nativeRenderer)
+    private val nativeLocator = nCreate(frame.nativeFrame, renderer.nativeHandle)
     private val finalizable: Finalizable
 
     init {

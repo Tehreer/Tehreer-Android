@@ -129,7 +129,7 @@ internal fun computeSelectionRects(frame: ComposedFrame, rangeStart: Int, rangeE
         val segmentEnd = min(charEnd, line.endIndex)
 
         if (segmentStart < segmentEnd) {
-            val edges = line.computeVisualEdges(segmentStart, segmentEnd)
+            val edges = line.getVisualEdges(segmentStart, segmentEnd)
             for (i in edges.indices step 2) {
                 include(edges[i] + lineLeft, edges[i + 1] + lineLeft)
             }

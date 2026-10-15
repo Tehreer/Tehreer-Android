@@ -103,7 +103,7 @@ open class TLabel : View {
             else -> DrawStyle.FILL
         }
         strokeColor = values.getColor(R.styleable.TLabel_strokeColor, Color.BLACK)
-        strokeWidth = values.getDimension(R.styleable.TLabel_strokeWidth, 0.0f)
+        strokeRadius = values.getDimension(R.styleable.TLabel_strokeRadius, 0.0f)
         strokeCap = when (values.getInt(R.styleable.TLabel_strokeCap, 0)) {
             1 -> StrokeCap.ROUND
             2 -> StrokeCap.SQUARE
@@ -259,14 +259,14 @@ open class TLabel : View {
         val adjustedX = x - frameLeft
         val adjustedY = y - frameTop
 
-        val lineIndex = frame.getLineIndexForPosition(adjustedX, adjustedY)
+        val lineIndex = frame.getLineIndexAtPosition(adjustedX, adjustedY)
         val composedLine = frame.lines[lineIndex]
         val lineLeft = composedLine.originX
         val lineRight = lineLeft + composedLine.width
 
         // Check if position exists within the line horizontally.
         if (adjustedX in lineLeft..lineRight) {
-            val charIndex = composedLine.computeNearestCharIndex(adjustedX - lineLeft)
+            val charIndex = composedLine.getCharIndexAtDistance(adjustedX - lineLeft)
             val lastIndex = composedLine.endIndex - 1
 
             // Make sure to provide character of this line.
@@ -398,9 +398,9 @@ open class TLabel : View {
     @get:ColorInt
     @setparam:ColorInt
     var textColor: Int
-        get() = renderer.fillColor
+        get() = renderer.foregroundColor
         set(value) {
-            renderer.fillColor = value
+            renderer.foregroundColor = value
             invalidate()
         }
 
@@ -508,14 +508,14 @@ open class TLabel : View {
         }
 
     /**
-     * The stroke width in pixels for text.
+     * The stroke radius in pixels for text, which is half of the width of the stroke.
      */
     @get:Px
     @setparam:Px
-    var strokeWidth: Float
-        get() = renderer.strokeWidth
+    var strokeRadius: Float
+        get() = renderer.strokeRadius
         set(value) {
-            renderer.strokeWidth = maxOf(0.0f, value)
+            renderer.strokeRadius = maxOf(0.0f, value)
             invalidate()
         }
 

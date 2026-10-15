@@ -174,13 +174,13 @@ class TTextViewLayoutTest {
     @Test
     fun textColorRepaintsTheLineViewsThatAreAlreadyThere() {
         showLongText()
-        assertTrue(host.lineViews().all { it.renderer.fillColor == Color.BLACK })
+        assertTrue(host.lineViews().all { it.renderer.foregroundColor == Color.BLACK })
 
         onMain { host.view.textColor = Color.RED }
 
         val lineViews = host.lineViews()
         assertTrue(lineViews.isNotEmpty())
-        assertTrue(lineViews.all { it.renderer.fillColor == Color.RED })
+        assertTrue(lineViews.all { it.renderer.foregroundColor == Color.RED })
         assertEquals(Color.RED, host.view.textColor)
 
         // ...and the ink that is drawn is red.

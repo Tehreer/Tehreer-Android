@@ -24,6 +24,8 @@
 #include <Tehreer/TRPath.h>
 #include <Tehreer/TRRenderer.h>
 
+#include "GlyphCache.h"
+#include "GlyphImage.h"
 #include "JavaBridge.h"
 #include "PathBuilder.h"
 #include "Typeface.h"
@@ -32,98 +34,9 @@
 using namespace std;
 using namespace Tehreer;
 
-static JavaVM *javaVM = nullptr;
-
 static TRRendererRef toRenderer(jlong handle)
 {
     return reinterpret_cast<TRRendererRef>(handle);
-}
-
-/**
- * The bitmap that an image of Core is drawn from, which is kept with the image as its native data.
- */
-static void destroyBitmap(void *data)
-{
-    auto bitmap = static_cast<jobject>(data);
-    JNIEnv *env = nullptr;
-    bool isAttached = false;
-
-    if (javaVM->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) == JNI_EDETACHED) {
-        if (javaVM->AttachCurrentThread(&env, nullptr) != JNI_OK) {
-            return;
-        }
-        isAttached = true;
-    }
-
-    env->DeleteGlobalRef(bitmap);
-
-    if (isAttached) {
-        javaVM->DetachCurrentThread();
-    }
-}
-
-static jobject createBitmap(JNIEnv *env, TRGlyphImageRef image)
-{
-    JavaBridge bridge(env);
-    jint width = static_cast<jint>(TRGlyphImageGetWidth(image));
-    jint height = static_cast<jint>(TRGlyphImageGetHeight(image));
-    const TRUInt8 *pixels = TRGlyphImageGetPixelsPtr(image);
-
-    if (width <= 0 || height <= 0 || !pixels) {
-        return nullptr;
-    }
-
-    if (TRGlyphImageGetFormat(image) == TRGlyphImageFormatAlpha) {
-        jobject bitmap = bridge.Bitmap_create(width, height, JavaBridge::BitmapConfig::Alpha8);
-        bridge.Bitmap_setPixels(bitmap, pixels, static_cast<size_t>(width) * height);
-
-        return bitmap;
-    }
-
-    /* The pixels of Core are in the order alpha, red, green and blue, while those of a bitmap are
-     * red, green, blue and alpha. Both have the colors premultiplied with alpha. */
-    size_t length = static_cast<size_t>(width) * height * 4;
-    vector<uint8_t> converted(length);
-
-    for (size_t i = 0; i < length; i += 4) {
-        converted[i + 0] = pixels[i + 1];
-        converted[i + 1] = pixels[i + 2];
-        converted[i + 2] = pixels[i + 3];
-        converted[i + 3] = pixels[i + 0];
-    }
-
-    jobject bitmap = bridge.Bitmap_create(width, height, JavaBridge::BitmapConfig::ARGB_8888);
-    bridge.Bitmap_setPixels(bitmap, converted.data(), length);
-
-    return bitmap;
-}
-
-/* Returns a local reference to the bitmap of an image, which is made when it is asked for first. */
-static jobject getBitmap(JNIEnv *env, TRGlyphImageRef image)
-{
-    void *data = TRGlyphImageGetNativeData(image);
-    if (data) {
-        return env->NewLocalRef(static_cast<jobject>(data));
-    }
-
-    jobject bitmap = createBitmap(env, image);
-    if (!bitmap) {
-        return nullptr;
-    }
-
-    jobject global = env->NewGlobalRef(bitmap);
-    if (!TRGlyphImageSetNativeData(image, global, destroyBitmap)) {
-        /* Another thread attached its own bitmap first, which is used as it is. */
-        env->DeleteGlobalRef(global);
-
-        data = TRGlyphImageGetNativeData(image);
-        if (data) {
-            env->DeleteLocalRef(bitmap);
-            return env->NewLocalRef(static_cast<jobject>(data));
-        }
-    }
-
-    return bitmap;
 }
 
 namespace {
@@ -207,6 +120,22 @@ static jfloat getSkewX(JNIEnv *env, jobject obj, jlong handle)
 static void setSkewX(JNIEnv *env, jobject obj, jlong handle, jfloat skewX)
 {
     TRRendererSetSkewX(toRenderer(handle), static_cast<TRFloat>(skewX));
+}
+
+static jfloat getRenderScale(JNIEnv *env, jobject obj, jlong handle)
+{
+    return static_cast<jfloat>(TRRendererGetRenderScale(toRenderer(handle)));
+}
+
+static void setRenderScale(JNIEnv *env, jobject obj, jlong handle, jfloat renderScale)
+{
+    TRRendererSetRenderScale(toRenderer(handle), static_cast<TRFloat>(renderScale));
+}
+
+/* The renderer retains the cache that it is given. Zero selects the default cache. */
+static void setGlyphCache(JNIEnv *env, jobject obj, jlong handle, jlong cacheHandle)
+{
+    TRRendererSetGlyphCache(toRenderer(handle), toGlyphCache(cacheHandle));
 }
 
 static jint getWritingDirection(JNIEnv *env, jobject obj, jlong handle)
@@ -338,7 +267,7 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId
 {
     PathBuilder builder(env);
 
-    TRPathRef corePath = TRRendererCopyGlyphPath(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
+    TRPathRef corePath = TRRendererCreateGlyphPath(toRenderer(handle), static_cast<TRGlyphID>(glyphId));
     if (corePath) {
         TRPathCallbacks callbacks = PathBuilder::callbacks();
         TRPathEnumerate(corePath, nullptr, &callbacks, &builder);
@@ -346,6 +275,19 @@ static jobject getGlyphPath(JNIEnv *env, jobject obj, jlong handle, jint glyphId
     }
 
     return builder.path;
+}
+
+/* Returns an image that the caller owns, or null if the glyph has none. */
+static jlong createGlyphImage(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
+{
+    return reinterpret_cast<jlong>(TRRendererCreateGlyphImage(toRenderer(handle),
+                                                               static_cast<TRGlyphID>(glyphId)));
+}
+
+static jlong createStrokeImage(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
+{
+    return reinterpret_cast<jlong>(TRRendererCreateStrokeImage(toRenderer(handle),
+                                                                static_cast<TRGlyphID>(glyphId)));
 }
 
 /* A glyph without any image has no box, which is null. */
@@ -360,12 +302,12 @@ static jobject makeBox(JNIEnv *env, const TRRect &rect)
     return nullptr;
 }
 
-static jobject getGlyphBoundingBox(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
+static jobject computeGlyphInkBox(JNIEnv *env, jobject obj, jlong handle, jint glyphId)
 {
-    return makeBox(env, TRRendererGetGlyphInkBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
+    return makeBox(env, TRRendererComputeGlyphInkBox(toRenderer(handle), static_cast<TRGlyphID>(glyphId)));
 }
 
-static jobject getRunBoundingBox(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
+static jobject computeRunInkBox(JNIEnv *env, jobject obj, jlong handle, jintArray glyphIds,
     jfloatArray offsets, jfloatArray advances, jint count)
 {
     RunData run(env, glyphIds, offsets, advances, count);
@@ -387,7 +329,7 @@ static void drawPlacement(void *userData, TRUInteger glyphIndex, TRGlyphImageRef
 {
     auto target = static_cast<DrawTarget *>(userData);
     JNIEnv *env = target->env;
-    jobject bitmap = getBitmap(env, image);
+    jobject bitmap = getGlyphImageBitmap(env, image);
 
     if (bitmap) {
         /* The images of a bitmap font are drawn at the size of their strike, so they are scaled. */
@@ -445,7 +387,7 @@ static void drawGlyphImage(void *userData, TRGlyphImageRef image, TRPoint origin
 {
     auto drawing = static_cast<Drawing *>(userData);
     JNIEnv *env = drawing->env;
-    jobject bitmap = getBitmap(env, image);
+    jobject bitmap = getGlyphImageBitmap(env, image);
 
     if (bitmap) {
         JavaBridge bridge(env);
@@ -497,7 +439,7 @@ static void drawReplacement(void *userData, const struct _TRGlyphRun *run, TRPoi
         jint saveCount = bridge.Canvas_save(drawing->canvas);
 
         drawing->env->CallVoidMethod(drawing->drawer, drawing->drawReplacement, drawing->canvas,
-            static_cast<jint>(TRGlyphRunGetStartIndex(run)), origin.x, origin.y,
+            reinterpret_cast<jlong>(TRGlyphRunGetReplacement(run)), origin.x, origin.y,
             TRGlyphRunGetAscent(run), TRGlyphRunGetDescent(run));
 
         bridge.Canvas_restoreToCount(drawing->canvas, saveCount);
@@ -540,7 +482,7 @@ Drawing::Drawing(JNIEnv *env, TRRendererRef renderer, jobject canvas, jobject pa
     if (drawer) {
         jclass drawerClass = env->GetObjectClass(drawer);
         drawReplacement = env->GetMethodID(drawerClass, "drawReplacement",
-                                           "(Landroid/graphics/Canvas;IFFFF)V");
+                                           "(Landroid/graphics/Canvas;JFFFF)V");
         env->DeleteLocalRef(drawerClass);
     }
 
@@ -573,6 +515,9 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nSetScaleY", "(JF)V", (void *)setScaleY },
     { "nGetSkewX", "(J)F", (void *)getSkewX },
     { "nSetSkewX", "(JF)V", (void *)setSkewX },
+    { "nGetRenderScale", "(J)F", (void *)getRenderScale },
+    { "nSetRenderScale", "(JF)V", (void *)setRenderScale },
+    { "nSetGlyphCache", "(JJ)V", (void *)setGlyphCache },
     { "nGetWritingDirection", "(J)I", (void *)getWritingDirection },
     { "nSetWritingDirection", "(JI)V", (void *)setWritingDirection },
     { "nGetForegroundColor", "(J)I", (void *)getForegroundColor },
@@ -598,9 +543,11 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetDrawStyle", "(J)I", (void *)getDrawStyle },
     { "nSetDrawStyle", "(JI)V", (void *)setDrawStyle },
     { "nIsRenderable", "(J)Z", (void *)isRenderable },
+    { "nCreateGlyphImage", "(JI)J", (void *)createGlyphImage },
+    { "nCreateStrokeImage", "(JI)J", (void *)createStrokeImage },
     { "nGetGlyphPath", "(JI)Landroid/graphics/Path;", (void *)getGlyphPath },
-    { "nGetGlyphBoundingBox", "(JI)Landroid/graphics/RectF;", (void *)getGlyphBoundingBox },
-    { "nGetRunBoundingBox", "(J[I[F[FI)Landroid/graphics/RectF;", (void *)getRunBoundingBox },
+    { "nComputeGlyphInkBox", "(JI)Landroid/graphics/RectF;", (void *)computeGlyphInkBox },
+    { "nComputeRunInkBox", "(J[I[F[FI)Landroid/graphics/RectF;", (void *)computeRunInkBox },
     { "nDrawGlyphs", "(JI[I[F[FILandroid/graphics/Canvas;Landroid/graphics/Paint;)V", (void *)drawGlyphs },
     { "nGetRunPath", "(J[I[F[FI)Landroid/graphics/Path;", (void *)getRunPath },
     { "nDispose", "(J)V", (void *)dispose },
@@ -608,7 +555,5 @@ static JNINativeMethod JNI_METHODS[] = {
 
 jint register_com_mta_tehreer_graphics_Renderer(JNIEnv *env)
 {
-    env->GetJavaVM(&javaVM);
-
     return JavaBridge::registerClass(env, "com/mta/tehreer/graphics/Renderer", JNI_METHODS, sizeof(JNI_METHODS) / sizeof(JNI_METHODS[0]));
 }

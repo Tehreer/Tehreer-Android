@@ -18,11 +18,12 @@ package com.mta.tehreer.util
 
 import androidx.test.platform.app.InstrumentationRegistry
 
+import com.mta.tehreer.font.FontFile
 import com.mta.tehreer.graphics.Typeface
 
 object TypefaceStore {
     val nafeesWeb: Typeface by lazy {
         val context = InstrumentationRegistry.getInstrumentation().context
-        context.assets.open("NafeesWeb.ttf").use { Typeface(it) }
+        context.assets.open("NafeesWeb.ttf").use { FontFile(it).typefaces[0] }
     }
 }

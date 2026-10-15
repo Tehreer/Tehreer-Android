@@ -145,6 +145,14 @@ internal class RunStyle private constructor(
     }
 
     companion object {
+        /** Makes the style of a range that has the given typeface, type size and horizontal scale. */
+        fun of(typeface: Typeface?, typeSize: Float, scaleX: Float): RunStyle {
+            return RunStyle(
+                typeface, typeface?.weight ?: TypeWeight.REGULAR, typeface?.slope ?: TypeSlope.PLAIN,
+                typeSize, scaleX
+            )
+        }
+
         /** Makes the initial style, which the default spans give to all of the text. */
         fun initial(defaultSpans: List<Any>): RunStyle {
             val style = RunStyle(null, TypeWeight.REGULAR, TypeSlope.PLAIN, 16.0f, 1.0f)

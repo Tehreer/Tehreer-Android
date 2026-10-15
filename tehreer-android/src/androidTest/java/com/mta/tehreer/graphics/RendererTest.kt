@@ -21,6 +21,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 
 import android.graphics.Bitmap
@@ -52,16 +53,18 @@ class RendererTest {
 
     @Test
     fun testInitialValues() {
-        assertEquals(subject.fillColor, Color.BLACK)
+        assertEquals(subject.foregroundColor, Color.BLACK)
         assertEquals(subject.drawStyle, DrawStyle.FILL)
         assertEquals(subject.writingDirection, WritingDirection.LEFT_TO_RIGHT)
         assertNull(subject.typeface)
         assertEquals(subject.typeSize, 16.0f, 0.0f)
-        assertEquals(subject.slantAngle, 0.0f, 0.0f)
+        assertEquals(subject.skewX, 0.0f, 0.0f)
         assertEquals(subject.scaleX, 1.0f, 0.0f)
         assertEquals(subject.scaleY, 1.0f, 0.0f)
         assertEquals(subject.strokeColor, Color.BLACK)
-        assertEquals(subject.strokeWidth, 1.0f, 0.0f)
+        assertEquals(subject.strokeRadius, 0.5f, 0.0f)
+        assertEquals(subject.renderScale, 1.0f, 0.0f)
+        assertSame(GlyphCache.default, subject.glyphCache)
         assertEquals(subject.strokeCap, StrokeCap.BUTT)
         assertEquals(subject.strokeJoin, StrokeJoin.ROUND)
         assertEquals(subject.strokeMiter, 1.0f, 0.0f)
@@ -74,13 +77,13 @@ class RendererTest {
     @Test
     fun testFillColorProperty() {
         // Given
-        val fillColor = Color.RED
+        val foregroundColor = Color.RED
 
         // When
-        subject.fillColor = fillColor
+        subject.foregroundColor = foregroundColor
 
         // Then
-        assertEquals(subject.fillColor, fillColor)
+        assertEquals(subject.foregroundColor, foregroundColor)
     }
 
     @Test
@@ -128,13 +131,13 @@ class RendererTest {
     @Test
     fun testSlantAngleProperty() {
         // Given
-        val slantAngle: Float = 1.0f
+        val skewX: Float = 1.0f
 
         // When
-        subject.slantAngle = slantAngle
+        subject.skewX = skewX
 
         // Then
-        assertEquals(subject.slantAngle, slantAngle, 0.0f)
+        assertEquals(subject.skewX, skewX, 0.0f)
     }
 
     @Test
@@ -174,15 +177,15 @@ class RendererTest {
     }
 
     @Test
-    fun testStrokeWidthProperty() {
+    fun testStrokeRadiusProperty() {
         // Given
-        val strokeWidth: Float = 2.5f
+        val strokeRadius: Float = 2.5f
 
         // When
-        subject.strokeWidth = strokeWidth
+        subject.strokeRadius = strokeRadius
 
         // Then
-        assertEquals(subject.strokeWidth, strokeWidth, 0.0f)
+        assertEquals(subject.strokeRadius, strokeRadius, 0.0f)
     }
 
     @Test
@@ -270,14 +273,14 @@ class RendererTest {
     }
 
     @Test
-    fun testComputeBoundingBoxForSingleGlyph() {
+    fun testComputeInkBoxForSingleGlyph() {
         // Given
         val glyphId = typeface.getGlyphId('ت'.code)
         subject.typeface = typeface
         subject.typeSize = typeSize
 
         // When
-        val bbox = subject.computeBoundingBox(glyphId)
+        val bbox = subject.computeInkBox(glyphId)
 
         // Then
         // The y axis points downward, so the glyph is above the baseline.
@@ -285,7 +288,7 @@ class RendererTest {
     }
 
     @Test
-    fun testComputeBoundingBoxForMultipleGlyphs() {
+    fun testComputeInkBoxForMultipleGlyphs() {
         // Given
         val glyphIds = IntList.of(51, 85, 120, 77, 120)
         val glyphOffsets = PointList.of(*FloatArray(10))
@@ -296,7 +299,7 @@ class RendererTest {
         subject.writingDirection = WritingDirection.RIGHT_TO_LEFT
 
         // When
-        val bbox = subject.computeBoundingBox(glyphIds, glyphOffsets, glyphAdvancess)
+        val bbox = subject.computeInkBox(glyphIds, glyphOffsets, glyphAdvancess)
 
         // Then
         // The positions are rounded to the nearest pixel, also where they are negative.
@@ -336,7 +339,7 @@ class RendererTest {
         val glyphId = typeface.getGlyphId('ت'.code)
         subject.typeface = typeface
         subject.typeSize = typeSize
-        subject.fillColor = Color.RED
+        subject.foregroundColor = Color.RED
 
         // When
         val bitmap = drawGlyph(glyphId, 50.0f)
@@ -377,7 +380,7 @@ class RendererTest {
         val glyphId = typeface.getGlyphId('ت'.code)
         subject.typeface = typeface
         subject.typeSize = typeSize
-        subject.strokeWidth = 3.0f
+        subject.strokeRadius = 3.0f
 
         // When
         subject.drawStyle = DrawStyle.FILL
@@ -405,14 +408,14 @@ class RendererTest {
     }
 
     @Test
-    fun testGeneratePath() {
+    fun testGetGlyphPath() {
         // Given
         val glyphId = typeface.getGlyphId('ت'.code)
         subject.typeface = typeface
         subject.typeSize = typeSize
 
         // When
-        val path = subject.generatePath(glyphId)
+        val path = subject.getGlyphPath(glyphId)
         val bounds = RectF()
         path.computeBounds(bounds, true)
 
@@ -430,7 +433,7 @@ class RendererTest {
         subject.typeSize = typeSize
 
         // When
-        val single = subject.generatePath(glyphId)
+        val single = subject.getGlyphPath(glyphId)
         val run = subject.generatePath(IntList.of(glyphId, glyphId),
                                         PointList.of(0.0f, 0.0f, 0.0f, 0.0f), FloatList.of(40.0f, 40.0f))
         val singleBounds = RectF()
@@ -442,6 +445,187 @@ class RendererTest {
         assertEquals(runBounds.right, singleBounds.right + 40.0f, 1.0f)
         assertEquals(runBounds.left, singleBounds.left, 1.0f)
         assertNotEquals(runBounds.width(), singleBounds.width(), 1.0f)
+    }
+
+    @Test
+    fun testRenderScaleProperty() {
+        // When
+        subject.renderScale = 2.0f
+
+        // Then
+        assertEquals(subject.renderScale, 2.0f, 0.0f)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testRenderScaleMustBePositive() {
+        subject.renderScale = 0.0f
+    }
+
+    @Test
+    fun testGlyphCacheProperty() {
+        // Given
+        val cache = GlyphCache(1024L * 1024L)
+
+        // When
+        subject.glyphCache = cache
+
+        // Then
+        assertSame(cache, subject.glyphCache)
+    }
+
+    @Test
+    fun testGlyphCacheKeepsGlyphsOfRenderer() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        val cache = GlyphCache(1024L * 1024L)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+        subject.glyphCache = cache
+
+        // When
+        val image = subject.getGlyphImage(glyphId)
+
+        // Then
+        assertNotNull(image)
+        assertTrue(cache.size > 0L)
+    }
+
+    @Test
+    fun testRenderScaleChangesImageSize() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // When
+        val normal = subject.getGlyphImage(glyphId)!!
+        subject.renderScale = 2.0f
+        val doubled = subject.getGlyphImage(glyphId)!!
+
+        // Then
+        assertTrue(doubled.width > normal.width)
+        assertTrue(doubled.height > normal.height)
+    }
+
+    @Test
+    fun testGetGlyphImage() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // When
+        val image = subject.getGlyphImage(glyphId)!!
+
+        // Then
+        assertEquals(GlyphImageFormat.ALPHA, image.format)
+        assertTrue(image.width > 0)
+        assertTrue(image.height > 0)
+    }
+
+    @Test
+    fun testGetGlyphImageOfSpaceIsNull() {
+        // Given
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // Then
+        assertNull(subject.getGlyphImage(typeface.getGlyphId(' '.code)))
+        assertNull(subject.getStrokeImage(typeface.getGlyphId(' '.code)))
+    }
+
+    @Test
+    fun testGetGlyphImageWithoutTypefaceIsNull() {
+        assertNull(subject.getGlyphImage(10))
+    }
+
+    @Test
+    fun testGetStrokeImageIsLargerThanOutlineForThickStroke() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+        subject.strokeRadius = 4.0f
+
+        // When
+        val fill = subject.getGlyphImage(glyphId)!!
+        val stroke = subject.getStrokeImage(glyphId)!!
+
+        // Then
+        assertEquals(GlyphImageFormat.ALPHA, stroke.format)
+        assertTrue(stroke.width >= fill.width)
+    }
+
+    @Test
+    fun testStrokeRadiusChangesStrokeImage() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // When
+        subject.strokeRadius = 1.0f
+        val thin = subject.getStrokeImage(glyphId)!!
+        subject.strokeRadius = 5.0f
+        val thick = subject.getStrokeImage(glyphId)!!
+
+        // Then
+        assertTrue(thick.width > thin.width)
+        assertTrue(thick.height > thin.height)
+    }
+
+    @Test
+    fun testForegroundColorDrawsGlyphs() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+        subject.foregroundColor = Color.RED
+
+        // When
+        val bitmap = drawGlyph(glyphId, 50.0f)
+        var isRed = false
+        for (x in 0 until bitmap.width) {
+            for (y in 0 until bitmap.height) {
+                val pixel = bitmap.getPixel(x, y)
+                if (Color.alpha(pixel) == 255 && Color.red(pixel) == 255 && Color.green(pixel) == 0) {
+                    isRed = true
+                }
+            }
+        }
+
+        // Then
+        assertTrue(isRed)
+    }
+
+    @Test
+    fun testSkewXProperty() {
+        // Given
+        val glyphId = typeface.getGlyphId('ت'.code)
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // When
+        val upright = subject.getGlyphImage(glyphId)!!
+        subject.skewX = 0.5f
+        val skewed = subject.getGlyphImage(glyphId)!!
+
+        // Then
+        assertEquals(0.5f, subject.skewX, 0.0f)
+        assertTrue(skewed.width > upright.width)
+    }
+
+    @Test
+    fun testGlyphPathIsEmptyForSpace() {
+        // Given
+        subject.typeface = typeface
+        subject.typeSize = typeSize
+
+        // When
+        val path = subject.getGlyphPath(typeface.getGlyphId(' '.code))
+
+        // Then
+        assertTrue(path.isEmpty)
     }
 }
 

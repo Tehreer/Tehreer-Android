@@ -31,17 +31,16 @@ import com.mta.tehreer.internal.Description
 import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.layout.Paragraphs
 import com.mta.tehreer.internal.util.FloatCollector
-import java.util.NavigableMap
 
 /**
  * Represents a frame containing multiple lines of text. The frame object is the output resulting
  * from text-framing process performed by a typesetter object.
  */
 class ComposedFrame internal constructor(
-    private val nativeFrame: Long,
+    internal val nativeFrame: Long,
     private val source: Spanned,
     typefaces: Map<Long, Typeface>,
-    holders: NavigableMap<Int, ReplacementHolder>
+    holders: Map<Long, ReplacementHolder>
 ) {
     private class Finalizable(private val nativeFrame: Long) {
         @Suppress("unused")
@@ -90,7 +89,9 @@ class ComposedFrame internal constructor(
         get() = nGetHeight(nativeFrame)
 
     /**
-     * Returns the index of line containing the specified character.
+     * Returns the index of line containing the specified character. The end index of the frame,
+     * which is the insertion point after its last character, belongs to the last line. The result
+     * is `-1` if the frame has no lines.
      *
      * @param charIndex The index of character for which to return the line index.
      * @return The index of line containing the specified character.
@@ -106,10 +107,7 @@ class ComposedFrame internal constructor(
             "Char Index: $charIndex, Frame Range: [$charStart..$charEnd)"
         }
 
-        val lineIndex = nGetLineIndexForCodeUnit(nativeFrame, charIndex)
-
-        // The end of the frame is not in any line, and belongs to the last one.
-        return if (lineIndex >= 0) lineIndex else lines.size - 1
+        return nGetLineIndexForCodeUnit(nativeFrame, charIndex)
     }
 
     /**
@@ -119,7 +117,7 @@ class ComposedFrame internal constructor(
      * @param y The y- coordinate of position.
      * @return The index of a suitable line representing the specified position.
      */
-    fun getLineIndexForPosition(x: Float, y: Float): Int {
+    fun getLineIndexAtPosition(x: Float, y: Float): Int {
         return nGetLineIndexAtPosition(nativeFrame, x, y)
     }
 
@@ -234,20 +232,6 @@ class ComposedFrame internal constructor(
                 }
             }
         }
-    }
-
-    /**
-     * Creates a locator that finds the lines of this frame visible in a rectangle. The ink boxes of
-     * the lines are measured with the given renderer, which is the one that draws the frame.
-     *
-     * @param renderer The renderer that decides how the glyphs are measured.
-     * @return A new line locator.
-     *
-     * @throws IllegalStateException if the locator could not be created, for example when the
-     *         lines are placed billions of units apart.
-     */
-    fun createLineLocator(renderer: Renderer): LineLocator {
-        return LineLocator(nativeFrame, renderer.nativeHandle)
     }
 
     /**

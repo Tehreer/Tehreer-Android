@@ -165,12 +165,12 @@ class FrameResolverTest {
 
             assertEquals(i, frame.getLineIndexForChar(line.startIndex))
             assertEquals(i, frame.getLineIndexForChar(line.endIndex - 1))
-            assertEquals(i, frame.getLineIndexForPosition(0.0f, line.originY))
+            assertEquals(i, frame.getLineIndexAtPosition(0.0f, line.originY))
         }
 
         // The end of the frame and the points below it belong to the last line.
         assertEquals(lines.size - 1, frame.getLineIndexForChar(TEXT.length))
-        assertEquals(lines.size - 1, frame.getLineIndexForPosition(0.0f, 5000.0f))
+        assertEquals(lines.size - 1, frame.getLineIndexAtPosition(0.0f, 5000.0f))
     }
 
     @Test

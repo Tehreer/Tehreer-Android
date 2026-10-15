@@ -90,14 +90,14 @@ class DrawTest {
     @Test
     fun testShadowIsDrawnByCore() {
         val shadowed = Renderer()
-        shadowed.fillColor = Color.RED
+        shadowed.foregroundColor = Color.RED
         shadowed.shadowRadius = 0.5f
         shadowed.shadowDx = 4.0f
         shadowed.shadowDy = 4.0f
         shadowed.shadowColor = Color.BLUE
 
         val plain = Renderer()
-        plain.fillColor = Color.RED
+        plain.foregroundColor = Color.RED
 
         val frame = frameOf(styled("Hello"))
         val withShadow = draw(frame, shadowed)
@@ -114,7 +114,7 @@ class DrawTest {
     @Test
     fun testGlyphsAreDrawnInRendererColor() {
         val renderer = Renderer()
-        renderer.fillColor = Color.RED
+        renderer.foregroundColor = Color.RED
 
         val bitmap = draw(frameOf(styled("Hello")), renderer)
 
@@ -127,7 +127,7 @@ class DrawTest {
         spanned.setSpan(ForegroundColorSpan(Color.BLUE), 0, 5, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
 
         val renderer = Renderer()
-        renderer.fillColor = Color.RED
+        renderer.foregroundColor = Color.RED
 
         val bitmap = draw(frameOf(spanned), renderer)
 
@@ -160,7 +160,7 @@ class DrawTest {
     fun testLineIsDrawnAtItsOrigin() {
         val frame = frameOf(styled("Hello"))
         val renderer = Renderer()
-        renderer.fillColor = Color.BLACK
+        renderer.foregroundColor = Color.BLACK
 
         val bitmap = Bitmap.createBitmap(300, 100, Bitmap.Config.ARGB_8888)
         bitmap.eraseColor(Color.WHITE)

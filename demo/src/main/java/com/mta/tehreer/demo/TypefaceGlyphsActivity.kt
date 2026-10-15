@@ -94,7 +94,7 @@ private class GlyphDrawable(
 
         this.renderer = renderer
         this.glyphId = IntList.of(glyphId)
-        this.glyphBounds = renderer.computeBoundingBox(glyphId)
+        this.glyphBounds = renderer.computeInkBox(glyphId)
         this.fontAscent = typeface.ascent * sizeByEm
         this.fontDescent = typeface.descent * sizeByEm
     }

@@ -45,7 +45,7 @@
             app:gravity="right"
             app:drawStyle="fill_stroke"
             app:strokeColor="#FF7F00"
-            app:strokeWidth=".5sp"
+            app:strokeRadius=".25sp"
             app:textColor="@color/colorPrimary"
             app:textSize="28sp"
             app:typeface="@id/typeface_taj_nastaleeq" />

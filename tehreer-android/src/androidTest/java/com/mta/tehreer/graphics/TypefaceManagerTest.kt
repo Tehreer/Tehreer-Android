@@ -69,4 +69,23 @@ class TypefaceManagerTest {
         )
         assertSame(typeface, TypefaceManager.getTypefaceByName(typeface.fullName))
     }
+
+    @Test
+    fun testFamilyIdLookup() {
+        TypefaceManager.registerTypeface(typeface, 4001, 77)
+
+        assertEquals(77, TypefaceManager.getTypefaceFamilyId(typeface))
+    }
+
+    @Test
+    fun testFamilyIdIsZeroWithoutOne() {
+        TypefaceManager.registerTypeface(typeface)
+
+        assertEquals(0, TypefaceManager.getTypefaceFamilyId(typeface))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testFamilyIdOfUnregisteredTypefaceFails() {
+        TypefaceManager.getTypefaceFamilyId(typeface)
+    }
 }

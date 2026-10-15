@@ -16,7 +16,6 @@
 
 package com.mta.tehreer.graphics
 
-import android.content.res.AssetManager
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.Rect
@@ -27,12 +26,10 @@ import com.mta.tehreer.internal.JniBridge
 import com.mta.tehreer.internal.collections.FloatBufferList
 import com.mta.tehreer.internal.collections.Int32BufferIntList
 import com.mta.tehreer.sfnt.SfntTag
-import java.io.File
-import java.io.InputStream
 
 /**
  * The `Typeface` class specifies the typeface and intrinsic style of a font. This is used in the
- * renderer, along with optionally Renderer settings like typeSize, slantAngle, scaleX, to specify
+ * renderer, along with optionally Renderer settings like typeSize, skewX, scaleX, to specify
  * how text appears when drawn (and measured).
  */
 class Typeface {
@@ -110,56 +107,6 @@ class Typeface {
     private val defaults: DefaultProperties
     private val finalizable: Finalizable
 
-    /**
-     * Constructs a typeface from the specified asset. The data of the asset is not copied into the
-     * memory. Rather, it is directly read from the stream when needed. So the performance of
-     * resulting typeface might be slower and should be used with caution.
-     *
-     * @param assetManager The application's asset manager.
-     * @param filePath The path of the font file in the assets directory.
-     *
-     * @throws RuntimeException if an error occurred while initialization.
-     */
-    constructor(assetManager: AssetManager, filePath: String) : this(
-        nCreateWithAsset(assetManager, filePath).also {
-            if (it == 0L) {
-                throw RuntimeException("Could not create typeface from specified asset")
-            }
-        }
-    )
-
-    /**
-     * Constructs a typeface from the specified file. The data for the font is directly read from
-     * the file when needed.
-     *
-     * @param file The font file.
-     *
-     * @throws RuntimeException if an error occurred while initialization.
-     */
-    constructor(file: File) : this(
-        nCreateWithFile(file.absolutePath).also {
-            if (it == 0L) {
-                throw RuntimeException("Could not create typeface from specified file")
-            }
-        }
-    )
-
-    /**
-     * Constructs a new typeface from the input stream by copying its data into a native memory
-     * buffer. It may take time to create the typeface if the stream holds larger data.
-     *
-     * @param stream The input stream that contains the data of the font.
-     *
-     * @throws RuntimeException if an error occurred while initialization.
-     */
-    constructor(stream: InputStream) : this(
-        nCreateFromStream(stream).also {
-            if (it == 0L) {
-                throw RuntimeException("Could not create typeface from specified stream")
-            }
-        }
-    )
-
     internal constructor(nativeTypeface: Long) {
         this.nativeTypeface = nativeTypeface
         this.defaults = DefaultProperties(this)
@@ -178,7 +125,7 @@ class Typeface {
      * @return `true` if this typeface supports OpenType font variations.
      */
     val isVariable: Boolean
-        get() = variationAxes != null
+        get() = nIsVariable(nativeTypeface)
 
     /**
      * Returns a variation instance of this typeface with the specified design coordinates.
@@ -448,6 +395,17 @@ class Typeface {
     }
 
     /**
+     * Returns the glyph id for the specified code point followed by a variation selector.
+     *
+     * @param codePoint The code point for which the glyph id is obtained.
+     * @param selector The code point of the variation selector.
+     * @return The glyph id of the variant, or 0 if this typeface has no such variant.
+     */
+    fun getVariantGlyphId(codePoint: Int, selector: Int): Int {
+        return nGetVariantGlyphId(nativeTypeface, codePoint, selector)
+    }
+
+    /**
      * Retrieves the advance for the specified glyph.
      *
      * @param glyphId The glyph id for which to retrieve the advance.
@@ -579,6 +537,8 @@ class Typeface {
     private external fun nGetLeading(nativeTypeface: Long): Int
     private external fun nGetGlyphCount(nativeTypeface: Long): Int
     private external fun nGetGlyphId(nativeTypeface: Long, codePoint: Int): Int
+    private external fun nGetVariantGlyphId(nativeTypeface: Long, codePoint: Int, selector: Int): Int
+    private external fun nIsVariable(nativeTypeface: Long): Boolean
     private external fun nGetGlyphAdvance(
         nativeTypeface: Long, glyphId: Int, typeSize: Float, vertical: Boolean
     ): Float
@@ -597,9 +557,6 @@ class Typeface {
             JniBridge.loadLibrary()
         }
 
-        @JvmStatic external fun nCreateWithAsset(assetManager: AssetManager, path: String): Long
-        @JvmStatic external fun nCreateWithFile(path: String): Long
-        @JvmStatic external fun nCreateFromStream(stream: InputStream): Long
 
         @JvmStatic external fun nDispose(nativeTypeface: Long)
 

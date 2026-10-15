@@ -71,6 +71,16 @@ static jfloat getWidth(JNIEnv *env, jobject obj, jlong handle)
     return TRComposedLineGetWidth(toLine(handle));
 }
 
+static jfloat getHeight(JNIEnv *env, jobject obj, jlong handle)
+{
+    return TRComposedLineGetHeight(toLine(handle));
+}
+
+static jboolean isTruncated(JNIEnv *env, jobject obj, jlong handle)
+{
+    return TRComposedLineIsTruncated(toLine(handle)) ? JNI_TRUE : JNI_FALSE;
+}
+
 static jfloat getTrailingWhitespaceExtent(JNIEnv *env, jobject obj, jlong handle)
 {
     return TRComposedLineGetTrailingWhitespaceExtent(toLine(handle));
@@ -97,7 +107,7 @@ static jlong getRun(JNIEnv *env, jobject obj, jlong handle, jint index)
     return reinterpret_cast<jlong>(TRComposedLineGetGlyphRun(toLine(handle), static_cast<TRUInteger>(index)));
 }
 
-static jfloat getDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
+static jfloat getCharDistance(JNIEnv *env, jobject obj, jlong handle, jint index)
 {
     TRFloat distance = 0.0f;
 
@@ -115,15 +125,15 @@ static void putEdge(void *userData, TRFloat left, TRFloat right, TRBoolean *stop
 }
 
 /* Hands the left and the right of each part that the range takes, one after the other. */
-static void enumerateEdges(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
+static void enumerateVisualEdges(JNIEnv *env, jobject obj, jlong handle, jint start, jint end,
     jobject collector)
 {
     FloatCollector floats(env, collector);
 
-    TRComposedLineEnumerateEdges(toLine(handle), toIndex(start), toLength(start, end), putEdge, &floats);
+    TRComposedLineEnumerateVisualEdges(toLine(handle), toIndex(start), toLength(start, end), putEdge, &floats);
 }
 
-static jint getIndexOfCodeUnit(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
+static jint getCharIndexAtDistance(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
 {
     return static_cast<jint>(TRComposedLineGetCodeUnitIndexAtDistance(toLine(handle), distance));
 }
@@ -134,7 +144,7 @@ static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushF
     return TRComposedLineGetPenOffset(toLine(handle), flushFactor, flushExtent);
 }
 
-static jobject getBoundingBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
+static jobject computeInkBox(JNIEnv *env, jobject obj, jlong handle, jlong rendererHandle)
 {
     TRRect box = TRComposedLineComputeInkBox(toLine(handle), toRenderer(rendererHandle));
 
@@ -165,16 +175,18 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetDescent", "(J)F", (void *)getDescent },
     { "nGetLeading", "(J)F", (void *)getLeading },
     { "nGetWidth", "(J)F", (void *)getWidth },
+    { "nGetHeight", "(J)F", (void *)getHeight },
+    { "nIsTruncated", "(J)Z", (void *)isTruncated },
     { "nGetTrailingWhitespaceExtent", "(J)F", (void *)getTrailingWhitespaceExtent },
     { "nGetOriginX", "(J)F", (void *)getOriginX },
     { "nGetOriginY", "(J)F", (void *)getOriginY },
     { "nGetRunCount", "(J)I", (void *)getRunCount },
     { "nGetRun", "(JI)J", (void *)getRun },
-    { "nGetDistance", "(JI)F", (void *)getDistance },
-    { "nEnumerateEdges", "(JIILcom/mta/tehreer/internal/util/FloatCollector;)V", (void *)enumerateEdges },
-    { "nGetIndexOfCodeUnit", "(JF)I", (void *)getIndexOfCodeUnit },
+    { "nGetCharDistance", "(JI)F", (void *)getCharDistance },
+    { "nEnumerateVisualEdges", "(JIILcom/mta/tehreer/internal/util/FloatCollector;)V", (void *)enumerateVisualEdges },
+    { "nGetCharIndexAtDistance", "(JF)I", (void *)getCharIndexAtDistance },
     { "nGetPenOffset", "(JFF)F", (void *)getPenOffset },
-    { "nGetBoundingBox", "(JJ)Landroid/graphics/RectF;", (void *)getBoundingBox },
+    { "nComputeInkBox", "(JJ)Landroid/graphics/RectF;", (void *)computeInkBox },
 };
 
 jint register_com_mta_tehreer_layout_ComposedLine(JNIEnv *env)

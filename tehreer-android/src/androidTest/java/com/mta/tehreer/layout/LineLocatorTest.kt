@@ -62,7 +62,7 @@ class LineLocatorTest {
     @Test
     fun testLineBoxesCoverTheLines() {
         val frame = frame()
-        val locator = frame.createLineLocator(Renderer())
+        val locator = LineLocator(frame, Renderer())
 
         assertEquals(frame.lines.size, locator.lineCount)
 
@@ -79,7 +79,7 @@ class LineLocatorTest {
     @Test
     fun testFindLinesInRect() {
         val frame = frame()
-        val locator = frame.createLineLocator(Renderer())
+        val locator = LineLocator(frame, Renderer())
         val all = locator.find(RectF(
             Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY,
             Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY
@@ -109,7 +109,7 @@ class LineLocatorTest {
     @Test
     fun testFirstLineIndexBelow() {
         val frame = frame()
-        val locator = frame.createLineLocator(Renderer())
+        val locator = LineLocator(frame, Renderer())
         val line = frame.lines[2]
 
         assertEquals(0, locator.getFirstLineIndexBelow(-10.0f))
@@ -120,6 +120,6 @@ class LineLocatorTest {
 
     @Test(expected = IndexOutOfBoundsException::class)
     fun testBadLineIndex() {
-        frame().createLineLocator(Renderer()).getLineBox(1000)
+        LineLocator(frame(), Renderer()).getLineBox(1000)
     }
 }

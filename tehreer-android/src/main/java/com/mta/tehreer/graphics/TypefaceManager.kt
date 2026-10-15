@@ -99,6 +99,22 @@ object TypefaceManager {
     }
 
     /**
+     * Returns the family ID of a registered typeface.
+     *
+     * @param typeface The typeface whose family ID is desired.
+     * @return The family ID of the typeface, or zero if it has none.
+     *
+     * @throws IllegalArgumentException if `typeface` is not registered.
+     */
+    fun getTypefaceFamilyId(typeface: Typeface): Int {
+        synchronized(this) {
+            require(registered.containsKey(typeface.nativeTypeface)) { "This typeface is not registered" }
+
+            return nGetTypefaceFamilyId(typeface.nativeTypeface)
+        }
+    }
+
+    /**
      * Returns the family whose name matches the given one, ignoring the case.
      *
      * @param familyName The name of the family.

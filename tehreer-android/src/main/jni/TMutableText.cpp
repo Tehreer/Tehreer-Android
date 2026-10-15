@@ -21,13 +21,12 @@
 #include <Tehreer/TRFontFeatures.h>
 #include <Tehreer/TRReplacement.h>
 #include <Tehreer/TRText.h>
-#include <Tehreer/TRTypesetter.h>
 
 #include "JavaBridge.h"
-#include "LayoutHandles.h"
 #include "ShapingEngine.h"
+#include "TMutableText.h"
+#include "TText.h"
 #include "Typeface.h"
-#include "Text.h"
 
 using namespace Tehreer;
 
@@ -99,37 +98,79 @@ static void finalizeReplacement(void *userData)
     }
 }
 
-static TRMutableTextRef toText(jlong handle)
-{
-    return reinterpret_cast<TRMutableTextRef>(handle);
-}
-
 static void setAttribute(jlong handle, jint start, jint end, const TRAttribute &attribute)
 {
-    TRTextSetAttribute(toText(handle), static_cast<TRUInteger>(start),
+    TRTextSetAttribute(toMutableText(handle), static_cast<TRUInteger>(start),
                        static_cast<TRUInteger>(end - start), &attribute);
 }
 
-/* Creates a text that is open for editing, so that its attributes can be set one by one. */
-static jlong createText(JNIEnv *env, jclass clazz, jstring jtext)
+
+static void beginEditing(JNIEnv *env, jclass clazz, jlong handle)
 {
-    jsize length = env->GetStringLength(jtext);
-    const jchar *chars = env->GetStringChars(jtext, nullptr);
-
-    TRMutableTextRef text = TRTextCreateMutable(TRStringEncodingUTF16);
-    if (text) {
-        TRTextBeginEditing(text);
-        TRTextAppendCodeUnits(text, chars, static_cast<TRUInteger>(length));
-    }
-
-    env->ReleaseStringChars(jtext, chars);
-
-    return reinterpret_cast<jlong>(text);
+    TRTextBeginEditing(toMutableText(handle));
 }
 
-static void disposeText(JNIEnv *env, jclass clazz, jlong handle)
+static void endEditing(JNIEnv *env, jclass clazz, jlong handle)
 {
-    TRTextRelease(toText(handle));
+    TRTextEndEditing(toMutableText(handle));
+}
+
+/* Gives the code units of a string to one of the editing functions of Core. */
+template <typename Edit>
+static jboolean withString(JNIEnv *env, jstring string, Edit edit)
+{
+    jsize length = env->GetStringLength(string);
+    const jchar *chars = env->GetStringChars(string, nullptr);
+    jboolean isDone = edit(chars, static_cast<TRUInteger>(length)) ? JNI_TRUE : JNI_FALSE;
+
+    env->ReleaseStringChars(string, chars);
+
+    return isDone;
+}
+
+static jboolean append(JNIEnv *env, jclass clazz, jlong handle, jstring string)
+{
+    return withString(env, string, [=](const jchar *chars, TRUInteger length) {
+        return TRTextAppendCodeUnits(toMutableText(handle), chars, length);
+    });
+}
+
+static jboolean insert(JNIEnv *env, jclass clazz, jlong handle, jint index, jstring string)
+{
+    return withString(env, string, [=](const jchar *chars, TRUInteger length) {
+        return TRTextInsertCodeUnits(toMutableText(handle), static_cast<TRUInteger>(index), chars,
+                                     length);
+    });
+}
+
+static jboolean deleteRange(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end)
+{
+    return TRTextDeleteCodeUnits(toMutableText(handle), static_cast<TRUInteger>(start),
+                                 static_cast<TRUInteger>(end - start)) ? JNI_TRUE : JNI_FALSE;
+}
+
+static jboolean replace(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+    jstring string)
+{
+    return withString(env, string, [=](const jchar *chars, TRUInteger length) {
+        return TRTextReplaceCodeUnits(toMutableText(handle), static_cast<TRUInteger>(start),
+                                      static_cast<TRUInteger>(end - start), chars, length);
+    });
+}
+
+static jboolean setString(JNIEnv *env, jclass clazz, jlong handle, jstring string)
+{
+    return withString(env, string, [=](const jchar *chars, TRUInteger length) {
+        return TRTextSetCodeUnits(toMutableText(handle), chars, length);
+    });
+}
+
+static jboolean removeAttribute(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
+    jint type)
+{
+    return TRTextRemoveAttribute(toMutableText(handle), static_cast<TRUInteger>(start),
+                                 static_cast<TRUInteger>(end - start),
+                                 static_cast<TRAttributeType>(type)) ? JNI_TRUE : JNI_FALSE;
 }
 
 static void setTypeface(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
@@ -305,8 +346,14 @@ static void setFirstIndentLineCount(JNIEnv *env, jclass clazz, jlong handle, jin
 }
 
 static JNINativeMethod TEXT_METHODS[] = {
-    { "nCreateText", "(Ljava/lang/String;)J", (void *)createText },
-    { "nDisposeText", "(J)V", (void *)disposeText },
+    { "nBeginEditing", "(J)V", (void *)beginEditing },
+    { "nEndEditing", "(J)V", (void *)endEditing },
+    { "nAppend", "(JLjava/lang/String;)Z", (void *)append },
+    { "nInsert", "(JILjava/lang/String;)Z", (void *)insert },
+    { "nDelete", "(JII)Z", (void *)deleteRange },
+    { "nReplace", "(JIILjava/lang/String;)Z", (void *)replace },
+    { "nSetString", "(JLjava/lang/String;)Z", (void *)setString },
+    { "nRemoveAttribute", "(JIII)Z", (void *)removeAttribute },
     { "nSetTypeface", "(JIIJ)V", (void *)setTypeface },
     { "nSetTypeSize", "(JIIF)V", (void *)setTypeSize },
     { "nSetScaleX", "(JIIF)V", (void *)setScaleX },
@@ -327,7 +374,7 @@ static JNINativeMethod TEXT_METHODS[] = {
     { "nSetFirstIndentLineCount", "(JIII)V", (void *)setFirstIndentLineCount },
 };
 
-jint register_com_mta_tehreer_layout_Text(JNIEnv *env)
+jint register_com_mta_tehreer_layout_TMutableText(JNIEnv *env)
 {
     env->GetJavaVM(&javaVM);
 
@@ -340,6 +387,6 @@ jint register_com_mta_tehreer_layout_Text(JNIEnv *env)
         return JNI_ERR;
     }
 
-    return JavaBridge::registerClass(env, "com/mta/tehreer/layout/Text", TEXT_METHODS,
+    return JavaBridge::registerClass(env, "com/mta/tehreer/layout/TMutableText", TEXT_METHODS,
                                      sizeof(TEXT_METHODS) / sizeof(TEXT_METHODS[0]));
 }

@@ -49,7 +49,7 @@
             <enum name="stroke" value="2" />
         </attr>
         <attr name="strokeColor" format="color" />
-        <attr name="strokeWidth" format="dimension" />
+        <attr name="strokeRadius" format="dimension" />
         <attr name="strokeCap" format="enum">
             <enum name="butt" value="0" />
             <enum name="round" value="1" />
@@ -87,7 +87,7 @@
         <attr name="typeface" />
         <attr name="drawStyle" />
         <attr name="strokeColor" />
-        <attr name="strokeWidth" />
+        <attr name="strokeRadius" />
         <attr name="strokeCap" />
         <attr name="strokeJoin" />
         <attr name="strokeMiter" />
