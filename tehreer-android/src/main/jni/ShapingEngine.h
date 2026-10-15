@@ -17,13 +17,10 @@
 #ifndef _TEHREER__SHAPING_ENGINE_H
 #define _TEHREER__SHAPING_ENGINE_H
 
-#include <cstdint>
 #include <jni.h>
 #include <vector>
 
 #include <Tehreer/TRShapingEngine.h>
-
-#include "ShapingResult.h"
 
 namespace Tehreer {
 
@@ -45,47 +42,6 @@ inline std::vector<TROpenTypeFeature> readOpenTypeFeatures(JNIEnv *env, jintArra
 
     return features;
 }
-
-/**
- * Shapes text with the shaping engine of Core. The engine of Core has no getters, so the settings
- * are kept here too.
- */
-class ShapingEngine {
-public:
-    static TRWritingDirection getScriptDefaultDirection(uint32_t scriptTag);
-
-    ShapingEngine();
-    ~ShapingEngine();
-
-    void setTypeface(TRTypefaceRef typeface);
-
-    jfloat typeSize() const { return m_typeSize; }
-    void setTypeSize(jfloat typeSize);
-
-    uint32_t scriptTag() const { return m_scriptTag; }
-    void setScriptTag(uint32_t scriptTag);
-
-    uint32_t languageTag() const { return m_languageTag; }
-    void setLanguageTag(uint32_t languageTag);
-
-    void setOpenTypeFeatures(const std::vector<TROpenTypeFeature> &features);
-
-    TRShapingOrder shapingOrder() const { return m_shapingOrder; }
-    void setShapingOrder(TRShapingOrder shapingOrder);
-
-    TRWritingDirection writingDirection() const { return m_writingDirection; }
-    void setWritingDirection(TRWritingDirection writingDirection);
-
-    void shapeText(ShapingResult &shapingResult, const jchar *charArray, jint fromIndex, jint toIndex);
-
-private:
-    TRShapingEngineRef m_core;
-    jfloat m_typeSize;
-    uint32_t m_scriptTag;
-    uint32_t m_languageTag;
-    TRShapingOrder m_shapingOrder;
-    TRWritingDirection m_writingDirection;
-};
 
 }
 
