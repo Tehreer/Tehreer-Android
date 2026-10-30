@@ -1,48 +1,69 @@
 name: build
 
 on:
-  pull_request:
   push:
-    branches: [ master, develop ]
-
+    branches: [master, develop]
+    paths-ignore:
+      - '*.md'
+  pull_request:
+    paths-ignore:
+      - '*.md'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
-    runs-on: macos-latest
-    timeout-minutes: 30
+    name: Build and Instrumentation Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up JDK environment
-        uses: actions/setup-java@v3
+        uses: actions/checkout@v7
         with:
-          distribution: 'zulu'
-          java-version: 11
+          submodules: recursive
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
-      - name: Setup NDK
-        uses: nttld/setup-ndk@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v5
         with:
-          ndk-version: r21e
+          distribution: temurin
+          java-version: 21
 
-      - name: Register NDK
-        run: "echo 'ndk.path=${{ steps.setup-ndk.outputs.ndk-path }}' >> local.properties"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
 
-      - name: Assemble Android Test 
-        run: ./gradlew assembleAndroidTest --stacktrace
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
-      - name: Run Instrumentation Tests
+      - name: Install NDK and CMake
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+            "ndk;28.2.13676358" "cmake;3.22.1"
+
+      - name: Build and Test
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          script: ./gradlew connectedCheck --stacktrace
+          arch: x86_64
+          target: google_apis
+          script: bundle exec fastlane android ci
 
-      - name: Upload Coverage Report
-        uses: codecov/codecov-action@v3
+      - name: Upload Test Reports
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          files: "tehreer-android/build/reports/coverage/androidTest/debug/report.xml"
-          verbose: true
+          name: android-test-reports
+          path: tehreer-android/build/reports/androidTests

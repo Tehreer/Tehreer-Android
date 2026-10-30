@@ -1,0 +1,59 @@
+default_platform(:android)
+
+RUNNER_ARGUMENTS = "android.testInstrumentationRunnerArguments"
+WIDGET_PACKAGE = "com.mta.tehreer.widget"
+WIDGET_DIRECTORY = "tehreer-android/src/androidTest/java/com/mta/tehreer/widget"
+
+# Crash the process in SheenBidi's SBMirrorLocatorRelease.
+CRASHING_CLASSES = [
+  "com.mta.tehreer.unicode.BidiMirrorLocatorTest",
+  "com.mta.tehreer.unicode.BidiLineMirrorIterableTest",
+  "com.mta.tehreer.unicode.BidiLineMirrorIteratorTest"
+]
+
+platform :android do
+  desc "Build the library, its instrumentation tests and the demo"
+  lane :build do
+    gradle(
+      tasks: [
+        ":tehreer-android:assembleDebug",
+        ":tehreer-android:assembleAndroidTest",
+        ":demo:assembleDebug"
+      ],
+      flags: "--stacktrace"
+    )
+  end
+
+  desc "Run the instrumentation tests on the attached device or emulator"
+  lane :test do
+    gradle(
+      task: ":tehreer-android:connectedDebugAndroidTest",
+      properties: {
+        "#{RUNNER_ARGUMENTS}.notClass" => CRASHING_CLASSES.join(","),
+        "#{RUNNER_ARGUMENTS}.notPackage" => WIDGET_PACKAGE
+      },
+      flags: "--stacktrace"
+    )
+
+    # Running all widget tests in one process is flaky (heap crash), so run
+    # one class per Gradle call.
+    widget_classes = Dir.glob(File.join("..", WIDGET_DIRECTORY, "*Test.kt"))
+                        .map { |path| File.basename(path, ".kt") }
+                        .sort
+    UI.user_error!("No widget tests found in #{WIDGET_DIRECTORY}") if widget_classes.empty?
+
+    widget_classes.each do |name|
+      gradle(
+        task: ":tehreer-android:connectedDebugAndroidTest",
+        properties: { "#{RUNNER_ARGUMENTS}.class" => "#{WIDGET_PACKAGE}.#{name}" },
+        flags: "--stacktrace"
+      )
+    end
+  end
+
+  desc "Build everything and run all tests"
+  lane :ci do
+    build
+    test
+  end
+end
