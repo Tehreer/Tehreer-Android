@@ -84,6 +84,17 @@ static jint getLineIndexAtPosition(JNIEnv *env, jobject obj, jlong handle, jfloa
     return static_cast<jint>(TRComposedFrameGetLineIndexAtPosition(toFrame(handle), position));
 }
 
+static jint getClusterStartAtPosition(JNIEnv *env, jobject obj, jlong handle, jfloat x, jfloat y)
+{
+    TRPoint position;
+    position.x = x;
+    position.y = y;
+
+    TRUInteger index = TRComposedFrameGetClusterStartAtPosition(toFrame(handle), position);
+
+    return (index != TRInvalidIndex ? static_cast<jint>(index) : -1);
+}
+
 static void putSelectionRect(void *userData, TRRect rect, TRBoolean *stop)
 {
     auto collector = static_cast<const FloatCollector *>(userData);
@@ -126,6 +137,7 @@ static JNINativeMethod FRAME_METHODS[] = {
     { "nGetLine", "(JI)J", (void *)getFrameLine },
     { "nGetLineIndexForCodeUnit", "(JI)I", (void *)getLineIndexForCodeUnit },
     { "nGetLineIndexAtPosition", "(JFF)I", (void *)getLineIndexAtPosition },
+    { "nGetClusterStartAtPosition", "(JFF)I", (void *)getClusterStartAtPosition },
     { "nEnumerateSelection", "(JIILcom/mta/tehreer/internal/util/FloatCollector;)V", (void *)enumerateSelection },
 };
 

@@ -246,8 +246,8 @@ open class TLabel : View {
     }
 
     /**
-     * Performs hit testing. Returns the index of character representing the specified position, or
-     * -1 if there is no character at this position.
+     * Performs hit testing. Returns the index of the first character of the cluster that is under
+     * the specified position, or -1 if there is no character at this position.
      *
      * @param x The x- coordinate of position.
      * @param y The y- coordinate of position.
@@ -259,21 +259,7 @@ open class TLabel : View {
         val adjustedX = x - frameLeft
         val adjustedY = y - frameTop
 
-        val lineIndex = frame.getLineIndexAtPosition(adjustedX, adjustedY)
-        val composedLine = frame.lines[lineIndex]
-        val lineLeft = composedLine.originX
-        val lineRight = lineLeft + composedLine.width
-
-        // Check if position exists within the line horizontally.
-        if (adjustedX in lineLeft..lineRight) {
-            val charIndex = composedLine.getCharIndexAtDistance(adjustedX - lineLeft)
-            val lastIndex = composedLine.endIndex - 1
-
-            // Make sure to provide character of this line.
-            return minOf(charIndex, lastIndex)
-        }
-
-        return -1
+        return frame.getClusterStartAtPosition(adjustedX, adjustedY)
     }
 
     /**

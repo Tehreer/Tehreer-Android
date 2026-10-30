@@ -191,6 +191,18 @@ class FrameResolverTest {
     }
 
     @Test
+    fun testClusterStartAtPosition() {
+        val frame = frameOf(styled(TEXT), resolver(200.0f, 1000.0f))
+        val line = frame.lines.get(1)
+        val y = line.originY + (line.descent - line.ascent) / 2.0f
+        val x = line.originX + line.getCharDistance(line.startIndex + 1) - 0.5f
+
+        assertEquals(line.startIndex, frame.getClusterStartAtPosition(x, y))
+        assertEquals(-1, frame.getClusterStartAtPosition(x, -5000.0f))
+        assertEquals(-1, frame.getClusterStartAtPosition(-5000.0f, y))
+    }
+
+    @Test
     fun testSelectionPath() {
         val frame = frameOf(styled(TEXT), resolver(200.0f, 1000.0f))
         val lines: List<ComposedLine> = frame.lines

@@ -138,6 +138,13 @@ static jint getCharIndexAtDistance(JNIEnv *env, jobject obj, jlong handle, jfloa
     return static_cast<jint>(TRComposedLineGetCodeUnitIndexAtDistance(toLine(handle), distance));
 }
 
+static jint getClusterStartAtDistance(JNIEnv *env, jobject obj, jlong handle, jfloat distance)
+{
+    TRUInteger index = TRComposedLineGetClusterStartAtDistance(toLine(handle), distance);
+
+    return (index != TRInvalidIndex ? static_cast<jint>(index) : -1);
+}
+
 static jfloat getPenOffset(JNIEnv *env, jobject obj, jlong handle, jfloat flushFactor,
     jfloat flushExtent)
 {
@@ -185,6 +192,7 @@ static JNINativeMethod JNI_METHODS[] = {
     { "nGetCharDistance", "(JI)F", (void *)getCharDistance },
     { "nEnumerateVisualEdges", "(JIILcom/mta/tehreer/internal/util/FloatCollector;)V", (void *)enumerateVisualEdges },
     { "nGetCharIndexAtDistance", "(JF)I", (void *)getCharIndexAtDistance },
+    { "nGetClusterStartAtDistance", "(JF)I", (void *)getClusterStartAtDistance },
     { "nGetPenOffset", "(JFF)F", (void *)getPenOffset },
     { "nComputeInkBox", "(JJ)Landroid/graphics/RectF;", (void *)computeInkBox },
 };

@@ -195,6 +195,20 @@ class ComposedLine internal constructor(
     }
 
     /**
+     * Returns the index of the first character of the cluster that covers the specified distance.
+     * A cluster is never split, so unlike [getCharIndexAtDistance], which gives the nearest
+     * boundary, this gives the cluster that is hit, for either direction of text.
+     *
+     * @param distance The distance from the left edge of this line.
+     * @return The absolute index of the first character of the cluster in source string, or `-1`
+     *         if nothing is hit: the distance is before the left edge or at or after the right
+     *         edge of the runs, it is NaN, it is on a truncation token, or the line has no runs.
+     */
+    fun getClusterStartAtDistance(distance: Float): Int {
+        return nGetClusterStartAtDistance(nativeLine, distance)
+    }
+
+    /**
      * Calculates the ink box of this line. The ink box is a rectangle that encloses the
      * paths of this line's glyphs, as tightly as possible.
      *
@@ -275,6 +289,7 @@ class ComposedLine internal constructor(
         nativeLine: Long, fromIndex: Int, toIndex: Int, collector: FloatCollector
     )
     private external fun nGetCharIndexAtDistance(nativeLine: Long, distance: Float): Int
+    private external fun nGetClusterStartAtDistance(nativeLine: Long, distance: Float): Int
     private external fun nGetPenOffset(
         nativeLine: Long, flushFactor: Float, flushExtent: Float
     ): Float

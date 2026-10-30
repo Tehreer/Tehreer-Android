@@ -91,6 +91,18 @@ class ComposedLineTest {
     }
 
     @Test
+    fun testClusterStartAtDistance() {
+        val line = typesetter().createSimpleLine(0, TEXT.length)
+        val middle = (line.getCharDistance(10) + line.getCharDistance(11)) / 2.0f
+
+        assertEquals(10, line.getClusterStartAtDistance(middle))
+        assertEquals(0, line.getClusterStartAtDistance(0.0f))
+        assertEquals(-1, line.getClusterStartAtDistance(-10.0f))
+        assertEquals(-1, line.getClusterStartAtDistance(line.width + 100.0f))
+        assertEquals(-1, line.getClusterStartAtDistance(Float.NaN))
+    }
+
+    @Test
     fun testVisualEdges() {
         val line = typesetter().createSimpleLine(0, TEXT.length)
 

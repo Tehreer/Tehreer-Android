@@ -122,6 +122,22 @@ class ComposedFrame internal constructor(
     }
 
     /**
+     * Returns the index of the first character of the cluster that is under the specified
+     * position, which is the character that a point hits. The line is the one whose top and bottom
+     * have the y-coordinate of the position, and the x-coordinate is measured from the origin of
+     * that line. A cluster is never split.
+     *
+     * @param x The x- coordinate of position.
+     * @param y The y- coordinate of position.
+     * @return The absolute index of the first character of the cluster in source string, or `-1`
+     *         if no character is there: the position is above or below the lines, outside the
+     *         runs of the line, or the frame has no lines.
+     */
+    fun getClusterStartAtPosition(x: Float, y: Float): Int {
+        return nGetClusterStartAtPosition(nativeFrame, x, y)
+    }
+
+    /**
      * Generates a path that contains a set of rectangles covering the specified selection range.
      *
      * @param fromIndex The index to the first character of selection in source text.
@@ -313,6 +329,7 @@ class ComposedFrame internal constructor(
     private external fun nGetLine(nativeFrame: Long, index: Int): Long
     private external fun nGetLineIndexForCodeUnit(nativeFrame: Long, charIndex: Int): Int
     private external fun nGetLineIndexAtPosition(nativeFrame: Long, x: Float, y: Float): Int
+    private external fun nGetClusterStartAtPosition(nativeFrame: Long, x: Float, y: Float): Int
     private external fun nEnumerateSelection(
         nativeFrame: Long, fromIndex: Int, toIndex: Int, collector: FloatCollector
     )

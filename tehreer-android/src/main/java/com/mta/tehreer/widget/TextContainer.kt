@@ -664,32 +664,7 @@ internal class TextContainer : ViewGroup {
         val frameX = x - originInScrollView[0]
         val frameY = y - originInScrollView[1]
 
-        val line = frame.lines.firstOrNull {
-            val lineTop = it.originY - it.ascent
-            val lineBottom = it.originY + it.descent + it.leading
-
-            frameY in lineTop..lineBottom
-        } ?: return -1
-
-        val nearestIndex = getCharIndexInLine(line, frameX)
-        if (nearestIndex < 0) {
-            return -1
-        }
-
-        // The index is the nearest to the position, which is the one after the char when the
-        // position is on the trailing half of it. The char is the one whose box has it.
-        for (charIndex in intArrayOf(nearestIndex, nearestIndex - 1)) {
-            if (charIndex < line.startIndex) {
-                continue
-            }
-
-            val rects = computeSelectionRects(frame, charIndex, charIndex + 1)
-            if (rects.any { it.contains(frameX, frameY) }) {
-                return charIndex
-            }
-        }
-
-        return -1
+        return frame.getClusterStartAtPosition(frameX, frameY)
     }
 
     private fun getCharIndexInLine(line: ComposedLine, frameX: Float): Int {
