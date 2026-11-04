@@ -20,12 +20,12 @@
 #include <Tehreer/TRAttribute.h>
 #include <Tehreer/TRFontFeatures.h>
 #include <Tehreer/TRReplacement.h>
-#include <Tehreer/TRText.h>
+#include <Tehreer/TRTypesetter.h>
 
 #include "JavaBridge.h"
+#include "LayoutHandles.h"
+#include "MutableTypesetter.h"
 #include "ShapingEngine.h"
-#include "TMutableText.h"
-#include "TText.h"
 #include "Typeface.h"
 
 using namespace Tehreer;
@@ -100,19 +100,25 @@ static void finalizeReplacement(void *userData)
 
 static void setAttribute(jlong handle, jint start, jint end, const TRAttribute &attribute)
 {
-    TRTextSetAttribute(toMutableText(handle), static_cast<TRUInteger>(start),
+    TRTypesetterSetAttribute(toMutableTypesetter(handle), static_cast<TRUInteger>(start),
                        static_cast<TRUInteger>(end - start), &attribute);
 }
 
 
+static jlong createMutable(JNIEnv *env, jclass clazz)
+{
+    return reinterpret_cast<jlong>(
+        TRTypesetterCreateMutable(TRStringEncodingUTF16, nullptr, 0));
+}
+
 static void beginEditing(JNIEnv *env, jclass clazz, jlong handle)
 {
-    TRTextBeginEditing(toMutableText(handle));
+    TRTypesetterBeginEditing(toMutableTypesetter(handle));
 }
 
 static void endEditing(JNIEnv *env, jclass clazz, jlong handle)
 {
-    TRTextEndEditing(toMutableText(handle));
+    TRTypesetterEndEditing(toMutableTypesetter(handle));
 }
 
 /* Gives the code units of a string to one of the editing functions of Core. */
@@ -131,21 +137,21 @@ static jboolean withString(JNIEnv *env, jstring string, Edit edit)
 static jboolean append(JNIEnv *env, jclass clazz, jlong handle, jstring string)
 {
     return withString(env, string, [=](const jchar *chars, TRUInteger length) {
-        return TRTextAppendCodeUnits(toMutableText(handle), chars, length);
+        return TRTypesetterAppendCodeUnits(toMutableTypesetter(handle), chars, length);
     });
 }
 
 static jboolean insert(JNIEnv *env, jclass clazz, jlong handle, jint index, jstring string)
 {
     return withString(env, string, [=](const jchar *chars, TRUInteger length) {
-        return TRTextInsertCodeUnits(toMutableText(handle), static_cast<TRUInteger>(index), chars,
+        return TRTypesetterInsertCodeUnits(toMutableTypesetter(handle), static_cast<TRUInteger>(index), chars,
                                      length);
     });
 }
 
 static jboolean deleteRange(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end)
 {
-    return TRTextDeleteCodeUnits(toMutableText(handle), static_cast<TRUInteger>(start),
+    return TRTypesetterDeleteCodeUnits(toMutableTypesetter(handle), static_cast<TRUInteger>(start),
                                  static_cast<TRUInteger>(end - start)) ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -153,7 +159,7 @@ static jboolean replace(JNIEnv *env, jclass clazz, jlong handle, jint start, jin
     jstring string)
 {
     return withString(env, string, [=](const jchar *chars, TRUInteger length) {
-        return TRTextReplaceCodeUnits(toMutableText(handle), static_cast<TRUInteger>(start),
+        return TRTypesetterReplaceCodeUnits(toMutableTypesetter(handle), static_cast<TRUInteger>(start),
                                       static_cast<TRUInteger>(end - start), chars, length);
     });
 }
@@ -161,14 +167,14 @@ static jboolean replace(JNIEnv *env, jclass clazz, jlong handle, jint start, jin
 static jboolean setString(JNIEnv *env, jclass clazz, jlong handle, jstring string)
 {
     return withString(env, string, [=](const jchar *chars, TRUInteger length) {
-        return TRTextSetCodeUnits(toMutableText(handle), chars, length);
+        return TRTypesetterSetCodeUnits(toMutableTypesetter(handle), chars, length);
     });
 }
 
 static jboolean removeAttribute(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
     jint type)
 {
-    return TRTextRemoveAttribute(toMutableText(handle), static_cast<TRUInteger>(start),
+    return TRTypesetterRemoveAttribute(toMutableTypesetter(handle), static_cast<TRUInteger>(start),
                                  static_cast<TRUInteger>(end - start),
                                  static_cast<TRAttributeType>(type)) ? JNI_TRUE : JNI_FALSE;
 }
@@ -260,7 +266,7 @@ static void setLanguage(JNIEnv *env, jclass clazz, jlong handle, jint start, jin
     setAttribute(handle, start, end, attribute);
 }
 
-/* The text retains the features, so they are released after they are set. */
+/* The typesetter retains the features, so they are released after they are set. */
 static void setFontFeatures(JNIEnv *env, jclass clazz, jlong handle, jint start, jint end,
     jintArray tags, jintArray values)
 {
@@ -277,7 +283,7 @@ static void setFontFeatures(JNIEnv *env, jclass clazz, jlong handle, jint start,
     }
 }
 
-/* The holder decides the room of the replacement, and has to stay alive as long as the text. */
+/* The holder decides the room of the replacement, and has to stay alive as long as the typesetter. */
 static jlong createReplacement(JNIEnv *env, jclass clazz, jobject holder, jboolean isBlock)
 {
     TRReplacementCallbacks callbacks = {};
@@ -345,7 +351,8 @@ static void setFirstIndentLineCount(JNIEnv *env, jclass clazz, jlong handle, jin
     setAttribute(handle, start, end, attribute);
 }
 
-static JNINativeMethod TEXT_METHODS[] = {
+static JNINativeMethod MUTABLE_TYPESETTER_METHODS[] = {
+    { "nCreateMutable", "()J", (void *)createMutable },
     { "nBeginEditing", "(J)V", (void *)beginEditing },
     { "nEndEditing", "(J)V", (void *)endEditing },
     { "nAppend", "(JLjava/lang/String;)Z", (void *)append },
@@ -374,7 +381,7 @@ static JNINativeMethod TEXT_METHODS[] = {
     { "nSetFirstIndentLineCount", "(JIII)V", (void *)setFirstIndentLineCount },
 };
 
-jint register_com_mta_tehreer_layout_TMutableText(JNIEnv *env)
+jint register_com_mta_tehreer_layout_MutableTypesetter(JNIEnv *env)
 {
     env->GetJavaVM(&javaVM);
 
@@ -387,6 +394,6 @@ jint register_com_mta_tehreer_layout_TMutableText(JNIEnv *env)
         return JNI_ERR;
     }
 
-    return JavaBridge::registerClass(env, "com/mta/tehreer/layout/TMutableText", TEXT_METHODS,
-                                     sizeof(TEXT_METHODS) / sizeof(TEXT_METHODS[0]));
+    return JavaBridge::registerClass(env, "com/mta/tehreer/layout/MutableTypesetter", MUTABLE_TYPESETTER_METHODS,
+                                     sizeof(MUTABLE_TYPESETTER_METHODS) / sizeof(MUTABLE_TYPESETTER_METHODS[0]));
 }

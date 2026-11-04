@@ -38,15 +38,15 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TMutableTextTest {
+class MutableTypesetterTest {
     private companion object {
         const val DELTA = 0.01f
     }
 
     private val typeface = FontFileStore.sudo.typefaces[0]
 
-    private fun styled(string: String): TMutableText {
-        val subject = TMutableText(string)
+    private fun styled(string: String): MutableTypesetter {
+        val subject = MutableTypesetter(string)
         subject.setSpan(TypefaceSpan(typeface), 0, subject.length)
         subject.setSpan(TypeSizeSpan(20.0f), 0, subject.length)
 
@@ -55,7 +55,7 @@ class TMutableTextTest {
 
     @Test
     fun testEmptyText() {
-        val subject = TMutableText()
+        val subject = MutableTypesetter()
 
         assertTrue(subject.isMutable)
         assertEquals(0, subject.length)
@@ -64,7 +64,7 @@ class TMutableTextTest {
 
     @Test
     fun testAppend() {
-        val subject = TMutableText("Hello")
+        val subject = MutableTypesetter("Hello")
 
         subject.append(" world")
 
@@ -74,7 +74,7 @@ class TMutableTextTest {
 
     @Test
     fun testInsert() {
-        val subject = TMutableText("Hello world")
+        val subject = MutableTypesetter("Hello world")
 
         subject.insert(5, " wide")
         subject.insert(subject.length, "!")
@@ -84,12 +84,12 @@ class TMutableTextTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun testInsertPastTheEnd() {
-        TMutableText("abc").insert(4, "x")
+        MutableTypesetter("abc").insert(4, "x")
     }
 
     @Test
     fun testDelete() {
-        val subject = TMutableText("Hello wide world")
+        val subject = MutableTypesetter("Hello wide world")
 
         subject.delete(5, 10)
 
@@ -98,12 +98,12 @@ class TMutableTextTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun testDeleteOutOfRange() {
-        TMutableText("abc").delete(1, 4)
+        MutableTypesetter("abc").delete(1, 4)
     }
 
     @Test
     fun testReplace() {
-        val subject = TMutableText("Hello wide world")
+        val subject = MutableTypesetter("Hello wide world")
 
         subject.replace(6, 10, "narrow")
 
@@ -122,7 +122,7 @@ class TMutableTextTest {
 
     @Test
     fun testBatchEditing() {
-        val subject = TMutableText("a")
+        val subject = MutableTypesetter("a")
 
         subject.beginEditing()
         subject.append("b")
@@ -166,12 +166,12 @@ class TMutableTextTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun testSetSpanOutOfRange() {
-        TMutableText("abc").setSpan(UnderlineSpan(), 0, 4)
+        MutableTypesetter("abc").setSpan(UnderlineSpan(), 0, 4)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun testSetUnknownSpan() {
-        TMutableText("abc").setSpan(Any(), 0, 3)
+        MutableTypesetter("abc").setSpan(Any(), 0, 3)
     }
 
     @Test
@@ -224,7 +224,7 @@ class TMutableTextTest {
         assertSame(replacement, subject.getSpanRun(1)!!.spans.filterIsInstance<ReplacementSpan>().single())
         assertTrue(subject.getSpanRun(0)!!.spans.filterIsInstance<ReplacementSpan>().isEmpty())
 
-        val line = Typesetter(subject).createSimpleLine(0, 2)
+        val line = subject.createSimpleLine(0, 2)
         assertEquals(30.0f, line.runs.single { it.startIndex == 1 }.width, DELTA)
     }
 
@@ -240,7 +240,7 @@ class TMutableTextTest {
         subject.insert(0, "xyz")
 
         assertSame(replacement, subject.getSpanRun(4)!!.spans.filterIsInstance<ReplacementSpan>().single())
-        assertEquals(30.0f, Typesetter(subject).createSimpleLine(0, 5).runs.single { it.startIndex == 4 }.width, DELTA)
+        assertEquals(30.0f, subject.createSimpleLine(0, 5).runs.single { it.startIndex == 4 }.width, DELTA)
     }
 
     @Test
@@ -250,7 +250,7 @@ class TMutableTextTest {
         subject.setSpan(TypefaceSpan(typeface), 5, 11)
         subject.setSpan(TypeSizeSpan(20.0f), 5, 11)
 
-        val line = Typesetter(subject).createSimpleLine(0, 11)
+        val line = subject.createSimpleLine(0, 11)
 
         assertEquals(11, line.endIndex)
         assertTrue(line.width > 0.0f)
@@ -268,7 +268,7 @@ class TMutableTextTest {
         spanned.setSpan(TypeSizeSpan(20.0f), 0, 5, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
         spanned.setSpan(ForegroundColorSpan(Color.RED), 1, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-        val subject = TMutableText(spanned)
+        val subject = MutableTypesetter(spanned)
 
         assertTrue(subject.isMutable)
         assertEquals("Hello", subject.string)

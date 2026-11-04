@@ -37,7 +37,7 @@ import java.util.IdentityHashMap
  * are shaped together.
  */
 internal class SpannedConverter(
-    private val text: TMutableText,
+    private val text: MutableTypesetter,
     private val spanned: Spanned,
     private val defaultSpans: List<Any>
 ) {
