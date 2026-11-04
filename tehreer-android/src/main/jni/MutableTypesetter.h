@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef _TEHREER__TMUTABLE_TEXT_H
-#define _TEHREER__TMUTABLE_TEXT_H
+#ifndef _TEHREER__MUTABLE_TYPESETTER_H
+#define _TEHREER__MUTABLE_TYPESETTER_H
 
 #include <jni.h>
 
-jint register_com_mta_tehreer_layout_TMutableText(JNIEnv *env);
+jint register_com_mta_tehreer_layout_MutableTypesetter(JNIEnv *env);
 
 #endif

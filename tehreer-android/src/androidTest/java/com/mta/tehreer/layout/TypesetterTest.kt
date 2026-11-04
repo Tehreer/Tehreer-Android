@@ -42,7 +42,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TTextTest {
+class TypesetterTest {
     private companion object {
         const val STRING = "Hello wide world"
         const val DELTA = 0.01f
@@ -64,7 +64,7 @@ class TTextTest {
 
     @Test
     fun testStringText() {
-        val subject = TText(STRING)
+        val subject = Typesetter(STRING)
 
         assertEquals(STRING.length, subject.length)
         assertEquals(STRING, subject.string)
@@ -74,7 +74,7 @@ class TTextTest {
 
     @Test
     fun testStringTextHasNoSpans() {
-        val run = TText(STRING).getSpanRun(0)!!
+        val run = Typesetter(STRING).getSpanRun(0)!!
 
         assertTrue(run.spans.isEmpty())
         assertEquals(STRING.length, run.length)
@@ -82,7 +82,7 @@ class TTextTest {
 
     @Test
     fun testEmptyText() {
-        val subject = TText("")
+        val subject = Typesetter("")
 
         assertEquals(0, subject.length)
         assertEquals("", subject.string)
@@ -91,7 +91,7 @@ class TTextTest {
 
     @Test
     fun testSubstring() {
-        val subject = TText(STRING)
+        val subject = Typesetter(STRING)
 
         assertEquals("wide", subject.getString(6, 10))
         assertEquals("", subject.getString(3, 3))
@@ -99,12 +99,12 @@ class TTextTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun testSubstringOutOfRange() {
-        TText(STRING).getString(0, STRING.length + 1)
+        Typesetter(STRING).getString(0, STRING.length + 1)
     }
 
     @Test
     fun testSpannedText() {
-        val subject = TText(spanned())
+        val subject = Typesetter(spanned())
 
         assertEquals(STRING, subject.string)
         assertFalse(subject.isMutable)
@@ -112,7 +112,7 @@ class TTextTest {
 
     @Test
     fun testSpanRunsOfSpannedText() {
-        val subject = TText(spanned())
+        val subject = Typesetter(spanned())
 
         val first = subject.getSpanRun(0)!!
         assertEquals(6, first.length)
@@ -139,7 +139,7 @@ class TTextTest {
 
     @Test
     fun testToSpannedRoundTrip() {
-        val subject = TText(spanned())
+        val subject = Typesetter(spanned())
 
         val spanned = subject.toSpanned()
 
@@ -172,7 +172,7 @@ class TTextTest {
         val features = setOf(OpenTypeFeature.of(SfntTag.make("liga"), 0))
         spanned.setSpan(OpenTypeFeaturesSpan(features), 0, 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
-        val result = TText(spanned).toSpanned()
+        val result = Typesetter(spanned).toSpanned()
 
         assertEquals(Color.YELLOW, result.getSpans(0, 5, BackgroundColorSpan::class.java).single().backgroundColor)
         assertEquals(1, result.getSpans(0, 5, StrikethroughSpan::class.java).size)
@@ -187,7 +187,7 @@ class TTextTest {
         spanned.setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, STRING.length, Spanned.SPAN_PARAGRAPH)
         spanned.setSpan(LeadingMarginSpan.Standard(12, 4), 0, STRING.length, Spanned.SPAN_PARAGRAPH)
 
-        val result = TText(spanned).toSpanned()
+        val result = Typesetter(spanned).toSpanned()
 
         val alignments = result.getSpans(0, result.length, AlignmentSpan::class.java)
         assertEquals(1, alignments.size)
@@ -201,7 +201,7 @@ class TTextTest {
 
     @Test
     fun testCopyIsImmutableAndEqual() {
-        val subject = TText(spanned())
+        val subject = Typesetter(spanned())
 
         val copy = subject.copy()
 
@@ -214,7 +214,7 @@ class TTextTest {
 
     @Test
     fun testMutableCopyIsIndependent() {
-        val subject = TText(spanned())
+        val subject = Typesetter(spanned())
 
         val copy = subject.mutableCopy()
         copy.append("!")
@@ -225,32 +225,136 @@ class TTextTest {
     }
 
     @Test
-    fun testTypesetterFromText() {
-        val text = TText(spanned())
-
-        val typesetter = Typesetter(text)
-        val line = typesetter.createSimpleLine(0, STRING.length)
+    fun testLinesOfSpannedText() {
+        val subject = Typesetter(spanned())
+        val line = subject.createSimpleLine(0, STRING.length)
 
         assertEquals(STRING.length, line.endIndex)
-        assertEquals(STRING, typesetter.spanned.toString())
+        assertEquals(STRING, subject.spanned.toString())
         assertSame(typeface, line.runs[0].typeface)
     }
 
     @Test
-    fun testTypesetterFromTextKeepsTextAsItWas() {
-        val text = TText(spanned()).mutableCopy()
-        val typesetter = Typesetter(text)
+    fun testSpannedOfCopyIsMadeOfAttributes() {
+        val copy = Typesetter(spanned()).mutableCopy().copy()
 
-        text.append(" and more")
-        val line = typesetter.createSimpleLine(0, STRING.length)
+        assertEquals(STRING, copy.spanned.toString())
+        assertSame(copy.spanned, copy.spanned)
+        assertEquals(1, copy.spanned.getSpans(0, copy.length, UnderlineSpan::class.java).size)
+    }
+
+    @Test
+    fun testLinesKeepTheTextAsItWas() {
+        val subject = Typesetter(spanned()).mutableCopy()
+        val line = subject.createSimpleLine(0, STRING.length)
+
+        subject.append(" and more")
 
         assertEquals(STRING.length, line.endIndex)
-        assertEquals(STRING.length, typesetter.createSimpleLine(0, STRING.length).endIndex)
-        assertNotNull(line.runs.firstOrNull())
+        assertEquals(STRING + " and more", subject.string)
+        assertSame(typeface, line.runs[0].typeface)
+        assertEquals(STRING.length + 9, subject.createSimpleLine(0, subject.length).endIndex)
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testTypesetterFromEmptyTextFails() {
-        Typesetter(TText(""))
+    fun testTypesetterOfEmptySpannedFails() {
+        Typesetter(SpannableStringBuilder(""))
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testCopyInBatchFails() {
+        val subject = Typesetter(spanned()).mutableCopy()
+
+        subject.beginEditing()
+        subject.copy()
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun testLineInBatchFails() {
+        val subject = Typesetter(spanned()).mutableCopy()
+
+        subject.beginEditing()
+        subject.createSimpleLine(0, STRING.length)
+    }
+
+    @Test
+    fun testGraphemeBoundaries() {
+        val subject = Typesetter("a\u0301b\uD83D\uDE00c")
+
+        assertEquals(2, subject.findBoundary(0, BoundaryType.GRAPHEME, BoundaryDirection.FORWARD))
+        assertEquals(3, subject.findBoundary(2, BoundaryType.GRAPHEME, BoundaryDirection.FORWARD))
+        assertEquals(5, subject.findBoundary(3, BoundaryType.GRAPHEME, BoundaryDirection.FORWARD))
+        assertEquals(3, subject.findBoundary(5, BoundaryType.GRAPHEME, BoundaryDirection.BACKWARD))
+        assertEquals(0, subject.findBoundary(1, BoundaryType.GRAPHEME, BoundaryDirection.BACKWARD))
+        assertEquals(BoundaryRange(3, 5), subject.getBoundaryRange(4, BoundaryType.GRAPHEME))
+    }
+
+    @Test
+    fun testWordBoundaries() {
+        val subject = Typesetter(STRING)
+
+        assertEquals(5, subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertEquals(6, subject.findBoundary(5, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertEquals(6, subject.findBoundary(8, BoundaryType.WORD, BoundaryDirection.BACKWARD))
+        assertEquals(BoundaryRange(6, 10), subject.getBoundaryRange(7, BoundaryType.WORD))
+        assertEquals(BoundaryRange(5, 6), subject.getBoundaryRange(5, BoundaryType.WORD))
+    }
+
+    @Test
+    fun testParagraphBoundaries() {
+        val subject = Typesetter("one\ntwo\nthree")
+
+        assertEquals(4, subject.findBoundary(0, BoundaryType.PARAGRAPH, BoundaryDirection.FORWARD))
+        assertEquals(8, subject.findBoundary(4, BoundaryType.PARAGRAPH, BoundaryDirection.FORWARD))
+        assertEquals(4, subject.findBoundary(7, BoundaryType.PARAGRAPH, BoundaryDirection.BACKWARD))
+        assertEquals(BoundaryRange(4, 8), subject.getBoundaryRange(5, BoundaryType.PARAGRAPH))
+    }
+
+    @Test
+    fun testBoundariesAtTheEnds() {
+        val subject = Typesetter(STRING)
+
+        assertNull(subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.BACKWARD))
+        assertNull(subject.findBoundary(STRING.length, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertEquals(STRING.length, subject.findBoundary(STRING.length - 1, BoundaryType.GRAPHEME, BoundaryDirection.FORWARD))
+        assertEquals(BoundaryRange(STRING.length, STRING.length), subject.getBoundaryRange(STRING.length, BoundaryType.WORD))
+    }
+
+    @Test
+    fun testBoundariesOutOfRange() {
+        val subject = Typesetter(STRING)
+
+        assertNull(subject.findBoundary(-1, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertNull(subject.findBoundary(STRING.length + 1, BoundaryType.WORD, BoundaryDirection.BACKWARD))
+        assertNull(subject.getBoundaryRange(STRING.length + 1, BoundaryType.WORD))
+    }
+
+    @Test
+    fun testBoundariesNeedNoTypeface() {
+        val subject = MutableTypesetter("two words")
+
+        assertEquals(3, subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.FORWARD))
+    }
+
+    @Test
+    fun testBoundariesAfterEdits() {
+        val subject = MutableTypesetter(STRING)
+
+        subject.insert(0, "Oh ")
+
+        assertEquals(2, subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertEquals(BoundaryRange(3, 8), subject.getBoundaryRange(4, BoundaryType.WORD))
+    }
+
+    @Test
+    fun testBoundariesInBatchAreUnavailable() {
+        val subject = MutableTypesetter(STRING)
+
+        subject.beginEditing()
+        assertNull(subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.FORWARD))
+        assertNull(subject.getBoundaryRange(0, BoundaryType.WORD))
+        subject.endEditing()
+
+        assertEquals(5, subject.findBoundary(0, BoundaryType.WORD, BoundaryDirection.FORWARD))
     }
 }

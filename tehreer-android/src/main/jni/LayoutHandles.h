@@ -33,6 +33,11 @@ static inline TRTypesetterRef toTypesetter(jlong handle)
     return reinterpret_cast<TRTypesetterRef>(handle);
 }
 
+static inline TRMutableTypesetterRef toMutableTypesetter(jlong handle)
+{
+    return reinterpret_cast<TRMutableTypesetterRef>(handle);
+}
+
 static inline TRComposedFrameRef toFrame(jlong handle)
 {
     return reinterpret_cast<TRComposedFrameRef>(handle);

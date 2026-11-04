@@ -253,7 +253,7 @@ class FrameResolver {
      */
     fun createFrame(fromIndex: Int, toIndex: Int): ComposedFrame {
         val typesetter = checkNotNull(typesetter) { "Typesetter is not set" }
-        val textLength = typesetter.spanned.length
+        val textLength = typesetter.length
 
         require(fromIndex >= 0) { "From Index: $fromIndex" }
         require(toIndex <= textLength) { "To Index: $toIndex, Text Length: $textLength" }

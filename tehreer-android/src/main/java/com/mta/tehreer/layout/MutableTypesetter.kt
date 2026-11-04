@@ -43,26 +43,32 @@ import com.mta.tehreer.layout.style.TypefaceSpan
 import com.mta.tehreer.sfnt.ShapingEngine
 
 /**
- * The `TMutableText` class is a [TText] that can be edited: its characters can be appended,
- * inserted, deleted and replaced, and the attributes of its ranges set and removed through spans.
- * It is not thread safe, so it must not be edited while another thread uses it.
+ * The `MutableTypesetter` class is a [Typesetter] that can be edited: its characters can be
+ * appended, inserted, deleted and replaced, and the attributes of its ranges set and removed
+ * through spans. It is not thread safe, so it must not be edited while another thread uses it.
  *
- * Edits can be grouped between [beginEditing] and [endEditing], which lets Core analyze the text
- * once for all of them. A text must not be in the middle of a group when a [Typesetter] is made of
- * it.
+ * Core shapes each paragraph that an edit changes right away, unless the edit is in a group. Edits
+ * can be grouped between [beginEditing] and [endEditing], which lets Core shape each changed
+ * paragraph once for all of them; this is also how a text with many attributes is built. No line
+ * can be made, no break can be suggested, no boundary can be searched for and no copy can be made
+ * while the typesetter is in the middle of a group, so it must not be given to a [FrameResolver]
+ * then.
+ *
+ * The lines and frames that are made from a mutable typesetter do not change when it is edited
+ * afterwards. Use [copy] to get an immutable typesetter, which can be shared between threads.
  *
  * The spans that [setSpan] and [removeSpan] understand, and the attributes that they stand for, are
- * listed in [TText]. Where the replacement of a [ReplacementSpan] is concerned, the span sees the
- * string and the range that the text had when it was set.
+ * listed in [Typesetter]. Where the replacement of a [ReplacementSpan] is concerned, the span sees
+ * the string and the range that the text had when it was set.
  */
-class TMutableText : TText {
+class MutableTypesetter : Typesetter {
     /**
-     * Creates an empty text.
+     * Creates an empty typesetter.
      */
-    constructor() : super(nCreateMutable(), HashMap(), HashMap())
+    constructor() : super(nCreateMutable(), HashMap(), HashMap(), null)
 
     /**
-     * Creates a text of the string, which has no attributes.
+     * Creates a typesetter of the string, which has no attributes.
      *
      * @param string The string of the text.
      */
@@ -71,8 +77,8 @@ class TMutableText : TText {
     }
 
     /**
-     * Creates a text of the spanned text. The attributes that Core knows are set on the ranges
-     * that the spans cover, see the table in [TText].
+     * Creates a typesetter of the spanned text. The attributes that Core knows are set on the ranges
+     * that the spans cover, see the table in [Typesetter].
      *
      * @param spanned The spanned text.
      */
@@ -89,39 +95,52 @@ class TMutableText : TText {
     }
 
     internal constructor(
-        nativeText: Long, typefaces: HashMap<Long, Typeface>, holders: HashMap<Long, ReplacementHolder>
-    ) : super(nativeText, typefaces, holders)
+        nativeTypesetter: Long, typefaces: HashMap<Long, Typeface>, holders: HashMap<Long, ReplacementHolder>
+    ) : super(nativeTypesetter, typefaces, holders, null)
 
     override val isMutable: Boolean
         get() = true
 
     /**
+     * The spanned text of this typesetter, which is made of its attributes each time, see
+     * [toSpanned]. The spans that Core does not know are not in it.
+     */
+    override val spanned: Spanned
+        get() = toSpanned()
+
+    override val lineTypefaces: Map<Long, Typeface>
+        get() = HashMap(typefaces)
+
+    override val lineHolders: Map<Long, ReplacementHolder>
+        get() = HashMap(holders)
+
+    /**
      * Begins a batch of edits, which Core handles together when [endEditing] is called.
      */
     fun beginEditing() {
-        nBeginEditing(nativeText)
+        nBeginEditing(nativeTypesetter)
     }
 
     /**
      * Ends a batch of edits.
      */
     fun endEditing() {
-        nEndEditing(nativeText)
+        nEndEditing(nativeTypesetter)
     }
 
     /**
-     * Appends the string to the end of this text.
+     * Appends the string to the end of this typesetter.
      *
      * @param string The string to append.
      */
     fun append(string: String) {
-        check(nAppend(nativeText, string)) { "Could not append the string" }
+        check(nAppend(nativeTypesetter, string)) { "Could not append the string" }
     }
 
     /**
-     * Inserts the string at an index of this text.
+     * Inserts the string at an index of this typesetter.
      *
-     * @param index The index at which to insert, which can be the length of this text.
+     * @param index The index at which to insert, which can be the length of this typesetter.
      * @param string The string to insert.
      *
      * @throws IllegalArgumentException if `index` is negative or greater than the length.
@@ -129,51 +148,51 @@ class TMutableText : TText {
     fun insert(index: Int, string: String) {
         require(index in 0..length) { "Index: $index, Text Length: $length" }
 
-        check(nInsert(nativeText, index, string)) { "Could not insert the string" }
+        check(nInsert(nativeTypesetter, index, string)) { "Could not insert the string" }
     }
 
     /**
-     * Deletes a range of this text.
+     * Deletes a range of this typesetter.
      *
      * @param startIndex The index to the first character of the range.
      * @param endIndex The index after the last character of the range.
      *
-     * @throws IllegalArgumentException if the range is not within this text.
+     * @throws IllegalArgumentException if the range is not within this typesetter.
      */
     fun delete(startIndex: Int, endIndex: Int) {
         checkRange(startIndex, endIndex)
 
-        check(nDelete(nativeText, startIndex, endIndex)) { "Could not delete the range" }
+        check(nDelete(nativeTypesetter, startIndex, endIndex)) { "Could not delete the range" }
     }
 
     /**
-     * Replaces a range of this text with the string.
+     * Replaces a range of this typesetter with the string.
      *
      * @param startIndex The index to the first character of the range.
      * @param endIndex The index after the last character of the range.
      * @param string The string that takes the place of the range.
      *
-     * @throws IllegalArgumentException if the range is not within this text.
+     * @throws IllegalArgumentException if the range is not within this typesetter.
      */
     fun replace(startIndex: Int, endIndex: Int, string: String) {
         checkRange(startIndex, endIndex)
 
-        check(nReplace(nativeText, startIndex, endIndex, string)) { "Could not replace the range" }
+        check(nReplace(nativeTypesetter, startIndex, endIndex, string)) { "Could not replace the range" }
     }
 
     /**
-     * Replaces the whole content of this text with the string. The attributes are left to Core,
+     * Replaces the whole content of this typesetter with the string. The attributes are left to Core,
      * which handles it as replacing the range of the whole text.
      *
      * @param string The new string of the text.
      */
     fun setString(string: String) {
-        check(nSetString(nativeText, string)) { "Could not set the string" }
+        check(nSetString(nativeTypesetter, string)) { "Could not set the string" }
     }
 
     /**
-     * Sets the attributes that a span stands for on a range of this text. They take the place of
-     * the ones that the range had, whichever spans they came from. See [TText] for the spans that
+     * Sets the attributes that a span stands for on a range of this typesetter. They take the place of
+     * the ones that the range had, whichever spans they came from. See [Typesetter] for the spans that
      * are known, and [removeSpan] for taking the attributes back.
      *
      * A span that depends on the text around it, such as `StyleSpan`, `RelativeSizeSpan`,
@@ -185,7 +204,7 @@ class TMutableText : TText {
      * @param startIndex The index to the first character of the range.
      * @param endIndex The index after the last character of the range.
      *
-     * @throws IllegalArgumentException if the range is not within this text or the span is not
+     * @throws IllegalArgumentException if the range is not within this typesetter or the span is not
      *         known.
      */
     fun setSpan(span: Any, startIndex: Int, endIndex: Int) {
@@ -218,7 +237,7 @@ class TMutableText : TText {
     }
 
     /**
-     * Removes the attributes that a span stands for from a range of this text, whichever spans
+     * Removes the attributes that a span stands for from a range of this typesetter, whichever spans
      * they came from. Only the kind of the span matters, so another span of the same class can be
      * given.
      *
@@ -226,7 +245,7 @@ class TMutableText : TText {
      * @param startIndex The index to the first character of the range.
      * @param endIndex The index after the last character of the range.
      *
-     * @throws IllegalArgumentException if the range is not within this text or the span is not
+     * @throws IllegalArgumentException if the range is not within this typesetter or the span is not
      *         known.
      */
     fun removeSpan(span: Any, startIndex: Int, endIndex: Int) {
@@ -237,7 +256,7 @@ class TMutableText : TText {
 
         if (startIndex < endIndex) {
             for (type in types) {
-                nRemoveAttribute(nativeText, startIndex, endIndex, type)
+                nRemoveAttribute(nativeTypesetter, startIndex, endIndex, type)
             }
         }
     }
@@ -294,16 +313,16 @@ class TMutableText : TText {
         }
 
         if (alignment >= 0) {
-            nSetTextAlignment(nativeText, startIndex, endIndex, alignment)
+            nSetTextAlignment(nativeTypesetter, startIndex, endIndex, alignment)
         }
     }
 
     private fun setLeadingMargin(span: LeadingMarginSpan, startIndex: Int, endIndex: Int) {
         val lineCount = if (span is LeadingMarginSpan2) maxOf(1, span.leadingMarginLineCount) else 1
 
-        nSetFirstLineHeadIndent(nativeText, startIndex, endIndex, span.getLeadingMargin(true).toFloat())
-        nSetHeadIndent(nativeText, startIndex, endIndex, span.getLeadingMargin(false).toFloat())
-        nSetFirstIndentLineCount(nativeText, startIndex, endIndex, lineCount)
+        nSetFirstLineHeadIndent(nativeTypesetter, startIndex, endIndex, span.getLeadingMargin(true).toFloat())
+        nSetHeadIndent(nativeTypesetter, startIndex, endIndex, span.getLeadingMargin(false).toFloat())
+        nSetFirstIndentLineCount(nativeTypesetter, startIndex, endIndex, lineCount)
     }
 
     private fun setContextualSpan(span: Any, startIndex: Int, endIndex: Int) {
@@ -336,41 +355,41 @@ class TMutableText : TText {
 
     internal fun putTypeface(start: Int, end: Int, typeface: Typeface) {
         typefaces[typeface.nativeTypeface] = typeface
-        nSetTypeface(nativeText, start, end, typeface.nativeTypeface)
+        nSetTypeface(nativeTypesetter, start, end, typeface.nativeTypeface)
     }
 
     internal fun putTypeSize(start: Int, end: Int, value: Float) =
-        nSetTypeSize(nativeText, start, end, value)
+        nSetTypeSize(nativeTypesetter, start, end, value)
 
     internal fun putScaleX(start: Int, end: Int, value: Float) =
-        nSetScaleX(nativeText, start, end, value)
+        nSetScaleX(nativeTypesetter, start, end, value)
 
     internal fun putBaselineOffset(start: Int, end: Int, value: Float) =
-        nSetBaselineOffset(nativeText, start, end, value)
+        nSetBaselineOffset(nativeTypesetter, start, end, value)
 
     internal fun putForegroundColor(start: Int, end: Int, value: Int) =
-        nSetForegroundColor(nativeText, start, end, value)
+        nSetForegroundColor(nativeTypesetter, start, end, value)
 
     internal fun putBackgroundColor(start: Int, end: Int, value: Int) =
-        nSetBackgroundColor(nativeText, start, end, value)
+        nSetBackgroundColor(nativeTypesetter, start, end, value)
 
     internal fun putUnderline(start: Int, end: Int, value: Boolean) =
-        nSetUnderline(nativeText, start, end, value)
+        nSetUnderline(nativeTypesetter, start, end, value)
 
     internal fun putStrikethrough(start: Int, end: Int, value: Boolean) =
-        nSetStrikethrough(nativeText, start, end, value)
+        nSetStrikethrough(nativeTypesetter, start, end, value)
 
     internal fun putDecorationColor(start: Int, end: Int, value: Int) =
-        nSetDecorationColor(nativeText, start, end, value)
+        nSetDecorationColor(nativeTypesetter, start, end, value)
 
     internal fun putLanguage(start: Int, end: Int, languageTag: Int) =
-        nSetLanguage(nativeText, start, end, languageTag)
+        nSetLanguage(nativeTypesetter, start, end, languageTag)
 
     internal fun putFontFeatures(start: Int, end: Int, span: OpenTypeFeaturesSpan) {
         val tags = span.features.map { it.tag() }.toIntArray()
         val values = span.features.map { it.value() }.toIntArray()
 
-        nSetFontFeatures(nativeText, start, end, tags, values)
+        nSetFontFeatures(nativeTypesetter, start, end, tags, values)
     }
 
     /** Makes the replacement of Core for a holder, which the caller has to release in the end. */
@@ -385,52 +404,54 @@ class TMutableText : TText {
 
     /** Sets a replacement that is made already, as many ranges as needed can share it. */
     internal fun putReplacement(start: Int, end: Int, replacement: Long) =
-        nSetReplacement(nativeText, start, end, replacement)
+        nSetReplacement(nativeTypesetter, start, end, replacement)
 
     internal fun releaseReplacement(replacement: Long) = nReleaseReplacement(replacement)
 
     internal fun putTextAlignment(start: Int, end: Int, value: Int) =
-        nSetTextAlignment(nativeText, start, end, value)
+        nSetTextAlignment(nativeTypesetter, start, end, value)
 
     internal fun putFirstLineHeadIndent(start: Int, end: Int, value: Float) =
-        nSetFirstLineHeadIndent(nativeText, start, end, value)
+        nSetFirstLineHeadIndent(nativeTypesetter, start, end, value)
 
     internal fun putHeadIndent(start: Int, end: Int, value: Float) =
-        nSetHeadIndent(nativeText, start, end, value)
+        nSetHeadIndent(nativeTypesetter, start, end, value)
 
     internal fun putFirstIndentLineCount(start: Int, end: Int, value: Int) =
-        nSetFirstIndentLineCount(nativeText, start, end, value)
+        nSetFirstIndentLineCount(nativeTypesetter, start, end, value)
 
     private companion object {
         const val DEFAULT_TYPE_SIZE = 16.0f
 
-        @JvmStatic external fun nBeginEditing(nativeText: Long)
-        @JvmStatic external fun nEndEditing(nativeText: Long)
-        @JvmStatic external fun nAppend(nativeText: Long, string: String): Boolean
-        @JvmStatic external fun nInsert(nativeText: Long, index: Int, string: String): Boolean
-        @JvmStatic external fun nDelete(nativeText: Long, start: Int, end: Int): Boolean
-        @JvmStatic external fun nReplace(nativeText: Long, start: Int, end: Int, string: String): Boolean
-        @JvmStatic external fun nSetString(nativeText: Long, string: String): Boolean
-        @JvmStatic external fun nRemoveAttribute(nativeText: Long, start: Int, end: Int, type: Int): Boolean
-        @JvmStatic external fun nSetTypeface(nativeText: Long, start: Int, end: Int, typeface: Long)
-        @JvmStatic external fun nSetTypeSize(nativeText: Long, start: Int, end: Int, value: Float)
-        @JvmStatic external fun nSetScaleX(nativeText: Long, start: Int, end: Int, value: Float)
-        @JvmStatic external fun nSetBaselineOffset(nativeText: Long, start: Int, end: Int, value: Float)
-        @JvmStatic external fun nSetForegroundColor(nativeText: Long, start: Int, end: Int, value: Int)
-        @JvmStatic external fun nSetBackgroundColor(nativeText: Long, start: Int, end: Int, value: Int)
-        @JvmStatic external fun nSetUnderline(nativeText: Long, start: Int, end: Int, value: Boolean)
-        @JvmStatic external fun nSetStrikethrough(nativeText: Long, start: Int, end: Int, value: Boolean)
-        @JvmStatic external fun nSetDecorationColor(nativeText: Long, start: Int, end: Int, value: Int)
-        @JvmStatic external fun nSetLanguage(nativeText: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nCreateMutable(): Long
+
+        @JvmStatic external fun nBeginEditing(nativeTypesetter: Long)
+        @JvmStatic external fun nEndEditing(nativeTypesetter: Long)
+        @JvmStatic external fun nAppend(nativeTypesetter: Long, string: String): Boolean
+        @JvmStatic external fun nInsert(nativeTypesetter: Long, index: Int, string: String): Boolean
+        @JvmStatic external fun nDelete(nativeTypesetter: Long, start: Int, end: Int): Boolean
+        @JvmStatic external fun nReplace(nativeTypesetter: Long, start: Int, end: Int, string: String): Boolean
+        @JvmStatic external fun nSetString(nativeTypesetter: Long, string: String): Boolean
+        @JvmStatic external fun nRemoveAttribute(nativeTypesetter: Long, start: Int, end: Int, type: Int): Boolean
+        @JvmStatic external fun nSetTypeface(nativeTypesetter: Long, start: Int, end: Int, typeface: Long)
+        @JvmStatic external fun nSetTypeSize(nativeTypesetter: Long, start: Int, end: Int, value: Float)
+        @JvmStatic external fun nSetScaleX(nativeTypesetter: Long, start: Int, end: Int, value: Float)
+        @JvmStatic external fun nSetBaselineOffset(nativeTypesetter: Long, start: Int, end: Int, value: Float)
+        @JvmStatic external fun nSetForegroundColor(nativeTypesetter: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetBackgroundColor(nativeTypesetter: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetUnderline(nativeTypesetter: Long, start: Int, end: Int, value: Boolean)
+        @JvmStatic external fun nSetStrikethrough(nativeTypesetter: Long, start: Int, end: Int, value: Boolean)
+        @JvmStatic external fun nSetDecorationColor(nativeTypesetter: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetLanguage(nativeTypesetter: Long, start: Int, end: Int, value: Int)
         @JvmStatic external fun nSetFontFeatures(
-            nativeText: Long, start: Int, end: Int, tags: IntArray, values: IntArray
+            nativeTypesetter: Long, start: Int, end: Int, tags: IntArray, values: IntArray
         )
         @JvmStatic external fun nCreateReplacement(holder: Any, isBlock: Boolean): Long
-        @JvmStatic external fun nSetReplacement(nativeText: Long, start: Int, end: Int, replacement: Long)
+        @JvmStatic external fun nSetReplacement(nativeTypesetter: Long, start: Int, end: Int, replacement: Long)
         @JvmStatic external fun nReleaseReplacement(replacement: Long)
-        @JvmStatic external fun nSetTextAlignment(nativeText: Long, start: Int, end: Int, value: Int)
-        @JvmStatic external fun nSetFirstLineHeadIndent(nativeText: Long, start: Int, end: Int, value: Float)
-        @JvmStatic external fun nSetHeadIndent(nativeText: Long, start: Int, end: Int, value: Float)
-        @JvmStatic external fun nSetFirstIndentLineCount(nativeText: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetTextAlignment(nativeTypesetter: Long, start: Int, end: Int, value: Int)
+        @JvmStatic external fun nSetFirstLineHeadIndent(nativeTypesetter: Long, start: Int, end: Int, value: Float)
+        @JvmStatic external fun nSetHeadIndent(nativeTypesetter: Long, start: Int, end: Int, value: Float)
+        @JvmStatic external fun nSetFirstIndentLineCount(nativeTypesetter: Long, start: Int, end: Int, value: Int)
     }
 }

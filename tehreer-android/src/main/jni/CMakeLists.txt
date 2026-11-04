@@ -202,8 +202,7 @@ set(FILE_LIST
     Typeface.cpp
     TypefaceManager.cpp
     Typesetter.cpp
-    TText.cpp
-    TMutableText.cpp
+    MutableTypesetter.cpp
     Unicode.cpp
 )
 
